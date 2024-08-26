@@ -1,0 +1,23 @@
+# Directories
+cache
+coverage
+node_modules
+out
+
+# Files
+*.env
+*.log
+.DS_Store
+.pnp.*
+lcov.info
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Docs
+docs/
+
+# Ignores development broadcast logs
+!broadcast
+broadcast/*
+broadcast/*/31337/
