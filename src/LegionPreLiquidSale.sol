@@ -18,6 +18,7 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
+import {ILegionAddressRegistry} from "./interfaces/ILegionAddressRegistry.sol";
 import {ILegionPreLiquidSale} from "./interfaces/ILegionPreLiquidSale.sol";
 import {ILegionLinearVesting} from "./interfaces/ILegionLinearVesting.sol";
 import {ILegionVestingFactory} from "./interfaces/ILegionVestingFactory.sol";
@@ -57,8 +58,11 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
     /// @dev The admin address of the project raising capital.
     address private projectAdmin;
 
+    /// @dev The address of Legion's Address Registry contract.
+    address private addressRegistry;
+
     /// @dev The admin address of Legion.
-    address private legionAdmin;
+    address private legionBouncer;
 
     /// @dev The address of Legion's Vesting Factory contract.
     address private vestingFactory;
@@ -96,19 +100,25 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
     /// @dev Constant representing 2 weeks in seconds.
     uint256 private constant TWO_WEEKS = 1209600;
 
+    /// @dev Constant representing the LEGION_BOUNCER unique ID
+    bytes32 internal constant LEGION_BOUNCER_ID = bytes32("LEGION_BOUNCER");
+
+    /// @dev Constant representing the LEGION_VESTING_FACTORY unique ID
+    bytes32 internal constant LEGION_VESTING_FACTORY_ID = bytes32("LEGION_VESTING_FACTORY");
+
     /**
-     * @notice Throws if called by any account other than the Legion admin.
+     * @notice Throws if called by any account other than Legion.
      */
     modifier onlyLegion() {
-        if (msg.sender != legionAdmin) revert NotCalledByLegionAdmin();
+        if (msg.sender != legionBouncer) revert NotCalledByLegion();
         _;
     }
 
     /**
-     * @notice Throws if called by any account other than the project admin.
+     * @notice Throws if called by any account other than the Project.
      */
     modifier onlyProject() {
-        if (msg.sender != projectAdmin) revert NotCalledByProjectAdmin();
+        if (msg.sender != projectAdmin) revert NotCalledByProject();
         _;
     }
 
@@ -134,8 +144,11 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
         saftMerkleRoot = preLiquidSaleConfig.saftMerkleRoot;
         bidToken = preLiquidSaleConfig.bidToken;
         projectAdmin = preLiquidSaleConfig.projectAdmin;
-        legionAdmin = preLiquidSaleConfig.legionAdmin;
-        vestingFactory = preLiquidSaleConfig.vestingFactory;
+        addressRegistry = preLiquidSaleConfig.addressRegistry;
+
+        /// Cache Legion addresses from `LegionAddressRegistry`
+        legionBouncer = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_BOUNCER_ID);
+        vestingFactory = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_VESTING_FACTORY_ID);
 
         /// Accepting investment is set to true by default
         investmentAccepted = true;
@@ -288,7 +301,7 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
         IERC20(askToken).safeTransferFrom(msg.sender, address(this), amount);
 
         /// Transfer the Legion fee to the Legion admin address
-        if (legionFee != 0) IERC20(askToken).safeTransferFrom(msg.sender, legionAdmin, legionFee);
+        if (legionFee != 0) IERC20(askToken).safeTransferFrom(msg.sender, legionBouncer, legionFee);
     }
 
     /**
@@ -387,7 +400,7 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
         IERC20(bidToken).safeTransfer(msg.sender, (amount - legionFee));
 
         /// Transfer the Legion fee to the Legion admin address
-        if (legionFee != 0) IERC20(bidToken).safeTransfer(legionAdmin, legionFee);
+        if (legionFee != 0) IERC20(bidToken).safeTransfer(legionBouncer, legionFee);
     }
 
     /**
@@ -576,8 +589,7 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
             saftMerkleRoot,
             bidToken,
             projectAdmin,
-            legionAdmin,
-            vestingFactory
+            addressRegistry
         );
     }
 
@@ -626,11 +638,12 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
      *
      * @param _preLiquidSaleConfig The configuration for the pre-liquid sale.
      */
-    function _verifyValidConfig(PreLiquidSaleConfig calldata _preLiquidSaleConfig) private pure {
+    function _verifyValidConfig(PreLiquidSaleConfig calldata _preLiquidSaleConfig) private view {
         /// Check for zero addresses provided
         if (
             _preLiquidSaleConfig.bidToken == address(0) || _preLiquidSaleConfig.projectAdmin == address(0)
-                || _preLiquidSaleConfig.legionAdmin == address(0) || _preLiquidSaleConfig.vestingFactory == address(0)
+                || _preLiquidSaleConfig.addressRegistry == address(0) || legionBouncer == address(0)
+                || vestingFactory == address(0)
         ) revert ZeroAddressProvided();
 
         /// Check for zero values provided

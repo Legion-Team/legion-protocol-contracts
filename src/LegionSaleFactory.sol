@@ -48,22 +48,19 @@ contract LegionSaleFactory is ILegionSaleFactory, Ownable {
     /**
      * @notice See {ILegionSaleFactory-createFixedPriceSale}.
      */
-    function createFixedPriceSale(
-        LegionFixedPriceSale.FixedPriceSalePeriodAndFeeConfig calldata fixedPriceSalePeriodAndFeeConfig,
-        LegionFixedPriceSale.FixedPriceSaleAddressConfig calldata fixedPriceSaleAddressConfig
-    ) external onlyOwner returns (address payable fixedPriceSaleInstance) {
+    function createFixedPriceSale(LegionFixedPriceSale.FixedPriceSaleConfig calldata fixedPriceSaleConfig)
+        external
+        onlyOwner
+        returns (address payable fixedPriceSaleInstance)
+    {
         /// Deploy a LegionFixedPriceSale instance
         fixedPriceSaleInstance = payable(fixedPriceSaleTemplate.clone());
 
         /// Emit successfully NewFixedPriceSaleCreated
-        emit NewFixedPriceSaleCreated(
-            fixedPriceSaleInstance, fixedPriceSalePeriodAndFeeConfig, fixedPriceSaleAddressConfig
-        );
+        emit NewFixedPriceSaleCreated(fixedPriceSaleInstance, fixedPriceSaleConfig);
 
         /// Initialize the LegionFixedPriceSale with the provided configuration
-        LegionFixedPriceSale(fixedPriceSaleInstance).initialize(
-            fixedPriceSalePeriodAndFeeConfig, fixedPriceSaleAddressConfig
-        );
+        LegionFixedPriceSale(fixedPriceSaleInstance).initialize(fixedPriceSaleConfig);
     }
 
     /**
@@ -87,21 +84,18 @@ contract LegionSaleFactory is ILegionSaleFactory, Ownable {
     /**
      * @notice See {ILegionSaleFactory-createSealedBidAuction}.
      */
-    function createSealedBidAuction(
-        LegionSealedBidAuction.SealedBidAuctionPeriodAndFeeConfig calldata sealedBidAuctionPeriodAndFeeConfig,
-        LegionSealedBidAuction.SealedBidAuctionAddressConfig calldata sealedBidAuctionAddressConfig
-    ) external onlyOwner returns (address payable sealedBidAuctionInstance) {
+    function createSealedBidAuction(LegionSealedBidAuction.SealedBidAuctionConfig calldata sealedBidAuctionConfig)
+        external
+        onlyOwner
+        returns (address payable sealedBidAuctionInstance)
+    {
         /// Deploy a LegionSealedBidAuction instance
         sealedBidAuctionInstance = payable(sealedBidAuctionTemplate.clone());
 
         /// Emit successfully NewSealedBidAuctionCreated
-        emit NewSealedBidAuctionCreated(
-            sealedBidAuctionInstance, sealedBidAuctionPeriodAndFeeConfig, sealedBidAuctionAddressConfig
-        );
+        emit NewSealedBidAuctionCreated(sealedBidAuctionInstance, sealedBidAuctionConfig);
 
         /// Initialize the LegionSealedBidAuction with the provided configuration
-        LegionSealedBidAuction(sealedBidAuctionInstance).initialize(
-            sealedBidAuctionPeriodAndFeeConfig, sealedBidAuctionAddressConfig
-        );
+        LegionSealedBidAuction(sealedBidAuctionInstance).initialize(sealedBidAuctionConfig);
     }
 }

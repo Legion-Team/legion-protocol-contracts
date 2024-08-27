@@ -38,8 +38,8 @@ interface ILegionFixedPriceSale is ILegionBaseSale {
      */
     error PrefundAllocationPeriodNotEnded();
 
-    /// @notice A struct describing the fixed price sale period and fee configuration.
-    struct FixedPriceSalePeriodAndFeeConfig {
+    /// @notice A struct describing the fixed price sale configuration.
+    struct FixedPriceSaleConfig {
         /// @dev The prefund period duration in seconds.
         uint256 prefundPeriodSeconds;
         /// @dev The prefund allocation period duration in seconds.
@@ -62,22 +62,14 @@ interface ILegionFixedPriceSale is ILegionBaseSale {
         uint256 minimumPledgeAmount;
         /// @dev The price of the token being sold denominated in the token used to raise capital.
         uint256 tokenPrice;
-    }
-
-    /// @notice A struct describing the fixed price sale addresses configuration.
-    struct FixedPriceSaleAddressConfig {
         /// @dev The address of the token used for raising capital.
         address bidToken;
         /// @dev The address of the token being sold to investors.
         address askToken;
         /// @dev The admin address of the project raising capital.
         address projectAdmin;
-        /// @dev The admin address of Legion.
-        address legionAdmin;
-        /// @dev The address of Legion signer.
-        address legionSigner;
-        /// @dev The address of Legion's Vesting Factory contract.
-        address vestingFactory;
+        /// @dev The address of Legion's Address Registry contract.
+        address addressRegistry;
     }
 
     /// @notice A struct describing the fixed price sale status.
@@ -115,13 +107,9 @@ interface ILegionFixedPriceSale is ILegionBaseSale {
     /**
      * @notice Initialized the contract with correct parameters.
      *
-     * @param fixedPriceSalePeriodAndFeeConfig The period and fee configuration for the fixed price sale.
-     * @param fixedPriceSaleAddressConfig The address configuration for the fixed price sale.
+     * @param fixedPriceSaleConfig The configuration for the fixed price sale.
      */
-    function initialize(
-        FixedPriceSalePeriodAndFeeConfig calldata fixedPriceSalePeriodAndFeeConfig,
-        FixedPriceSaleAddressConfig calldata fixedPriceSaleAddressConfig
-    ) external;
+    function initialize(FixedPriceSaleConfig calldata fixedPriceSaleConfig) external;
 
     /**
      * @notice Pledge capital to the fixed price sale.
@@ -142,17 +130,9 @@ interface ILegionFixedPriceSale is ILegionBaseSale {
     function publishSaleResults(bytes32 merkleRoot, uint256 tokensAllocated) external;
 
     /**
-     * @notice Returns the period and fee configuration for the fixed price sale.
+     * @notice Returns the configuration for the fixed price sale.
      */
-    function salePeriodAndFeeConfiguration()
-        external
-        view
-        returns (FixedPriceSalePeriodAndFeeConfig memory salePeriodAndFeeConfig);
-
-    /**
-     * @notice Returns the address configuration for the fixed price sale.
-     */
-    function saleAddressConfiguration() external view returns (FixedPriceSaleAddressConfig memory saleAddressConfig);
+    function saleConfiguration() external view returns (FixedPriceSaleConfig memory saleConfig);
 
     /**
      * @notice Returns the status for the fixed price sale.

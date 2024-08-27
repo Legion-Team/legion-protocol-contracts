@@ -171,14 +171,14 @@ interface ILegionBaseSale {
     error NoCapitalPledged(address investor);
 
     /**
-     * @notice Throws when not called by the Legion admin.
+     * @notice Throws when not called by Legion.
      */
-    error NotCalledByLegionAdmin();
+    error NotCalledByLegion();
 
     /**
-     * @notice Throws when not called by the Project admin.
+     * @notice Throws when not called by the Project.
      */
-    error NotCalledByProjectAdmin();
+    error NotCalledByProject();
 
     /**
      * @notice Throws when the `askToken` is unavailable.

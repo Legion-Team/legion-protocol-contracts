@@ -62,8 +62,11 @@ abstract contract LegionBaseSale is ILegionBaseSale, Initializable {
     /// @dev The admin address of the project raising capital.
     address internal projectAdmin;
 
+    /// @dev The address of Legion's Address Registry contract.
+    address internal addressRegistry;
+
     /// @dev The admin address of Legion.
-    address internal legionAdmin;
+    address internal legionBouncer;
 
     /// @dev The address of Legion signer.
     address internal legionSigner;
@@ -122,19 +125,28 @@ abstract contract LegionBaseSale is ILegionBaseSale, Initializable {
     /// @dev Constant representing 6 months in seconds.
     uint256 internal constant SIX_MONTHS = 15780000;
 
+    /// @dev Constant representing the LEGION_BOUNCER unique ID
+    bytes32 internal constant LEGION_BOUNCER_ID = bytes32("LEGION_BOUNCER");
+
+    /// @dev Constant representing the LEGION_SIGNER unique ID
+    bytes32 internal constant LEGION_SIGNER_ID = bytes32("LEGION_SIGNER");
+
+    /// @dev Constant representing the LEGION_VESTING_FACTORY unique ID
+    bytes32 internal constant LEGION_VESTING_FACTORY_ID = bytes32("LEGION_VESTING_FACTORY");
+
     /**
-     * @notice Throws if called by any account other than the Legion admin.
+     * @notice Throws if called by any account other than Legion.
      */
     modifier onlyLegion() {
-        if (msg.sender != legionAdmin) revert NotCalledByLegionAdmin();
+        if (msg.sender != legionBouncer) revert NotCalledByLegion();
         _;
     }
 
     /**
-     * @notice Throws if called by any account other than the project admin.
+     * @notice Throws if called by any account other than the Project.
      */
     modifier onlyProject() {
-        if (msg.sender != projectAdmin) revert NotCalledByProjectAdmin();
+        if (msg.sender != projectAdmin) revert NotCalledByProject();
         _;
     }
 
@@ -218,7 +230,7 @@ abstract contract LegionBaseSale is ILegionBaseSale, Initializable {
         IERC20(bidToken).safeTransfer(msg.sender, (_totalCapitalRaised - _legionFee));
 
         /// Transfer the Legion fee to the Legion admin address
-        if (_legionFee != 0) IERC20(bidToken).safeTransfer(legionAdmin, _legionFee);
+        if (_legionFee != 0) IERC20(bidToken).safeTransfer(legionBouncer, _legionFee);
     }
 
     /**
@@ -332,7 +344,7 @@ abstract contract LegionBaseSale is ILegionBaseSale, Initializable {
         IERC20(askToken).safeTransferFrom(msg.sender, address(this), amount);
 
         /// Transfer the Legion fee to the Legion admin address
-        if (legionFee != 0) IERC20(askToken).safeTransferFrom(msg.sender, legionAdmin, legionFee);
+        if (legionFee != 0) IERC20(askToken).safeTransferFrom(msg.sender, legionBouncer, legionFee);
     }
 
     /**

@@ -21,13 +21,10 @@ interface ILegionSaleFactory {
      * @notice This event is emitted when a new fixed price sale is deployed and initialized.
      *
      * @param saleInstance The address of the sale instance deployed.
-     * @param fixedPriceSalePeriodAndFeeConfig The period and fee configuration for the fixed price sale.
-     * @param fixedPriceSaleAddressConfig The address configuration for the fixed price sale.
+     * @param fixedPriceSaleConfig The configuration for the fixed price sale.
      */
     event NewFixedPriceSaleCreated(
-        address saleInstance,
-        ILegionFixedPriceSale.FixedPriceSalePeriodAndFeeConfig fixedPriceSalePeriodAndFeeConfig,
-        ILegionFixedPriceSale.FixedPriceSaleAddressConfig fixedPriceSaleAddressConfig
+        address saleInstance, ILegionFixedPriceSale.FixedPriceSaleConfig fixedPriceSaleConfig
     );
 
     /**
@@ -42,27 +39,22 @@ interface ILegionSaleFactory {
      * @notice This event is emitted when a new sealed bid auction is deployed and initialized.
      *
      * @param saleInstance The address of the sale instance deployed.
-     * @param sealedBidAuctionPeriodAndFeeConfig The period and fee configuration for the sealed bid auction.
-     * @param sealedBidAuctionAddressConfig The address configuration for the sealed bid auction.
+     * @param sealedBidAuctionConfig The configuration for the sealed bid auction.
      */
     event NewSealedBidAuctionCreated(
-        address saleInstance,
-        ILegionSealedBidAuction.SealedBidAuctionPeriodAndFeeConfig sealedBidAuctionPeriodAndFeeConfig,
-        ILegionSealedBidAuction.SealedBidAuctionAddressConfig sealedBidAuctionAddressConfig
+        address saleInstance, ILegionSealedBidAuction.SealedBidAuctionConfig sealedBidAuctionConfig
     );
 
     /**
      * @notice Deploy a LegionFixedPriceSale contract.
      *
-     * @param fixedPriceSalePeriodAndFeeConfig The period and fee configuration for the fixed price sale.
-     * @param fixedPriceSaleAddressConfig The address configuration for the fixed price sale.
+     * @param fixedPriceSaleConfig The configuration for the fixed price sale.
      *
      * @return fixedPriceSaleInstance The address of the fixedPriceSaleInstance deployed.
      */
-    function createFixedPriceSale(
-        ILegionFixedPriceSale.FixedPriceSalePeriodAndFeeConfig calldata fixedPriceSalePeriodAndFeeConfig,
-        ILegionFixedPriceSale.FixedPriceSaleAddressConfig calldata fixedPriceSaleAddressConfig
-    ) external returns (address payable fixedPriceSaleInstance);
+    function createFixedPriceSale(ILegionFixedPriceSale.FixedPriceSaleConfig calldata fixedPriceSaleConfig)
+        external
+        returns (address payable fixedPriceSaleInstance);
 
     /**
      * @notice Deploy a LegionPreLiquidSale contract.
@@ -78,13 +70,11 @@ interface ILegionSaleFactory {
     /**
      * @notice Deploy a LegionSealedBidAuction contract.
      *
-     * @param sealedBidAuctionPeriodAndFeeConfig The period and fee configuration for the sealed bid auction.
-     * @param sealedBidAuctionAddressConfig The address configuration for the sealed bid auction.
+     * @param sealedBidAuctionConfig The configuration for the sealed bid auction.
      *
      * @return sealedBidAuctionInstance The address of the sealedBidAuctionInstance deployed.
      */
-    function createSealedBidAuction(
-        ILegionSealedBidAuction.SealedBidAuctionPeriodAndFeeConfig calldata sealedBidAuctionPeriodAndFeeConfig,
-        ILegionSealedBidAuction.SealedBidAuctionAddressConfig calldata sealedBidAuctionAddressConfig
-    ) external returns (address payable sealedBidAuctionInstance);
+    function createSealedBidAuction(ILegionSealedBidAuction.SealedBidAuctionConfig calldata sealedBidAuctionConfig)
+        external
+        returns (address payable sealedBidAuctionInstance);
 }
