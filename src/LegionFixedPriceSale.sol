@@ -72,6 +72,7 @@ contract LegionFixedPriceSale is LegionBaseSale, ILegionFixedPriceSale {
         /// Cache Legion addresses from `LegionAddressRegistry`
         legionBouncer = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_BOUNCER_ID);
         legionSigner = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_SIGNER_ID);
+        legionFeeReceiver = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_FEE_RECEIVER_ID);
         vestingFactory = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_VESTING_FACTORY_ID);
 
         /// Calculate and set prefundStartTime, prefundEndTime, startTime, endTime and refundEndTime
@@ -230,7 +231,7 @@ contract LegionFixedPriceSale is LegionBaseSale, ILegionFixedPriceSale {
         if (
             _fixedPriceSaleConfig.bidToken == address(0) || _fixedPriceSaleConfig.projectAdmin == address(0)
                 || _fixedPriceSaleConfig.addressRegistry == address(0) || legionBouncer == address(0)
-                || legionSigner == address(0) || vestingFactory == address(0)
+                || legionSigner == address(0) || legionFeeReceiver == address(0) || vestingFactory == address(0)
         ) {
             revert ZeroAddressProvided();
         }

@@ -64,6 +64,9 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
     /// @dev The admin address of Legion.
     address private legionBouncer;
 
+    /// @dev The address of Legion fee receiver.
+    address internal legionFeeReceiver;
+
     /// @dev The address of Legion's Vesting Factory contract.
     address private vestingFactory;
 
@@ -102,6 +105,9 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
 
     /// @dev Constant representing the LEGION_BOUNCER unique ID
     bytes32 internal constant LEGION_BOUNCER_ID = bytes32("LEGION_BOUNCER");
+
+    /// @dev Constant representing the LEGION_FEE_RECEIVER unique ID
+    bytes32 internal constant LEGION_FEE_RECEIVER_ID = bytes32("LEGION_FEE_RECEIVER");
 
     /// @dev Constant representing the LEGION_VESTING_FACTORY unique ID
     bytes32 internal constant LEGION_VESTING_FACTORY_ID = bytes32("LEGION_VESTING_FACTORY");
@@ -148,6 +154,7 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
 
         /// Cache Legion addresses from `LegionAddressRegistry`
         legionBouncer = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_BOUNCER_ID);
+        legionFeeReceiver = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_FEE_RECEIVER_ID);
         vestingFactory = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_VESTING_FACTORY_ID);
 
         /// Accepting investment is set to true by default
@@ -300,8 +307,8 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
         /// Transfer the allocated amount of tokens for distribution
         IERC20(askToken).safeTransferFrom(msg.sender, address(this), amount);
 
-        /// Transfer the Legion fee to the Legion admin address
-        if (legionFee != 0) IERC20(askToken).safeTransferFrom(msg.sender, legionBouncer, legionFee);
+        /// Transfer the Legion fee to the Legion fee receiver address
+        if (legionFee != 0) IERC20(askToken).safeTransferFrom(msg.sender, legionFeeReceiver, legionFee);
     }
 
     /**
@@ -399,8 +406,8 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
         /// Transfer the amount to the Project's address
         IERC20(bidToken).safeTransfer(msg.sender, (amount - legionFee));
 
-        /// Transfer the Legion fee to the Legion admin address
-        if (legionFee != 0) IERC20(bidToken).safeTransfer(legionBouncer, legionFee);
+        /// Transfer the Legion fee to the Legion fee receiver address
+        if (legionFee != 0) IERC20(bidToken).safeTransfer(legionFeeReceiver, legionFee);
     }
 
     /**
@@ -643,7 +650,7 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
         if (
             _preLiquidSaleConfig.bidToken == address(0) || _preLiquidSaleConfig.projectAdmin == address(0)
                 || _preLiquidSaleConfig.addressRegistry == address(0) || legionBouncer == address(0)
-                || vestingFactory == address(0)
+                || legionFeeReceiver == address(0) || vestingFactory == address(0)
         ) revert ZeroAddressProvided();
 
         /// Check for zero values provided

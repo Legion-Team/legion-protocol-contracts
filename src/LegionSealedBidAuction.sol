@@ -68,6 +68,7 @@ contract LegionSealedBidAuction is LegionBaseSale, ILegionSealedBidAuction {
         /// Cache Legion addresses from `LegionAddressRegistry`
         legionBouncer = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_BOUNCER_ID);
         legionSigner = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_SIGNER_ID);
+        legionFeeReceiver = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_FEE_RECEIVER_ID);
         vestingFactory = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_VESTING_FACTORY_ID);
 
         /// Calculate and set startTime, endTime and refundEndTime
@@ -270,7 +271,7 @@ contract LegionSealedBidAuction is LegionBaseSale, ILegionSealedBidAuction {
         if (
             _sealedBidAuctionConfig.bidToken == address(0) || _sealedBidAuctionConfig.projectAdmin == address(0)
                 || _sealedBidAuctionConfig.addressRegistry == address(0) || legionBouncer == address(0)
-                || legionSigner == address(0) || vestingFactory == address(0)
+                || legionSigner == address(0) || legionFeeReceiver == address(0) || vestingFactory == address(0)
         ) revert ZeroAddressProvided();
 
         /// Check for zero values provided

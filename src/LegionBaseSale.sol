@@ -65,11 +65,14 @@ abstract contract LegionBaseSale is ILegionBaseSale, Initializable {
     /// @dev The address of Legion's Address Registry contract.
     address internal addressRegistry;
 
-    /// @dev The admin address of Legion.
+    /// @dev The address of Legion bouncer.
     address internal legionBouncer;
 
     /// @dev The address of Legion signer.
     address internal legionSigner;
+
+    /// @dev The address of Legion fee receiver.
+    address internal legionFeeReceiver;
 
     /// @dev The address of Legion's Vesting Factory contract.
     address internal vestingFactory;
@@ -130,6 +133,9 @@ abstract contract LegionBaseSale is ILegionBaseSale, Initializable {
 
     /// @dev Constant representing the LEGION_SIGNER unique ID
     bytes32 internal constant LEGION_SIGNER_ID = bytes32("LEGION_SIGNER");
+
+    /// @dev Constant representing the LEGION_FEE_RECEIVER unique ID
+    bytes32 internal constant LEGION_FEE_RECEIVER_ID = bytes32("LEGION_FEE_RECEIVER");
 
     /// @dev Constant representing the LEGION_VESTING_FACTORY unique ID
     bytes32 internal constant LEGION_VESTING_FACTORY_ID = bytes32("LEGION_VESTING_FACTORY");
@@ -229,8 +235,8 @@ abstract contract LegionBaseSale is ILegionBaseSale, Initializable {
         /// Transfer the raised capital to the project owner
         IERC20(bidToken).safeTransfer(msg.sender, (_totalCapitalRaised - _legionFee));
 
-        /// Transfer the Legion fee to the Legion admin address
-        if (_legionFee != 0) IERC20(bidToken).safeTransfer(legionBouncer, _legionFee);
+        /// Transfer the Legion fee to the Legion fee receiver address
+        if (_legionFee != 0) IERC20(bidToken).safeTransfer(legionFeeReceiver, _legionFee);
     }
 
     /**
@@ -343,8 +349,8 @@ abstract contract LegionBaseSale is ILegionBaseSale, Initializable {
         /// Transfer the allocated amount of tokens for distribution
         IERC20(askToken).safeTransferFrom(msg.sender, address(this), amount);
 
-        /// Transfer the Legion fee to the Legion admin address
-        if (legionFee != 0) IERC20(askToken).safeTransferFrom(msg.sender, legionBouncer, legionFee);
+        /// Transfer the Legion fee to the Legion fee receiver address
+        if (legionFee != 0) IERC20(askToken).safeTransferFrom(msg.sender, legionFeeReceiver, legionFee);
     }
 
     /**
