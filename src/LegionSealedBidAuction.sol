@@ -58,18 +58,10 @@ contract LegionSealedBidAuction is LegionBaseSale, ILegionSealedBidAuction {
         legionFeeOnTokensSoldBps = sealedBidAuctionConfig.legionFeeOnTokensSoldBps;
         minimumPledgeAmount = sealedBidAuctionConfig.minimumPledgeAmount;
         publicKey = sealedBidAuctionConfig.publicKey;
-
-        /// Initialize sealed bid auction address configuration
         bidToken = sealedBidAuctionConfig.bidToken;
         askToken = sealedBidAuctionConfig.askToken;
         projectAdmin = sealedBidAuctionConfig.projectAdmin;
         addressRegistry = sealedBidAuctionConfig.addressRegistry;
-
-        /// Cache Legion addresses from `LegionAddressRegistry`
-        legionBouncer = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_BOUNCER_ID);
-        legionSigner = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_SIGNER_ID);
-        legionFeeReceiver = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_FEE_RECEIVER_ID);
-        vestingFactory = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_VESTING_FACTORY_ID);
 
         /// Calculate and set startTime, endTime and refundEndTime
         startTime = block.timestamp;
@@ -91,6 +83,12 @@ contract LegionSealedBidAuction is LegionBaseSale, ILegionSealedBidAuction {
 
         /// Verify if the sale configuration is valid
         _verifyValidConfig(sealedBidAuctionConfig);
+
+        /// Cache Legion addresses from `LegionAddressRegistry`
+        legionBouncer = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_BOUNCER_ID);
+        legionSigner = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_SIGNER_ID);
+        legionFeeReceiver = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_FEE_RECEIVER_ID);
+        vestingFactory = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_VESTING_FACTORY_ID);
     }
 
     /**
@@ -266,12 +264,11 @@ contract LegionSealedBidAuction is LegionBaseSale, ILegionSealedBidAuction {
      *
      * @param _sealedBidAuctionConfig The period and fee configuration for the sealed bid auction.
      */
-    function _verifyValidConfig(SealedBidAuctionConfig calldata _sealedBidAuctionConfig) private view {
+    function _verifyValidConfig(SealedBidAuctionConfig calldata _sealedBidAuctionConfig) private pure {
         /// Check for zero addresses provided
         if (
             _sealedBidAuctionConfig.bidToken == address(0) || _sealedBidAuctionConfig.projectAdmin == address(0)
-                || _sealedBidAuctionConfig.addressRegistry == address(0) || legionBouncer == address(0)
-                || legionSigner == address(0) || legionFeeReceiver == address(0) || vestingFactory == address(0)
+                || _sealedBidAuctionConfig.addressRegistry == address(0)
         ) revert ZeroAddressProvided();
 
         /// Check for zero values provided

@@ -7,6 +7,7 @@ import {Test, console2, Vm} from "forge-std/Test.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {ILegionPreLiquidSale} from "../src/interfaces/ILegionPreLiquidSale.sol";
 import {ILegionSaleFactory} from "../src/interfaces/ILegionSaleFactory.sol";
+import {LegionAddressRegistry} from "../src/LegionAddressRegistry.sol";
 import {LegionAccessControl} from "../src/LegionAccessControl.sol";
 import {LegionPreLiquidSale} from "../src/LegionPreLiquidSale.sol";
 import {LegionSaleFactory} from "../src/LegionSaleFactory.sol";
@@ -14,19 +15,20 @@ import {LegionVestingFactory} from "../src/LegionVestingFactory.sol";
 import {MockToken} from "../src/mocks/MockToken.sol";
 
 contract LegionPreLiquidSaleTest is Test {
-    ILegionPreLiquidSale.PreLiquidSaleConfig public preLiquidSaleConfig;
+    ILegionPreLiquidSale.PreLiquidSaleConfig preLiquidSaleConfig;
 
-    LegionPreLiquidSale public preLiquidSaleTemplate;
-    LegionSaleFactory public legionSaleFactory;
-    LegionVestingFactory public legionVestingFactory;
+    LegionAddressRegistry legionAddressRegistry;
+    LegionPreLiquidSale preLiquidSaleTemplate;
+    LegionSaleFactory legionSaleFactory;
+    LegionVestingFactory legionVestingFactory;
 
-    MockToken public bidToken;
-    MockToken public askToken;
+    MockToken bidToken;
+    MockToken askToken;
 
-    address public legionPreLiquidSaleInstance;
+    address legionPreLiquidSaleInstance;
     address awsBroadcaster = address(0x10);
     address legionEOA = address(0x01);
-    address legionAdmin = address(new LegionAccessControl(legionEOA, awsBroadcaster));
+    address legionBouncer = address(new LegionAccessControl(legionEOA, awsBroadcaster));
     address projectAdmin = address(0x02);
 
     address investor1 = address(0x03);
@@ -37,6 +39,7 @@ contract LegionPreLiquidSaleTest is Test {
 
     address nonLegionAdmin = address(0x08);
     address nonProjectAdmin = address(0x09);
+    address legionFeeReceiver = address(0x10);
 
     address nonOwner = address(0x03);
 
@@ -56,10 +59,12 @@ contract LegionPreLiquidSaleTest is Test {
 
     function setUp() public {
         preLiquidSaleTemplate = new LegionPreLiquidSale();
-        legionSaleFactory = new LegionSaleFactory(legionAdmin);
+        legionSaleFactory = new LegionSaleFactory(legionBouncer);
         legionVestingFactory = new LegionVestingFactory();
+        legionAddressRegistry = new LegionAddressRegistry(legionBouncer);
         bidToken = new MockToken("USD Coin", "USDC");
         askToken = new MockToken("LFG Coin", "LFG");
+        prepareLegionAddressRegistry();
     }
 
     /**
@@ -76,8 +81,7 @@ contract LegionPreLiquidSaleTest is Test {
             saftMerkleRoot: _preLiquidSaleConfig.saftMerkleRoot,
             bidToken: _preLiquidSaleConfig.bidToken,
             projectAdmin: _preLiquidSaleConfig.projectAdmin,
-            legionAdmin: _preLiquidSaleConfig.legionAdmin,
-            vestingFactory: _preLiquidSaleConfig.vestingFactory
+            addressRegistry: _preLiquidSaleConfig.addressRegistry
         });
     }
 
@@ -96,11 +100,10 @@ contract LegionPreLiquidSaleTest is Test {
                 saftMerkleRoot: SAFT_MERKLE_ROOT,
                 bidToken: address(bidToken),
                 projectAdmin: projectAdmin,
-                legionAdmin: legionAdmin,
-                vestingFactory: address(legionVestingFactory)
+                addressRegistry: address(legionAddressRegistry)
             })
         );
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         legionPreLiquidSaleInstance = legionSaleFactory.createPreLiquidSale(preLiquidSaleConfig);
     }
 
@@ -108,7 +111,7 @@ contract LegionPreLiquidSaleTest is Test {
      * @dev Helper method to mint tokens to investors and approve the sale instance contract
      */
     function prepareMintAndApproveTokens() public {
-        vm.startPrank(legionAdmin);
+        vm.startPrank(legionBouncer);
 
         MockToken(bidToken).mint(investor1, 100000 * 1e18);
         MockToken(bidToken).mint(investor2, 100000 * 1e18);
@@ -140,6 +143,19 @@ contract LegionPreLiquidSaleTest is Test {
         vm.stopPrank();
     }
 
+    /**
+     * @dev Helper method to prepare LegionAddressRegistry
+     */
+    function prepareLegionAddressRegistry() public {
+        vm.startPrank(legionBouncer);
+
+        legionAddressRegistry.setLegionAddress(bytes32("LEGION_BOUNCER"), legionBouncer);
+        legionAddressRegistry.setLegionAddress(bytes32("LEGION_FEE_RECEIVER"), legionFeeReceiver);
+        legionAddressRegistry.setLegionAddress(bytes32("LEGION_VESTING_FACTORY"), address(legionVestingFactory));
+
+        vm.stopPrank();
+    }
+
     /* ========== INITIALIZATION TESTS ========== */
 
     /**
@@ -163,8 +179,7 @@ contract LegionPreLiquidSaleTest is Test {
         assertEq(saleConfig.saftMerkleRoot, SAFT_MERKLE_ROOT);
         assertEq(saleConfig.bidToken, address(bidToken));
         assertEq(saleConfig.projectAdmin, projectAdmin);
-        assertEq(saleConfig.legionAdmin, legionAdmin);
-        assertEq(saleConfig.vestingFactory, address(legionVestingFactory));
+        assertEq(saleConfig.addressRegistry, address(legionAddressRegistry));
 
         assertEq(saleStatus.askToken, address(0));
         assertEq(saleStatus.vestingStartTime, 0);
@@ -205,8 +220,7 @@ contract LegionPreLiquidSaleTest is Test {
                 saftMerkleRoot: SAFT_MERKLE_ROOT,
                 bidToken: address(bidToken),
                 projectAdmin: projectAdmin,
-                legionAdmin: legionAdmin,
-                vestingFactory: address(legionVestingFactory)
+                addressRegistry: address(legionAddressRegistry)
             })
         );
 
@@ -235,8 +249,7 @@ contract LegionPreLiquidSaleTest is Test {
                 saftMerkleRoot: SAFT_MERKLE_ROOT,
                 bidToken: address(bidToken),
                 projectAdmin: projectAdmin,
-                legionAdmin: legionAdmin,
-                vestingFactory: address(legionVestingFactory)
+                addressRegistry: address(legionAddressRegistry)
             })
         );
 
@@ -263,8 +276,7 @@ contract LegionPreLiquidSaleTest is Test {
                 saftMerkleRoot: SAFT_MERKLE_ROOT,
                 bidToken: address(0),
                 projectAdmin: address(0),
-                legionAdmin: address(0),
-                vestingFactory: address(0)
+                addressRegistry: address(0)
             })
         );
 
@@ -272,7 +284,7 @@ contract LegionPreLiquidSaleTest is Test {
         vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.ZeroAddressProvided.selector));
 
         // Act
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         legionSaleFactory.createPreLiquidSale(preLiquidSaleConfig);
     }
 
@@ -292,8 +304,7 @@ contract LegionPreLiquidSaleTest is Test {
                 saftMerkleRoot: 0,
                 bidToken: address(bidToken),
                 projectAdmin: projectAdmin,
-                legionAdmin: legionAdmin,
-                vestingFactory: address(legionVestingFactory)
+                addressRegistry: address(legionAddressRegistry)
             })
         );
 
@@ -301,7 +312,7 @@ contract LegionPreLiquidSaleTest is Test {
         vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.ZeroValueProvided.selector));
 
         // Act
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         legionSaleFactory.createPreLiquidSale(preLiquidSaleConfig);
     }
 
@@ -321,8 +332,7 @@ contract LegionPreLiquidSaleTest is Test {
                 saftMerkleRoot: SAFT_MERKLE_ROOT,
                 bidToken: address(bidToken),
                 projectAdmin: projectAdmin,
-                legionAdmin: legionAdmin,
-                vestingFactory: address(legionVestingFactory)
+                addressRegistry: address(legionAddressRegistry)
             })
         );
 
@@ -330,7 +340,7 @@ contract LegionPreLiquidSaleTest is Test {
         vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.InvalidPeriodConfig.selector));
 
         // Act
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         legionSaleFactory.createPreLiquidSale(preLiquidSaleConfig);
     }
 
@@ -779,7 +789,7 @@ contract LegionPreLiquidSaleTest is Test {
         vm.warp(1 + 1 days);
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.NotCalledByProjectAdmin.selector));
+        vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.NotCalledByProject.selector));
 
         // Act
         vm.prank(nonProjectAdmin);
@@ -821,7 +831,7 @@ contract LegionPreLiquidSaleTest is Test {
         );
 
         // Act
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).publishTgeDetails(
             address(askToken), 1000000 * 1e18, (block.timestamp + TWO_WEEKS + 2), 20000 * 1e18
         );
@@ -858,7 +868,7 @@ contract LegionPreLiquidSaleTest is Test {
         vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.SaleIsCanceled.selector));
 
         // Act
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).publishTgeDetails(
             address(askToken), 1000000 * 1e18, (block.timestamp + TWO_WEEKS + 2), 20000 * 1e18
         );
@@ -891,7 +901,7 @@ contract LegionPreLiquidSaleTest is Test {
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.NotCalledByLegionAdmin.selector));
+        vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.NotCalledByLegion.selector));
 
         // Act
         vm.prank(nonLegionAdmin);
@@ -930,7 +940,7 @@ contract LegionPreLiquidSaleTest is Test {
         vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.InvalidTotalSupply.selector));
 
         // Act
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).publishTgeDetails(
             address(askToken), 100000 * 1e18, (block.timestamp + TWO_WEEKS + 2), 20000 * 1e18
         );
@@ -964,7 +974,7 @@ contract LegionPreLiquidSaleTest is Test {
 
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).publishTgeDetails(
             address(askToken), 1000000 * 1e18, (block.timestamp + TWO_WEEKS + 2), 20000 * 1e18
         );
@@ -1004,7 +1014,7 @@ contract LegionPreLiquidSaleTest is Test {
 
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).publishTgeDetails(
             address(askToken), 1000000 * 1e18, (block.timestamp + TWO_WEEKS + 2), 20000 * 1e18
         );
@@ -1046,7 +1056,7 @@ contract LegionPreLiquidSaleTest is Test {
 
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).publishTgeDetails(
             address(askToken), 1000000 * 1e18, (block.timestamp + TWO_WEEKS + 2), 20000 * 1e18
         );
@@ -1122,7 +1132,7 @@ contract LegionPreLiquidSaleTest is Test {
 
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).publishTgeDetails(
             address(askToken), 1000000 * 1e18, (block.timestamp + TWO_WEEKS + 2), 20000 * 1e18
         );
@@ -1161,7 +1171,7 @@ contract LegionPreLiquidSaleTest is Test {
 
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).publishTgeDetails(
             address(askToken), 1000000 * 1e18, (block.timestamp + TWO_WEEKS + 2), 20000 * 1e18
         );
@@ -1200,11 +1210,13 @@ contract LegionPreLiquidSaleTest is Test {
 
         // Assert
         vm.expectEmit();
-        emit ILegionPreLiquidSale.EmergencyWithdraw(legionAdmin, address(bidToken), 1000 * 1e18);
+        emit ILegionPreLiquidSale.EmergencyWithdraw(legionBouncer, address(bidToken), 1000 * 1e18);
 
         // Act
-        vm.prank(legionAdmin);
-        ILegionPreLiquidSale(legionPreLiquidSaleInstance).emergencyWithdraw(legionAdmin, address(bidToken), 1000 * 1e18);
+        vm.prank(legionBouncer);
+        ILegionPreLiquidSale(legionPreLiquidSaleInstance).emergencyWithdraw(
+            legionBouncer, address(bidToken), 1000 * 1e18
+        );
     }
 
     /**
@@ -1232,7 +1244,7 @@ contract LegionPreLiquidSaleTest is Test {
         );
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.NotCalledByLegionAdmin.selector));
+        vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.NotCalledByLegion.selector));
 
         // Act
         vm.prank(projectAdmin);
@@ -1376,7 +1388,7 @@ contract LegionPreLiquidSaleTest is Test {
         vm.warp(block.timestamp + 1 days);
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.NotCalledByProjectAdmin.selector));
+        vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.NotCalledByProject.selector));
 
         // Act
         vm.prank(nonProjectAdmin);
@@ -1595,7 +1607,7 @@ contract LegionPreLiquidSaleTest is Test {
         vm.warp(block.timestamp + 1);
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.NotCalledByProjectAdmin.selector));
+        vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.NotCalledByProject.selector));
 
         // Act
         vm.prank(nonProjectAdmin);
@@ -1925,7 +1937,7 @@ contract LegionPreLiquidSaleTest is Test {
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).cancelSale();
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.NotCalledByProjectAdmin.selector));
+        vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.NotCalledByProject.selector));
 
         // Act
         vm.prank(nonProjectAdmin);
@@ -1944,7 +1956,7 @@ contract LegionPreLiquidSaleTest is Test {
 
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).publishTgeDetails(
             address(askToken), 1000000 * 1e18, (block.timestamp + TWO_WEEKS + 2), 20000 * 1e18
         );
@@ -2026,7 +2038,7 @@ contract LegionPreLiquidSaleTest is Test {
 
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).publishTgeDetails(
             address(askToken), 1000000 * 1e18, (block.timestamp + TWO_WEEKS + 2), 20000 * 1e18
         );
@@ -2072,7 +2084,7 @@ contract LegionPreLiquidSaleTest is Test {
 
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).publishTgeDetails(
             address(askToken), 1000000 * 1e18, (block.timestamp + TWO_WEEKS + 2), 20000 * 1e18
         );
@@ -2114,7 +2126,7 @@ contract LegionPreLiquidSaleTest is Test {
 
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).publishTgeDetails(
             address(askToken), 1000000 * 1e18, (block.timestamp + TWO_WEEKS + 2), 20000 * 1e18
         );
@@ -2153,7 +2165,7 @@ contract LegionPreLiquidSaleTest is Test {
 
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).publishTgeDetails(
             address(askToken), 1000000 * 1e18, (block.timestamp + TWO_WEEKS + 2), 20000 * 1e18
         );
@@ -2200,7 +2212,7 @@ contract LegionPreLiquidSaleTest is Test {
 
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).publishTgeDetails(
             address(askToken), 1000000 * 1e18, (block.timestamp + TWO_WEEKS + 2), 20000 * 1e18
         );
@@ -2247,7 +2259,7 @@ contract LegionPreLiquidSaleTest is Test {
 
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).publishTgeDetails(
             address(askToken), 1000000 * 1e18, (block.timestamp + TWO_WEEKS + 2), 20000 * 1e18
         );
@@ -2295,7 +2307,7 @@ contract LegionPreLiquidSaleTest is Test {
         vm.warp(1);
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.NotCalledByProjectAdmin.selector));
+        vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.NotCalledByProject.selector));
 
         // Act
         vm.prank(nonProjectAdmin);
@@ -2312,7 +2324,7 @@ contract LegionPreLiquidSaleTest is Test {
 
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).publishTgeDetails(
             address(askToken), 1000000 * 1e18, (block.timestamp + TWO_WEEKS + 2), 20000 * 1e18
         );

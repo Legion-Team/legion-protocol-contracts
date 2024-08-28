@@ -69,12 +69,6 @@ contract LegionFixedPriceSale is LegionBaseSale, ILegionFixedPriceSale {
         projectAdmin = fixedPriceSaleConfig.projectAdmin;
         addressRegistry = fixedPriceSaleConfig.addressRegistry;
 
-        /// Cache Legion addresses from `LegionAddressRegistry`
-        legionBouncer = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_BOUNCER_ID);
-        legionSigner = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_SIGNER_ID);
-        legionFeeReceiver = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_FEE_RECEIVER_ID);
-        vestingFactory = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_VESTING_FACTORY_ID);
-
         /// Calculate and set prefundStartTime, prefundEndTime, startTime, endTime and refundEndTime
         prefundStartTime = block.timestamp;
         prefundEndTime = prefundStartTime + fixedPriceSaleConfig.prefundPeriodSeconds;
@@ -97,6 +91,12 @@ contract LegionFixedPriceSale is LegionBaseSale, ILegionFixedPriceSale {
 
         /// Verify if the sale configuration is valid
         _verifyValidConfig(fixedPriceSaleConfig);
+
+        /// Cache Legion addresses from `LegionAddressRegistry`
+        legionBouncer = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_BOUNCER_ID);
+        legionSigner = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_SIGNER_ID);
+        legionFeeReceiver = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_FEE_RECEIVER_ID);
+        vestingFactory = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_VESTING_FACTORY_ID);
     }
 
     /**
@@ -226,12 +226,11 @@ contract LegionFixedPriceSale is LegionBaseSale, ILegionFixedPriceSale {
      *
      * @param _fixedPriceSaleConfig The configuration for the fixed price sale.
      */
-    function _verifyValidConfig(FixedPriceSaleConfig calldata _fixedPriceSaleConfig) private view {
+    function _verifyValidConfig(FixedPriceSaleConfig calldata _fixedPriceSaleConfig) private pure {
         /// Check for zero addresses provided
         if (
             _fixedPriceSaleConfig.bidToken == address(0) || _fixedPriceSaleConfig.projectAdmin == address(0)
-                || _fixedPriceSaleConfig.addressRegistry == address(0) || legionBouncer == address(0)
-                || legionSigner == address(0) || legionFeeReceiver == address(0) || vestingFactory == address(0)
+                || _fixedPriceSaleConfig.addressRegistry == address(0)
         ) {
             revert ZeroAddressProvided();
         }

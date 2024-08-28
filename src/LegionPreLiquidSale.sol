@@ -152,16 +152,16 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
         projectAdmin = preLiquidSaleConfig.projectAdmin;
         addressRegistry = preLiquidSaleConfig.addressRegistry;
 
-        /// Cache Legion addresses from `LegionAddressRegistry`
-        legionBouncer = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_BOUNCER_ID);
-        legionFeeReceiver = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_FEE_RECEIVER_ID);
-        vestingFactory = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_VESTING_FACTORY_ID);
-
         /// Accepting investment is set to true by default
         investmentAccepted = true;
 
         /// Verify if the sale configuration is valid
         _verifyValidConfig(preLiquidSaleConfig);
+
+        /// Cache Legion addresses from `LegionAddressRegistry`
+        legionBouncer = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_BOUNCER_ID);
+        legionFeeReceiver = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_FEE_RECEIVER_ID);
+        vestingFactory = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_VESTING_FACTORY_ID);
     }
 
     /**
@@ -645,12 +645,11 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
      *
      * @param _preLiquidSaleConfig The configuration for the pre-liquid sale.
      */
-    function _verifyValidConfig(PreLiquidSaleConfig calldata _preLiquidSaleConfig) private view {
+    function _verifyValidConfig(PreLiquidSaleConfig calldata _preLiquidSaleConfig) private pure {
         /// Check for zero addresses provided
         if (
             _preLiquidSaleConfig.bidToken == address(0) || _preLiquidSaleConfig.projectAdmin == address(0)
-                || _preLiquidSaleConfig.addressRegistry == address(0) || legionBouncer == address(0)
-                || legionFeeReceiver == address(0) || vestingFactory == address(0)
+                || _preLiquidSaleConfig.addressRegistry == address(0)
         ) revert ZeroAddressProvided();
 
         /// Check for zero values provided

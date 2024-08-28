@@ -6,6 +6,7 @@ import {Test, console2, Vm} from "forge-std/Test.sol";
 import {ILegionBaseSale} from "../src/interfaces/ILegionBaseSale.sol";
 import {ILegionFixedPriceSale} from "../src/interfaces/ILegionFixedPriceSale.sol";
 import {ILegionSaleFactory} from "../src/interfaces/ILegionSaleFactory.sol";
+import {LegionAddressRegistry} from "../src/LegionAddressRegistry.sol";
 import {LegionAccessControl} from "../src/LegionAccessControl.sol";
 import {LegionFixedPriceSale} from "../src/LegionFixedPriceSale.sol";
 import {LegionSaleFactory} from "../src/LegionSaleFactory.sol";
@@ -20,20 +21,21 @@ contract LegionFixedPriceSaleTest is Test {
     using ECDSA for bytes32;
     using MessageHashUtils for bytes32;
 
-    ILegionFixedPriceSale.FixedPriceSalePeriodAndFeeConfig public salePeriodAndFeeConfig;
-    ILegionFixedPriceSale.FixedPriceSaleAddressConfig public saleAddressConfig;
-    LegionFixedPriceSale public fixedPriceSaleTemplate;
-    LegionSaleFactory public legionSaleFactory;
-    LegionVestingFactory public legionVestingFactory;
+    ILegionFixedPriceSale.FixedPriceSaleConfig saleConfig;
+    LegionFixedPriceSale fixedPriceSaleTemplate;
 
-    MockToken public bidToken;
-    MockToken public askToken;
+    LegionAddressRegistry legionAddressRegistry;
+    LegionSaleFactory legionSaleFactory;
+    LegionVestingFactory legionVestingFactory;
 
-    address public legionSaleInstance;
+    MockToken bidToken;
+    MockToken askToken;
+
+    address legionSaleInstance;
 
     address awsBroadcaster = address(0x10);
     address legionEOA = address(0x01);
-    address legionAdmin = address(new LegionAccessControl(legionEOA, awsBroadcaster));
+    address legionBouncer = address(new LegionAccessControl(legionEOA, awsBroadcaster));
     address projectAdmin = address(0x02);
 
     address investor1 = address(0x03);
@@ -44,6 +46,8 @@ contract LegionFixedPriceSaleTest is Test {
 
     address nonLegionAdmin = address(0x08);
     address nonProjectAdmin = address(0x09);
+
+    address legionFeeReceiver = address(0x10);
 
     bytes signatureInv1;
     bytes signatureInv2;
@@ -79,40 +83,34 @@ contract LegionFixedPriceSaleTest is Test {
 
     function setUp() public {
         fixedPriceSaleTemplate = new LegionFixedPriceSale();
-        legionSaleFactory = new LegionSaleFactory(legionAdmin);
+        legionSaleFactory = new LegionSaleFactory(legionBouncer);
         legionVestingFactory = new LegionVestingFactory();
+        legionAddressRegistry = new LegionAddressRegistry(legionBouncer);
         bidToken = new MockToken("USD Coin", "USDC");
         askToken = new MockToken("LFG Coin", "LFG");
+        prepareLegionAddressRegistry();
     }
 
     /**
      * @dev Helper method to set the fixed price sale configuration
      */
-    function setSaleConfig(
-        ILegionFixedPriceSale.FixedPriceSalePeriodAndFeeConfig memory _salePeriodAndFeeConfig,
-        ILegionFixedPriceSale.FixedPriceSaleAddressConfig memory _saleAddressConfig
-    ) public {
-        salePeriodAndFeeConfig = ILegionFixedPriceSale.FixedPriceSalePeriodAndFeeConfig({
-            prefundPeriodSeconds: _salePeriodAndFeeConfig.prefundPeriodSeconds,
-            prefundAllocationPeriodSeconds: _salePeriodAndFeeConfig.prefundAllocationPeriodSeconds,
-            salePeriodSeconds: _salePeriodAndFeeConfig.salePeriodSeconds,
-            refundPeriodSeconds: _salePeriodAndFeeConfig.refundPeriodSeconds,
-            lockupPeriodSeconds: _salePeriodAndFeeConfig.lockupPeriodSeconds,
-            vestingDurationSeconds: _salePeriodAndFeeConfig.vestingDurationSeconds,
-            vestingCliffDurationSeconds: _salePeriodAndFeeConfig.vestingCliffDurationSeconds,
-            legionFeeOnCapitalRaisedBps: _salePeriodAndFeeConfig.legionFeeOnCapitalRaisedBps,
-            legionFeeOnTokensSoldBps: _salePeriodAndFeeConfig.legionFeeOnTokensSoldBps,
-            minimumPledgeAmount: _salePeriodAndFeeConfig.minimumPledgeAmount,
-            tokenPrice: _salePeriodAndFeeConfig.tokenPrice
-        });
-
-        saleAddressConfig = ILegionFixedPriceSale.FixedPriceSaleAddressConfig({
-            bidToken: _saleAddressConfig.bidToken,
-            askToken: _saleAddressConfig.askToken,
-            projectAdmin: _saleAddressConfig.projectAdmin,
-            legionAdmin: _saleAddressConfig.legionAdmin,
-            legionSigner: _saleAddressConfig.legionSigner,
-            vestingFactory: _saleAddressConfig.vestingFactory
+    function setSaleConfig(ILegionFixedPriceSale.FixedPriceSaleConfig memory _saleConfig) public {
+        saleConfig = ILegionFixedPriceSale.FixedPriceSaleConfig({
+            prefundPeriodSeconds: _saleConfig.prefundPeriodSeconds,
+            prefundAllocationPeriodSeconds: _saleConfig.prefundAllocationPeriodSeconds,
+            salePeriodSeconds: _saleConfig.salePeriodSeconds,
+            refundPeriodSeconds: _saleConfig.refundPeriodSeconds,
+            lockupPeriodSeconds: _saleConfig.lockupPeriodSeconds,
+            vestingDurationSeconds: _saleConfig.vestingDurationSeconds,
+            vestingCliffDurationSeconds: _saleConfig.vestingCliffDurationSeconds,
+            legionFeeOnCapitalRaisedBps: _saleConfig.legionFeeOnCapitalRaisedBps,
+            legionFeeOnTokensSoldBps: _saleConfig.legionFeeOnTokensSoldBps,
+            minimumPledgeAmount: _saleConfig.minimumPledgeAmount,
+            tokenPrice: _saleConfig.tokenPrice,
+            bidToken: _saleConfig.bidToken,
+            askToken: _saleConfig.askToken,
+            projectAdmin: _saleConfig.projectAdmin,
+            addressRegistry: _saleConfig.addressRegistry
         });
     }
 
@@ -121,7 +119,7 @@ contract LegionFixedPriceSaleTest is Test {
      */
     function prepareCreateLegionFixedPriceSale() public {
         setSaleConfig(
-            ILegionFixedPriceSale.FixedPriceSalePeriodAndFeeConfig({
+            ILegionFixedPriceSale.FixedPriceSaleConfig({
                 prefundPeriodSeconds: PREFUND_PERIOD_SECONDS,
                 prefundAllocationPeriodSeconds: PREFUND_ALLOCATION_PERIOD_SECONDS,
                 salePeriodSeconds: SALE_PERIOD_SECONDS,
@@ -132,26 +130,22 @@ contract LegionFixedPriceSaleTest is Test {
                 legionFeeOnCapitalRaisedBps: LEGION_FEE_CAPITAL_RAISED_BPS,
                 legionFeeOnTokensSoldBps: LEGION_FEE_TOKENS_SOLD_BPS,
                 minimumPledgeAmount: MINIMUM_PLEDGE_AMOUNT,
-                tokenPrice: TOKEN_PRICE
-            }),
-            ILegionFixedPriceSale.FixedPriceSaleAddressConfig({
+                tokenPrice: TOKEN_PRICE,
                 bidToken: address(bidToken),
                 askToken: address(askToken),
                 projectAdmin: projectAdmin,
-                legionAdmin: legionAdmin,
-                legionSigner: vm.addr(legionSignerPK),
-                vestingFactory: address(legionVestingFactory)
+                addressRegistry: address(legionAddressRegistry)
             })
         );
-        vm.prank(legionAdmin);
-        legionSaleInstance = legionSaleFactory.createFixedPriceSale(salePeriodAndFeeConfig, saleAddressConfig);
+        vm.prank(legionBouncer);
+        legionSaleInstance = legionSaleFactory.createFixedPriceSale(saleConfig);
     }
 
     /**
      * @dev Helper method to mint tokens to investors and approve the sale instance contract
      */
     function prepareMintAndApproveInvestorTokens() public {
-        vm.startPrank(legionAdmin);
+        vm.startPrank(legionBouncer);
         MockToken(bidToken).mint(investor1, 1000 * 1e18);
         MockToken(bidToken).mint(investor2, 2000 * 1e18);
         MockToken(bidToken).mint(investor3, 3000 * 1e18);
@@ -230,6 +224,20 @@ contract LegionFixedPriceSaleTest is Test {
     }
 
     /**
+     * @dev Helper method to prepare LegionAddressRegistry
+     */
+    function prepareLegionAddressRegistry() public {
+        vm.startPrank(legionBouncer);
+
+        legionAddressRegistry.setLegionAddress(bytes32("LEGION_BOUNCER"), legionBouncer);
+        legionAddressRegistry.setLegionAddress(bytes32("LEGION_SIGNER"), vm.addr(legionSignerPK));
+        legionAddressRegistry.setLegionAddress(bytes32("LEGION_FEE_RECEIVER"), legionFeeReceiver);
+        legionAddressRegistry.setLegionAddress(bytes32("LEGION_VESTING_FACTORY"), address(legionVestingFactory));
+
+        vm.stopPrank();
+    }
+
+    /**
      * @dev Helper method to get sale start time
      */
     function startTime() public view returns (uint256) {
@@ -281,30 +289,25 @@ contract LegionFixedPriceSaleTest is Test {
     function test_createFixedPriceSale_successfullyDeployedWithValidParameters() public {
         // Arrange & Act
         prepareCreateLegionFixedPriceSale();
-        ILegionFixedPriceSale.FixedPriceSalePeriodAndFeeConfig memory periodAndFeeConfig =
-            LegionFixedPriceSale(payable(legionSaleInstance)).salePeriodAndFeeConfiguration();
-
-        ILegionFixedPriceSale.FixedPriceSaleAddressConfig memory addressConfig =
-            LegionFixedPriceSale(payable(legionSaleInstance)).saleAddressConfiguration();
+        ILegionFixedPriceSale.FixedPriceSaleConfig memory fixedPriceSaleConfig =
+            LegionFixedPriceSale(payable(legionSaleInstance)).saleConfiguration();
 
         // Assert
-        assertEq(periodAndFeeConfig.prefundPeriodSeconds, PREFUND_PERIOD_SECONDS);
-        assertEq(periodAndFeeConfig.prefundAllocationPeriodSeconds, PREFUND_ALLOCATION_PERIOD_SECONDS);
-        assertEq(periodAndFeeConfig.salePeriodSeconds, SALE_PERIOD_SECONDS);
-        assertEq(periodAndFeeConfig.refundPeriodSeconds, REFUND_PERIOD_SECONDS);
-        assertEq(periodAndFeeConfig.lockupPeriodSeconds, LOCKUP_PERIOD_SECONDS);
-        assertEq(periodAndFeeConfig.vestingDurationSeconds, VESTING_DURATION_SECONDS);
-        assertEq(periodAndFeeConfig.vestingCliffDurationSeconds, VESTING_CLIFF_DURATION_SECONDS);
-        assertEq(periodAndFeeConfig.legionFeeOnCapitalRaisedBps, LEGION_FEE_CAPITAL_RAISED_BPS);
-        assertEq(periodAndFeeConfig.legionFeeOnTokensSoldBps, LEGION_FEE_TOKENS_SOLD_BPS);
-        assertEq(periodAndFeeConfig.tokenPrice, TOKEN_PRICE);
+        assertEq(fixedPriceSaleConfig.prefundPeriodSeconds, PREFUND_PERIOD_SECONDS);
+        assertEq(fixedPriceSaleConfig.prefundAllocationPeriodSeconds, PREFUND_ALLOCATION_PERIOD_SECONDS);
+        assertEq(fixedPriceSaleConfig.salePeriodSeconds, SALE_PERIOD_SECONDS);
+        assertEq(fixedPriceSaleConfig.refundPeriodSeconds, REFUND_PERIOD_SECONDS);
+        assertEq(fixedPriceSaleConfig.lockupPeriodSeconds, LOCKUP_PERIOD_SECONDS);
+        assertEq(fixedPriceSaleConfig.vestingDurationSeconds, VESTING_DURATION_SECONDS);
+        assertEq(fixedPriceSaleConfig.vestingCliffDurationSeconds, VESTING_CLIFF_DURATION_SECONDS);
+        assertEq(fixedPriceSaleConfig.legionFeeOnCapitalRaisedBps, LEGION_FEE_CAPITAL_RAISED_BPS);
+        assertEq(fixedPriceSaleConfig.legionFeeOnTokensSoldBps, LEGION_FEE_TOKENS_SOLD_BPS);
+        assertEq(fixedPriceSaleConfig.tokenPrice, TOKEN_PRICE);
 
-        assertEq(addressConfig.bidToken, address(bidToken));
-        assertEq(addressConfig.askToken, address(askToken));
-        assertEq(addressConfig.projectAdmin, projectAdmin);
-        assertEq(addressConfig.legionAdmin, legionAdmin);
-        assertEq(addressConfig.legionSigner, vm.addr(legionSignerPK));
-        assertEq(addressConfig.vestingFactory, address(legionVestingFactory));
+        assertEq(fixedPriceSaleConfig.bidToken, address(bidToken));
+        assertEq(fixedPriceSaleConfig.askToken, address(askToken));
+        assertEq(fixedPriceSaleConfig.projectAdmin, projectAdmin);
+        assertEq(fixedPriceSaleConfig.addressRegistry, address(legionAddressRegistry));
     }
 
     /**
@@ -318,7 +321,7 @@ contract LegionFixedPriceSaleTest is Test {
         vm.expectRevert();
 
         // Act
-        LegionFixedPriceSale(payable(legionSaleInstance)).initialize(salePeriodAndFeeConfig, saleAddressConfig);
+        LegionFixedPriceSale(payable(legionSaleInstance)).initialize(saleConfig);
     }
 
     /**
@@ -327,7 +330,7 @@ contract LegionFixedPriceSaleTest is Test {
     function test_initialize_revertInitializeImplementation() public {
         // Arrange
         setSaleConfig(
-            ILegionFixedPriceSale.FixedPriceSalePeriodAndFeeConfig({
+            ILegionFixedPriceSale.FixedPriceSaleConfig({
                 prefundPeriodSeconds: PREFUND_PERIOD_SECONDS,
                 prefundAllocationPeriodSeconds: PREFUND_ALLOCATION_PERIOD_SECONDS,
                 salePeriodSeconds: SALE_PERIOD_SECONDS,
@@ -338,15 +341,11 @@ contract LegionFixedPriceSaleTest is Test {
                 legionFeeOnCapitalRaisedBps: LEGION_FEE_CAPITAL_RAISED_BPS,
                 legionFeeOnTokensSoldBps: LEGION_FEE_TOKENS_SOLD_BPS,
                 minimumPledgeAmount: MINIMUM_PLEDGE_AMOUNT,
-                tokenPrice: TOKEN_PRICE
-            }),
-            ILegionFixedPriceSale.FixedPriceSaleAddressConfig({
+                tokenPrice: TOKEN_PRICE,
                 bidToken: address(bidToken),
                 askToken: address(askToken),
                 projectAdmin: projectAdmin,
-                legionAdmin: legionAdmin,
-                legionSigner: vm.addr(legionSignerPK),
-                vestingFactory: address(legionVestingFactory)
+                addressRegistry: address(legionAddressRegistry)
             })
         );
 
@@ -356,9 +355,7 @@ contract LegionFixedPriceSaleTest is Test {
         vm.expectRevert(abi.encodeWithSelector(Initializable.InvalidInitialization.selector));
 
         // Act
-        LegionFixedPriceSale(payable(fixedPriceSaleImplementation)).initialize(
-            salePeriodAndFeeConfig, saleAddressConfig
-        );
+        LegionFixedPriceSale(payable(fixedPriceSaleImplementation)).initialize(saleConfig);
     }
 
     /**
@@ -367,7 +364,7 @@ contract LegionFixedPriceSaleTest is Test {
     function test_initialize_revertInitializeTemplate() public {
         // Arrange
         setSaleConfig(
-            ILegionFixedPriceSale.FixedPriceSalePeriodAndFeeConfig({
+            ILegionFixedPriceSale.FixedPriceSaleConfig({
                 prefundPeriodSeconds: PREFUND_PERIOD_SECONDS,
                 prefundAllocationPeriodSeconds: PREFUND_ALLOCATION_PERIOD_SECONDS,
                 salePeriodSeconds: SALE_PERIOD_SECONDS,
@@ -378,15 +375,11 @@ contract LegionFixedPriceSaleTest is Test {
                 legionFeeOnCapitalRaisedBps: LEGION_FEE_CAPITAL_RAISED_BPS,
                 legionFeeOnTokensSoldBps: LEGION_FEE_TOKENS_SOLD_BPS,
                 minimumPledgeAmount: MINIMUM_PLEDGE_AMOUNT,
-                tokenPrice: TOKEN_PRICE
-            }),
-            ILegionFixedPriceSale.FixedPriceSaleAddressConfig({
+                tokenPrice: TOKEN_PRICE,
                 bidToken: address(bidToken),
                 askToken: address(askToken),
                 projectAdmin: projectAdmin,
-                legionAdmin: legionAdmin,
-                legionSigner: vm.addr(legionSignerPK),
-                vestingFactory: address(legionVestingFactory)
+                addressRegistry: address(legionAddressRegistry)
             })
         );
 
@@ -394,7 +387,7 @@ contract LegionFixedPriceSaleTest is Test {
         vm.expectRevert(abi.encodeWithSelector(Initializable.InvalidInitialization.selector));
 
         // Act
-        LegionFixedPriceSale(fixedPriceSaleTemplate).initialize(salePeriodAndFeeConfig, saleAddressConfig);
+        LegionFixedPriceSale(fixedPriceSaleTemplate).initialize(saleConfig);
     }
 
     /**
@@ -403,7 +396,7 @@ contract LegionFixedPriceSaleTest is Test {
     function test_createFixedPriceSale_revertsWithZeroAddressProvided() public {
         // Arrange
         setSaleConfig(
-            ILegionFixedPriceSale.FixedPriceSalePeriodAndFeeConfig({
+            ILegionFixedPriceSale.FixedPriceSaleConfig({
                 prefundPeriodSeconds: PREFUND_PERIOD_SECONDS,
                 prefundAllocationPeriodSeconds: PREFUND_ALLOCATION_PERIOD_SECONDS,
                 salePeriodSeconds: SALE_PERIOD_SECONDS,
@@ -414,15 +407,11 @@ contract LegionFixedPriceSaleTest is Test {
                 legionFeeOnCapitalRaisedBps: LEGION_FEE_CAPITAL_RAISED_BPS,
                 legionFeeOnTokensSoldBps: LEGION_FEE_TOKENS_SOLD_BPS,
                 minimumPledgeAmount: MINIMUM_PLEDGE_AMOUNT,
-                tokenPrice: TOKEN_PRICE
-            }),
-            ILegionFixedPriceSale.FixedPriceSaleAddressConfig({
+                tokenPrice: TOKEN_PRICE,
                 bidToken: address(0),
                 askToken: address(0),
                 projectAdmin: address(0),
-                legionAdmin: address(0),
-                legionSigner: address(0),
-                vestingFactory: address(0)
+                addressRegistry: address(0)
             })
         );
 
@@ -430,8 +419,8 @@ contract LegionFixedPriceSaleTest is Test {
         vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.ZeroAddressProvided.selector));
 
         // Act
-        vm.prank(legionAdmin);
-        legionSaleFactory.createFixedPriceSale(salePeriodAndFeeConfig, saleAddressConfig);
+        vm.prank(legionBouncer);
+        legionSaleFactory.createFixedPriceSale(saleConfig);
     }
 
     /**
@@ -440,7 +429,7 @@ contract LegionFixedPriceSaleTest is Test {
     function test_createFixedPriceSale_revertsWithZeroValueProvided() public {
         // Arrange
         setSaleConfig(
-            ILegionFixedPriceSale.FixedPriceSalePeriodAndFeeConfig({
+            ILegionFixedPriceSale.FixedPriceSaleConfig({
                 prefundPeriodSeconds: 0,
                 prefundAllocationPeriodSeconds: 0,
                 salePeriodSeconds: 0,
@@ -451,15 +440,11 @@ contract LegionFixedPriceSaleTest is Test {
                 legionFeeOnCapitalRaisedBps: 0,
                 legionFeeOnTokensSoldBps: 0,
                 minimumPledgeAmount: 0,
-                tokenPrice: 0
-            }),
-            ILegionFixedPriceSale.FixedPriceSaleAddressConfig({
+                tokenPrice: 0,
                 bidToken: address(bidToken),
                 askToken: address(askToken),
                 projectAdmin: projectAdmin,
-                legionAdmin: legionAdmin,
-                legionSigner: vm.addr(legionSignerPK),
-                vestingFactory: address(legionVestingFactory)
+                addressRegistry: address(legionAddressRegistry)
             })
         );
 
@@ -467,8 +452,8 @@ contract LegionFixedPriceSaleTest is Test {
         vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.ZeroValueProvided.selector));
 
         // Act
-        vm.prank(legionAdmin);
-        legionSaleFactory.createFixedPriceSale(salePeriodAndFeeConfig, saleAddressConfig);
+        vm.prank(legionBouncer);
+        legionSaleFactory.createFixedPriceSale(saleConfig);
     }
 
     /**
@@ -477,7 +462,7 @@ contract LegionFixedPriceSaleTest is Test {
     function test_createFixedPriceSale_revertsWithInvalidPeriodConfigTooLong() public {
         // Arrange
         setSaleConfig(
-            ILegionFixedPriceSale.FixedPriceSalePeriodAndFeeConfig({
+            ILegionFixedPriceSale.FixedPriceSaleConfig({
                 prefundPeriodSeconds: THREE_MONTHS + 1,
                 prefundAllocationPeriodSeconds: TWO_WEEKS + 1,
                 salePeriodSeconds: THREE_MONTHS + 1,
@@ -488,15 +473,11 @@ contract LegionFixedPriceSaleTest is Test {
                 legionFeeOnCapitalRaisedBps: LEGION_FEE_CAPITAL_RAISED_BPS,
                 legionFeeOnTokensSoldBps: LEGION_FEE_TOKENS_SOLD_BPS,
                 minimumPledgeAmount: MINIMUM_PLEDGE_AMOUNT,
-                tokenPrice: TOKEN_PRICE
-            }),
-            ILegionFixedPriceSale.FixedPriceSaleAddressConfig({
+                tokenPrice: TOKEN_PRICE,
                 bidToken: address(bidToken),
                 askToken: address(askToken),
                 projectAdmin: projectAdmin,
-                legionAdmin: legionAdmin,
-                legionSigner: vm.addr(legionSignerPK),
-                vestingFactory: address(legionVestingFactory)
+                addressRegistry: address(legionAddressRegistry)
             })
         );
 
@@ -504,8 +485,8 @@ contract LegionFixedPriceSaleTest is Test {
         vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.InvalidPeriodConfig.selector));
 
         // Act
-        vm.prank(legionAdmin);
-        legionSaleFactory.createFixedPriceSale(salePeriodAndFeeConfig, saleAddressConfig);
+        vm.prank(legionBouncer);
+        legionSaleFactory.createFixedPriceSale(saleConfig);
     }
 
     /**
@@ -514,7 +495,7 @@ contract LegionFixedPriceSaleTest is Test {
     function test_createFixedPriceSale_revertsWithInvalidPeriodConfigTooShort() public {
         // Arrange
         setSaleConfig(
-            ILegionFixedPriceSale.FixedPriceSalePeriodAndFeeConfig({
+            ILegionFixedPriceSale.FixedPriceSaleConfig({
                 prefundPeriodSeconds: ONE_HOUR - 1,
                 prefundAllocationPeriodSeconds: ONE_HOUR - 1,
                 salePeriodSeconds: ONE_HOUR - 1,
@@ -525,15 +506,11 @@ contract LegionFixedPriceSaleTest is Test {
                 legionFeeOnCapitalRaisedBps: LEGION_FEE_CAPITAL_RAISED_BPS,
                 legionFeeOnTokensSoldBps: LEGION_FEE_TOKENS_SOLD_BPS,
                 minimumPledgeAmount: MINIMUM_PLEDGE_AMOUNT,
-                tokenPrice: TOKEN_PRICE
-            }),
-            ILegionFixedPriceSale.FixedPriceSaleAddressConfig({
+                tokenPrice: TOKEN_PRICE,
                 bidToken: address(bidToken),
                 askToken: address(askToken),
                 projectAdmin: projectAdmin,
-                legionAdmin: legionAdmin,
-                legionSigner: vm.addr(legionSignerPK),
-                vestingFactory: address(legionVestingFactory)
+                addressRegistry: address(legionAddressRegistry)
             })
         );
 
@@ -541,8 +518,8 @@ contract LegionFixedPriceSaleTest is Test {
         vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.InvalidPeriodConfig.selector));
 
         // Act
-        vm.prank(legionAdmin);
-        legionSaleFactory.createFixedPriceSale(salePeriodAndFeeConfig, saleAddressConfig);
+        vm.prank(legionBouncer);
+        legionSaleFactory.createFixedPriceSale(saleConfig);
     }
 
     /* ========== PLEDGE CAPITAL TESTS ========== */
@@ -592,7 +569,7 @@ contract LegionFixedPriceSaleTest is Test {
     function test_pledgeCapital_successfullyEmitsCapitalPledgedPrefund() public {
         // Arrange
         setSaleConfig(
-            ILegionFixedPriceSale.FixedPriceSalePeriodAndFeeConfig({
+            ILegionFixedPriceSale.FixedPriceSaleConfig({
                 prefundPeriodSeconds: PREFUND_PERIOD_SECONDS,
                 prefundAllocationPeriodSeconds: PREFUND_ALLOCATION_PERIOD_SECONDS,
                 salePeriodSeconds: SALE_PERIOD_SECONDS,
@@ -603,19 +580,15 @@ contract LegionFixedPriceSaleTest is Test {
                 legionFeeOnCapitalRaisedBps: LEGION_FEE_CAPITAL_RAISED_BPS,
                 legionFeeOnTokensSoldBps: LEGION_FEE_TOKENS_SOLD_BPS,
                 minimumPledgeAmount: MINIMUM_PLEDGE_AMOUNT,
-                tokenPrice: TOKEN_PRICE
-            }),
-            ILegionFixedPriceSale.FixedPriceSaleAddressConfig({
+                tokenPrice: TOKEN_PRICE,
                 bidToken: address(bidToken),
                 askToken: address(askToken),
                 projectAdmin: projectAdmin,
-                legionAdmin: legionAdmin,
-                legionSigner: vm.addr(legionSignerPK),
-                vestingFactory: address(legionVestingFactory)
+                addressRegistry: address(legionAddressRegistry)
             })
         );
-        vm.prank(legionAdmin);
-        legionSaleInstance = legionSaleFactory.createFixedPriceSale(salePeriodAndFeeConfig, saleAddressConfig);
+        vm.prank(legionBouncer);
+        legionSaleInstance = legionSaleFactory.createFixedPriceSale(saleConfig);
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
 
@@ -719,11 +692,11 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Assert
         vm.expectEmit();
-        emit ILegionBaseSale.EmergencyWithdraw(legionAdmin, address(bidToken), 1000 * 1e18);
+        emit ILegionBaseSale.EmergencyWithdraw(legionBouncer, address(bidToken), 1000 * 1e18);
 
         // Act
-        vm.prank(legionAdmin);
-        ILegionFixedPriceSale(legionSaleInstance).emergencyWithdraw(legionAdmin, address(bidToken), 1000 * 1e18);
+        vm.prank(legionBouncer);
+        ILegionFixedPriceSale(legionSaleInstance).emergencyWithdraw(legionBouncer, address(bidToken), 1000 * 1e18);
     }
 
     /**
@@ -741,7 +714,7 @@ contract LegionFixedPriceSaleTest is Test {
         ILegionFixedPriceSale(legionSaleInstance).pledgeCapital(1000 * 1e18, signatureInv1);
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.NotCalledByLegionAdmin.selector));
+        vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.NotCalledByLegion.selector));
 
         // Act
         vm.prank(projectAdmin);
@@ -929,7 +902,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
 
         // Assert
@@ -955,7 +928,7 @@ contract LegionFixedPriceSaleTest is Test {
         vm.warp(endTime());
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.NotCalledByProjectAdmin.selector));
+        vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.NotCalledByProject.selector));
 
         // Act
         vm.prank(investor1);
@@ -1058,7 +1031,7 @@ contract LegionFixedPriceSaleTest is Test {
         emit ILegionFixedPriceSale.SaleResultsPublished(claimTokensMerkleRoot, 4000 * 1e18);
 
         // Act
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
     }
 
@@ -1077,7 +1050,7 @@ contract LegionFixedPriceSaleTest is Test {
         vm.warp(refundEndTime() + 1);
 
         // Arrange
-        vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.NotCalledByLegionAdmin.selector));
+        vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.NotCalledByLegion.selector));
 
         // Act
         vm.prank(nonLegionAdmin);
@@ -1098,14 +1071,14 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
 
         // Assert
         vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.TokensAlreadyAllocated.selector, 4000 * 1e18));
 
         // Act
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 3999 * 1e18);
     }
 
@@ -1127,7 +1100,7 @@ contract LegionFixedPriceSaleTest is Test {
         vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.RefundPeriodIsNotOver.selector));
 
         // Act
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
     }
 
@@ -1152,7 +1125,7 @@ contract LegionFixedPriceSaleTest is Test {
         vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.SaleIsCanceled.selector));
 
         // Act
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
     }
 
@@ -1177,7 +1150,7 @@ contract LegionFixedPriceSaleTest is Test {
         emit ILegionBaseSale.ExcessCapitalResultsPublished(excessCapitalMerkleRoot);
 
         // Act
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishExcessCapitalResults(excessCapitalMerkleRoot);
     }
 
@@ -1196,7 +1169,7 @@ contract LegionFixedPriceSaleTest is Test {
         vm.warp(endTime() + 1);
 
         // Arrange
-        vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.NotCalledByLegionAdmin.selector));
+        vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.NotCalledByLegion.selector));
 
         // Act
         vm.prank(nonLegionAdmin);
@@ -1217,7 +1190,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(endTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishExcessCapitalResults(excessCapitalMerkleRoot);
 
         // Assert
@@ -1228,7 +1201,7 @@ contract LegionFixedPriceSaleTest is Test {
         );
 
         // Act
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishExcessCapitalResults(excessCapitalMerkleRoot);
     }
 
@@ -1250,7 +1223,7 @@ contract LegionFixedPriceSaleTest is Test {
         vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.SaleHasNotEnded.selector));
 
         // Act
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishExcessCapitalResults(excessCapitalMerkleRoot);
     }
 
@@ -1275,7 +1248,7 @@ contract LegionFixedPriceSaleTest is Test {
         vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.SaleIsCanceled.selector));
 
         // Act
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishExcessCapitalResults(excessCapitalMerkleRoot);
     }
 
@@ -1295,7 +1268,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
 
         vm.startPrank(projectAdmin);
@@ -1326,7 +1299,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
 
         vm.startPrank(projectAdmin);
@@ -1348,7 +1321,7 @@ contract LegionFixedPriceSaleTest is Test {
     function test_supplyTokens_successfullyEmitsIfLegionFeeIsZero() public {
         // Arrange
         setSaleConfig(
-            ILegionFixedPriceSale.FixedPriceSalePeriodAndFeeConfig({
+            ILegionFixedPriceSale.FixedPriceSaleConfig({
                 prefundPeriodSeconds: PREFUND_PERIOD_SECONDS,
                 prefundAllocationPeriodSeconds: PREFUND_ALLOCATION_PERIOD_SECONDS,
                 salePeriodSeconds: SALE_PERIOD_SECONDS,
@@ -1359,19 +1332,15 @@ contract LegionFixedPriceSaleTest is Test {
                 legionFeeOnCapitalRaisedBps: LEGION_FEE_CAPITAL_RAISED_BPS,
                 legionFeeOnTokensSoldBps: 0,
                 minimumPledgeAmount: MINIMUM_PLEDGE_AMOUNT,
-                tokenPrice: TOKEN_PRICE
-            }),
-            ILegionFixedPriceSale.FixedPriceSaleAddressConfig({
+                tokenPrice: TOKEN_PRICE,
                 bidToken: address(bidToken),
                 askToken: address(askToken),
                 projectAdmin: projectAdmin,
-                legionAdmin: legionAdmin,
-                legionSigner: vm.addr(legionSignerPK),
-                vestingFactory: address(legionVestingFactory)
+                addressRegistry: address(legionAddressRegistry)
             })
         );
-        vm.prank(legionAdmin);
-        legionSaleInstance = legionSaleFactory.createFixedPriceSale(salePeriodAndFeeConfig, saleAddressConfig);
+        vm.prank(legionBouncer);
+        legionSaleInstance = legionSaleFactory.createFixedPriceSale(saleConfig);
 
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
@@ -1381,7 +1350,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
 
         vm.startPrank(projectAdmin);
@@ -1412,7 +1381,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
 
         vm.startPrank(nonProjectAdmin);
@@ -1421,7 +1390,7 @@ contract LegionFixedPriceSaleTest is Test {
         vm.stopPrank();
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.NotCalledByProjectAdmin.selector));
+        vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.NotCalledByProject.selector));
 
         // Act
         vm.prank(nonProjectAdmin);
@@ -1442,12 +1411,12 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
 
         vm.warp(lockupEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).cancelExpiredSale();
 
         vm.startPrank(projectAdmin);
@@ -1477,7 +1446,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
 
         vm.startPrank(projectAdmin);
@@ -1534,7 +1503,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
 
         vm.startPrank(projectAdmin);
@@ -1557,7 +1526,7 @@ contract LegionFixedPriceSaleTest is Test {
     function test_supplyTokens_revertsIfAskTokenUnavailable() public {
         // Arrange
         setSaleConfig(
-            ILegionFixedPriceSale.FixedPriceSalePeriodAndFeeConfig({
+            ILegionFixedPriceSale.FixedPriceSaleConfig({
                 prefundPeriodSeconds: PREFUND_PERIOD_SECONDS,
                 prefundAllocationPeriodSeconds: PREFUND_ALLOCATION_PERIOD_SECONDS,
                 salePeriodSeconds: SALE_PERIOD_SECONDS,
@@ -1568,19 +1537,15 @@ contract LegionFixedPriceSaleTest is Test {
                 legionFeeOnCapitalRaisedBps: LEGION_FEE_CAPITAL_RAISED_BPS,
                 legionFeeOnTokensSoldBps: LEGION_FEE_TOKENS_SOLD_BPS,
                 minimumPledgeAmount: MINIMUM_PLEDGE_AMOUNT,
-                tokenPrice: TOKEN_PRICE
-            }),
-            ILegionFixedPriceSale.FixedPriceSaleAddressConfig({
+                tokenPrice: TOKEN_PRICE,
                 bidToken: address(bidToken),
                 askToken: address(0),
                 projectAdmin: projectAdmin,
-                legionAdmin: legionAdmin,
-                legionSigner: vm.addr(legionSignerPK),
-                vestingFactory: address(legionVestingFactory)
+                addressRegistry: address(legionAddressRegistry)
             })
         );
-        vm.prank(legionAdmin);
-        legionSaleInstance = legionSaleFactory.createFixedPriceSale(salePeriodAndFeeConfig, saleAddressConfig);
+        vm.prank(legionBouncer);
+        legionSaleInstance = legionSaleFactory.createFixedPriceSale(saleConfig);
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
 
@@ -1589,7 +1554,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
 
         // Assert
@@ -1616,7 +1581,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
 
         vm.warp(lockupEndTime() + 1);
@@ -1626,7 +1591,7 @@ contract LegionFixedPriceSaleTest is Test {
         emit ILegionBaseSale.SaleCanceled();
 
         // Act
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).cancelExpiredSale();
     }
 
@@ -1644,7 +1609,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
 
         vm.startPrank(projectAdmin);
@@ -1659,7 +1624,7 @@ contract LegionFixedPriceSaleTest is Test {
         vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.TokensAlreadySupplied.selector));
 
         // Act
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).cancelExpiredSale();
     }
 
@@ -1677,19 +1642,19 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
 
         vm.warp(lockupEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).cancelExpiredSale();
 
         // Assert
         vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.SaleIsCanceled.selector));
 
         // Act
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).cancelExpiredSale();
     }
 
@@ -1707,7 +1672,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
 
         vm.warp(lockupEndTime() - 1);
@@ -1716,7 +1681,7 @@ contract LegionFixedPriceSaleTest is Test {
         vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.LockupPeriodIsNotOver.selector));
 
         // Act
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).cancelExpiredSale();
     }
 
@@ -1726,7 +1691,7 @@ contract LegionFixedPriceSaleTest is Test {
     function test_cancelExpiredSale_revertsIfAskTokenUnavailableAndResultsPublished() public {
         // Arrange
         setSaleConfig(
-            ILegionFixedPriceSale.FixedPriceSalePeriodAndFeeConfig({
+            ILegionFixedPriceSale.FixedPriceSaleConfig({
                 prefundPeriodSeconds: PREFUND_PERIOD_SECONDS,
                 prefundAllocationPeriodSeconds: PREFUND_ALLOCATION_PERIOD_SECONDS,
                 salePeriodSeconds: SALE_PERIOD_SECONDS,
@@ -1737,19 +1702,15 @@ contract LegionFixedPriceSaleTest is Test {
                 legionFeeOnCapitalRaisedBps: LEGION_FEE_CAPITAL_RAISED_BPS,
                 legionFeeOnTokensSoldBps: LEGION_FEE_TOKENS_SOLD_BPS,
                 minimumPledgeAmount: MINIMUM_PLEDGE_AMOUNT,
-                tokenPrice: TOKEN_PRICE
-            }),
-            ILegionFixedPriceSale.FixedPriceSaleAddressConfig({
+                tokenPrice: TOKEN_PRICE,
                 bidToken: address(bidToken),
                 askToken: address(0),
                 projectAdmin: projectAdmin,
-                legionAdmin: legionAdmin,
-                legionSigner: vm.addr(legionSignerPK),
-                vestingFactory: address(legionVestingFactory)
+                addressRegistry: address(legionAddressRegistry)
             })
         );
-        vm.prank(legionAdmin);
-        legionSaleInstance = legionSaleFactory.createFixedPriceSale(salePeriodAndFeeConfig, saleAddressConfig);
+        vm.prank(legionBouncer);
+        legionSaleInstance = legionSaleFactory.createFixedPriceSale(saleConfig);
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
 
@@ -1758,7 +1719,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
 
         vm.warp(lockupEndTime() + 1);
@@ -1767,7 +1728,7 @@ contract LegionFixedPriceSaleTest is Test {
         vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.SaleResultsAlreadyPublished.selector));
 
         // Act
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).cancelExpiredSale();
     }
 
@@ -1777,7 +1738,7 @@ contract LegionFixedPriceSaleTest is Test {
     function test_cancelExpiredSale_successfullyCancelIfAskTokenUnavailableAndResultsNotPublished() public {
         // Arrange
         setSaleConfig(
-            ILegionFixedPriceSale.FixedPriceSalePeriodAndFeeConfig({
+            ILegionFixedPriceSale.FixedPriceSaleConfig({
                 prefundPeriodSeconds: PREFUND_PERIOD_SECONDS,
                 prefundAllocationPeriodSeconds: PREFUND_ALLOCATION_PERIOD_SECONDS,
                 salePeriodSeconds: SALE_PERIOD_SECONDS,
@@ -1788,19 +1749,15 @@ contract LegionFixedPriceSaleTest is Test {
                 legionFeeOnCapitalRaisedBps: LEGION_FEE_CAPITAL_RAISED_BPS,
                 legionFeeOnTokensSoldBps: LEGION_FEE_TOKENS_SOLD_BPS,
                 minimumPledgeAmount: MINIMUM_PLEDGE_AMOUNT,
-                tokenPrice: TOKEN_PRICE
-            }),
-            ILegionFixedPriceSale.FixedPriceSaleAddressConfig({
+                tokenPrice: TOKEN_PRICE,
                 bidToken: address(bidToken),
                 askToken: address(0),
                 projectAdmin: projectAdmin,
-                legionAdmin: legionAdmin,
-                legionSigner: vm.addr(legionSignerPK),
-                vestingFactory: address(legionVestingFactory)
+                addressRegistry: address(legionAddressRegistry)
             })
         );
-        vm.prank(legionAdmin);
-        legionSaleInstance = legionSaleFactory.createFixedPriceSale(salePeriodAndFeeConfig, saleAddressConfig);
+        vm.prank(legionBouncer);
+        legionSaleInstance = legionSaleFactory.createFixedPriceSale(saleConfig);
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
 
@@ -1814,7 +1771,7 @@ contract LegionFixedPriceSaleTest is Test {
         emit ILegionBaseSale.SaleCanceled();
 
         // Act
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).cancelExpiredSale();
     }
 
@@ -1833,7 +1790,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
 
         vm.startPrank(projectAdmin);
@@ -1861,7 +1818,7 @@ contract LegionFixedPriceSaleTest is Test {
     function test_withdrawCapital_successfullyEmitsIfLegionFeeIsZero() public {
         // Arrange
         setSaleConfig(
-            ILegionFixedPriceSale.FixedPriceSalePeriodAndFeeConfig({
+            ILegionFixedPriceSale.FixedPriceSaleConfig({
                 prefundPeriodSeconds: PREFUND_PERIOD_SECONDS,
                 prefundAllocationPeriodSeconds: PREFUND_ALLOCATION_PERIOD_SECONDS,
                 salePeriodSeconds: SALE_PERIOD_SECONDS,
@@ -1872,19 +1829,15 @@ contract LegionFixedPriceSaleTest is Test {
                 legionFeeOnCapitalRaisedBps: 0,
                 legionFeeOnTokensSoldBps: LEGION_FEE_TOKENS_SOLD_BPS,
                 minimumPledgeAmount: MINIMUM_PLEDGE_AMOUNT,
-                tokenPrice: TOKEN_PRICE
-            }),
-            ILegionFixedPriceSale.FixedPriceSaleAddressConfig({
+                tokenPrice: TOKEN_PRICE,
                 bidToken: address(bidToken),
                 askToken: address(askToken),
                 projectAdmin: projectAdmin,
-                legionAdmin: legionAdmin,
-                legionSigner: vm.addr(legionSignerPK),
-                vestingFactory: address(legionVestingFactory)
+                addressRegistry: address(legionAddressRegistry)
             })
         );
-        vm.prank(legionAdmin);
-        legionSaleInstance = legionSaleFactory.createFixedPriceSale(salePeriodAndFeeConfig, saleAddressConfig);
+        vm.prank(legionBouncer);
+        legionSaleInstance = legionSaleFactory.createFixedPriceSale(saleConfig);
 
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
@@ -1893,7 +1846,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
 
         vm.startPrank(projectAdmin);
@@ -1928,7 +1881,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
 
         vm.startPrank(projectAdmin);
@@ -1942,7 +1895,7 @@ contract LegionFixedPriceSaleTest is Test {
         ILegionFixedPriceSale(legionSaleInstance).supplyTokens(4000 * 1e18, 100 * 1e18);
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.NotCalledByProjectAdmin.selector));
+        vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.NotCalledByProject.selector));
 
         // Act
         vm.prank(nonProjectAdmin);
@@ -1962,7 +1915,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
 
         // Assert
@@ -2083,7 +2036,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(endTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishExcessCapitalResults(excessCapitalMerkleRoot);
 
         // Act
@@ -2142,7 +2095,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(endTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishExcessCapitalResults(excessCapitalMerkleRoot);
 
         vm.prank(projectAdmin);
@@ -2174,7 +2127,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(endTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishExcessCapitalResults(excessCapitalMerkleRoot);
 
         // Assert
@@ -2203,7 +2156,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(endTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishExcessCapitalResults(excessCapitalMerkleRoot);
         vm.prank(investor2);
         ILegionFixedPriceSale(legionSaleInstance).claimExcessCapital(1000 * 1e18, excessClaimProofInvestor2);
@@ -2234,7 +2187,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(endTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishExcessCapitalResults(excessCapitalMerkleRootMalicious);
 
         // Assert
@@ -2265,7 +2218,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
 
         vm.startPrank(projectAdmin);
@@ -2306,7 +2259,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
 
         vm.startPrank(projectAdmin);
@@ -2344,7 +2297,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
 
         vm.startPrank(projectAdmin);
@@ -2382,7 +2335,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(distributeMerkleRootMalicious, 4000 * 1e18);
 
         vm.startPrank(projectAdmin);
@@ -2420,7 +2373,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
 
         vm.startPrank(projectAdmin);
@@ -2461,7 +2414,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
 
         vm.warp(lockupEndTime() + 1);
@@ -2509,7 +2462,7 @@ contract LegionFixedPriceSaleTest is Test {
     function test_claimTokenAllocation_revertsIfAskTokenNotAvailable() public {
         // Arrange
         setSaleConfig(
-            ILegionFixedPriceSale.FixedPriceSalePeriodAndFeeConfig({
+            ILegionFixedPriceSale.FixedPriceSaleConfig({
                 prefundPeriodSeconds: PREFUND_PERIOD_SECONDS,
                 prefundAllocationPeriodSeconds: PREFUND_ALLOCATION_PERIOD_SECONDS,
                 salePeriodSeconds: SALE_PERIOD_SECONDS,
@@ -2520,19 +2473,15 @@ contract LegionFixedPriceSaleTest is Test {
                 legionFeeOnCapitalRaisedBps: LEGION_FEE_CAPITAL_RAISED_BPS,
                 legionFeeOnTokensSoldBps: LEGION_FEE_TOKENS_SOLD_BPS,
                 minimumPledgeAmount: MINIMUM_PLEDGE_AMOUNT,
-                tokenPrice: TOKEN_PRICE
-            }),
-            ILegionFixedPriceSale.FixedPriceSaleAddressConfig({
+                tokenPrice: TOKEN_PRICE,
                 bidToken: address(bidToken),
                 askToken: address(0),
                 projectAdmin: projectAdmin,
-                legionAdmin: legionAdmin,
-                legionSigner: vm.addr(legionSignerPK),
-                vestingFactory: address(legionVestingFactory)
+                addressRegistry: address(legionAddressRegistry)
             })
         );
-        vm.prank(legionAdmin);
-        legionSaleInstance = legionSaleFactory.createFixedPriceSale(salePeriodAndFeeConfig, saleAddressConfig);
+        vm.prank(legionBouncer);
+        legionSaleInstance = legionSaleFactory.createFixedPriceSale(saleConfig);
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
 
@@ -2545,7 +2494,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
 
         // Assert
@@ -2576,7 +2525,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
 
         vm.startPrank(projectAdmin);
@@ -2619,7 +2568,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
 
         vm.startPrank(projectAdmin);
@@ -2645,7 +2594,7 @@ contract LegionFixedPriceSaleTest is Test {
     function test_releaseTokens_revertsIfAskTokenNotAvailable() public {
         // Arrange
         setSaleConfig(
-            ILegionFixedPriceSale.FixedPriceSalePeriodAndFeeConfig({
+            ILegionFixedPriceSale.FixedPriceSaleConfig({
                 prefundPeriodSeconds: PREFUND_PERIOD_SECONDS,
                 prefundAllocationPeriodSeconds: PREFUND_ALLOCATION_PERIOD_SECONDS,
                 salePeriodSeconds: SALE_PERIOD_SECONDS,
@@ -2656,19 +2605,15 @@ contract LegionFixedPriceSaleTest is Test {
                 legionFeeOnCapitalRaisedBps: LEGION_FEE_CAPITAL_RAISED_BPS,
                 legionFeeOnTokensSoldBps: LEGION_FEE_TOKENS_SOLD_BPS,
                 minimumPledgeAmount: MINIMUM_PLEDGE_AMOUNT,
-                tokenPrice: TOKEN_PRICE
-            }),
-            ILegionFixedPriceSale.FixedPriceSaleAddressConfig({
+                tokenPrice: TOKEN_PRICE,
                 bidToken: address(bidToken),
                 askToken: address(0),
                 projectAdmin: projectAdmin,
-                legionAdmin: legionAdmin,
-                legionSigner: vm.addr(legionSignerPK),
-                vestingFactory: address(legionVestingFactory)
+                addressRegistry: address(legionAddressRegistry)
             })
         );
-        vm.prank(legionAdmin);
-        legionSaleInstance = legionSaleFactory.createFixedPriceSale(salePeriodAndFeeConfig, saleAddressConfig);
+        vm.prank(legionBouncer);
+        legionSaleInstance = legionSaleFactory.createFixedPriceSale(saleConfig);
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
 
@@ -2681,7 +2626,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionAdmin);
+        vm.prank(legionBouncer);
         ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18);
 
         vm.warp(lockupEndTime() + VESTING_CLIFF_DURATION_SECONDS + 1);
