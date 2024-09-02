@@ -20,6 +20,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 
 import {LegionBaseSale} from "./LegionBaseSale.sol";
 
+import {ILegionAddressRegistry} from "./interfaces/ILegionAddressRegistry.sol";
 import {ILegionFixedPriceSale} from "./interfaces/ILegionFixedPriceSale.sol";
 import {ILegionLinearVesting} from "./interfaces/ILegionLinearVesting.sol";
 import {ILegionVestingFactory} from "./interfaces/ILegionVestingFactory.sol";
@@ -50,55 +51,52 @@ contract LegionFixedPriceSale is LegionBaseSale, ILegionFixedPriceSale {
     /**
      * @notice See {ILegionFixedPriceSale-initialize}.
      */
-    function initialize(
-        FixedPriceSalePeriodAndFeeConfig calldata fixedPriceSalePeriodAndFeeConfig,
-        FixedPriceSaleAddressConfig calldata fixedPriceSaleAddressConfig
-    ) external initializer {
-        /// Initialize fixed price sale period and fee configuration
-        prefundPeriodSeconds = fixedPriceSalePeriodAndFeeConfig.prefundPeriodSeconds;
-        prefundAllocationPeriodSeconds = fixedPriceSalePeriodAndFeeConfig.prefundAllocationPeriodSeconds;
-        salePeriodSeconds = fixedPriceSalePeriodAndFeeConfig.salePeriodSeconds;
-        refundPeriodSeconds = fixedPriceSalePeriodAndFeeConfig.refundPeriodSeconds;
-        lockupPeriodSeconds = fixedPriceSalePeriodAndFeeConfig.lockupPeriodSeconds;
-        vestingDurationSeconds = fixedPriceSalePeriodAndFeeConfig.vestingDurationSeconds;
-        vestingCliffDurationSeconds = fixedPriceSalePeriodAndFeeConfig.vestingCliffDurationSeconds;
-        legionFeeOnCapitalRaisedBps = fixedPriceSalePeriodAndFeeConfig.legionFeeOnCapitalRaisedBps;
-        legionFeeOnTokensSoldBps = fixedPriceSalePeriodAndFeeConfig.legionFeeOnTokensSoldBps;
-        minimumPledgeAmount = fixedPriceSalePeriodAndFeeConfig.minimumPledgeAmount;
-        tokenPrice = fixedPriceSalePeriodAndFeeConfig.tokenPrice;
-
-        /// Initialize fixed price sale address configuration
-        bidToken = fixedPriceSaleAddressConfig.bidToken;
-        askToken = fixedPriceSaleAddressConfig.askToken;
-        projectAdmin = fixedPriceSaleAddressConfig.projectAdmin;
-        legionAdmin = fixedPriceSaleAddressConfig.legionAdmin;
-        legionSigner = fixedPriceSaleAddressConfig.legionSigner;
-        vestingFactory = fixedPriceSaleAddressConfig.vestingFactory;
+    function initialize(FixedPriceSaleConfig calldata fixedPriceSaleConfig) external initializer {
+        /// Initialize fixed price sale configuration
+        prefundPeriodSeconds = fixedPriceSaleConfig.prefundPeriodSeconds;
+        prefundAllocationPeriodSeconds = fixedPriceSaleConfig.prefundAllocationPeriodSeconds;
+        salePeriodSeconds = fixedPriceSaleConfig.salePeriodSeconds;
+        refundPeriodSeconds = fixedPriceSaleConfig.refundPeriodSeconds;
+        lockupPeriodSeconds = fixedPriceSaleConfig.lockupPeriodSeconds;
+        vestingDurationSeconds = fixedPriceSaleConfig.vestingDurationSeconds;
+        vestingCliffDurationSeconds = fixedPriceSaleConfig.vestingCliffDurationSeconds;
+        legionFeeOnCapitalRaisedBps = fixedPriceSaleConfig.legionFeeOnCapitalRaisedBps;
+        legionFeeOnTokensSoldBps = fixedPriceSaleConfig.legionFeeOnTokensSoldBps;
+        minimumPledgeAmount = fixedPriceSaleConfig.minimumPledgeAmount;
+        tokenPrice = fixedPriceSaleConfig.tokenPrice;
+        bidToken = fixedPriceSaleConfig.bidToken;
+        askToken = fixedPriceSaleConfig.askToken;
+        projectAdmin = fixedPriceSaleConfig.projectAdmin;
+        addressRegistry = fixedPriceSaleConfig.addressRegistry;
 
         /// Calculate and set prefundStartTime, prefundEndTime, startTime, endTime and refundEndTime
         prefundStartTime = block.timestamp;
-        prefundEndTime = prefundStartTime + fixedPriceSalePeriodAndFeeConfig.prefundPeriodSeconds;
-        startTime = prefundEndTime + fixedPriceSalePeriodAndFeeConfig.prefundAllocationPeriodSeconds;
-        endTime = startTime + fixedPriceSalePeriodAndFeeConfig.salePeriodSeconds;
-        refundEndTime = endTime + fixedPriceSalePeriodAndFeeConfig.refundPeriodSeconds;
+        prefundEndTime = prefundStartTime + fixedPriceSaleConfig.prefundPeriodSeconds;
+        startTime = prefundEndTime + fixedPriceSaleConfig.prefundAllocationPeriodSeconds;
+        endTime = startTime + fixedPriceSaleConfig.salePeriodSeconds;
+        refundEndTime = endTime + fixedPriceSaleConfig.refundPeriodSeconds;
 
         /// Check if lockupPeriodSeconds is less than refundPeriodSeconds
         /// lockupEndTime should be at least refundEndTime
-        if (
-            fixedPriceSalePeriodAndFeeConfig.lockupPeriodSeconds <= fixedPriceSalePeriodAndFeeConfig.refundPeriodSeconds
-        ) {
+        if (fixedPriceSaleConfig.lockupPeriodSeconds <= fixedPriceSaleConfig.refundPeriodSeconds) {
             /// If yes, set lockupEndTime to be refundEndTime
             lockupEndTime = refundEndTime;
         } else {
             /// If no, calculate the lockupEndTime
-            lockupEndTime = endTime + fixedPriceSalePeriodAndFeeConfig.lockupPeriodSeconds;
+            lockupEndTime = endTime + fixedPriceSaleConfig.lockupPeriodSeconds;
         }
 
         // Set the vestingStartTime to begin when lockupEndTime is reached
         vestingStartTime = lockupEndTime;
 
         /// Verify if the sale configuration is valid
-        _verifyValidConfig(fixedPriceSalePeriodAndFeeConfig, fixedPriceSaleAddressConfig);
+        _verifyValidConfig(fixedPriceSaleConfig);
+
+        /// Cache Legion addresses from `LegionAddressRegistry`
+        legionBouncer = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_BOUNCER_ID);
+        legionSigner = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_SIGNER_ID);
+        legionFeeReceiver = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_FEE_RECEIVER_ID);
+        vestingFactory = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_VESTING_FACTORY_ID);
     }
 
     /**
@@ -163,15 +161,11 @@ contract LegionFixedPriceSale is LegionBaseSale, ILegionFixedPriceSale {
     }
 
     /**
-     * @notice See {ILegionFixedPriceSale-salePeriodAndFeeConfiguration}.
+     * @notice See {ILegionFixedPriceSale-saleConfiguration}.
      */
-    function salePeriodAndFeeConfiguration()
-        external
-        view
-        returns (FixedPriceSalePeriodAndFeeConfig memory salePeriodAndFeeConfig)
-    {
-        /// Get the fixed price sale period and fee config
-        salePeriodAndFeeConfig = FixedPriceSalePeriodAndFeeConfig(
+    function saleConfiguration() external view returns (FixedPriceSaleConfig memory saleConfig) {
+        /// Get the fixed price sale config
+        saleConfig = FixedPriceSaleConfig(
             prefundPeriodSeconds,
             prefundAllocationPeriodSeconds,
             salePeriodSeconds,
@@ -182,17 +176,12 @@ contract LegionFixedPriceSale is LegionBaseSale, ILegionFixedPriceSale {
             legionFeeOnCapitalRaisedBps,
             legionFeeOnTokensSoldBps,
             tokenPrice,
-            minimumPledgeAmount
+            minimumPledgeAmount,
+            bidToken,
+            askToken,
+            projectAdmin,
+            addressRegistry
         );
-    }
-
-    /**
-     * @notice See {ILegionFixedPriceSale-saleAddressConfiguration}.
-     */
-    function saleAddressConfiguration() external view returns (FixedPriceSaleAddressConfig memory saleAddressConfig) {
-        /// Get the fixed price sale address config
-        saleAddressConfig =
-            FixedPriceSaleAddressConfig(bidToken, askToken, projectAdmin, legionAdmin, legionSigner, vestingFactory);
     }
 
     /**
@@ -235,48 +224,40 @@ contract LegionFixedPriceSale is LegionBaseSale, ILegionFixedPriceSale {
     /**
      * @notice Verify if the sale configuration is valid.
      *
-     * @param _fixedPriceSalePeriodAndFeeConfig The period and fee configuration for the fixed price sale.
-     * @param _fixedPriceSaleAddressConfig The address configuration for the fixed price sale.
+     * @param _fixedPriceSaleConfig The configuration for the fixed price sale.
      */
-    function _verifyValidConfig(
-        FixedPriceSalePeriodAndFeeConfig calldata _fixedPriceSalePeriodAndFeeConfig,
-        FixedPriceSaleAddressConfig calldata _fixedPriceSaleAddressConfig
-    ) private pure {
+    function _verifyValidConfig(FixedPriceSaleConfig calldata _fixedPriceSaleConfig) private pure {
         /// Check for zero addresses provided
         if (
-            _fixedPriceSaleAddressConfig.bidToken == address(0)
-                || _fixedPriceSaleAddressConfig.projectAdmin == address(0)
-                || _fixedPriceSaleAddressConfig.legionAdmin == address(0)
-                || _fixedPriceSaleAddressConfig.legionSigner == address(0)
-                || _fixedPriceSaleAddressConfig.vestingFactory == address(0)
-        ) revert ZeroAddressProvided();
+            _fixedPriceSaleConfig.bidToken == address(0) || _fixedPriceSaleConfig.projectAdmin == address(0)
+                || _fixedPriceSaleConfig.addressRegistry == address(0)
+        ) {
+            revert ZeroAddressProvided();
+        }
 
         /// Check for zero values provided
         if (
-            _fixedPriceSalePeriodAndFeeConfig.prefundPeriodSeconds == 0
-                || _fixedPriceSalePeriodAndFeeConfig.prefundAllocationPeriodSeconds == 0
-                || _fixedPriceSalePeriodAndFeeConfig.salePeriodSeconds == 0
-                || _fixedPriceSalePeriodAndFeeConfig.refundPeriodSeconds == 0
-                || _fixedPriceSalePeriodAndFeeConfig.lockupPeriodSeconds == 0
-                || _fixedPriceSalePeriodAndFeeConfig.tokenPrice == 0
+            _fixedPriceSaleConfig.prefundPeriodSeconds == 0 || _fixedPriceSaleConfig.prefundAllocationPeriodSeconds == 0
+                || _fixedPriceSaleConfig.salePeriodSeconds == 0 || _fixedPriceSaleConfig.refundPeriodSeconds == 0
+                || _fixedPriceSaleConfig.lockupPeriodSeconds == 0 || _fixedPriceSaleConfig.tokenPrice == 0
         ) revert ZeroValueProvided();
 
         /// Check if prefund, allocation, sale, refund and lockup periods are longer than allowed
         if (
-            _fixedPriceSalePeriodAndFeeConfig.prefundPeriodSeconds > THREE_MONTHS
-                || _fixedPriceSalePeriodAndFeeConfig.prefundAllocationPeriodSeconds > TWO_WEEKS
-                || _fixedPriceSalePeriodAndFeeConfig.salePeriodSeconds > THREE_MONTHS
-                || _fixedPriceSalePeriodAndFeeConfig.refundPeriodSeconds > TWO_WEEKS
-                || _fixedPriceSalePeriodAndFeeConfig.lockupPeriodSeconds > SIX_MONTHS
+            _fixedPriceSaleConfig.prefundPeriodSeconds > THREE_MONTHS
+                || _fixedPriceSaleConfig.prefundAllocationPeriodSeconds > TWO_WEEKS
+                || _fixedPriceSaleConfig.salePeriodSeconds > THREE_MONTHS
+                || _fixedPriceSaleConfig.refundPeriodSeconds > TWO_WEEKS
+                || _fixedPriceSaleConfig.lockupPeriodSeconds > SIX_MONTHS
         ) revert InvalidPeriodConfig();
 
         /// Check if prefund, allocation, sale, refund and lockup periods are shorter than allowed
         if (
-            _fixedPriceSalePeriodAndFeeConfig.prefundPeriodSeconds < ONE_HOUR
-                || _fixedPriceSalePeriodAndFeeConfig.prefundAllocationPeriodSeconds < ONE_HOUR
-                || _fixedPriceSalePeriodAndFeeConfig.salePeriodSeconds < ONE_HOUR
-                || _fixedPriceSalePeriodAndFeeConfig.refundPeriodSeconds < ONE_HOUR
-                || _fixedPriceSalePeriodAndFeeConfig.lockupPeriodSeconds < ONE_HOUR
+            _fixedPriceSaleConfig.prefundPeriodSeconds < ONE_HOUR
+                || _fixedPriceSaleConfig.prefundAllocationPeriodSeconds < ONE_HOUR
+                || _fixedPriceSaleConfig.salePeriodSeconds < ONE_HOUR
+                || _fixedPriceSaleConfig.refundPeriodSeconds < ONE_HOUR
+                || _fixedPriceSaleConfig.lockupPeriodSeconds < ONE_HOUR
         ) revert InvalidPeriodConfig();
     }
 }

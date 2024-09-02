@@ -20,6 +20,8 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 
 import {LegionBaseSale} from "./LegionBaseSale.sol";
 import {ECIES, Point} from "./lib/ECIES.sol";
+
+import {ILegionAddressRegistry} from "./interfaces/ILegionAddressRegistry.sol";
 import {ILegionBaseSale} from "./interfaces/ILegionBaseSale.sol";
 import {ILegionSealedBidAuction} from "./interfaces/ILegionSealedBidAuction.sol";
 import {ILegionLinearVesting} from "./interfaces/ILegionLinearVesting.sol";
@@ -45,52 +47,48 @@ contract LegionSealedBidAuction is LegionBaseSale, ILegionSealedBidAuction {
     /**
      * @notice See {ILegionSealedBidAuction-initialize}.
      */
-    function initialize(
-        SealedBidAuctionPeriodAndFeeConfig calldata sealedBidAuctionPeriodAndFeeConfig,
-        SealedBidAuctionAddressConfig calldata sealedBidAuctionAddressConfig
-    ) external initializer {
+    function initialize(SealedBidAuctionConfig calldata sealedBidAuctionConfig) external initializer {
         /// Initialize sealed bid auction period and fee configuration
-        salePeriodSeconds = sealedBidAuctionPeriodAndFeeConfig.salePeriodSeconds;
-        refundPeriodSeconds = sealedBidAuctionPeriodAndFeeConfig.refundPeriodSeconds;
-        lockupPeriodSeconds = sealedBidAuctionPeriodAndFeeConfig.lockupPeriodSeconds;
-        vestingDurationSeconds = sealedBidAuctionPeriodAndFeeConfig.vestingDurationSeconds;
-        vestingCliffDurationSeconds = sealedBidAuctionPeriodAndFeeConfig.vestingCliffDurationSeconds;
-        legionFeeOnCapitalRaisedBps = sealedBidAuctionPeriodAndFeeConfig.legionFeeOnCapitalRaisedBps;
-        legionFeeOnTokensSoldBps = sealedBidAuctionPeriodAndFeeConfig.legionFeeOnTokensSoldBps;
-        minimumPledgeAmount = sealedBidAuctionPeriodAndFeeConfig.minimumPledgeAmount;
-        publicKey = sealedBidAuctionPeriodAndFeeConfig.publicKey;
-
-        /// Initialize sealed bid auction address configuration
-        bidToken = sealedBidAuctionAddressConfig.bidToken;
-        askToken = sealedBidAuctionAddressConfig.askToken;
-        projectAdmin = sealedBidAuctionAddressConfig.projectAdmin;
-        legionAdmin = sealedBidAuctionAddressConfig.legionAdmin;
-        legionSigner = sealedBidAuctionAddressConfig.legionSigner;
-        vestingFactory = sealedBidAuctionAddressConfig.vestingFactory;
+        salePeriodSeconds = sealedBidAuctionConfig.salePeriodSeconds;
+        refundPeriodSeconds = sealedBidAuctionConfig.refundPeriodSeconds;
+        lockupPeriodSeconds = sealedBidAuctionConfig.lockupPeriodSeconds;
+        vestingDurationSeconds = sealedBidAuctionConfig.vestingDurationSeconds;
+        vestingCliffDurationSeconds = sealedBidAuctionConfig.vestingCliffDurationSeconds;
+        legionFeeOnCapitalRaisedBps = sealedBidAuctionConfig.legionFeeOnCapitalRaisedBps;
+        legionFeeOnTokensSoldBps = sealedBidAuctionConfig.legionFeeOnTokensSoldBps;
+        minimumPledgeAmount = sealedBidAuctionConfig.minimumPledgeAmount;
+        publicKey = sealedBidAuctionConfig.publicKey;
+        bidToken = sealedBidAuctionConfig.bidToken;
+        askToken = sealedBidAuctionConfig.askToken;
+        projectAdmin = sealedBidAuctionConfig.projectAdmin;
+        addressRegistry = sealedBidAuctionConfig.addressRegistry;
 
         /// Calculate and set startTime, endTime and refundEndTime
         startTime = block.timestamp;
-        endTime = startTime + sealedBidAuctionPeriodAndFeeConfig.salePeriodSeconds;
-        refundEndTime = endTime + sealedBidAuctionPeriodAndFeeConfig.refundPeriodSeconds;
+        endTime = startTime + sealedBidAuctionConfig.salePeriodSeconds;
+        refundEndTime = endTime + sealedBidAuctionConfig.refundPeriodSeconds;
 
         /// Check if lockupPeriodSeconds is less than refundPeriodSeconds
         /// lockupEndTime should be at least refundEndTime
-        if (
-            sealedBidAuctionPeriodAndFeeConfig.lockupPeriodSeconds
-                <= sealedBidAuctionPeriodAndFeeConfig.refundPeriodSeconds
-        ) {
+        if (sealedBidAuctionConfig.lockupPeriodSeconds <= sealedBidAuctionConfig.refundPeriodSeconds) {
             /// If yes, set lockupEndTime to be refundEndTime
             lockupEndTime = refundEndTime;
         } else {
             /// If no, calculate the lockupEndTime
-            lockupEndTime = endTime + sealedBidAuctionPeriodAndFeeConfig.lockupPeriodSeconds;
+            lockupEndTime = endTime + sealedBidAuctionConfig.lockupPeriodSeconds;
         }
 
         // Set the vestingStartTime to begin when lockupEndTime is reached
         vestingStartTime = lockupEndTime;
 
         /// Verify if the sale configuration is valid
-        _verifyValidConfig(sealedBidAuctionPeriodAndFeeConfig, sealedBidAuctionAddressConfig);
+        _verifyValidConfig(sealedBidAuctionConfig);
+
+        /// Cache Legion addresses from `LegionAddressRegistry`
+        legionBouncer = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_BOUNCER_ID);
+        legionSigner = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_SIGNER_ID);
+        legionFeeReceiver = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_FEE_RECEIVER_ID);
+        vestingFactory = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_VESTING_FACTORY_ID);
     }
 
     /**
@@ -207,15 +205,11 @@ contract LegionSealedBidAuction is LegionBaseSale, ILegionSealedBidAuction {
     }
 
     /**
-     * @notice See {ILegionSealedBidAuction-salePeriodAndFeeConfiguration}.
+     * @notice See {ILegionSealedBidAuction-saleConfiguration}.
      */
-    function salePeriodAndFeeConfiguration()
-        external
-        view
-        returns (SealedBidAuctionPeriodAndFeeConfig memory salePeriodAndFeeConfig)
-    {
-        /// Get the sealed bid auction period and fee config
-        salePeriodAndFeeConfig = SealedBidAuctionPeriodAndFeeConfig(
+    function saleConfiguration() external view returns (SealedBidAuctionConfig memory saleConfig) {
+        /// Get the sealed bid auction config
+        saleConfig = SealedBidAuctionConfig(
             salePeriodSeconds,
             refundPeriodSeconds,
             lockupPeriodSeconds,
@@ -224,21 +218,12 @@ contract LegionSealedBidAuction is LegionBaseSale, ILegionSealedBidAuction {
             legionFeeOnCapitalRaisedBps,
             legionFeeOnTokensSoldBps,
             minimumPledgeAmount,
-            publicKey
+            publicKey,
+            bidToken,
+            askToken,
+            projectAdmin,
+            addressRegistry
         );
-    }
-
-    /**
-     * @notice See {ILegionSealedBidAuction-saleAddressConfiguration}.
-     */
-    function saleAddressConfiguration()
-        external
-        view
-        returns (SealedBidAuctionAddressConfig memory saleAddressConfig)
-    {
-        /// Get the sealed bid auction address config
-        saleAddressConfig =
-            SealedBidAuctionAddressConfig(bidToken, askToken, projectAdmin, legionAdmin, legionSigner, vestingFactory);
     }
 
     /**
@@ -277,44 +262,36 @@ contract LegionSealedBidAuction is LegionBaseSale, ILegionSealedBidAuction {
     /**
      * @notice Verify if the sale configuration is valid.
      *
-     * @param _sealedBidAuctionPeriodAndFeeConfig The period and fee configuration for the sealed bid auction.
-     * @param _sealedBidAuctionAddressConfig The address configuration for the sealed bid auction.
+     * @param _sealedBidAuctionConfig The period and fee configuration for the sealed bid auction.
      */
-    function _verifyValidConfig(
-        SealedBidAuctionPeriodAndFeeConfig calldata _sealedBidAuctionPeriodAndFeeConfig,
-        SealedBidAuctionAddressConfig calldata _sealedBidAuctionAddressConfig
-    ) private pure {
+    function _verifyValidConfig(SealedBidAuctionConfig calldata _sealedBidAuctionConfig) private pure {
         /// Check for zero addresses provided
         if (
-            _sealedBidAuctionAddressConfig.bidToken == address(0)
-                || _sealedBidAuctionAddressConfig.projectAdmin == address(0)
-                || _sealedBidAuctionAddressConfig.legionAdmin == address(0)
-                || _sealedBidAuctionAddressConfig.legionSigner == address(0)
-                || _sealedBidAuctionAddressConfig.vestingFactory == address(0)
+            _sealedBidAuctionConfig.bidToken == address(0) || _sealedBidAuctionConfig.projectAdmin == address(0)
+                || _sealedBidAuctionConfig.addressRegistry == address(0)
         ) revert ZeroAddressProvided();
 
         /// Check for zero values provided
         if (
-            _sealedBidAuctionPeriodAndFeeConfig.salePeriodSeconds == 0
-                || _sealedBidAuctionPeriodAndFeeConfig.refundPeriodSeconds == 0
-                || _sealedBidAuctionPeriodAndFeeConfig.lockupPeriodSeconds == 0
+            _sealedBidAuctionConfig.salePeriodSeconds == 0 || _sealedBidAuctionConfig.refundPeriodSeconds == 0
+                || _sealedBidAuctionConfig.lockupPeriodSeconds == 0
         ) revert ZeroValueProvided();
 
         /// Check if the public key used for encryption is valid
-        if (!ECIES.isValid(_sealedBidAuctionPeriodAndFeeConfig.publicKey)) revert InvalidBidPublicKey();
+        if (!ECIES.isValid(_sealedBidAuctionConfig.publicKey)) revert InvalidBidPublicKey();
 
         /// Check if sale, refund and lockup periods are longer than allowed
         if (
-            _sealedBidAuctionPeriodAndFeeConfig.salePeriodSeconds > THREE_MONTHS
-                || _sealedBidAuctionPeriodAndFeeConfig.refundPeriodSeconds > TWO_WEEKS
-                || _sealedBidAuctionPeriodAndFeeConfig.lockupPeriodSeconds > SIX_MONTHS
+            _sealedBidAuctionConfig.salePeriodSeconds > THREE_MONTHS
+                || _sealedBidAuctionConfig.refundPeriodSeconds > TWO_WEEKS
+                || _sealedBidAuctionConfig.lockupPeriodSeconds > SIX_MONTHS
         ) revert InvalidPeriodConfig();
 
         /// Check if sale, refund and lockup periods are shorter than allowed
         if (
-            _sealedBidAuctionPeriodAndFeeConfig.salePeriodSeconds < ONE_HOUR
-                || _sealedBidAuctionPeriodAndFeeConfig.refundPeriodSeconds < ONE_HOUR
-                || _sealedBidAuctionPeriodAndFeeConfig.lockupPeriodSeconds < ONE_HOUR
+            _sealedBidAuctionConfig.salePeriodSeconds < ONE_HOUR
+                || _sealedBidAuctionConfig.refundPeriodSeconds < ONE_HOUR
+                || _sealedBidAuctionConfig.lockupPeriodSeconds < ONE_HOUR
         ) revert InvalidPeriodConfig();
     }
 

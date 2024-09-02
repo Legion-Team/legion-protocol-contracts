@@ -81,8 +81,8 @@ interface ILegionSealedBidAuction is ILegionBaseSale {
      */
     error InvalidSalt();
 
-    /// @notice A struct describing the sealed bid auction period and fee configuration.
-    struct SealedBidAuctionPeriodAndFeeConfig {
+    /// @notice A struct describing the sealed bid auction configuration.
+    struct SealedBidAuctionConfig {
         /// @dev The sale period duration in seconds.
         uint256 salePeriodSeconds;
         /// @dev The refund period duration in seconds.
@@ -101,22 +101,14 @@ interface ILegionSealedBidAuction is ILegionBaseSale {
         uint256 minimumPledgeAmount;
         /// @dev The public key used to encrypt the sealed bids.
         Point publicKey;
-    }
-
-    /// @notice A struct describing the sealed bid auction addresses configuration.
-    struct SealedBidAuctionAddressConfig {
         /// @dev The address of the token used for raising capital.
         address bidToken;
         /// @dev The address of the token being sold to investors.
         address askToken;
         /// @dev The admin address of the project raising capital.
         address projectAdmin;
-        /// @dev The admin address of Legion.
-        address legionAdmin;
-        /// @dev The address of Legion signer.
-        address legionSigner;
-        /// @dev The address of Legion's Vesting Factory contract.
-        address vestingFactory;
+        /// @dev The address of Legion's Address Registry contract.
+        address addressRegistry;
     }
 
     /// @notice A struct describing the sealed bid auction status.
@@ -160,13 +152,9 @@ interface ILegionSealedBidAuction is ILegionBaseSale {
     /**
      * @notice Initialized the contract with correct parameters.
      *
-     * @param sealedBidAuctionPeriodAndFeeConfig The period and fee configuration for the sealed bid auction.
-     * @param sealedBidAuctionAddressConfig The address configuration for the the sealed bid auction.
+     * @param sealedBidAuctionConfig The configuration for the sealed bid auction.
      */
-    function initialize(
-        SealedBidAuctionPeriodAndFeeConfig calldata sealedBidAuctionPeriodAndFeeConfig,
-        SealedBidAuctionAddressConfig calldata sealedBidAuctionAddressConfig
-    ) external;
+    function initialize(SealedBidAuctionConfig calldata sealedBidAuctionConfig) external;
 
     /**
      * @notice Pledge capital to the sealed bid auction.
@@ -200,20 +188,9 @@ interface ILegionSealedBidAuction is ILegionBaseSale {
     ) external;
 
     /**
-     * @notice Returns the period and fee configuration for the sealed bid auction.
+     * @notice Returns the configuration for the sealed bid auction.
      */
-    function salePeriodAndFeeConfiguration()
-        external
-        view
-        returns (SealedBidAuctionPeriodAndFeeConfig memory salePeriodAndFeeConfig);
-
-    /**
-     * @notice Returns the address configuration for the sealed bid auction.
-     */
-    function saleAddressConfiguration()
-        external
-        view
-        returns (SealedBidAuctionAddressConfig memory saleAddressConfig);
+    function saleConfiguration() external view returns (SealedBidAuctionConfig memory saleConfig);
 
     /**
      * @notice Returns the status for the sealed bid auction.
