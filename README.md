@@ -101,7 +101,38 @@ Every sealed bid auction consists of three stages, explained below:
 - `cancelExpiredSale`: Cancels the sale if it has expired.
 - `claimBackCapitalIfCanceled`: Allows investors to claim back their capital if the sale is canceled.
 
-### 3. LegionSaleFactory
+### 3. LegionPreLiquidSale
+
+The `LegionPreLiquidSale` contract is used to execute pre-liquid sales of ERC20 tokens **before** the Token Generation Event (TGE). It manages the entire lifecycle of the sale, including investing, refunds, raised capital withdrawal, token distribution for vesting, and sale cancellation.
+
+The main difference with the other types of sales Legion offers is that the pre-liquid sale commences before the token actually exists and is deployed (Pre-TGE). Only whitelisted users are allowed to invest in the sale, once they have signed a legally binding SAFT (Simple Agreement for Future Tokens). Once TGE occurs, Legion publishes the data on-chain, and projects supply the tokens for distribution.
+
+As there is a certain time gap between the period when capital is raised and the TGE, projects are allowed to withdraw capital before they supply the tokens, as they might need early access to it. However, once any raised capital is withdrawn, no changes are allowed to the `saftMerkleRoot` and `vestingTerms`.
+
+In comparison to other sale contracts, the `LegionPreLiquidSale` is more asynchronous; however, its stages can be described as follows:
+
+1. **Active Investment Period**: The stage where whitelisted users invest capital and investments are accepted.
+2. **Refund Period**: This stage is required by the MiCA regulation, where users can receive a refund if they decide. In the case of a pre-liquid sale, the refund period is counted individually for each investor.
+3. **Capital Withdrawal**: Once a refund period for an investor is over, projects are allowed to withdraw the raised capital from this investor.
+4. **Token Claims**: After the TGE details are published by Legion and tokens are supplied by the project, investors are allowed to claim their tokens into the vesting contract deployed for them.
+
+#### Key Functions:
+
+- `initialize`: Initializes the sale with configuration parameters.
+- `invest`: Allows whitelisted users (SAFT signers) to invest in the pre-liquid sale.
+- `refund`: Allows investors to receive a full refund within 14 days since their investment. (MiCA).
+- `publishTgeDetails`: Publishes the TGE details, called by Legion.
+- `supplyAskTokens`: Allows the project admin to supply tokens for the sale.
+- `updateSAFTMerkleRoot`: Allows the project admin to update the SAFT Merkle root.
+- `updateVestingTerms`: Allows the project admin to update the vesting terms for the pre-liquid sale.
+- `withdrawRaisedCapital`: Allows the project admin to withdraw raised capital.
+- `claimAskTokenAllocation`: Allows investors to claim their token allocation, after TGE and tokens are supplied by the project.
+- `cancelSale`: Allows the project admin to cancel the sale.
+- `withdrawCapitalIfSaleIsCanceled`: Allows investors to withdraw back their capital if the sale is canceled.
+- `withdrawExcessCapital`: Allows investors to withdraw excess capital in case they've provided more than the amount according to the SAFT has been lowered.
+- `toggleInvestmentAccepted`: Allows the project admin to pause/unpause accepting investments to the sale.
+
+### 4. LegionSaleFactory
 
 The `LegionSaleFactory` contract is a factory responsible for deploying proxy instances of the Legion sale contracts. It creates new sales by cloning the existing templates and initializing them with specific configurations.
 
@@ -109,8 +140,9 @@ The `LegionSaleFactory` contract is a factory responsible for deploying proxy in
 
 - `createFixedPriceSale`: Deploys a new instance of `LegionFixedPriceSale`.
 - `createSealedBidAuction`: Deploys a new instance of `LegionSealedBidAuction`.
+- `createPreLiquidSale`: Deploys a new instance of `LegionPreLiquidSale`.
 
-### 4. LegionLinearVesting
+### 5. LegionLinearVesting
 
 The `LegionLinearVesting` contract handles the linear vesting of tokens for investors. It releases vested tokens over a specified duration, ensuring that tokens are distributed gradually according to a predefined schedule.
 
@@ -118,7 +150,7 @@ The `LegionLinearVesting` contract handles the linear vesting of tokens for inve
 
 - `initialize`: Initializes the vesting contract with the beneficiary, start timestamp, and vesting duration.
 
-### 5. LegionVestingFactory
+### 6. LegionVestingFactory
 
 The `LegionVestingFactory` contract is a factory for deploying proxy instances of Legion vesting contracts. It allows for the creation of new vesting schedule contracts.
 
@@ -126,7 +158,7 @@ The `LegionVestingFactory` contract is a factory for deploying proxy instances o
 
 - `createLinearVesting`: Creates a new instance of `LegionLinearVesting`.
 
-### 6. LegionAddressRegistry
+### 7. LegionAddressRegistry
 
 The `LegionAddressRegistry` contract maintains a registry of key addresses used in the Legion protocol. It allows for the storage and retrieval of addresses associated with unique identifiers, ensuring that all critical addresses are managed and accessible in a centralized registry.
 
@@ -135,7 +167,7 @@ The `LegionAddressRegistry` contract maintains a registry of key addresses used 
 - `setLegionAddress`: Sets an address in the registry.
 - `getLegionAddress`: Retrieves an address from the registry.
 
-### 7. LegionAccessControl
+### 8. LegionAccessControl
 
 The `LegionAccessControl` contract serves as a single point of interaction between Legion and the other contracts in the protocol that require Legion admin access. Two roles are defined: `DEFAULT_ADMIN` and `BROADCASTER`. The `DEFAULT_ADMIN` can grant and revoke `BROADCASTER` roles, whereas the `BROADCASTER` role is only able to perform `functionCall` calls to external contracts.
 
