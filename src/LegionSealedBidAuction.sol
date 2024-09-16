@@ -196,7 +196,7 @@ contract LegionSealedBidAuction is LegionBaseSale, ILegionSealedBidAuction {
     /**
      * @notice See {ILegionBaseSale-cancelSale}.
      */
-    function cancelSale() public virtual override(ILegionBaseSale, LegionBaseSale) onlyProject {
+    function cancelSale() public override(ILegionBaseSale, LegionBaseSale) onlyProject {
         /// Call parent method
         super.cancelSale();
 

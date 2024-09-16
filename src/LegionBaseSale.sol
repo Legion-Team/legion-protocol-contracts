@@ -20,6 +20,7 @@ import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProo
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
+import {ILegionAddressRegistry} from "./interfaces/ILegionAddressRegistry.sol";
 import {ILegionBaseSale} from "./interfaces/ILegionBaseSale.sol";
 import {ILegionLinearVesting} from "./interfaces/ILegionLinearVesting.sol";
 import {ILegionVestingFactory} from "./interfaces/ILegionVestingFactory.sol";
@@ -451,6 +452,20 @@ abstract contract LegionBaseSale is ILegionBaseSale, Initializable {
 
         /// Transfer the amount to Legion's address
         IERC20(token).safeTransfer(receiver, amount);
+    }
+
+    /**
+     * @notice See {ILegionBaseSale-syncLegionAddresses}.
+     */
+    function syncLegionAddresses() external virtual onlyLegion {
+        /// Cache Legion addresses from `LegionAddressRegistry`
+        legionBouncer = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_BOUNCER_ID);
+        legionSigner = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_SIGNER_ID);
+        legionFeeReceiver = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_FEE_RECEIVER_ID);
+        vestingFactory = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_VESTING_FACTORY_ID);
+
+        /// Emit successfully LegionAddressesSynced
+        emit LegionAddressesSynced(legionBouncer, legionSigner, legionFeeReceiver, vestingFactory);
     }
 
     /**

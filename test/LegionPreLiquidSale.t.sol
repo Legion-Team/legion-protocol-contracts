@@ -2335,4 +2335,43 @@ contract LegionPreLiquidSaleTest is Test {
         vm.prank(projectAdmin);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).toggleInvestmentAccepted();
     }
+
+    /* ========== SYNC LEGION ADDRESSES TESTS ========== */
+
+    /**
+     * @dev Test Case: Successfully sync Legion addresses from `LegionAddressRegistry.sol` by Legion
+     */
+    function test_syncLegionAddresses_successfullyEmitsLegionAddressesSynced() public {
+        // Arrange
+        prepareCreateLegionPreLiquidSale();
+
+        vm.prank(legionBouncer);
+        legionAddressRegistry.setLegionAddress(bytes32("LEGION_FEE_RECEIVER"), address(1));
+
+        // Assert
+        vm.expectEmit();
+        emit ILegionPreLiquidSale.LegionAddressesSynced(legionBouncer, address(1), address(legionVestingFactory));
+
+        // Act
+        vm.prank(legionBouncer);
+        ILegionPreLiquidSale(legionPreLiquidSaleInstance).syncLegionAddresses();
+    }
+
+    /**
+     * @dev Test Case: Attempt to sync Legion addresses from `LegionAddressRegistry.sol` by non Legion admin
+     */
+    function test_syncLegionAddresses_revertsIfNotCalledByLegion() public {
+        // Arrange
+        prepareCreateLegionPreLiquidSale();
+
+        vm.prank(legionBouncer);
+        legionAddressRegistry.setLegionAddress(bytes32("LEGION_FEE_RECEIVER"), address(1));
+
+        // Assert
+        vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.NotCalledByLegion.selector));
+
+        // Act
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSale(legionPreLiquidSaleInstance).syncLegionAddresses();
+    }
 }

@@ -3333,4 +3333,45 @@ contract LegionSealedBidAuctionTest is Test {
             encryptedAmountInvestort1, uint256(uint160(investor1))
         );
     }
+
+    /* ========== SYNC LEGION ADDRESSES TESTS ========== */
+
+    /**
+     * @dev Test Case: Successfully sync Legion addresses from `LegionAddressRegistry.sol` by Legion
+     */
+    function test_syncLegionAddresses_successfullyEmitsLegionAddressesSynced() public {
+        // Arrange
+        prepareCreateLegionSealedBidAuction();
+
+        vm.prank(legionBouncer);
+        legionAddressRegistry.setLegionAddress(bytes32("LEGION_FEE_RECEIVER"), address(1));
+
+        // Assert
+        vm.expectEmit();
+        emit ILegionBaseSale.LegionAddressesSynced(
+            legionBouncer, vm.addr(legionSignerPK), address(1), address(legionVestingFactory)
+        );
+
+        // Act
+        vm.prank(legionBouncer);
+        ILegionSealedBidAuction(legionSealedBidAuctionInstance).syncLegionAddresses();
+    }
+
+    /**
+     * @dev Test Case: Attempt to sync Legion addresses from `LegionAddressRegistry.sol` by non Legion admin
+     */
+    function test_syncLegionAddresses_revertsIfNotCalledByLegion() public {
+        // Arrange
+        prepareCreateLegionSealedBidAuction();
+
+        vm.prank(legionBouncer);
+        legionAddressRegistry.setLegionAddress(bytes32("LEGION_FEE_RECEIVER"), address(1));
+
+        // Assert
+        vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.NotCalledByLegion.selector));
+
+        // Act
+        vm.prank(projectAdmin);
+        ILegionSealedBidAuction(legionSealedBidAuctionInstance).syncLegionAddresses();
+    }
 }

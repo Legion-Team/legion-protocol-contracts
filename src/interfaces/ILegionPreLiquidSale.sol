@@ -72,6 +72,15 @@ interface ILegionPreLiquidSale {
     event EmergencyWithdraw(address receiver, address token, uint256 amount);
 
     /**
+     * @notice This event is emitted when excess capital results are successfully published by the Legion admin.
+     *
+     * @param legionBouncer The updated Legion bouncer address.
+     * @param legionFeeReceiver The updated fee receiver address of Legion.
+     * @param vestingFactory The updated vesting factory address.
+     */
+    event LegionAddressesSynced(address legionBouncer, address legionFeeReceiver, address vestingFactory);
+
+    /**
      * @notice This event is emitted when the SAFT merkle root is updated by the Legion admin.
      *
      * @param merkleRoot The new SAFT merkle root.
@@ -494,6 +503,11 @@ interface ILegionPreLiquidSale {
      * @notice Toggles the `investmentAccepted` status.
      */
     function toggleInvestmentAccepted() external;
+
+    /**
+     * @notice Syncs active Legion addresses from `LegionAddressRegistry.sol`
+     */
+    function syncLegionAddresses() external;
 
     /**
      * @notice Returns the configuration for the pre-liquid token sale.

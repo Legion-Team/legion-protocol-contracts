@@ -65,7 +65,7 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
     address private legionBouncer;
 
     /// @dev The address of Legion fee receiver.
-    address internal legionFeeReceiver;
+    address private legionFeeReceiver;
 
     /// @dev The address of Legion's Vesting Factory contract.
     address private vestingFactory;
@@ -89,13 +89,13 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
     uint256 private totalCapitalWithdrawn;
 
     /// @dev Whether the sale has been canceled or not.
-    bool internal isCanceled;
+    bool private isCanceled;
 
     /// @dev Whether the ask tokens have been supplied to the sale.
-    bool internal askTokensSupplied;
+    bool private askTokensSupplied;
 
     /// @dev Whether investment is being accepted by the Project.
-    bool internal investmentAccepted;
+    bool private investmentAccepted;
 
     /// @dev Mapping of investor address to investor position.
     mapping(address investorAddress => InvestorPosition investorPosition) public investorPositions;
@@ -104,13 +104,13 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
     uint256 private constant TWO_WEEKS = 1209600;
 
     /// @dev Constant representing the LEGION_BOUNCER unique ID
-    bytes32 internal constant LEGION_BOUNCER_ID = bytes32("LEGION_BOUNCER");
+    bytes32 private constant LEGION_BOUNCER_ID = bytes32("LEGION_BOUNCER");
 
     /// @dev Constant representing the LEGION_FEE_RECEIVER unique ID
-    bytes32 internal constant LEGION_FEE_RECEIVER_ID = bytes32("LEGION_FEE_RECEIVER");
+    bytes32 private constant LEGION_FEE_RECEIVER_ID = bytes32("LEGION_FEE_RECEIVER");
 
     /// @dev Constant representing the LEGION_VESTING_FACTORY unique ID
-    bytes32 internal constant LEGION_VESTING_FACTORY_ID = bytes32("LEGION_VESTING_FACTORY");
+    bytes32 private constant LEGION_VESTING_FACTORY_ID = bytes32("LEGION_VESTING_FACTORY");
 
     /**
      * @notice Throws if called by any account other than Legion.
@@ -579,6 +579,19 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
 
         /// Emit successfully ToggleInvestmentAccepted
         emit ToggleInvestmentAccepted(investmentAccepted);
+    }
+
+    /**
+     * @notice See {ILegionPreLiquidSale-syncLegionAddresses}.
+     */
+    function syncLegionAddresses() external onlyLegion {
+        /// Cache Legion addresses from `LegionAddressRegistry`
+        legionBouncer = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_BOUNCER_ID);
+        legionFeeReceiver = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_FEE_RECEIVER_ID);
+        vestingFactory = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_VESTING_FACTORY_ID);
+
+        /// Emit successfully LegionAddressesSynced
+        emit LegionAddressesSynced(legionBouncer, legionFeeReceiver, vestingFactory);
     }
 
     /**
