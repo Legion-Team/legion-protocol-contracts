@@ -12,7 +12,8 @@ import {LegionAccessControl} from "../src/LegionAccessControl.sol";
 import {LegionPreLiquidSale} from "../src/LegionPreLiquidSale.sol";
 import {LegionSaleFactory} from "../src/LegionSaleFactory.sol";
 import {LegionVestingFactory} from "../src/LegionVestingFactory.sol";
-import {MockToken} from "../src/mocks/MockToken.sol";
+import {MockAskToken} from "../src/mocks/MockAskToken.sol";
+import {MockBidToken} from "../src/mocks/MockBidToken.sol";
 
 contract LegionPreLiquidSaleTest is Test {
     ILegionPreLiquidSale.PreLiquidSaleConfig preLiquidSaleConfig;
@@ -22,8 +23,8 @@ contract LegionPreLiquidSaleTest is Test {
     LegionSaleFactory legionSaleFactory;
     LegionVestingFactory legionVestingFactory;
 
-    MockToken bidToken;
-    MockToken askToken;
+    MockBidToken bidToken;
+    MockAskToken askToken;
 
     address legionPreLiquidSaleInstance;
     address awsBroadcaster = address(0x10);
@@ -49,8 +50,8 @@ contract LegionPreLiquidSaleTest is Test {
     uint256 constant TOKEN_ALLOCATION_TGE_BPS = 1000;
     uint256 constant LEGION_FEE_CAPITAL_RAISED_BPS = 250;
     uint256 constant LEGION_FEE_TOKENS_SOLD_BPS = 250;
-    bytes32 constant SAFT_MERKLE_ROOT = 0xb1f74233838c8077babb1c1e9ca12a76f0ec395a7a2e2501aea9c95f06a6e368;
-    bytes32 constant SAFT_MERKLE_ROOT_UPDATED = 0xb4345742554431ccf97adcdb0c09485d9d7103483a40e50ff40cc76e7257e240;
+    bytes32 constant SAFT_MERKLE_ROOT = 0xf83b2bf46e6b41de4becf9edf5b2ee2b6d10c6462808ccad44e50d2661249f29;
+    bytes32 constant SAFT_MERKLE_ROOT_UPDATED = 0xa1512c9fd6263ee1d0121b062e8cb409939190acfed903d935f2aefeceef1f57;
 
     uint256 constant TWO_WEEKS = 1209600;
 
@@ -62,8 +63,8 @@ contract LegionPreLiquidSaleTest is Test {
         legionSaleFactory = new LegionSaleFactory(legionBouncer);
         legionVestingFactory = new LegionVestingFactory();
         legionAddressRegistry = new LegionAddressRegistry(legionBouncer);
-        bidToken = new MockToken("USD Coin", "USDC");
-        askToken = new MockToken("LFG Coin", "LFG");
+        bidToken = new MockBidToken("USD Coin", "USDC");
+        askToken = new MockAskToken("LFG Coin", "LFG");
         prepareLegionAddressRegistry();
     }
 
@@ -113,32 +114,32 @@ contract LegionPreLiquidSaleTest is Test {
     function prepareMintAndApproveTokens() public {
         vm.startPrank(legionBouncer);
 
-        MockToken(bidToken).mint(investor1, 100000 * 1e18);
-        MockToken(bidToken).mint(investor2, 100000 * 1e18);
-        MockToken(bidToken).mint(investor3, 100000 * 1e18);
-        MockToken(bidToken).mint(investor4, 100000 * 1e18);
+        MockBidToken(bidToken).mint(investor1, 100000 * 1e6);
+        MockBidToken(bidToken).mint(investor2, 100000 * 1e6);
+        MockBidToken(bidToken).mint(investor3, 100000 * 1e6);
+        MockBidToken(bidToken).mint(investor4, 100000 * 1e6);
 
         vm.stopPrank();
 
         vm.prank(investor1);
-        MockToken(bidToken).approve(legionPreLiquidSaleInstance, 100000 * 1e18);
+        MockBidToken(bidToken).approve(legionPreLiquidSaleInstance, 100000 * 1e6);
 
         vm.prank(investor2);
-        MockToken(bidToken).approve(legionPreLiquidSaleInstance, 100000 * 1e18);
+        MockBidToken(bidToken).approve(legionPreLiquidSaleInstance, 100000 * 1e6);
 
         vm.prank(investor3);
-        MockToken(bidToken).approve(legionPreLiquidSaleInstance, 100000 * 1e18);
+        MockBidToken(bidToken).approve(legionPreLiquidSaleInstance, 100000 * 1e6);
 
         vm.prank(investor4);
-        MockToken(bidToken).approve(legionPreLiquidSaleInstance, 100000 * 1e18);
+        MockBidToken(bidToken).approve(legionPreLiquidSaleInstance, 100000 * 1e6);
 
         vm.startPrank(projectAdmin);
 
-        MockToken(askToken).mint(projectAdmin, 1000000 * 1e18);
-        MockToken(bidToken).mint(projectAdmin, 1000000 * 1e18);
+        MockAskToken(askToken).mint(projectAdmin, 1000000 * 1e18);
+        MockBidToken(bidToken).mint(projectAdmin, 1000000 * 1e6);
 
-        MockToken(askToken).approve(legionPreLiquidSaleInstance, 1000000 * 1e18);
-        MockToken(bidToken).approve(legionPreLiquidSaleInstance, 1000000 * 1e18);
+        MockAskToken(askToken).approve(legionPreLiquidSaleInstance, 1000000 * 1e18);
+        MockBidToken(bidToken).approve(legionPreLiquidSaleInstance, 1000000 * 1e6);
 
         vm.stopPrank();
     }
@@ -356,22 +357,22 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(1);
 
         // Assert
         vm.expectEmit();
         emit ILegionPreLiquidSale.CapitalInvested(
-            10000 * 1e18, investor1, 50, 0x0000000000000000000000000000000000000000000000000000000000000003, 1
+            10000 * 1e6, investor1, 50, 0x0000000000000000000000000000000000000000000000000000000000000003, 1
         );
 
         // Act
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -388,8 +389,8 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(1);
 
@@ -402,8 +403,8 @@ contract LegionPreLiquidSaleTest is Test {
         // Act
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -420,8 +421,8 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(1);
 
@@ -431,8 +432,8 @@ contract LegionPreLiquidSaleTest is Test {
         // Act
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            11000 * 1e18,
-            10000 * 1e18,
+            11000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -449,8 +450,8 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(1);
 
@@ -460,8 +461,8 @@ contract LegionPreLiquidSaleTest is Test {
         // Act
         vm.prank(investor5);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -478,8 +479,8 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(1);
 
@@ -492,8 +493,8 @@ contract LegionPreLiquidSaleTest is Test {
         // Act
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -512,15 +513,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -530,7 +531,7 @@ contract LegionPreLiquidSaleTest is Test {
 
         // Assert
         vm.expectEmit();
-        emit ILegionPreLiquidSale.CapitalRefunded(10000 * 1e18, investor1);
+        emit ILegionPreLiquidSale.CapitalRefunded(10000 * 1e6, investor1);
 
         // Act
         vm.prank(investor1);
@@ -547,15 +548,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -582,15 +583,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -616,15 +617,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -657,15 +658,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -692,15 +693,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -714,7 +715,7 @@ contract LegionPreLiquidSaleTest is Test {
         vm.warp(block.timestamp + REFUND_PERIOD_SECONDS + 2 days);
 
         vm.prank(projectAdmin);
-        MockToken(bidToken).approve(legionPreLiquidSaleInstance, 10000 * 1e18);
+        MockBidToken(bidToken).approve(legionPreLiquidSaleInstance, 10000 * 1e6);
 
         // Assert
         vm.expectEmit();
@@ -735,15 +736,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -772,15 +773,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -808,15 +809,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -847,15 +848,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -884,15 +885,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -920,15 +921,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -958,15 +959,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -998,15 +999,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -1040,15 +1041,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -1082,15 +1083,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -1116,15 +1117,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -1155,15 +1156,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -1196,13 +1197,13 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -1210,12 +1211,12 @@ contract LegionPreLiquidSaleTest is Test {
 
         // Assert
         vm.expectEmit();
-        emit ILegionPreLiquidSale.EmergencyWithdraw(legionBouncer, address(bidToken), 1000 * 1e18);
+        emit ILegionPreLiquidSale.EmergencyWithdraw(legionBouncer, address(bidToken), 1000 * 1e6);
 
         // Act
         vm.prank(legionBouncer);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).emergencyWithdraw(
-            legionBouncer, address(bidToken), 1000 * 1e18
+            legionBouncer, address(bidToken), 1000 * 1e6
         );
     }
 
@@ -1231,13 +1232,13 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -1248,9 +1249,7 @@ contract LegionPreLiquidSaleTest is Test {
 
         // Act
         vm.prank(projectAdmin);
-        ILegionPreLiquidSale(legionPreLiquidSaleInstance).emergencyWithdraw(
-            projectAdmin, address(bidToken), 1000 * 1e18
-        );
+        ILegionPreLiquidSale(legionPreLiquidSaleInstance).emergencyWithdraw(projectAdmin, address(bidToken), 1000 * 1e6);
     }
 
     /* ========== WITHDRAW RAISED CAPITAL TESTS ========== */
@@ -1265,15 +1264,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1 days);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -1283,7 +1282,7 @@ contract LegionPreLiquidSaleTest is Test {
 
         // Assert
         vm.expectEmit();
-        emit ILegionPreLiquidSale.CapitalWithdrawn(10000 * 1e18);
+        emit ILegionPreLiquidSale.CapitalWithdrawn(10000 * 1e6);
 
         // Act
         vm.prank(projectAdmin);
@@ -1300,15 +1299,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1 days);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -1337,15 +1336,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1 days);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -1371,15 +1370,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -1405,15 +1404,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -1442,15 +1441,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -1478,15 +1477,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -1499,7 +1498,7 @@ contract LegionPreLiquidSaleTest is Test {
 
         // Assert
         vm.expectEmit();
-        emit ILegionPreLiquidSale.CapitalRefundedAfterCancel(10000 * 1e18, investor1);
+        emit ILegionPreLiquidSale.CapitalRefundedAfterCancel(10000 * 1e6, investor1);
 
         // Act
         vm.prank(investor1);
@@ -1516,15 +1515,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -1550,15 +1549,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -1644,15 +1643,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -1683,15 +1682,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1 days);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -1704,13 +1703,13 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1Updated = new bytes32[](2);
 
-        saftInvestProofInvestor1Updated[0] = bytes32(0xaf325546cc30a71479fc43db2eac83f81ef4b7a1292b8d5971cd7ac9173278f6);
-        saftInvestProofInvestor1Updated[1] = bytes32(0xb228cd64aa129d34d329c6d163763ebe0af9cb1cda3ea7b4c02aac3d75cd171b);
+        saftInvestProofInvestor1Updated[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1Updated[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         // Assert
         vm.expectEmit();
         emit ILegionPreLiquidSale.ExcessCapitalWithdrawn(
-            1000 * 1e18,
+            1000 * 1e6,
             investor1,
             40,
             0x0000000000000000000000000000000000000000000000000000000000000030,
@@ -1720,8 +1719,8 @@ contract LegionPreLiquidSaleTest is Test {
         // Act
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).withdrawExcessCapital(
-            1000 * 1e18,
-            9000 * 1e18,
+            1000 * 1e6,
+            9000 * 1e6,
             40,
             0x0000000000000000000000000000000000000000000000000000000000000030,
             saftInvestProofInvestor1Updated
@@ -1738,15 +1737,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1 days);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -1771,8 +1770,8 @@ contract LegionPreLiquidSaleTest is Test {
         // Act
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).withdrawExcessCapital(
-            1000 * 1e18,
-            9000 * 1e18,
+            1000 * 1e6,
+            9000 * 1e6,
             40,
             0x0000000000000000000000000000000000000000000000000000000000000030,
             saftInvestProofInvestor1Updated
@@ -1789,15 +1788,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1 days);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -1821,8 +1820,8 @@ contract LegionPreLiquidSaleTest is Test {
         // Act
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).withdrawExcessCapital(
-            2000 * 1e18,
-            9000 * 1e18,
+            2000 * 1e6,
+            9000 * 1e6,
             40,
             0x0000000000000000000000000000000000000000000000000000000000000030,
             saftInvestProofInvestor1Updated
@@ -1839,15 +1838,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1 days);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -1871,8 +1870,8 @@ contract LegionPreLiquidSaleTest is Test {
         // Act
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).withdrawExcessCapital(
-            1000 * 1e18,
-            9000 * 1e18,
+            1000 * 1e6,
+            9000 * 1e6,
             100,
             0x0000000000000000000000000000000000000000000000000000000000000030,
             saftInvestProofInvestor1Updated
@@ -1981,15 +1980,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -2022,15 +2021,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -2054,8 +2053,8 @@ contract LegionPreLiquidSaleTest is Test {
             LegionPreLiquidSale(payable(legionPreLiquidSaleInstance)).investorPositions(investor1);
 
         assertEq(hasSettled, true);
-        assertEq(MockToken(askToken).balanceOf(vestingAddress), 4500 * 1e18);
-        assertEq(MockToken(askToken).balanceOf(investor1), 500 * 1e18);
+        assertEq(MockAskToken(askToken).balanceOf(vestingAddress), 4500 * 1e18);
+        assertEq(MockAskToken(askToken).balanceOf(investor1), 500 * 1e18);
     }
 
     /**
@@ -2068,15 +2067,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -2110,15 +2109,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -2149,15 +2148,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -2196,15 +2195,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1
@@ -2230,7 +2229,7 @@ contract LegionPreLiquidSaleTest is Test {
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).releaseTokens();
 
         // Assert
-        assertEq(MockToken(askToken).balanceOf(investor1), 501027111872146118721);
+        assertEq(MockAskToken(askToken).balanceOf(investor1), 501027111872146118721);
     }
 
     /**
@@ -2243,15 +2242,15 @@ contract LegionPreLiquidSaleTest is Test {
 
         bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
 
-        saftInvestProofInvestor1[0] = bytes32(0x7781c5053112c59523cd5ad10f3848f06c4ec03dc830e1d06fe74a9db2c7921c);
-        saftInvestProofInvestor1[1] = bytes32(0xadb7b49d77e80d6ec12e1b1444c186e8f23587767a7fa5461396f08b2562dafe);
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
 
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
-            10000 * 1e18,
-            10000 * 1e18,
+            10000 * 1e6,
+            10000 * 1e6,
             50,
             0x0000000000000000000000000000000000000000000000000000000000000003,
             saftInvestProofInvestor1

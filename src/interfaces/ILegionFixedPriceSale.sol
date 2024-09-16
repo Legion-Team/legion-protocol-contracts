@@ -126,8 +126,9 @@ interface ILegionFixedPriceSale is ILegionBaseSale {
      *
      * @param merkleRoot The merkle root to verify against.
      * @param tokensAllocated The total amount of tokens allocated for distribution among investors.
+     * @param askTokenDecimals The decimals number of the ask token.
      */
-    function publishSaleResults(bytes32 merkleRoot, uint256 tokensAllocated) external;
+    function publishSaleResults(bytes32 merkleRoot, uint256 tokensAllocated, uint8 askTokenDecimals) external;
 
     /**
      * @notice Returns the configuration for the fixed price sale.

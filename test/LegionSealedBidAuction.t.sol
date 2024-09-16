@@ -12,7 +12,8 @@ import {LegionAccessControl} from "../src/LegionAccessControl.sol";
 import {LegionSealedBidAuction} from "../src/LegionSealedBidAuction.sol";
 import {LegionSaleFactory} from "../src/LegionSaleFactory.sol";
 import {LegionVestingFactory} from "../src/LegionVestingFactory.sol";
-import {MockToken} from "../src/mocks/MockToken.sol";
+import {MockAskToken} from "../src/mocks/MockAskToken.sol";
+import {MockBidToken} from "../src/mocks/MockBidToken.sol";
 
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
@@ -30,8 +31,8 @@ contract LegionSealedBidAuctionTest is Test {
     LegionSaleFactory legionSaleFactory;
     LegionVestingFactory legionVestingFactory;
 
-    MockToken bidToken;
-    MockToken askToken;
+    MockBidToken bidToken;
+    MockAskToken askToken;
 
     address legionSealedBidAuctionInstance;
 
@@ -62,8 +63,8 @@ contract LegionSealedBidAuctionTest is Test {
     bytes32 claimTokensMerkleRoot = 0x15c61ba404fb3c87c5853c85e7d2b741d237461665ee138f71c1041ee193862b;
     bytes32 distributeMerkleRootMalicious = 0x3669cbc540102264b01a429a06da6cc5b37f56b4f4efa289f5f0543609e8f54d;
     bytes32 distributeMerkleRootMalicious2 = 0xb2962bf5c95bc63831e3a68d7cb04b33e9e450adbc6a9847f3697af2a87ea2dc;
-    bytes32 excessCapitalMerkleRoot = 0x2bcb5c3161b0ed54626b82c3838bdc49e78a2e0e8ae2874479c745ee19b3acff;
-    bytes32 excessCapitalMerkleRootMalicious = 0xa2d4230de986e8d243ebba07eb14374136aaad54143f05d469b08f78861f9a33;
+    bytes32 excessCapitalMerkleRoot = 0x54c416133cce27821e67f6c475e59fcdafb30c065ea8feaac86970c532db0202;
+    bytes32 excessCapitalMerkleRootMalicious = 0x04169dca2cf842bea9fcf4df22c9372c6d6f04410bfa446585e287aa1c834974;
 
     bytes sealedBidDataInvestor1;
     bytes sealedBidDataInvestor2;
@@ -85,7 +86,7 @@ contract LegionSealedBidAuctionTest is Test {
     uint256 constant VESTING_CLIFF_DURATION_SECONDS = 3600;
     uint256 constant LEGION_FEE_CAPITAL_RAISED_BPS = 250;
     uint256 constant LEGION_FEE_TOKENS_SOLD_BPS = 250;
-    uint256 constant MINIMUM_PLEDGE_AMOUNT = 1 * 1e18;
+    uint256 constant MINIMUM_PLEDGE_AMOUNT = 1 * 1e6;
     uint256 constant PRIVATE_KEY = 69;
 
     uint256 constant ONE_HOUR = 3600;
@@ -104,8 +105,8 @@ contract LegionSealedBidAuctionTest is Test {
         legionSaleFactory = new LegionSaleFactory(legionBouncer);
         legionVestingFactory = new LegionVestingFactory();
         legionAddressRegistry = new LegionAddressRegistry(legionBouncer);
-        bidToken = new MockToken("USD Coin", "USDC");
-        askToken = new MockToken("LFG Coin", "LFG");
+        bidToken = new MockBidToken("USD Coin", "USDC");
+        askToken = new MockAskToken("LFG Coin", "LFG");
         prepareLegionAddressRegistry();
     }
 
@@ -160,22 +161,22 @@ contract LegionSealedBidAuctionTest is Test {
      */
     function prepareMintAndApproveInvestorTokens() public {
         vm.prank(legionBouncer);
-        MockToken(bidToken).mint(investor1, 1000 * 1e18);
-        MockToken(bidToken).mint(investor2, 2000 * 1e18);
-        MockToken(bidToken).mint(investor3, 3000 * 1e18);
-        MockToken(bidToken).mint(investor4, 4000 * 1e18);
+        MockBidToken(bidToken).mint(investor1, 1000 * 1e6);
+        MockBidToken(bidToken).mint(investor2, 2000 * 1e6);
+        MockBidToken(bidToken).mint(investor3, 3000 * 1e6);
+        MockBidToken(bidToken).mint(investor4, 4000 * 1e6);
 
         vm.prank(investor1);
-        MockToken(bidToken).approve(legionSealedBidAuctionInstance, 1000 * 1e18);
+        MockBidToken(bidToken).approve(legionSealedBidAuctionInstance, 1000 * 1e6);
 
         vm.prank(investor2);
-        MockToken(bidToken).approve(legionSealedBidAuctionInstance, 2000 * 1e18);
+        MockBidToken(bidToken).approve(legionSealedBidAuctionInstance, 2000 * 1e6);
 
         vm.prank(investor3);
-        MockToken(bidToken).approve(legionSealedBidAuctionInstance, 3000 * 1e18);
+        MockBidToken(bidToken).approve(legionSealedBidAuctionInstance, 3000 * 1e6);
 
         vm.prank(investor4);
-        MockToken(bidToken).approve(legionSealedBidAuctionInstance, 4000 * 1e18);
+        MockBidToken(bidToken).approve(legionSealedBidAuctionInstance, 4000 * 1e6);
     }
 
     /**
@@ -225,22 +226,22 @@ contract LegionSealedBidAuctionTest is Test {
     function preparePledgedCapitalFromAllInvestors() public {
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.prank(investor2);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            2000 * 1e18, sealedBidDataInvestor2, signatureInv2
+            2000 * 1e6, sealedBidDataInvestor2, signatureInv2
         );
 
         vm.prank(investor3);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            3000 * 1e18, sealedBidDataInvestor3, signatureInv3
+            3000 * 1e6, sealedBidDataInvestor3, signatureInv3
         );
 
         vm.prank(investor4);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            4000 * 1e18, sealedBidDataInvestor4, signatureInv4
+            4000 * 1e6, sealedBidDataInvestor4, signatureInv4
         );
     }
 
@@ -610,13 +611,13 @@ contract LegionSealedBidAuctionTest is Test {
         // Assert
         vm.expectEmit();
         emit ILegionSealedBidAuction.CapitalPledged(
-            1000 * 1e18, encryptedAmountInvestort1, uint256(uint160(investor1)), investor1, startTime() + 1
+            1000 * 1e6, encryptedAmountInvestort1, uint256(uint160(investor1)), investor1, startTime() + 1
         );
 
         // Act
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
     }
 
@@ -638,7 +639,7 @@ contract LegionSealedBidAuctionTest is Test {
         // Act
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
     }
 
@@ -660,7 +661,7 @@ contract LegionSealedBidAuctionTest is Test {
         // Act
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, invalidSealedBidData, signatureInv1
+            1000 * 1e6, invalidSealedBidData, signatureInv1
         );
     }
 
@@ -682,7 +683,7 @@ contract LegionSealedBidAuctionTest is Test {
         // Act
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, invalidSealedBidData1, signatureInv1
+            1000 * 1e6, invalidSealedBidData1, signatureInv1
         );
     }
 
@@ -708,7 +709,7 @@ contract LegionSealedBidAuctionTest is Test {
         // Act
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, invalidSealedBidData, signatureInv1
+            1000 * 1e16, invalidSealedBidData, signatureInv1
         );
     }
 
@@ -723,12 +724,12 @@ contract LegionSealedBidAuctionTest is Test {
         prepareInvestorSignatures();
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.InvalidPledgeAmount.selector, 1 * 1e17));
+        vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.InvalidPledgeAmount.selector, 1 * 1e5));
 
         // Act
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1 * 1e17, sealedBidDataInvestor1, signatureInv1
+            1 * 1e5, sealedBidDataInvestor1, signatureInv1
         );
     }
 
@@ -751,7 +752,7 @@ contract LegionSealedBidAuctionTest is Test {
         // Act
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e16, sealedBidDataInvestor1, signatureInv1
         );
     }
 
@@ -771,7 +772,7 @@ contract LegionSealedBidAuctionTest is Test {
         // Act
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, invalidSignature
+            1000 * 1e6, sealedBidDataInvestor1, invalidSignature
         );
     }
 
@@ -791,17 +792,17 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         // Assert
         vm.expectEmit();
-        emit ILegionBaseSale.EmergencyWithdraw(legionBouncer, address(bidToken), 1000 * 1e18);
+        emit ILegionBaseSale.EmergencyWithdraw(legionBouncer, address(bidToken), 1000 * 1e6);
 
         // Act
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).emergencyWithdraw(
-            legionBouncer, address(bidToken), 1000 * 1e18
+            legionBouncer, address(bidToken), 1000 * 1e6
         );
     }
 
@@ -819,7 +820,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         // Assert
@@ -828,7 +829,7 @@ contract LegionSealedBidAuctionTest is Test {
         // Act
         vm.prank(projectAdmin);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).emergencyWithdraw(
-            projectAdmin, address(bidToken), 1000 * 1e18
+            projectAdmin, address(bidToken), 1000 * 1e6
         );
     }
 
@@ -846,20 +847,20 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(endTime() + 1);
 
         // Act & Assert
         vm.expectEmit();
-        emit ILegionBaseSale.CapitalRefunded(1000 * 1e18, investor1);
+        emit ILegionBaseSale.CapitalRefunded(1000 * 1e6, investor1);
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).requestRefund();
 
-        uint256 investor1Balance = MockToken(bidToken).balanceOf(investor1);
-        assertEq(investor1Balance, 1000 * 1e18);
+        uint256 investor1Balance = MockBidToken(bidToken).balanceOf(investor1);
+        assertEq(investor1Balance, 1000 * 1e6);
     }
 
     /**
@@ -874,7 +875,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(refundEndTime() + 1);
@@ -899,7 +900,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(endTime() + 1);
@@ -947,7 +948,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(block.timestamp + 30 minutes);
@@ -958,7 +959,7 @@ contract LegionSealedBidAuctionTest is Test {
         // Act
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).requestRefund();
-        uint256 investor1Balance = MockToken(bidToken).balanceOf(investor1);
+        uint256 investor1Balance = MockBidToken(bidToken).balanceOf(investor1);
         assertEq(investor1Balance, 0);
     }
 
@@ -976,7 +977,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(block.timestamp + 7 days);
@@ -1002,7 +1003,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(block.timestamp + 7 days);
@@ -1030,7 +1031,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(refundEndTime() + 1);
@@ -1040,7 +1041,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         // Assert
@@ -1063,7 +1064,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(endTime());
@@ -1088,7 +1089,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(refundEndTime());
@@ -1118,7 +1119,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(block.timestamp + 7 days);
@@ -1128,14 +1129,14 @@ contract LegionSealedBidAuctionTest is Test {
 
         // Assert
         vm.expectEmit();
-        emit ILegionBaseSale.CapitalRefundedAfterCancel(1000 * 1e18, investor1);
+        emit ILegionBaseSale.CapitalRefundedAfterCancel(1000 * 1e6, investor1);
 
         // Act
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).claimBackCapitalIfCanceled();
 
         // Assert
-        assertEq(MockToken(bidToken).balanceOf(investor1), 1000 * 1e18);
+        assertEq(MockBidToken(bidToken).balanceOf(investor1), 1000 * 1e6);
     }
 
     /**
@@ -1150,7 +1151,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(block.timestamp + 7 days);
@@ -1200,7 +1201,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(refundEndTime() + 1);
@@ -1210,12 +1211,12 @@ contract LegionSealedBidAuctionTest is Test {
 
         // Assert
         vm.expectEmit();
-        emit ILegionSealedBidAuction.SaleResultsPublished(claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY);
+        emit ILegionSealedBidAuction.SaleResultsPublished(claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY);
 
         // Act
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
     }
 
@@ -1231,7 +1232,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(endTime() + 1 weeks);
@@ -1245,7 +1246,7 @@ contract LegionSealedBidAuctionTest is Test {
         // Act
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
     }
 
@@ -1261,7 +1262,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(refundEndTime() + 1);
@@ -1275,7 +1276,7 @@ contract LegionSealedBidAuctionTest is Test {
         // Act
         vm.prank(nonLegionAdmin);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
     }
 
@@ -1291,7 +1292,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(refundEndTime() + 1);
@@ -1302,7 +1303,7 @@ contract LegionSealedBidAuctionTest is Test {
         // Act
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
     }
 
@@ -1318,7 +1319,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(refundEndTime() + 1);
@@ -1328,7 +1329,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         // Assert
@@ -1337,7 +1338,7 @@ contract LegionSealedBidAuctionTest is Test {
         // Act
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
     }
 
@@ -1353,7 +1354,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(refundEndTime() + 1);
@@ -1367,7 +1368,7 @@ contract LegionSealedBidAuctionTest is Test {
         // Act
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY - 1
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY - 1
         );
     }
 
@@ -1385,7 +1386,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(refundEndTime() + 1);
@@ -1411,7 +1412,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(refundEndTime() + 1);
@@ -1439,7 +1440,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(refundEndTime() + 1);
@@ -1467,7 +1468,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(refundEndTime() + 1);
@@ -1492,7 +1493,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(refundEndTime() - 1);
@@ -1519,7 +1520,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(endTime() + 1);
@@ -1545,7 +1546,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(endTime() + 1);
@@ -1570,7 +1571,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(endTime() + 1);
@@ -1602,7 +1603,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(endTime() - 1);
@@ -1627,7 +1628,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(endTime() + 1 weeks);
@@ -1657,7 +1658,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(refundEndTime() + 1);
@@ -1667,12 +1668,12 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         vm.startPrank(projectAdmin);
-        MockToken(askToken).mint(projectAdmin, 4100 * 1e18);
-        MockToken(askToken).approve(legionSealedBidAuctionInstance, 4100 * 1e18);
+        MockAskToken(askToken).mint(projectAdmin, 4100 * 1e18);
+        MockAskToken(askToken).approve(legionSealedBidAuctionInstance, 4100 * 1e18);
         vm.stopPrank();
 
         // Assert
@@ -1696,7 +1697,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(refundEndTime() + 1);
@@ -1706,12 +1707,12 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         vm.startPrank(projectAdmin);
-        MockToken(askToken).mint(projectAdmin, 4090 * 1e18);
-        MockToken(askToken).approve(legionSealedBidAuctionInstance, 4090 * 1e18);
+        MockAskToken(askToken).mint(projectAdmin, 4090 * 1e18);
+        MockAskToken(askToken).approve(legionSealedBidAuctionInstance, 4090 * 1e18);
         vm.stopPrank();
 
         // Assert
@@ -1753,7 +1754,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(refundEndTime() + 1);
@@ -1763,12 +1764,12 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         vm.startPrank(projectAdmin);
-        MockToken(askToken).mint(projectAdmin, 4000 * 1e18);
-        MockToken(askToken).approve(legionSealedBidAuctionInstance, 4000 * 1e18);
+        MockAskToken(askToken).mint(projectAdmin, 4000 * 1e18);
+        MockAskToken(askToken).approve(legionSealedBidAuctionInstance, 4000 * 1e18);
         vm.stopPrank();
 
         // Assert
@@ -1792,7 +1793,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(refundEndTime() + 1);
@@ -1802,12 +1803,12 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         vm.startPrank(nonProjectAdmin);
-        MockToken(askToken).mint(nonProjectAdmin, 10250 * 1e18);
-        MockToken(askToken).approve(legionSealedBidAuctionInstance, 10250 * 1e18);
+        MockAskToken(askToken).mint(nonProjectAdmin, 10250 * 1e18);
+        MockAskToken(askToken).approve(legionSealedBidAuctionInstance, 10250 * 1e18);
         vm.stopPrank();
 
         // Assert
@@ -1830,7 +1831,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(refundEndTime() + 1);
@@ -1840,7 +1841,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         vm.warp(lockupEndTime() + 1);
@@ -1849,8 +1850,8 @@ contract LegionSealedBidAuctionTest is Test {
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).cancelExpiredSale();
 
         vm.startPrank(projectAdmin);
-        MockToken(askToken).mint(projectAdmin, 4100 * 1e18);
-        MockToken(askToken).approve(legionSealedBidAuctionInstance, 4100 * 1e18);
+        MockAskToken(askToken).mint(projectAdmin, 4100 * 1e18);
+        MockAskToken(askToken).approve(legionSealedBidAuctionInstance, 4100 * 1e18);
         vm.stopPrank();
 
         // Assert
@@ -1873,7 +1874,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(refundEndTime() + 1);
@@ -1883,12 +1884,12 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         vm.startPrank(projectAdmin);
-        MockToken(askToken).mint(projectAdmin, 10240 * 1e18);
-        MockToken(askToken).approve(legionSealedBidAuctionInstance, 10240 * 1e18);
+        MockAskToken(askToken).mint(projectAdmin, 10240 * 1e18);
+        MockAskToken(askToken).approve(legionSealedBidAuctionInstance, 10240 * 1e18);
         vm.stopPrank();
 
         // Assert
@@ -1911,14 +1912,14 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(refundEndTime() + 1);
 
         vm.startPrank(projectAdmin);
-        MockToken(askToken).mint(projectAdmin, 10250 * 1e18);
-        MockToken(askToken).approve(legionSealedBidAuctionInstance, 10250 * 1e18);
+        MockAskToken(askToken).mint(projectAdmin, 10250 * 1e18);
+        MockAskToken(askToken).approve(legionSealedBidAuctionInstance, 10250 * 1e18);
         vm.stopPrank();
 
         // Assert
@@ -1941,7 +1942,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(refundEndTime() + 1);
@@ -1951,12 +1952,12 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         vm.startPrank(projectAdmin);
-        MockToken(askToken).mint(projectAdmin, 8200 * 1e18);
-        MockToken(askToken).approve(legionSealedBidAuctionInstance, 8200 * 1e18);
+        MockAskToken(askToken).mint(projectAdmin, 8200 * 1e18);
+        MockAskToken(askToken).approve(legionSealedBidAuctionInstance, 8200 * 1e18);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18);
         vm.stopPrank();
 
@@ -1998,7 +1999,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(refundEndTime() + 1);
@@ -2008,7 +2009,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         // Assert
@@ -2033,7 +2034,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(refundEndTime() + 1);
@@ -2043,7 +2044,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         vm.warp(lockupEndTime() + 1);
@@ -2069,7 +2070,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(refundEndTime() + 1);
@@ -2079,12 +2080,12 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         vm.startPrank(projectAdmin);
-        MockToken(askToken).mint(projectAdmin, 40100 * 1e18);
-        MockToken(askToken).approve(legionSealedBidAuctionInstance, 40100 * 1e18);
+        MockAskToken(askToken).mint(projectAdmin, 40100 * 1e18);
+        MockAskToken(askToken).approve(legionSealedBidAuctionInstance, 40100 * 1e18);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18);
         vm.stopPrank();
 
@@ -2110,7 +2111,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(refundEndTime() + 1);
@@ -2120,7 +2121,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         vm.warp(lockupEndTime() + 1);
@@ -2148,7 +2149,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(refundEndTime() + 1);
@@ -2158,7 +2159,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         vm.warp(lockupEndTime() - 1);
@@ -2201,7 +2202,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(refundEndTime() + 1);
@@ -2211,7 +2212,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         vm.warp(lockupEndTime() + 1);
@@ -2254,7 +2255,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(lockupEndTime() + 1);
@@ -2289,12 +2290,12 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         vm.startPrank(projectAdmin);
-        MockToken(askToken).mint(projectAdmin, 4100 * 1e18);
-        MockToken(askToken).approve(legionSealedBidAuctionInstance, 4100 * 1e18);
+        MockAskToken(askToken).mint(projectAdmin, 4100 * 1e18);
+        MockAskToken(askToken).approve(legionSealedBidAuctionInstance, 4100 * 1e18);
         vm.stopPrank();
 
         vm.expectEmit();
@@ -2349,12 +2350,12 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         vm.startPrank(projectAdmin);
-        MockToken(askToken).mint(projectAdmin, 4100 * 1e18);
-        MockToken(askToken).approve(legionSealedBidAuctionInstance, 4100 * 1e18);
+        MockAskToken(askToken).mint(projectAdmin, 4100 * 1e18);
+        MockAskToken(askToken).approve(legionSealedBidAuctionInstance, 4100 * 1e18);
         vm.stopPrank();
 
         vm.expectEmit();
@@ -2390,12 +2391,12 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         vm.startPrank(projectAdmin);
-        MockToken(askToken).mint(projectAdmin, 4100 * 1e18);
-        MockToken(askToken).approve(legionSealedBidAuctionInstance, 4100 * 1e18);
+        MockAskToken(askToken).mint(projectAdmin, 4100 * 1e18);
+        MockAskToken(askToken).approve(legionSealedBidAuctionInstance, 4100 * 1e18);
         vm.stopPrank();
 
         vm.expectEmit();
@@ -2430,7 +2431,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         // Assert
@@ -2551,8 +2552,8 @@ contract LegionSealedBidAuctionTest is Test {
 
         bytes32[] memory excessClaimProofInvestor2 = new bytes32[](2);
 
-        excessClaimProofInvestor2[0] = bytes32(0xe6ec166fcb24e8b45dbf44e2137a36706ae07288095a733f7439bb2f81a94051);
-        excessClaimProofInvestor2[1] = bytes32(0x61c19f281f94212e62b60d017ca806d139d4f0da454abbc73e9533e0d99f398b);
+        excessClaimProofInvestor2[0] = bytes32(0x048605503187722f63911ca26b8cca1d0a2afc10509c8be7f963371fec52b188);
+        excessClaimProofInvestor2[1] = bytes32(0xcbe43c4b6aafb4df43acc0bebce3220a96e982592e3c306730bf73681c612708);
 
         vm.warp(endTime() + 1);
 
@@ -2562,7 +2563,7 @@ contract LegionSealedBidAuctionTest is Test {
         // Act
         vm.prank(investor2);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).claimExcessCapital(
-            1000 * 1e18, excessClaimProofInvestor2
+            1000 * 1e6, excessClaimProofInvestor2
         );
 
         // Assert
@@ -2571,7 +2572,7 @@ contract LegionSealedBidAuctionTest is Test {
             LegionSealedBidAuction(payable(legionSealedBidAuctionInstance)).investorPositions(investor2);
 
         assertEq(hasClaimedExcess, true);
-        assertEq(MockToken(bidToken).balanceOf(investor2), 1000 * 1e18);
+        assertEq(MockBidToken(bidToken).balanceOf(investor2), 1000 * 1e6);
     }
 
     /**
@@ -2588,8 +2589,8 @@ contract LegionSealedBidAuctionTest is Test {
 
         bytes32[] memory excessClaimProofInvestor2 = new bytes32[](2);
 
-        excessClaimProofInvestor2[0] = bytes32(0xe6ec166fcb24e8b45dbf44e2137a36706ae07288095a733f7439bb2f81a94051);
-        excessClaimProofInvestor2[1] = bytes32(0x61c19f281f94212e62b60d017ca806d139d4f0da454abbc73e9533e0d99f398b);
+        excessClaimProofInvestor2[0] = bytes32(0x048605503187722f63911ca26b8cca1d0a2afc10509c8be7f963371fec52b188);
+        excessClaimProofInvestor2[1] = bytes32(0xcbe43c4b6aafb4df43acc0bebce3220a96e982592e3c306730bf73681c612708);
 
         vm.warp(endTime() - 1);
 
@@ -2599,7 +2600,7 @@ contract LegionSealedBidAuctionTest is Test {
         // Act
         vm.prank(investor2);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).claimExcessCapital(
-            1000 * 1e18, excessClaimProofInvestor2
+            1000 * 1e6, excessClaimProofInvestor2
         );
     }
 
@@ -2617,8 +2618,8 @@ contract LegionSealedBidAuctionTest is Test {
 
         bytes32[] memory excessClaimProofInvestor2 = new bytes32[](2);
 
-        excessClaimProofInvestor2[0] = bytes32(0xe6ec166fcb24e8b45dbf44e2137a36706ae07288095a733f7439bb2f81a94051);
-        excessClaimProofInvestor2[1] = bytes32(0x61c19f281f94212e62b60d017ca806d139d4f0da454abbc73e9533e0d99f398b);
+        excessClaimProofInvestor2[0] = bytes32(0x048605503187722f63911ca26b8cca1d0a2afc10509c8be7f963371fec52b188);
+        excessClaimProofInvestor2[1] = bytes32(0xcbe43c4b6aafb4df43acc0bebce3220a96e982592e3c306730bf73681c612708);
 
         vm.warp(endTime() + 1);
 
@@ -2634,7 +2635,7 @@ contract LegionSealedBidAuctionTest is Test {
         // Act
         vm.prank(investor2);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).claimExcessCapital(
-            1000 * 1e18, excessClaimProofInvestor2
+            1000 * 1e6, excessClaimProofInvestor2
         );
     }
 
@@ -2666,7 +2667,7 @@ contract LegionSealedBidAuctionTest is Test {
         // Act
         vm.prank(investor2);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).claimExcessCapital(
-            1000 * 1e18, excessClaimProofInvestor2
+            1000 * 1e6, excessClaimProofInvestor2
         );
     }
 
@@ -2684,8 +2685,8 @@ contract LegionSealedBidAuctionTest is Test {
 
         bytes32[] memory excessClaimProofInvestor2 = new bytes32[](2);
 
-        excessClaimProofInvestor2[0] = bytes32(0xe6ec166fcb24e8b45dbf44e2137a36706ae07288095a733f7439bb2f81a94051);
-        excessClaimProofInvestor2[1] = bytes32(0x61c19f281f94212e62b60d017ca806d139d4f0da454abbc73e9533e0d99f398b);
+        excessClaimProofInvestor2[0] = bytes32(0x048605503187722f63911ca26b8cca1d0a2afc10509c8be7f963371fec52b188);
+        excessClaimProofInvestor2[1] = bytes32(0xcbe43c4b6aafb4df43acc0bebce3220a96e982592e3c306730bf73681c612708);
 
         vm.warp(endTime() + 1);
 
@@ -2693,7 +2694,7 @@ contract LegionSealedBidAuctionTest is Test {
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishExcessCapitalResults(excessCapitalMerkleRoot);
         vm.prank(investor2);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).claimExcessCapital(
-            1000 * 1e18, excessClaimProofInvestor2
+            1000 * 1e6, excessClaimProofInvestor2
         );
 
         // Assert
@@ -2702,7 +2703,7 @@ contract LegionSealedBidAuctionTest is Test {
         // Act
         vm.prank(investor2);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).claimExcessCapital(
-            1000 * 1e18, excessClaimProofInvestor2
+            1000 * 1e6, excessClaimProofInvestor2
         );
     }
 
@@ -2718,10 +2719,11 @@ contract LegionSealedBidAuctionTest is Test {
 
         preparePledgedCapitalFromAllInvestors();
 
-        bytes32[] memory excessClaimProofInvestor5 = new bytes32[](2);
+        bytes32[] memory excessClaimProofInvestor5 = new bytes32[](3);
 
-        excessClaimProofInvestor5[0] = bytes32(0xab15bf46a7b5a0fed230b26afe212fe8303fc537eb6e007370eabeaf0b869955);
-        excessClaimProofInvestor5[1] = bytes32(0xbe76d3200dd468b9512ea8ec335a3149f5aa5d0d975c3de3cd37afb777182abc);
+        excessClaimProofInvestor5[0] = bytes32(0x048605503187722f63911ca26b8cca1d0a2afc10509c8be7f963371fec52b188);
+        excessClaimProofInvestor5[1] = bytes32(0xe3d631b26859e467c1b67a022155b59ea1d0c431074ce3cc5b424d06e598ce5b);
+        excessClaimProofInvestor5[2] = bytes32(0xe2c834aa6df188c7ae16c529aafb5e7588aa06afcced782a044b70652cadbdc3);
 
         vm.warp(endTime() + 1);
 
@@ -2736,7 +2738,7 @@ contract LegionSealedBidAuctionTest is Test {
         // Act
         vm.prank(investor5);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).claimExcessCapital(
-            6000 * 1e18, excessClaimProofInvestor5
+            6000 * 1e6, excessClaimProofInvestor5
         );
     }
 
@@ -2766,12 +2768,12 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         vm.startPrank(projectAdmin);
-        MockToken(askToken).mint(projectAdmin, 4100 * 1e18);
-        MockToken(askToken).approve(legionSealedBidAuctionInstance, 4100 * 1e18);
+        MockAskToken(askToken).mint(projectAdmin, 4100 * 1e18);
+        MockAskToken(askToken).approve(legionSealedBidAuctionInstance, 4100 * 1e18);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).withdrawCapital();
         vm.stopPrank();
@@ -2786,7 +2788,7 @@ contract LegionSealedBidAuctionTest is Test {
             LegionSealedBidAuction(payable(legionSealedBidAuctionInstance)).investorPositions(investor2);
 
         assertEq(hasSettled, true);
-        assertEq(MockToken(askToken).balanceOf(vestingAddress), 1000 * 1e18);
+        assertEq(MockAskToken(askToken).balanceOf(vestingAddress), 1000 * 1e18);
     }
 
     /**
@@ -2813,12 +2815,12 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         vm.startPrank(projectAdmin);
-        MockToken(askToken).mint(projectAdmin, 4100 * 1e18);
-        MockToken(askToken).approve(legionSealedBidAuctionInstance, 4100 * 1e18);
+        MockAskToken(askToken).mint(projectAdmin, 4100 * 1e18);
+        MockAskToken(askToken).approve(legionSealedBidAuctionInstance, 4100 * 1e18);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).withdrawCapital();
         vm.stopPrank();
@@ -2857,12 +2859,12 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         vm.startPrank(projectAdmin);
-        MockToken(askToken).mint(projectAdmin, 4100 * 1e18);
-        MockToken(askToken).approve(legionSealedBidAuctionInstance, 4100 * 1e18);
+        MockAskToken(askToken).mint(projectAdmin, 4100 * 1e18);
+        MockAskToken(askToken).approve(legionSealedBidAuctionInstance, 4100 * 1e18);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).withdrawCapital();
         vm.stopPrank();
@@ -2901,12 +2903,12 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            distributeMerkleRootMalicious, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            distributeMerkleRootMalicious, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         vm.startPrank(projectAdmin);
-        MockToken(askToken).mint(projectAdmin, 4100 * 1e18);
-        MockToken(askToken).approve(legionSealedBidAuctionInstance, 4100 * 1e18);
+        MockAskToken(askToken).mint(projectAdmin, 4100 * 1e18);
+        MockAskToken(askToken).approve(legionSealedBidAuctionInstance, 4100 * 1e18);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).withdrawCapital();
         vm.stopPrank();
@@ -2945,12 +2947,12 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         vm.startPrank(projectAdmin);
-        MockToken(askToken).mint(projectAdmin, 4100 * 1e18);
-        MockToken(askToken).approve(legionSealedBidAuctionInstance, 4100 * 1e18);
+        MockAskToken(askToken).mint(projectAdmin, 4100 * 1e18);
+        MockAskToken(askToken).approve(legionSealedBidAuctionInstance, 4100 * 1e18);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).withdrawCapital();
         vm.stopPrank();
@@ -2992,7 +2994,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         vm.warp(lockupEndTime() + 1);
@@ -3077,7 +3079,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         // Assert
@@ -3114,12 +3116,12 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         vm.startPrank(projectAdmin);
-        MockToken(askToken).mint(projectAdmin, 4100 * 1e18);
-        MockToken(askToken).approve(legionSealedBidAuctionInstance, 4100 * 1e18);
+        MockAskToken(askToken).mint(projectAdmin, 4100 * 1e18);
+        MockAskToken(askToken).approve(legionSealedBidAuctionInstance, 4100 * 1e18);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).withdrawCapital();
         vm.stopPrank();
@@ -3136,7 +3138,7 @@ contract LegionSealedBidAuctionTest is Test {
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).releaseTokens();
 
         // Assert
-        assertEq(MockToken(askToken).balanceOf(investor2), 114186960933536276);
+        assertEq(MockAskToken(askToken).balanceOf(investor2), 114186960933536276);
     }
 
     /**
@@ -3163,12 +3165,12 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         vm.startPrank(projectAdmin);
-        MockToken(askToken).mint(projectAdmin, 4100 * 1e18);
-        MockToken(askToken).approve(legionSealedBidAuctionInstance, 4100 * 1e18);
+        MockAskToken(askToken).mint(projectAdmin, 4100 * 1e18);
+        MockAskToken(askToken).approve(legionSealedBidAuctionInstance, 4100 * 1e18);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).withdrawCapital();
         vm.stopPrank();
@@ -3225,7 +3227,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         vm.warp(lockupEndTime() + VESTING_CLIFF_DURATION_SECONDS + 1);
@@ -3252,22 +3254,22 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.prank(investor2);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            2000 * 1e18, sealedBidDataInvestor2, signatureInv2
+            2000 * 1e6, sealedBidDataInvestor2, signatureInv2
         );
 
         vm.prank(investor3);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            3000 * 1e18, sealedBidDataInvestor3, signatureInv3
+            3000 * 1e6, sealedBidDataInvestor3, signatureInv3
         );
 
         vm.prank(investor4);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            4000 * 1e18, sealedBidDataInvestor4, signatureInv4
+            4000 * 1e6, sealedBidDataInvestor4, signatureInv4
         );
 
         vm.warp(refundEndTime() + 1);
@@ -3277,7 +3279,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e18, PRIVATE_KEY
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
         // Act
@@ -3313,7 +3315,7 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.prank(investor1);
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).pledgeCapital(
-            1000 * 1e18, sealedBidDataInvestor1, signatureInv1
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
         vm.warp(refundEndTime() - 1);
