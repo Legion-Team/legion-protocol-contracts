@@ -650,7 +650,7 @@ abstract contract LegionBaseSale is ILegionBaseSale, Initializable {
      * @param _signature The signature to verify.
      */
     function _verifyLegionSignature(bytes memory _signature) internal view virtual {
-        bytes32 _data = keccak256(abi.encodePacked(msg.sender)).toEthSignedMessageHash();
+        bytes32 _data = keccak256(abi.encodePacked(msg.sender, address(this), block.chainid)).toEthSignedMessageHash();
         if (_data.recover(_signature) != legionSigner) revert InvalidSignature();
     }
 }

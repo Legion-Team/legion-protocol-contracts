@@ -191,10 +191,14 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.startPrank(legionSigner);
 
-        bytes32 digest1 = keccak256(abi.encodePacked(investor1)).toEthSignedMessageHash();
-        bytes32 digest2 = keccak256(abi.encodePacked(investor2)).toEthSignedMessageHash();
-        bytes32 digest3 = keccak256(abi.encodePacked(investor3)).toEthSignedMessageHash();
-        bytes32 digest4 = keccak256(abi.encodePacked(investor4)).toEthSignedMessageHash();
+        bytes32 digest1 = keccak256(abi.encodePacked(investor1, legionSealedBidAuctionInstance, block.chainid))
+            .toEthSignedMessageHash();
+        bytes32 digest2 = keccak256(abi.encodePacked(investor2, legionSealedBidAuctionInstance, block.chainid))
+            .toEthSignedMessageHash();
+        bytes32 digest3 = keccak256(abi.encodePacked(investor3, legionSealedBidAuctionInstance, block.chainid))
+            .toEthSignedMessageHash();
+        bytes32 digest4 = keccak256(abi.encodePacked(investor4, legionSealedBidAuctionInstance, block.chainid))
+            .toEthSignedMessageHash();
 
         (v, r, s) = vm.sign(legionSignerPK, digest1);
         signatureInv1 = abi.encodePacked(r, s, v);
@@ -212,7 +216,8 @@ contract LegionSealedBidAuctionTest is Test {
 
         vm.startPrank(nonLegionSigner);
 
-        bytes32 digest5 = keccak256(abi.encodePacked(investor1)).toEthSignedMessageHash();
+        bytes32 digest5 = keccak256(abi.encodePacked(investor1, legionSealedBidAuctionInstance, block.chainid))
+            .toEthSignedMessageHash();
 
         (v, r, s) = vm.sign(nonLegionSignerPK, digest5);
         invalidSignature = abi.encodePacked(r, s, v);
