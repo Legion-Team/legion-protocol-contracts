@@ -427,7 +427,7 @@ contract LegionPreLiquidSaleTest is Test {
         vm.warp(1);
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.NotAllowedToInvestCapital.selector, investor1));
+        vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.InvalidPositionAmount.selector, investor1));
 
         // Act
         vm.prank(investor1);
@@ -456,7 +456,7 @@ contract LegionPreLiquidSaleTest is Test {
         vm.warp(1);
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.NotAllowedToInvestCapital.selector, investor5));
+        vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.InvalidProof.selector, investor5));
 
         // Act
         vm.prank(investor5);
@@ -1883,9 +1883,7 @@ contract LegionPreLiquidSaleTest is Test {
         saftInvestProofInvestor1Updated[1] = bytes32(0xb228cd64aa129d34d329c6d163763ebe0af9cb1cda3ea7b4c02aac3d75cd171b);
 
         // Assert
-        vm.expectRevert(
-            abi.encodeWithSelector(ILegionPreLiquidSale.NotAllowedToWithdrawExcessCapital.selector, investor1)
-        );
+        vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.InvalidPositionAmount.selector, investor1));
 
         // Act
         vm.prank(investor1);
@@ -1933,9 +1931,7 @@ contract LegionPreLiquidSaleTest is Test {
         saftInvestProofInvestor1Updated[1] = bytes32(0xb228cd64aa129d34d329c6d163763ebe0af9cb1cda3ea7b4c02aac3d75cd171b);
 
         // Assert
-        vm.expectRevert(
-            abi.encodeWithSelector(ILegionPreLiquidSale.NotAllowedToWithdrawExcessCapital.selector, investor1)
-        );
+        vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.InvalidProof.selector, investor1));
 
         // Act
         vm.prank(investor1);
@@ -2117,7 +2113,7 @@ contract LegionPreLiquidSaleTest is Test {
 
         // Act
         vm.prank(investor1);
-        ILegionPreLiquidSale(legionPreLiquidSaleInstance).claimAskTokenAllocation();
+        ILegionPreLiquidSale(legionPreLiquidSaleInstance).claimAskTokenAllocation(saftInvestProofInvestor1);
 
         (,,,,,, bool hasSettled, address vestingAddress) =
             LegionPreLiquidSale(payable(legionPreLiquidSaleInstance)).investorPositions(investor1);
@@ -2125,6 +2121,76 @@ contract LegionPreLiquidSaleTest is Test {
         assertEq(hasSettled, true);
         assertEq(MockAskToken(askToken).balanceOf(vestingAddress), 4500 * 1e18);
         assertEq(MockAskToken(askToken).balanceOf(investor1), 500 * 1e18);
+    }
+
+    /**
+     * @dev Test Case: Attempt to claim ask token allocation if SAFT amount is updated and excess capital is not claimed
+     */
+    function test_claimAskTokenAllocation_revertsIfSAFTAmountIsUpdatedAndExcessCapitalIsNotClaimed() public {
+        // Arrange
+        prepareCreateLegionPreLiquidSale();
+        prepareMintAndApproveTokens();
+
+        bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
+        bytes32[] memory saftInvestProofInvestor1Updated = new bytes32[](2);
+
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
+
+        saftInvestProofInvestor1Updated[0] = bytes32(0x06b9a02ceee8e29e5e87d315570724711a73bb8000f81845e9a674a24692f547);
+        saftInvestProofInvestor1Updated[1] = bytes32(0x6e1b5de4c29dfb7fb513111b13ea23a716e5818936703e683d1e055f88a5772d);
+
+        vm.warp(block.timestamp + 1);
+
+        vm.prank(investor1);
+        ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
+            10000 * 1e6,
+            10000 * 1e6,
+            50,
+            0x0000000000000000000000000000000000000000000000000000000000000003,
+            saftInvestProofInvestor1
+        );
+
+        vm.warp(block.timestamp + TWO_WEEKS + 1);
+
+        vm.prank(legionBouncer);
+        ILegionPreLiquidSale(legionPreLiquidSaleInstance).publishTgeDetails(
+            address(askToken), 1000000 * 1e18, (block.timestamp + TWO_WEEKS + 2), 20000 * 1e18
+        );
+
+        vm.startPrank(projectAdmin);
+        ILegionPreLiquidSale(legionPreLiquidSaleInstance).supplyAskTokens(20000 * 1e18, 500 * 1e18);
+        ILegionPreLiquidSale(legionPreLiquidSaleInstance).updateSAFTMerkleRoot(
+            0x6d9283d7f9721edc8bd59a41dc800b296f4311ee3a0ee8385a34a8ff8d8cb586
+        );
+        vm.stopPrank();
+
+        // Assert
+        vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.InvalidProof.selector, investor1));
+
+        // Act
+        vm.prank(investor1);
+        ILegionPreLiquidSale(legionPreLiquidSaleInstance).claimAskTokenAllocation(saftInvestProofInvestor1Updated);
+
+        vm.prank(investor1);
+        ILegionPreLiquidSale(legionPreLiquidSaleInstance).withdrawExcessCapital(
+            5000000000,
+            5000000000,
+            25,
+            0x0000000000000000000000000000000000000000000000000000000000000003,
+            saftInvestProofInvestor1Updated
+        );
+
+        // Act
+        vm.prank(investor1);
+        ILegionPreLiquidSale(legionPreLiquidSaleInstance).claimAskTokenAllocation(saftInvestProofInvestor1Updated);
+
+        (,,,,,, bool hasSettled, address vestingAddress) =
+            LegionPreLiquidSale(payable(legionPreLiquidSaleInstance)).investorPositions(investor1);
+
+        assertEq(hasSettled, true);
+        assertEq(MockAskToken(askToken).balanceOf(vestingAddress), 2250 * 1e18);
+        assertEq(MockAskToken(askToken).balanceOf(investor1), 250 * 1e18);
     }
 
     /**
@@ -2166,7 +2232,7 @@ contract LegionPreLiquidSaleTest is Test {
 
         // Act
         vm.prank(investor5);
-        ILegionPreLiquidSale(legionPreLiquidSaleInstance).claimAskTokenAllocation();
+        ILegionPreLiquidSale(legionPreLiquidSaleInstance).claimAskTokenAllocation(saftInvestProofInvestor1);
     }
 
     /**
@@ -2205,7 +2271,7 @@ contract LegionPreLiquidSaleTest is Test {
 
         // Act
         vm.prank(investor5);
-        ILegionPreLiquidSale(legionPreLiquidSaleInstance).claimAskTokenAllocation();
+        ILegionPreLiquidSale(legionPreLiquidSaleInstance).claimAskTokenAllocation(saftInvestProofInvestor1);
     }
 
     /**
@@ -2243,14 +2309,14 @@ contract LegionPreLiquidSaleTest is Test {
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).supplyAskTokens(20000 * 1e18, 500 * 1e18);
 
         vm.prank(investor1);
-        ILegionPreLiquidSale(legionPreLiquidSaleInstance).claimAskTokenAllocation();
+        ILegionPreLiquidSale(legionPreLiquidSaleInstance).claimAskTokenAllocation(saftInvestProofInvestor1);
 
         // Assert
         vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.AlreadySettled.selector, investor1));
 
         // Act
         vm.prank(investor1);
-        ILegionPreLiquidSale(legionPreLiquidSaleInstance).claimAskTokenAllocation();
+        ILegionPreLiquidSale(legionPreLiquidSaleInstance).claimAskTokenAllocation(saftInvestProofInvestor1);
     }
 
     /* ========== RELEASE TOKENS TESTS ========== */
@@ -2290,7 +2356,7 @@ contract LegionPreLiquidSaleTest is Test {
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).supplyAskTokens(20000 * 1e18, 500 * 1e18);
 
         vm.prank(investor1);
-        ILegionPreLiquidSale(legionPreLiquidSaleInstance).claimAskTokenAllocation();
+        ILegionPreLiquidSale(legionPreLiquidSaleInstance).claimAskTokenAllocation(saftInvestProofInvestor1);
 
         vm.warp(block.timestamp + TWO_WEEKS + VESTING_CLIFF_DURATION_SECONDS + 3600);
 

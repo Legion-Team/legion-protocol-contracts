@@ -197,23 +197,23 @@ interface ILegionPreLiquidSale {
     error InvalidClaimAmount();
 
     /**
+     * @notice Throws when the invested capital amount is not equal to the SAFT amount.
+     *
+     * @param investor The address of the investor.
+     */
+    error InvalidPositionAmount(address investor);
+
+    /**
+     * @notice Throws when the merkle proof for the investor is inavlid.
+     *
+     * @param investor The address of the investor.
+     */
+    error InvalidProof(address investor);
+
+    /**
      * @notice Throws when the Project is not accepting investments.
      */
     error InvestmentNotAccepted();
-
-    /**
-     * @notice Throws when the investor is not allowed to invest capital.
-     *
-     * @param investor The address of the investor.
-     */
-    error NotAllowedToInvestCapital(address investor);
-
-    /**
-     * @notice Throws when the investor is not allowed to withdraw excess capital.
-     *
-     * @param investor The address of the investor.
-     */
-    error NotAllowedToWithdrawExcessCapital(address investor);
 
     /**
      * @notice Throws when not called by Legion.
@@ -462,8 +462,10 @@ interface ILegionPreLiquidSale {
 
     /**
      * @notice Claim token allocation by investors
+     *
+     * @param proof The merkle proof that the investor has signed a SAFT
      */
-    function claimAskTokenAllocation() external;
+    function claimAskTokenAllocation(bytes32[] calldata proof) external;
 
     /**
      * @notice Cancel the sale.

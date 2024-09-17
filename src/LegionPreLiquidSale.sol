@@ -209,8 +209,8 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
             position.cachedSAFTHash = saftHash;
         }
 
-        /// Verify that the user can invest capital
-        _verifyCanInvestCapital(msg.sender, proof);
+        /// Verify that the investor position is valid
+        _verifyValidPosition(msg.sender, proof);
 
         /// Emit successfully CapitalInvested
         emit CapitalInvested(amount, msg.sender, tokenAllocationBps, saftHash, block.timestamp);
@@ -416,12 +416,15 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
     /**
      * @notice See {ILegionPreLiquidSale-claimTokenAllocation}.
      */
-    function claimAskTokenAllocation() external {
+    function claimAskTokenAllocation(bytes32[] calldata proof) external {
         /// Verify that the sale has not been canceled
         _verifySaleNotCanceled();
 
         /// Verify that the investor can claim the token allocation
         _verifyCanClaimTokenAllocation(msg.sender);
+
+        /// Verify that the investor position is valid
+        _verifyValidPosition(msg.sender, proof);
 
         /// Load the investor position
         InvestorPosition storage position = investorPositions[msg.sender];
@@ -546,8 +549,8 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
             position.cachedSAFTHash = saftHash;
         }
 
-        /// Verify that the investor can claim excess capital
-        _verifyCanWithdrawExcessCapital(msg.sender, proof);
+        /// Verify that the investor position is valid
+        _verifyValidPosition(msg.sender, proof);
 
         /// Emit successfully ExcessCapitalWithdrawn
         emit ExcessCapitalWithdrawn(amount, msg.sender, tokenAllocationBps, saftHash, block.timestamp);
@@ -677,39 +680,6 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
         if (_preLiquidSaleConfig.refundPeriodSeconds > TWO_WEEKS) revert InvalidPeriodConfig();
     }
 
-    /**
-     * @notice Verify if an investor is eligible to invest capital in the pre-liquid sale.
-     *
-     * @param _investor The address of the investor trying to participate.
-     * @param _proof The merkle proof that the investor is part of the whitelist
-     */
-    function _verifyCanInvestCapital(address _investor, bytes32[] calldata _proof) private view {
-        /// Load the investor position
-        InvestorPosition memory position = investorPositions[_investor];
-
-        /// Generate the merkle leaf
-        bytes32 leaf = keccak256(
-            bytes.concat(
-                keccak256(
-                    abi.encode(
-                        _investor,
-                        position.cachedSAFTInvestAmount,
-                        position.cachedTokenAllocationBps,
-                        position.cachedSAFTHash
-                    )
-                )
-            )
-        );
-
-        /// Verify that the amount invested is the maximum invest amount allowed
-        if ((position.investedCapital != position.cachedSAFTInvestAmount)) {
-            revert NotAllowedToInvestCapital(_investor);
-        }
-
-        /// Verify the merkle proof
-        if (!MerkleProof.verify(_proof, saftMerkleRoot, leaf)) revert NotAllowedToInvestCapital(_investor);
-    }
-
     function _verifyCanWithdrawInvestorPosition(address _investor) private view {
         /// Load the investor position
         InvestorPosition memory position = investorPositions[_investor];
@@ -800,39 +770,6 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
     }
 
     /**
-     * @notice Verify if an investor is eligible to withdraw excess capital.
-     *
-     * @param _investor The address of the investor trying to participate.
-     * @param _proof The merkle proof that the investor is part of the whitelist
-     */
-    function _verifyCanWithdrawExcessCapital(address _investor, bytes32[] calldata _proof) internal view {
-        /// Load the investor position
-        InvestorPosition memory position = investorPositions[_investor];
-
-        /// Generate the merkle leaf
-        bytes32 leaf = keccak256(
-            bytes.concat(
-                keccak256(
-                    abi.encode(
-                        _investor,
-                        position.cachedSAFTInvestAmount,
-                        position.cachedTokenAllocationBps,
-                        position.cachedSAFTHash
-                    )
-                )
-            )
-        );
-
-        /// Verify that the amount invested is equal to the maximum invest amount allowed
-        if (position.investedCapital != position.cachedSAFTInvestAmount) {
-            revert NotAllowedToWithdrawExcessCapital(_investor);
-        }
-
-        /// Verify the merkle proof
-        if (!MerkleProof.verify(_proof, saftMerkleRoot, leaf)) revert NotAllowedToWithdrawExcessCapital(_investor);
-    }
-
-    /**
      * @notice Verify if an investor is eligible to claim token allocation.
      *
      * @param _investor The address of the investor.
@@ -857,5 +794,38 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
     function _verifyInvestmentAccepted() internal view {
         /// Check if investment is accepted by the Project
         if (!investmentAccepted) revert InvestmentNotAccepted();
+    }
+
+    /**
+     * @notice Verify if the investor position is valid
+     *
+     * @param _investor The address of the investor.
+     * @param _proof The merkle proof that the investor is part of the whitelist
+     */
+    function _verifyValidPosition(address _investor, bytes32[] calldata _proof) internal view {
+        /// Load the investor position
+        InvestorPosition memory position = investorPositions[_investor];
+
+        /// Generate the merkle leaf
+        bytes32 leaf = keccak256(
+            bytes.concat(
+                keccak256(
+                    abi.encode(
+                        _investor,
+                        position.cachedSAFTInvestAmount,
+                        position.cachedTokenAllocationBps,
+                        position.cachedSAFTHash
+                    )
+                )
+            )
+        );
+
+        /// Verify that the amount invested is equal to the SAFT amount
+        if (position.investedCapital != position.cachedSAFTInvestAmount) {
+            revert InvalidPositionAmount(_investor);
+        }
+
+        /// Verify the merkle proof
+        if (!MerkleProof.verify(_proof, saftMerkleRoot, leaf)) revert InvalidProof(_investor);
     }
 }
