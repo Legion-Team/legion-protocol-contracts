@@ -797,6 +797,48 @@ contract LegionPreLiquidSaleTest is Test {
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).cancelSale();
     }
 
+    /**
+     * @dev Test Case: Attempt to cancel a sale if tokens have been supplied by the project
+     */
+    function test_cancelSale_revertsIfAskTokensHaveBeenSupplied() public {
+        // Arrange
+        prepareCreateLegionPreLiquidSale();
+        prepareMintAndApproveTokens();
+
+        bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
+
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
+
+        vm.warp(block.timestamp + 1);
+
+        vm.prank(investor1);
+        ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
+            10000 * 1e6,
+            10000 * 1e6,
+            50,
+            0x0000000000000000000000000000000000000000000000000000000000000003,
+            saftInvestProofInvestor1
+        );
+
+        vm.warp(block.timestamp + TWO_WEEKS + 1);
+
+        vm.prank(legionBouncer);
+        ILegionPreLiquidSale(legionPreLiquidSaleInstance).publishTgeDetails(
+            address(askToken), 1000000 * 1e18, (block.timestamp + TWO_WEEKS + 2), 20000 * 1e18
+        );
+
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSale(legionPreLiquidSaleInstance).supplyAskTokens(20000 * 1e18, 500 * 1e18);
+
+        // Assert
+        vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.TokensAlreadySupplied.selector));
+
+        // Act
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSale(legionPreLiquidSaleInstance).cancelSale();
+    }
+
     /* ========== PUBLISH TGE DETAILS TESTS ========== */
 
     /**

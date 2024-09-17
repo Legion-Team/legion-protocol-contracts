@@ -468,6 +468,9 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
         /// Verify that the sale has not been canceled
         _verifySaleNotCanceled();
 
+        /// Verify that no tokens have been supplied to the sale by the Project
+        _verifyAskTokensNotSupplied();
+
         /// Cache the amount of funds to be returned to the sale
         uint256 capitalToReturn = totalCapitalWithdrawn;
 
@@ -794,6 +797,13 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
     function _verifyInvestmentAccepted() internal view {
         /// Check if investment is accepted by the Project
         if (!investmentAccepted) revert InvestmentNotAccepted();
+    }
+
+    /**
+     * @notice Verify that the project has not supplied ask tokens to the sale.
+     */
+    function _verifyAskTokensNotSupplied() internal view virtual {
+        if (askTokensSupplied) revert TokensAlreadySupplied();
     }
 
     /**
