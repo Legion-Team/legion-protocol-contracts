@@ -244,7 +244,8 @@ contract LegionSealedBidAuction is LegionBaseSale, ILegionSealedBidAuction {
             claimTokensMerkleRoot,
             excessCapitalMerkleRoot,
             isCanceled,
-            tokensSupplied
+            tokensSupplied,
+            capitalWithdrawn
         );
     }
 

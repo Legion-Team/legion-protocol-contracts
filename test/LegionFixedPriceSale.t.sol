@@ -2081,6 +2081,41 @@ contract LegionFixedPriceSaleTest is Test {
         ILegionFixedPriceSale(legionSaleInstance).withdrawCapital();
     }
 
+    /**
+     * @dev Test Case: Attempt to withdraw raised capital after capital already withdrawn
+     */
+    function test_withdrawCapital_revertsIfCapitalAlreadyWithdrawn() public {
+        // Arrange
+        prepareCreateLegionFixedPriceSale();
+        prepareMintAndApproveInvestorTokens();
+        prepareInvestorSignatures();
+
+        preparePledgedCapitalFromAllInvestors();
+
+        vm.warp(refundEndTime() + 1);
+
+        vm.prank(legionBouncer);
+        ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(
+            claimTokensMerkleRoot, 4000 * 1e18, askTokenDecimals
+        );
+
+        vm.startPrank(projectAdmin);
+
+        MockAskToken(askToken).mint(projectAdmin, 4100 * 1e18);
+        MockAskToken(askToken).approve(legionSaleInstance, 4100 * 1e18);
+        ILegionFixedPriceSale(legionSaleInstance).supplyTokens(4000 * 1e18, 100 * 1e18);
+        ILegionFixedPriceSale(legionSaleInstance).withdrawCapital();
+
+        vm.stopPrank();
+
+        // Assert
+        vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.CapitalAlreadyWithdrawn.selector));
+
+        // Act
+        vm.prank(projectAdmin);
+        ILegionFixedPriceSale(legionSaleInstance).withdrawCapital();
+    }
+
     /* ========== CLAIM EXCESS CAPITAL TESTS ========== */
 
     /**

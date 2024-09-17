@@ -209,7 +209,8 @@ contract LegionFixedPriceSale is LegionBaseSale, ILegionFixedPriceSale {
             claimTokensMerkleRoot,
             excessCapitalMerkleRoot,
             isCanceled,
-            tokensSupplied
+            tokensSupplied,
+            capitalWithdrawn
         );
     }
 

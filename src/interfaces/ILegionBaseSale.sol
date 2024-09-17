@@ -110,6 +110,11 @@ interface ILegionBaseSale {
     error AlreadyClaimedExcess(address investor);
 
     /**
+     * @notice Throws when capital has already been withdrawn by the Project.
+     */
+    error CapitalAlreadyWithdrawn();
+
+    /**
      * @notice Throws when the excess capital results have already been published.
      *
      * @param merkleRoot The merkle root for distribution of excess capital.

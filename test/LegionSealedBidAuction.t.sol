@@ -2541,6 +2541,46 @@ contract LegionSealedBidAuctionTest is Test {
         ILegionSealedBidAuction(legionSealedBidAuctionInstance).withdrawCapital();
     }
 
+    /**
+     * @dev Test Case: Attempt to withdraw raised capital after capital already withdrawn
+     */
+    function test_withdrawCapital_revertsIfCapitalAlreadyWithdrawn() public {
+        // Arrange
+        prepareSealedBidData();
+        prepareCreateLegionSealedBidAuction();
+        prepareMintAndApproveInvestorTokens();
+        prepareInvestorSignatures();
+
+        preparePledgedCapitalFromAllInvestors();
+
+        vm.warp(refundEndTime() + 1);
+
+        vm.startPrank(legionBouncer);
+
+        ILegionSealedBidAuction(legionSealedBidAuctionInstance).initializePublishSaleResults();
+        ILegionSealedBidAuction(legionSealedBidAuctionInstance).publishSaleResults(
+            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
+        );
+        
+        vm.stopPrank();
+
+        vm.startPrank(projectAdmin);
+
+        MockAskToken(askToken).mint(projectAdmin, 4100 * 1e18);
+        MockAskToken(askToken).approve(legionSealedBidAuctionInstance, 4100 * 1e18);
+        ILegionSealedBidAuction(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18);
+        ILegionSealedBidAuction(legionSealedBidAuctionInstance).withdrawCapital();   
+
+        vm.stopPrank();
+
+        // Assert
+        vm.expectRevert(abi.encodeWithSelector(ILegionBaseSale.CapitalAlreadyWithdrawn.selector));
+
+        // Act
+        vm.prank(projectAdmin);
+        ILegionSealedBidAuction(legionSealedBidAuctionInstance).withdrawCapital();
+    }
+
     /* ========== CLAIM EXCESS CAPITAL TESTS ========== */
 
     /**
