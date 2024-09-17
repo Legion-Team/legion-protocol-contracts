@@ -135,7 +135,7 @@ library ECIES {
 
     /// @notice Checks whether a point is valid. We consider a point valid if it is on the curve and not the generator point or the point at infinity.
     function isValid(Point memory p) public pure returns (bool) {
-        return isOnBn128(p) && !(p.x == 1 && p.y == 2) && !(p.x == 0 && p.y == 0);
+        return isOnBn128(p) && !(p.x == 1 && p.y == 2) && !(p.x == 0 && p.y == 0) && (p.x < FIELD_MODULUS) && (p.y < FIELD_MODULUS);
     }
 
     function _fieldmul(uint256 a, uint256 b) private pure returns (uint256 c) {
