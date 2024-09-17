@@ -387,11 +387,14 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
             /// Load the investor position
             InvestorPosition storage position = investorPositions[investors[i]];
 
+            /// Get the outstanding capital to be withdrawn
+            uint256 currentAmount = position.investedCapital - position.withdrawnCapital;
+
             /// Mark the amount of capital withdrawn
-            position.withdrawnCapital += position.investedCapital;
+            position.withdrawnCapital += currentAmount;
 
             /// Increment the total amount to be withdrawn
-            amount += position.investedCapital;
+            amount += currentAmount;
         }
 
         /// Account for the capital withdrawn

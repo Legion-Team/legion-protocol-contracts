@@ -1290,6 +1290,76 @@ contract LegionPreLiquidSaleTest is Test {
     }
 
     /**
+     * @dev Test Case: Successfully withdraw correct amount of capital from the sale by the Project, after SAFT update.
+     */
+    function test_withdrawRaisedCapital_successfullyWithdrawsCorrectAmountAfterSAFTUpdated() public {
+        // Arrange
+        prepareCreateLegionPreLiquidSale();
+        prepareMintAndApproveTokens();
+
+        bytes32[] memory saftInvestProofInvestor1 = new bytes32[](2);
+        bytes32[] memory saftInvestProofInvestor2 = new bytes32[](2);
+
+        saftInvestProofInvestor1[0] = bytes32(0xbf0d75977c8c91921960e0f5ccd657654f6a695076abb91add448c612538cff4);
+        saftInvestProofInvestor1[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
+
+        saftInvestProofInvestor2[0] = bytes32(0x8b846f1445c05e0514359ea93d8373b7925c743217ff45aa582d83f554c2561d);
+        saftInvestProofInvestor2[1] = bytes32(0xdd8fa3ddc36f0074a1c4a6a3adb9fc70688a6795a53c5260cc72ce467cdb11d2);
+
+        vm.warp(block.timestamp + 1 days);
+
+        vm.prank(investor1);
+        ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
+            10000 * 1e6,
+            10000 * 1e6,
+            50,
+            0x0000000000000000000000000000000000000000000000000000000000000003,
+            saftInvestProofInvestor1
+        );
+
+        vm.prank(investor2);
+        ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
+            10000 * 1e6,
+            10000 * 1e6,
+            50,
+            0x0000000000000000000000000000000000000000000000000000000000000004,
+            saftInvestProofInvestor2
+        );
+
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSale(legionPreLiquidSaleInstance).updateSAFTMerkleRoot(
+            0x0f648450b95bab26fe23d4e7971e2e4248c64f36c2f06f8566ea59c1c93833e5
+        );
+
+        vm.warp(block.timestamp + 1 days + REFUND_PERIOD_SECONDS);
+
+        // Assert
+        vm.expectEmit();
+        emit ILegionPreLiquidSale.CapitalWithdrawn(10000 * 1e6);
+
+        // Act
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSale(legionPreLiquidSaleInstance).withdrawRaisedCapital(investedAddresses);
+
+        vm.prank(investor1);
+        ILegionPreLiquidSale(legionPreLiquidSaleInstance).invest(
+            10000 * 1e6,
+            20000 * 1e6,
+            100,
+            0x0000000000000000000000000000000000000000000000000000000000000003,
+            saftInvestProofInvestor1
+        );
+
+        // Assert
+        vm.expectEmit();
+        emit ILegionPreLiquidSale.CapitalWithdrawn(10000 * 1e6);
+
+        // Act
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSale(legionPreLiquidSaleInstance).withdrawRaisedCapital(investedAddresses);
+    }
+
+    /**
      * @dev Test Case: Attempt to withdraw from a position from which capital has already been withdrawn.
      */
     function test_withdrawRaisedCapital_revertsIfPositionHasAlreadyBeenWithdrawn() public {
