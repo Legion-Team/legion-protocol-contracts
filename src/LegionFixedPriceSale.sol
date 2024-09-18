@@ -156,11 +156,8 @@ contract LegionFixedPriceSale is LegionBaseSale, ILegionFixedPriceSale {
         /// Set the total tokens to be allocated by the Project team
         totalTokensAllocated = tokensAllocated;
 
-        /// Check if Legion is publishing results on the sale source chain
-        /// and set the total capital raised to be withdrawn by the project
-        totalCapitalRaised = (askToken != address(0))
-            ? (tokensAllocated * tokenPrice) / (10 ** (ERC20(askToken).decimals()))
-            : (tokensAllocated * tokenPrice) / (10 ** askTokenDecimals);
+        /// Set the total capital raised to be withdrawn by the project
+        totalCapitalRaised = (tokensAllocated * tokenPrice) / (10 ** askTokenDecimals);
 
         /// Emit successfully SaleResultsPublished
         emit SaleResultsPublished(merkleRoot, tokensAllocated);
