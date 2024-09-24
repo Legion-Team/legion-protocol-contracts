@@ -314,12 +314,12 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
     /**
      * @notice See {ILegionPreLiquidSale-updateSAFTMerkleRoot}.
      */
-    function updateSAFTMerkleRoot(bytes32 merkleRoot) external onlyProject {
+    function updateSAFTMerkleRoot(bytes32 merkleRoot) external onlyLegion {
         /// Verify that the sale is not canceled
         _verifySaleNotCanceled();
 
-        /// Verify that the project has not withdrawn any capital
-        _verifyNoCapitalWithdrawn();
+        /// Verify that tokens for distribution have not been allocated
+        _verifyTokensNotAllocated();
 
         /// Set the new SAFT merkle root
         saftMerkleRoot = merkleRoot;
@@ -675,7 +675,7 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
         ) revert ZeroAddressProvided();
 
         /// Check for zero values provided
-        if (_preLiquidSaleConfig.refundPeriodSeconds == 0 || _preLiquidSaleConfig.saftMerkleRoot == 0) {
+        if (_preLiquidSaleConfig.refundPeriodSeconds == 0) {
             revert ZeroValueProvided();
         }
 

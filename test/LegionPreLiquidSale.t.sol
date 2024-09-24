@@ -1368,7 +1368,7 @@ contract LegionPreLiquidSaleTest is Test {
             saftInvestProofInvestor2
         );
 
-        vm.prank(projectAdmin);
+        vm.prank(legionBouncer);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).updateSAFTMerkleRoot(
             0x0f648450b95bab26fe23d4e7971e2e4248c64f36c2f06f8566ea59c1c93833e5
         );
@@ -1704,24 +1704,24 @@ contract LegionPreLiquidSaleTest is Test {
         emit ILegionPreLiquidSale.SAFTMerkleRootUpdated(SAFT_MERKLE_ROOT_UPDATED);
 
         // Act
-        vm.prank(projectAdmin);
+        vm.prank(legionBouncer);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).updateSAFTMerkleRoot(SAFT_MERKLE_ROOT_UPDATED);
     }
 
     /**
-     * @dev Test Case: Attempt to update SAFT merkle root by non project admin.
+     * @dev Test Case: Attempt to update SAFT merkle root by non Legion admin.
      */
-    function test_updateSAFTMerkleRoot_revertsIfCalledByNonProjectAdmin() public {
+    function test_updateSAFTMerkleRoot_revertsIfCalledByNonLegionAdmin() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
 
         vm.warp(block.timestamp + 1);
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.NotCalledByProject.selector));
+        vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.NotCalledByLegion.selector));
 
         // Act
-        vm.prank(nonProjectAdmin);
+        vm.prank(nonLegionAdmin);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).updateSAFTMerkleRoot(SAFT_MERKLE_ROOT_UPDATED);
     }
 
@@ -1741,14 +1741,14 @@ contract LegionPreLiquidSaleTest is Test {
         vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.SaleIsCanceled.selector));
 
         // Act
-        vm.prank(projectAdmin);
+        vm.prank(legionBouncer);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).updateSAFTMerkleRoot(SAFT_MERKLE_ROOT_UPDATED);
     }
 
     /**
      * @dev Test Case: Attempt to update SAFT merkle root when the project has withdrawn capital.
      */
-    function test_updateSAFTMerkleRoot_revertsIfCapitalHasBeenWithdrawn() public {
+    function test_updateSAFTMerkleRoot_revertsIfTgeDetailsHaveBeenPublished() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
         prepareMintAndApproveTokens();
@@ -1771,14 +1771,16 @@ contract LegionPreLiquidSaleTest is Test {
 
         vm.warp(block.timestamp + REFUND_PERIOD_SECONDS + 1 days);
 
-        vm.prank(projectAdmin);
-        ILegionPreLiquidSale(legionPreLiquidSaleInstance).withdrawRaisedCapital(investedAddresses);
+        vm.prank(legionBouncer);
+        ILegionPreLiquidSale(legionPreLiquidSaleInstance).publishTgeDetails(
+            address(askToken), 1000000 * 1e18, (block.timestamp + TWO_WEEKS + 2), 20000 * 1e18
+        );
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.ProjectHasWithdrawnCapital.selector));
+        vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.TokensAlreadyAllocated.selector));
 
         // Act
-        vm.prank(projectAdmin);
+        vm.prank(legionBouncer);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).updateSAFTMerkleRoot(SAFT_MERKLE_ROOT_UPDATED);
     }
 
@@ -1810,7 +1812,7 @@ contract LegionPreLiquidSaleTest is Test {
 
         vm.warp(block.timestamp + 1 days + REFUND_PERIOD_SECONDS);
 
-        vm.prank(projectAdmin);
+        vm.prank(legionBouncer);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).updateSAFTMerkleRoot(SAFT_MERKLE_ROOT_UPDATED);
 
         bytes32[] memory saftInvestProofInvestor1Updated = new bytes32[](2);
@@ -1865,7 +1867,7 @@ contract LegionPreLiquidSaleTest is Test {
 
         vm.warp(block.timestamp + 1 days + REFUND_PERIOD_SECONDS);
 
-        vm.prank(projectAdmin);
+        vm.prank(legionBouncer);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).updateSAFTMerkleRoot(SAFT_MERKLE_ROOT_UPDATED);
 
         bytes32[] memory saftInvestProofInvestor1Updated = new bytes32[](2);
@@ -1916,7 +1918,7 @@ contract LegionPreLiquidSaleTest is Test {
 
         vm.warp(block.timestamp + 1 days + REFUND_PERIOD_SECONDS);
 
-        vm.prank(projectAdmin);
+        vm.prank(legionBouncer);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).updateSAFTMerkleRoot(SAFT_MERKLE_ROOT_UPDATED);
 
         bytes32[] memory saftInvestProofInvestor1Updated = new bytes32[](2);
@@ -1964,7 +1966,7 @@ contract LegionPreLiquidSaleTest is Test {
 
         vm.warp(block.timestamp + 1 days + REFUND_PERIOD_SECONDS);
 
-        vm.prank(projectAdmin);
+        vm.prank(legionBouncer);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).updateSAFTMerkleRoot(SAFT_MERKLE_ROOT_UPDATED);
 
         bytes32[] memory saftInvestProofInvestor1Updated = new bytes32[](2);
@@ -2196,16 +2198,17 @@ contract LegionPreLiquidSaleTest is Test {
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
         vm.prank(legionBouncer);
+        ILegionPreLiquidSale(legionPreLiquidSaleInstance).updateSAFTMerkleRoot(
+            0x6d9283d7f9721edc8bd59a41dc800b296f4311ee3a0ee8385a34a8ff8d8cb586
+        );
+
+        vm.prank(legionBouncer);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).publishTgeDetails(
             address(askToken), 1000000 * 1e18, (block.timestamp + TWO_WEEKS + 2), 20000 * 1e18
         );
 
-        vm.startPrank(projectAdmin);
+        vm.prank(projectAdmin);
         ILegionPreLiquidSale(legionPreLiquidSaleInstance).supplyAskTokens(20000 * 1e18, 500 * 1e18);
-        ILegionPreLiquidSale(legionPreLiquidSaleInstance).updateSAFTMerkleRoot(
-            0x6d9283d7f9721edc8bd59a41dc800b296f4311ee3a0ee8385a34a8ff8d8cb586
-        );
-        vm.stopPrank();
 
         // Assert
         vm.expectRevert(abi.encodeWithSelector(ILegionPreLiquidSale.InvalidProof.selector, investor1));
