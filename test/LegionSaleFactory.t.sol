@@ -17,7 +17,8 @@ import {LegionPreLiquidSale} from "../src/LegionPreLiquidSale.sol";
 import {LegionSealedBidAuction} from "../src/LegionSealedBidAuction.sol";
 import {LegionSaleFactory} from "../src/LegionSaleFactory.sol";
 import {LegionVestingFactory} from "../src/LegionVestingFactory.sol";
-import {MockToken} from "../src/mocks/MockToken.sol";
+import {MockAskToken} from "../src/mocks/MockAskToken.sol";
+import {MockBidToken} from "../src/mocks/MockBidToken.sol";
 
 contract LegionSaleFactoryTest is Test {
     ILegionFixedPriceSale.FixedPriceSaleConfig fixedPriceSaleConfig;
@@ -28,8 +29,8 @@ contract LegionSaleFactoryTest is Test {
     LegionSaleFactory legionSaleFactory;
     LegionVestingFactory legionVestingFactory;
 
-    MockToken bidToken;
-    MockToken askToken;
+    MockBidToken bidToken;
+    MockAskToken askToken;
 
     address legionFixedPriceSaleInstance;
     address legionPreLiquidSaleInstance;
@@ -63,8 +64,8 @@ contract LegionSaleFactoryTest is Test {
         legionSaleFactory = new LegionSaleFactory(legionBouncer);
         legionVestingFactory = new LegionVestingFactory();
         legionAddressRegistry = new LegionAddressRegistry(legionBouncer);
-        bidToken = new MockToken("USD Coin", "USDC");
-        askToken = new MockToken("LFG Coin", "LFG");
+        bidToken = new MockBidToken("USD Coin", "USDC");
+        askToken = new MockAskToken("LFG Coin", "LFG");
         prepareLegionAddressRegistry();
     }
 

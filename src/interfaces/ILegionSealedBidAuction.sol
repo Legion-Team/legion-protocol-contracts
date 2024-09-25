@@ -139,6 +139,8 @@ interface ILegionSealedBidAuction is ILegionBaseSale {
         bool isCanceled;
         /// @dev Whether tokens have been supplied by the project or not.
         bool tokensSupplied;
+        /// @dev Whether raised capital has been withdrawn from the sale by the project or not.
+        bool capitalWithdrawn;
     }
 
     /// @notice A struct describing the encrypted bid

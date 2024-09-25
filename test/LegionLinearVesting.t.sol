@@ -8,14 +8,14 @@ import {ILegionVestingFactory} from "../src/interfaces/ILegionVestingFactory.sol
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {LegionLinearVesting} from "../src/LegionLinearVesting.sol";
 import {LegionVestingFactory} from "../src/LegionVestingFactory.sol";
-import {MockToken} from "../src/mocks/MockToken.sol";
+import {MockAskToken} from "../src/mocks/MockAskToken.sol";
 import {VestingWalletUpgradeable} from "@openzeppelin/contracts-upgradeable/finance/VestingWalletUpgradeable.sol";
 
 contract LegionLinearVestingTest is Test {
     LegionLinearVesting public linearVestingTemplate;
     LegionVestingFactory public legionVestingFactory;
 
-    MockToken public askToken;
+    MockAskToken public askToken;
 
     address public legionVestingInstance;
 
@@ -30,7 +30,7 @@ contract LegionLinearVestingTest is Test {
     function setUp() public {
         linearVestingTemplate = new LegionLinearVesting();
         legionVestingFactory = new LegionVestingFactory();
-        askToken = new MockToken("LFG Coin", "LFG");
+        askToken = new MockAskToken("LFG Coin", "LFG");
     }
 
     /**
@@ -43,7 +43,7 @@ contract LegionLinearVestingTest is Test {
         );
 
         vm.deal(legionVestingInstance, 1000 ether);
-        MockToken(askToken).mint(legionVestingInstance, 1000 * 1e18);
+        MockAskToken(askToken).mint(legionVestingInstance, 1000 * 1e18);
     }
 
     /**

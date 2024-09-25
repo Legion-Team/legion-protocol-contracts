@@ -20,6 +20,7 @@ import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProo
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
+import {ILegionAddressRegistry} from "./interfaces/ILegionAddressRegistry.sol";
 import {ILegionBaseSale} from "./interfaces/ILegionBaseSale.sol";
 import {ILegionLinearVesting} from "./interfaces/ILegionLinearVesting.sol";
 import {ILegionVestingFactory} from "./interfaces/ILegionVestingFactory.sol";
@@ -112,6 +113,9 @@ abstract contract LegionBaseSale is ILegionBaseSale, Initializable {
 
     /// @dev Whether tokens have been supplied by the project or not.
     bool internal tokensSupplied;
+
+    /// @dev Whether raised capital has been withdrawn from the sale by the project or not.
+    bool internal capitalWithdrawn;
 
     /// @dev Mapping of investor address to investor position.
     mapping(address investorAddress => InvestorPosition investorPosition) public investorPositions;
@@ -217,11 +221,17 @@ abstract contract LegionBaseSale is ILegionBaseSale, Initializable {
         /// Verify that sale results have been published
         _verifySaleResultsArePublished();
 
+        /// Verify that the project can withdraw capital
+        _verifyCanWithdrawCapital();
+
         /// Check if projects are withdrawing capital on the sale source chain
         if (askToken != address(0)) {
             /// Allow projects to withdraw capital only in case they've supplied tokens
             _verifyTokensSupplied();
         }
+
+        /// Flag that the capital has been withdrawn
+        capitalWithdrawn = true;
 
         /// Cache value in memory
         uint256 _totalCapitalRaised = totalCapitalRaised;
@@ -454,6 +464,20 @@ abstract contract LegionBaseSale is ILegionBaseSale, Initializable {
     }
 
     /**
+     * @notice See {ILegionBaseSale-syncLegionAddresses}.
+     */
+    function syncLegionAddresses() external virtual onlyLegion {
+        /// Cache Legion addresses from `LegionAddressRegistry`
+        legionBouncer = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_BOUNCER_ID);
+        legionSigner = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_SIGNER_ID);
+        legionFeeReceiver = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_FEE_RECEIVER_ID);
+        vestingFactory = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_VESTING_FACTORY_ID);
+
+        /// Emit successfully LegionAddressesSynced
+        emit LegionAddressesSynced(legionBouncer, legionSigner, legionFeeReceiver, vestingFactory);
+    }
+
+    /**
      * @notice Create a vesting schedule contract.
      *
      * @param _beneficiary The beneficiary.
@@ -650,7 +674,14 @@ abstract contract LegionBaseSale is ILegionBaseSale, Initializable {
      * @param _signature The signature to verify.
      */
     function _verifyLegionSignature(bytes memory _signature) internal view virtual {
-        bytes32 _data = keccak256(abi.encodePacked(msg.sender)).toEthSignedMessageHash();
+        bytes32 _data = keccak256(abi.encodePacked(msg.sender, address(this), block.chainid)).toEthSignedMessageHash();
         if (_data.recover(_signature) != legionSigner) revert InvalidSignature();
+    }
+
+    /**
+     * @notice Verify that the project can withdraw capital.
+     */
+    function _verifyCanWithdrawCapital() internal view virtual {
+        if (capitalWithdrawn) revert CapitalAlreadyWithdrawn();
     }
 }

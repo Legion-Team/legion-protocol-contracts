@@ -62,6 +62,18 @@ interface ILegionBaseSale {
     event EmergencyWithdraw(address receiver, address token, uint256 amount);
 
     /**
+     * @notice This event is emitted when excess capital results are successfully published by the Legion admin.
+     *
+     * @param legionBouncer The updated Legion bouncer address.
+     * @param legionSigner The updated Legion signer address.
+     * @param legionFeeReceiver The updated fee receiver address of Legion.
+     * @param vestingFactory The updated vesting factory address.
+     */
+    event LegionAddressesSynced(
+        address legionBouncer, address legionSigner, address legionFeeReceiver, address vestingFactory
+    );
+
+    /**
      * @notice This event is emitted when a sale is successfully canceled.
      */
     event SaleCanceled();
@@ -96,6 +108,11 @@ interface ILegionBaseSale {
      * @param investor The address of the investor trying to get excess capital back.
      */
     error AlreadyClaimedExcess(address investor);
+
+    /**
+     * @notice Throws when capital has already been withdrawn by the Project.
+     */
+    error CapitalAlreadyWithdrawn();
 
     /**
      * @notice Throws when the excess capital results have already been published.
@@ -347,4 +364,9 @@ interface ILegionBaseSale {
      * @param amount The amount to be withdrawn.
      */
     function emergencyWithdraw(address receiver, address token, uint256 amount) external;
+
+    /**
+     * @notice Syncs active Legion addresses from `LegionAddressRegistry.sol`
+     */
+    function syncLegionAddresses() external;
 }

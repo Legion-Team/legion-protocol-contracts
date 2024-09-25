@@ -137,7 +137,10 @@ contract LegionFixedPriceSale is LegionBaseSale, ILegionFixedPriceSale {
     /**
      * @notice See {ILegionFixedPriceSale-publishSaleResults}.
      */
-    function publishSaleResults(bytes32 merkleRoot, uint256 tokensAllocated) external onlyLegion {
+    function publishSaleResults(bytes32 merkleRoot, uint256 tokensAllocated, uint8 askTokenDecimals)
+        external
+        onlyLegion
+    {
         /// Verify that the sale is not canceled
         _verifySaleNotCanceled();
 
@@ -154,7 +157,7 @@ contract LegionFixedPriceSale is LegionBaseSale, ILegionFixedPriceSale {
         totalTokensAllocated = tokensAllocated;
 
         /// Set the total capital raised to be withdrawn by the project
-        totalCapitalRaised = (tokensAllocated * tokenPrice) / (10 ** (ERC20(bidToken).decimals()));
+        totalCapitalRaised = (tokensAllocated * tokenPrice) / (10 ** askTokenDecimals);
 
         /// Emit successfully SaleResultsPublished
         emit SaleResultsPublished(merkleRoot, tokensAllocated);
@@ -175,8 +178,8 @@ contract LegionFixedPriceSale is LegionBaseSale, ILegionFixedPriceSale {
             vestingCliffDurationSeconds,
             legionFeeOnCapitalRaisedBps,
             legionFeeOnTokensSoldBps,
-            tokenPrice,
             minimumPledgeAmount,
+            tokenPrice,
             bidToken,
             askToken,
             projectAdmin,
@@ -203,7 +206,8 @@ contract LegionFixedPriceSale is LegionBaseSale, ILegionFixedPriceSale {
             claimTokensMerkleRoot,
             excessCapitalMerkleRoot,
             isCanceled,
-            tokensSupplied
+            tokensSupplied,
+            capitalWithdrawn
         );
     }
 

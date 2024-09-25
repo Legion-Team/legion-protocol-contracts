@@ -72,6 +72,15 @@ interface ILegionPreLiquidSale {
     event EmergencyWithdraw(address receiver, address token, uint256 amount);
 
     /**
+     * @notice This event is emitted when excess capital results are successfully published by the Legion admin.
+     *
+     * @param legionBouncer The updated Legion bouncer address.
+     * @param legionFeeReceiver The updated fee receiver address of Legion.
+     * @param vestingFactory The updated vesting factory address.
+     */
+    event LegionAddressesSynced(address legionBouncer, address legionFeeReceiver, address vestingFactory);
+
+    /**
      * @notice This event is emitted when the SAFT merkle root is updated by the Legion admin.
      *
      * @param merkleRoot The new SAFT merkle root.
@@ -188,23 +197,23 @@ interface ILegionPreLiquidSale {
     error InvalidClaimAmount();
 
     /**
+     * @notice Throws when the invested capital amount is not equal to the SAFT amount.
+     *
+     * @param investor The address of the investor.
+     */
+    error InvalidPositionAmount(address investor);
+
+    /**
+     * @notice Throws when the merkle proof for the investor is inavlid.
+     *
+     * @param investor The address of the investor.
+     */
+    error InvalidProof(address investor);
+
+    /**
      * @notice Throws when the Project is not accepting investments.
      */
     error InvestmentNotAccepted();
-
-    /**
-     * @notice Throws when the investor is not allowed to invest capital.
-     *
-     * @param investor The address of the investor.
-     */
-    error NotAllowedToInvestCapital(address investor);
-
-    /**
-     * @notice Throws when the investor is not allowed to withdraw excess capital.
-     *
-     * @param investor The address of the investor.
-     */
-    error NotAllowedToWithdrawExcessCapital(address investor);
 
     /**
      * @notice Throws when not called by Legion.
@@ -453,8 +462,10 @@ interface ILegionPreLiquidSale {
 
     /**
      * @notice Claim token allocation by investors
+     *
+     * @param proof The merkle proof that the investor has signed a SAFT
      */
-    function claimAskTokenAllocation() external;
+    function claimAskTokenAllocation(bytes32[] calldata proof) external;
 
     /**
      * @notice Cancel the sale.
@@ -494,6 +505,11 @@ interface ILegionPreLiquidSale {
      * @notice Toggles the `investmentAccepted` status.
      */
     function toggleInvestmentAccepted() external;
+
+    /**
+     * @notice Syncs active Legion addresses from `LegionAddressRegistry.sol`
+     */
+    function syncLegionAddresses() external;
 
     /**
      * @notice Returns the configuration for the pre-liquid token sale.

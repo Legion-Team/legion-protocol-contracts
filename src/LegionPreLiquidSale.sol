@@ -65,7 +65,7 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
     address private legionBouncer;
 
     /// @dev The address of Legion fee receiver.
-    address internal legionFeeReceiver;
+    address private legionFeeReceiver;
 
     /// @dev The address of Legion's Vesting Factory contract.
     address private vestingFactory;
@@ -89,13 +89,13 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
     uint256 private totalCapitalWithdrawn;
 
     /// @dev Whether the sale has been canceled or not.
-    bool internal isCanceled;
+    bool private isCanceled;
 
     /// @dev Whether the ask tokens have been supplied to the sale.
-    bool internal askTokensSupplied;
+    bool private askTokensSupplied;
 
     /// @dev Whether investment is being accepted by the Project.
-    bool internal investmentAccepted;
+    bool private investmentAccepted;
 
     /// @dev Mapping of investor address to investor position.
     mapping(address investorAddress => InvestorPosition investorPosition) public investorPositions;
@@ -104,13 +104,13 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
     uint256 private constant TWO_WEEKS = 1209600;
 
     /// @dev Constant representing the LEGION_BOUNCER unique ID
-    bytes32 internal constant LEGION_BOUNCER_ID = bytes32("LEGION_BOUNCER");
+    bytes32 private constant LEGION_BOUNCER_ID = bytes32("LEGION_BOUNCER");
 
     /// @dev Constant representing the LEGION_FEE_RECEIVER unique ID
-    bytes32 internal constant LEGION_FEE_RECEIVER_ID = bytes32("LEGION_FEE_RECEIVER");
+    bytes32 private constant LEGION_FEE_RECEIVER_ID = bytes32("LEGION_FEE_RECEIVER");
 
     /// @dev Constant representing the LEGION_VESTING_FACTORY unique ID
-    bytes32 internal constant LEGION_VESTING_FACTORY_ID = bytes32("LEGION_VESTING_FACTORY");
+    bytes32 private constant LEGION_VESTING_FACTORY_ID = bytes32("LEGION_VESTING_FACTORY");
 
     /**
      * @notice Throws if called by any account other than Legion.
@@ -209,8 +209,8 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
             position.cachedSAFTHash = saftHash;
         }
 
-        /// Verify that the user can invest capital
-        _verifyCanInvestCapital(msg.sender, proof);
+        /// Verify that the investor position is valid
+        _verifyValidPosition(msg.sender, proof);
 
         /// Emit successfully CapitalInvested
         emit CapitalInvested(amount, msg.sender, tokenAllocationBps, saftHash, block.timestamp);
@@ -314,12 +314,12 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
     /**
      * @notice See {ILegionPreLiquidSale-updateSAFTMerkleRoot}.
      */
-    function updateSAFTMerkleRoot(bytes32 merkleRoot) external onlyProject {
+    function updateSAFTMerkleRoot(bytes32 merkleRoot) external onlyLegion {
         /// Verify that the sale is not canceled
         _verifySaleNotCanceled();
 
-        /// Verify that the project has not withdrawn any capital
-        _verifyNoCapitalWithdrawn();
+        /// Verify that tokens for distribution have not been allocated
+        _verifyTokensNotAllocated();
 
         /// Set the new SAFT merkle root
         saftMerkleRoot = merkleRoot;
@@ -387,11 +387,14 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
             /// Load the investor position
             InvestorPosition storage position = investorPositions[investors[i]];
 
+            /// Get the outstanding capital to be withdrawn
+            uint256 currentAmount = position.investedCapital - position.withdrawnCapital;
+
             /// Mark the amount of capital withdrawn
-            position.withdrawnCapital += position.investedCapital;
+            position.withdrawnCapital += currentAmount;
 
             /// Increment the total amount to be withdrawn
-            amount += position.investedCapital;
+            amount += currentAmount;
         }
 
         /// Account for the capital withdrawn
@@ -413,12 +416,15 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
     /**
      * @notice See {ILegionPreLiquidSale-claimTokenAllocation}.
      */
-    function claimAskTokenAllocation() external {
+    function claimAskTokenAllocation(bytes32[] calldata proof) external {
         /// Verify that the sale has not been canceled
         _verifySaleNotCanceled();
 
         /// Verify that the investor can claim the token allocation
         _verifyCanClaimTokenAllocation(msg.sender);
+
+        /// Verify that the investor position is valid
+        _verifyValidPosition(msg.sender, proof);
 
         /// Load the investor position
         InvestorPosition storage position = investorPositions[msg.sender];
@@ -461,6 +467,9 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
     function cancelSale() external onlyProject {
         /// Verify that the sale has not been canceled
         _verifySaleNotCanceled();
+
+        /// Verify that no tokens have been supplied to the sale by the Project
+        _verifyAskTokensNotSupplied();
 
         /// Cache the amount of funds to be returned to the sale
         uint256 capitalToReturn = totalCapitalWithdrawn;
@@ -543,8 +552,8 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
             position.cachedSAFTHash = saftHash;
         }
 
-        /// Verify that the investor can claim excess capital
-        _verifyCanWithdrawExcessCapital(msg.sender, proof);
+        /// Verify that the investor position is valid
+        _verifyValidPosition(msg.sender, proof);
 
         /// Emit successfully ExcessCapitalWithdrawn
         emit ExcessCapitalWithdrawn(amount, msg.sender, tokenAllocationBps, saftHash, block.timestamp);
@@ -579,6 +588,19 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
 
         /// Emit successfully ToggleInvestmentAccepted
         emit ToggleInvestmentAccepted(investmentAccepted);
+    }
+
+    /**
+     * @notice See {ILegionPreLiquidSale-syncLegionAddresses}.
+     */
+    function syncLegionAddresses() external onlyLegion {
+        /// Cache Legion addresses from `LegionAddressRegistry`
+        legionBouncer = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_BOUNCER_ID);
+        legionFeeReceiver = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_FEE_RECEIVER_ID);
+        vestingFactory = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_VESTING_FACTORY_ID);
+
+        /// Emit successfully LegionAddressesSynced
+        emit LegionAddressesSynced(legionBouncer, legionFeeReceiver, vestingFactory);
     }
 
     /**
@@ -653,45 +675,12 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
         ) revert ZeroAddressProvided();
 
         /// Check for zero values provided
-        if (_preLiquidSaleConfig.refundPeriodSeconds == 0 || _preLiquidSaleConfig.saftMerkleRoot == 0) {
+        if (_preLiquidSaleConfig.refundPeriodSeconds == 0) {
             revert ZeroValueProvided();
         }
 
         /// Check if prefund, allocation, sale, refund and lockup periods are within range
         if (_preLiquidSaleConfig.refundPeriodSeconds > TWO_WEEKS) revert InvalidPeriodConfig();
-    }
-
-    /**
-     * @notice Verify if an investor is eligible to invest capital in the pre-liquid sale.
-     *
-     * @param _investor The address of the investor trying to participate.
-     * @param _proof The merkle proof that the investor is part of the whitelist
-     */
-    function _verifyCanInvestCapital(address _investor, bytes32[] calldata _proof) private view {
-        /// Load the investor position
-        InvestorPosition memory position = investorPositions[_investor];
-
-        /// Generate the merkle leaf
-        bytes32 leaf = keccak256(
-            bytes.concat(
-                keccak256(
-                    abi.encode(
-                        _investor,
-                        position.cachedSAFTInvestAmount,
-                        position.cachedTokenAllocationBps,
-                        position.cachedSAFTHash
-                    )
-                )
-            )
-        );
-
-        /// Verify that the amount invested is the maximum invest amount allowed
-        if ((position.investedCapital != position.cachedSAFTInvestAmount)) {
-            revert NotAllowedToInvestCapital(_investor);
-        }
-
-        /// Verify the merkle proof
-        if (!MerkleProof.verify(_proof, saftMerkleRoot, leaf)) revert NotAllowedToInvestCapital(_investor);
     }
 
     function _verifyCanWithdrawInvestorPosition(address _investor) private view {
@@ -784,39 +773,6 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
     }
 
     /**
-     * @notice Verify if an investor is eligible to withdraw excess capital.
-     *
-     * @param _investor The address of the investor trying to participate.
-     * @param _proof The merkle proof that the investor is part of the whitelist
-     */
-    function _verifyCanWithdrawExcessCapital(address _investor, bytes32[] calldata _proof) internal view {
-        /// Load the investor position
-        InvestorPosition memory position = investorPositions[_investor];
-
-        /// Generate the merkle leaf
-        bytes32 leaf = keccak256(
-            bytes.concat(
-                keccak256(
-                    abi.encode(
-                        _investor,
-                        position.cachedSAFTInvestAmount,
-                        position.cachedTokenAllocationBps,
-                        position.cachedSAFTHash
-                    )
-                )
-            )
-        );
-
-        /// Verify that the amount invested is equal to the maximum invest amount allowed
-        if (position.investedCapital != position.cachedSAFTInvestAmount) {
-            revert NotAllowedToWithdrawExcessCapital(_investor);
-        }
-
-        /// Verify the merkle proof
-        if (!MerkleProof.verify(_proof, saftMerkleRoot, leaf)) revert NotAllowedToWithdrawExcessCapital(_investor);
-    }
-
-    /**
      * @notice Verify if an investor is eligible to claim token allocation.
      *
      * @param _investor The address of the investor.
@@ -841,5 +797,45 @@ contract LegionPreLiquidSale is ILegionPreLiquidSale, Initializable {
     function _verifyInvestmentAccepted() internal view {
         /// Check if investment is accepted by the Project
         if (!investmentAccepted) revert InvestmentNotAccepted();
+    }
+
+    /**
+     * @notice Verify that the project has not supplied ask tokens to the sale.
+     */
+    function _verifyAskTokensNotSupplied() internal view virtual {
+        if (askTokensSupplied) revert TokensAlreadySupplied();
+    }
+
+    /**
+     * @notice Verify if the investor position is valid
+     *
+     * @param _investor The address of the investor.
+     * @param _proof The merkle proof that the investor is part of the whitelist
+     */
+    function _verifyValidPosition(address _investor, bytes32[] calldata _proof) internal view {
+        /// Load the investor position
+        InvestorPosition memory position = investorPositions[_investor];
+
+        /// Generate the merkle leaf
+        bytes32 leaf = keccak256(
+            bytes.concat(
+                keccak256(
+                    abi.encode(
+                        _investor,
+                        position.cachedSAFTInvestAmount,
+                        position.cachedTokenAllocationBps,
+                        position.cachedSAFTHash
+                    )
+                )
+            )
+        );
+
+        /// Verify that the amount invested is equal to the SAFT amount
+        if (position.investedCapital != position.cachedSAFTInvestAmount) {
+            revert InvalidPositionAmount(_investor);
+        }
+
+        /// Verify the merkle proof
+        if (!MerkleProof.verify(_proof, saftMerkleRoot, leaf)) revert InvalidProof(_investor);
     }
 }
