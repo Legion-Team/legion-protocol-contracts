@@ -10,7 +10,7 @@ env:
 
 jobs:
   forge-test:
-    name: Run Forge Tests and Checks 
+    name: Run Forge Tests and Checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,40 +44,40 @@ jobs:
         id: snapshot
 
   forge-coverage:
-      name: Run Coverage Reporting
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v3
-          with:
-            submodules: recursive
+    name: Run Coverage Reporting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
 
-        - name: Install Foundry
-          uses: foundry-rs/foundry-toolchain@v1
-          with:
-            version: nightly
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
 
-        - name: Install forge dependencies
-          run: forge install
+      - name: Install forge dependencies
+        run: forge install
 
-        - name: Install lcov
-          run: |
-            sudo apt-get install lcov
-          id: lcov
+      - name: Install lcov
+        run: |
+          sudo apt-get install lcov
+        id: lcov
 
-        - name: Run coverage
-          run: |
-            forge coverage --report summary --report lcov
-      
-        - name: Prune coverage
-          run: |
-            lcov --remove ./lcov.info -o ./lcov-filtered.info 'test/*' 'script/*' 'src/utils/*' 
+      - name: Run coverage
+        run: |
+          forge coverage --report summary --report lcov
+
+      - name: Prune coverage
+        run: |
+          lcov --remove ./lcov.info -o ./lcov-filtered.info 'test/*' 'script/*' 'src/utils/*'
 
   finish:
     needs: forge-coverage
     if: ${{ always() }}
     runs-on: ubuntu-latest
     steps:
-    - name: Coveralls Finished
-      uses: coverallsapp/github-action@v2
-      with:
-        parallel-finished: true
+      - name: Coveralls Finished
+        uses: coverallsapp/github-action@v2
+        with:
+          parallel-finished: true

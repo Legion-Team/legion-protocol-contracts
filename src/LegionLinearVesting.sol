@@ -1,18 +1,24 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
-/**
- * ██      ███████  ██████  ██  ██████  ███    ██
- * ██      ██      ██       ██ ██    ██ ████   ██
- * ██      █████   ██   ███ ██ ██    ██ ██ ██  ██
- * ██      ██      ██    ██ ██ ██    ██ ██  ██ ██
- * ███████ ███████  ██████  ██  ██████  ██   ████
- *
- * If you find a bug, please contact security(at)legion.cc
- * We will pay a fair bounty for any issue that puts user's funds at risk.
- *
- */
-import {VestingWalletUpgradeable} from "@openzeppelin/contracts-upgradeable/finance/VestingWalletUpgradeable.sol";
+//       ___       ___           ___                       ___           ___
+//      /\__\     /\  \         /\  \          ___        /\  \         /\__\
+//     /:/  /    /::\  \       /::\  \        /\  \      /::\  \       /::|  |
+//    /:/  /    /:/\:\  \     /:/\:\  \       \:\  \    /:/\:\  \     /:|:|  |
+//   /:/  /    /::\~\:\  \   /:/  \:\  \      /::\__\  /:/  \:\  \   /:/|:|  |__
+//  /:/__/    /:/\:\ \:\__\ /:/__/_\:\__\  __/:/\/__/ /:/__/ \:\__\ /:/ |:| /\__\
+//  \:\  \    \:\~\:\ \/__/ \:\  /\ \/__/ /\/:/  /    \:\  \ /:/  / \/__|:|/:/  /
+//   \:\  \    \:\ \:\__\    \:\ \:\__\   \::/__/      \:\  /:/  /      |:/:/  /
+//    \:\  \    \:\ \/__/     \:\/:/  /    \:\__\       \:\/:/  /       |::/  /
+//     \:\__\    \:\__\        \::/  /      \/__/        \::/  /        /:/  /
+//      \/__/     \/__/         \/__/                     \/__/         \/__/
+//
+// If you find a bug, please contact security[at]legion.cc
+// We will pay a fair bounty for any issue that puts users' funds at risk.
+
+import { VestingWalletUpgradeable } from "@openzeppelin/contracts-upgradeable/finance/VestingWalletUpgradeable.sol";
+
+import { Errors } from "./utils/Errors.sol";
 
 /**
  * @title Legion Linear Vesting.
@@ -25,17 +31,10 @@ contract LegionLinearVesting is VestingWalletUpgradeable {
     uint256 private cliffEndTimestamp;
 
     /**
-     * @notice Throws when an user tries to release tokens before the cliff period has ended.
-     *
-     * @param currentTimestamp The current block timestamp.
-     */
-    error CliffNotEnded(uint256 currentTimestamp);
-
-    /**
      * @notice Throws if an user tries to release tokens before the cliff period has ended
      */
     modifier onlyCliffEnded() {
-        if (block.timestamp < cliffEndTimestamp) revert CliffNotEnded(block.timestamp);
+        if (block.timestamp < cliffEndTimestamp) revert Errors.CliffNotEnded(block.timestamp);
         _;
     }
 
@@ -43,7 +42,7 @@ contract LegionLinearVesting is VestingWalletUpgradeable {
      * @dev LegionLinearVesting constructor.
      */
     constructor() {
-        /// Disable initialization
+        // Disable initialization
         _disableInitializers();
     }
 
@@ -54,14 +53,19 @@ contract LegionLinearVesting is VestingWalletUpgradeable {
      * @param startTimestamp The start timestamp of the vesting schedule.
      * @param durationSeconds The vesting duration in seconds.
      */
-    function initialize(address beneficiary, uint64 startTimestamp, uint64 durationSeconds, uint64 cliffDurationSeconds)
+    function initialize(
+        address beneficiary,
+        uint64 startTimestamp,
+        uint64 durationSeconds,
+        uint64 cliffDurationSeconds
+    )
         public
         initializer
     {
-        /// Initialize the LegionLinearVesting clone
+        // Initialize the LegionLinearVesting clone
         __VestingWallet_init(beneficiary, startTimestamp, durationSeconds);
 
-        /// Set the cliff end timestamp, based on the cliff duration
+        // Set the cliff end timestamp, based on the cliff duration
         cliffEndTimestamp = startTimestamp + cliffDurationSeconds;
     }
 

@@ -1,20 +1,24 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
-/**
- * ██      ███████  ██████  ██  ██████  ███    ██
- * ██      ██      ██       ██ ██    ██ ████   ██
- * ██      █████   ██   ███ ██ ██    ██ ██ ██  ██
- * ██      ██      ██    ██ ██ ██    ██ ██  ██ ██
- * ███████ ███████  ██████  ██  ██████  ██   ████
- *
- * If you find a bug, please contact security(at)legion.cc
- * We will pay a fair bounty for any issue that puts user's funds at risk.
- *
- */
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+//       ___       ___           ___                       ___           ___
+//      /\__\     /\  \         /\  \          ___        /\  \         /\__\
+//     /:/  /    /::\  \       /::\  \        /\  \      /::\  \       /::|  |
+//    /:/  /    /:/\:\  \     /:/\:\  \       \:\  \    /:/\:\  \     /:|:|  |
+//   /:/  /    /::\~\:\  \   /:/  \:\  \      /::\__\  /:/  \:\  \   /:/|:|  |__
+//  /:/__/    /:/\:\ \:\__\ /:/__/_\:\__\  __/:/\/__/ /:/__/ \:\__\ /:/ |:| /\__\
+//  \:\  \    \:\~\:\ \/__/ \:\  /\ \/__/ /\/:/  /    \:\  \ /:/  / \/__|:|/:/  /
+//   \:\  \    \:\ \:\__\    \:\ \:\__\   \::/__/      \:\  /:/  /      |:/:/  /
+//    \:\  \    \:\ \/__/     \:\/:/  /    \:\__\       \:\/:/  /       |::/  /
+//     \:\__\    \:\__\        \::/  /      \/__/        \::/  /        /:/  /
+//      \/__/     \/__/         \/__/                     \/__/         \/__/
+//
+// If you find a bug, please contact security[at]legion.cc
+// We will pay a fair bounty for any issue that puts users' funds at risk.
 
-import {ILegionAddressRegistry} from "./interfaces/ILegionAddressRegistry.sol";
+import { Ownable } from "@solady/src/auth/Ownable.sol";
+
+import { ILegionAddressRegistry } from "./interfaces/ILegionAddressRegistry.sol";
 
 /**
  * @title Legion Address Registry.
@@ -30,19 +34,21 @@ contract LegionAddressRegistry is ILegionAddressRegistry, Ownable {
      *
      * @param newOwner The owner of the registry contract.
      */
-    constructor(address newOwner) Ownable(newOwner) {}
+    constructor(address newOwner) {
+        _initializeOwner(newOwner);
+    }
 
     /**
      * @notice See {ILegionAddressRegistry-setLegionAddress}.
      */
     function setLegionAddress(bytes32 id, address updatedAddress) external onlyOwner {
-        /// Cache the previous address before update
+        // Cache the previous address before update
         address previousAddress = _legionAddresses[id];
 
-        /// Update the address in the state
+        // Update the address in the state
         _legionAddresses[id] = updatedAddress;
 
-        /// Successfully emit LegionAddressSet
+        // Successfully emit LegionAddressSet
         emit LegionAddressSet(id, previousAddress, updatedAddress);
     }
 

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
-import {Script, console2} from "forge-std/Script.sol";
-import {LegionSaleFactory} from "../src/LegionSaleFactory.sol";
+import { Script, console2 } from "forge-std/Script.sol";
+import { LegionSaleFactory } from "../src/LegionSaleFactory.sol";
 
 contract LegionSaleFactoryScript is Script {
-    function setUp() public {}
+    function setUp() public { }
 
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
@@ -14,7 +14,7 @@ contract LegionSaleFactoryScript is Script {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        LegionSaleFactory legionSaleFactory = new LegionSaleFactory(legionBouncer);
+        new LegionSaleFactory(legionBouncer);
 
         vm.stopBroadcast();
     }
