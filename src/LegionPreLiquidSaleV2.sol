@@ -81,6 +81,9 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
         // Verify that the investor has not refunded
         _verifyHasNotRefunded();
 
+        // Verify that the investor has not claimed excess capital
+        _verifyHasNotClaimedExcess();
+
         // Increment total capital invested from investors
         saleStatus.totalCapitalInvested += amount;
 

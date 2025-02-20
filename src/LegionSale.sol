@@ -796,6 +796,13 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
     }
 
     /**
+     * @notice Verify that the investor has not claimed excess capital.
+     */
+    function _verifyHasNotClaimedExcess() internal view virtual {
+        if (investorPositions[msg.sender].hasClaimedExcess) revert Errors.InvestorHasClaimedExcess(msg.sender);
+    }
+
+    /**
      * @notice Verify the common sale configuration is valid.
      */
     function _verifyValidInitParams(LegionSaleInitializationParams memory saleInitParams) internal view virtual {

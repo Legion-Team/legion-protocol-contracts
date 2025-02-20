@@ -140,6 +140,13 @@ library Errors {
     error InvestorHasRefunded(address investor);
 
     /**
+     * @notice Throws when the investor has claimed excess capital invested.
+     *
+     * @param investor The address of the investor.
+     */
+    error InvestorHasClaimedExcess(address investor);
+
+    /**
      * @notice Throws when the salt used to encrypt the bid is invalid.
      */
     error InvalidSalt();

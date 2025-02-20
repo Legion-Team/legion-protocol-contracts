@@ -991,6 +991,41 @@ contract LegionSealedBidAuctionSaleTest is Test {
         );
     }
 
+    /**
+     * @dev Test case: Attempt to invest after investor has claimed excess capital
+     */
+    function test_invest_revertsIfInvestorHasClaimedExcessCapital() public {
+        // Arrange
+        prepareSealedBidData();
+        prepareCreateLegionSealedBidAuction();
+        prepareMintAndApproveInvestorTokens();
+        prepareInvestorSignatures();
+
+        prepareInvestedCapitalFromAllInvestors();
+
+        bytes32[] memory excessClaimProofInvestor2 = new bytes32[](2);
+
+        excessClaimProofInvestor2[0] = bytes32(0x048605503187722f63911ca26b8cca1d0a2afc10509c8be7f963371fec52b188);
+        excessClaimProofInvestor2[1] = bytes32(0xcbe43c4b6aafb4df43acc0bebce3220a96e982592e3c306730bf73681c612708);
+
+        vm.prank(legionBouncer);
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
+
+        vm.prank(investor2);
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawExcessInvestedCapital(
+            1000 * 1e6, excessClaimProofInvestor2
+        );
+
+        // Assert
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvestorHasClaimedExcess.selector, investor2));
+
+        // Act
+        vm.prank(investor2);
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).invest(
+            2000 * 1e6, sealedBidDataInvestor2, signatureInv2
+        );
+    }
+
     /* ========== EMERGENCY WITHDRAW TESTS ========== */
 
     /**

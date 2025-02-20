@@ -109,6 +109,9 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
         // Verify that the investor has not refunded
         _verifyHasNotRefunded();
 
+        // Verify that the investor has not claimed excess capital
+        _verifyHasNotClaimedExcess();
+
         // Increment total capital pledged from investors
         saleStatus.totalCapitalInvested += amount;
 
