@@ -233,6 +233,9 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
         /// Verify that the sale has not been canceled
         _verifySaleNotCanceled();
 
+        /// Veriify that the refund period is over
+        _verifyRefundPeriodIsOver();
+
         /// Set the address of the token distributed to investors
         saleStatus.askToken = _askToken;
 
