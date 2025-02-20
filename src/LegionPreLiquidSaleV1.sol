@@ -16,9 +16,10 @@ pragma solidity 0.8.28;
 // If you find a bug, please contact security[at]legion.cc
 // We will pay a fair bounty for any issue that puts users' funds at risk.
 
-import { ECDSA } from "@solady/src/utils/ECDSA.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { Initializable } from "@solady/src/utils/Initializable.sol";
 import { MerkleProofLib } from "@solady/src/utils/MerkleProofLib.sol";
+import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { SafeTransferLib } from "@solady/src/utils/SafeTransferLib.sol";
 
@@ -35,6 +36,7 @@ import { ILegionVestingFactory } from "./interfaces/ILegionVestingFactory.sol";
  */
 contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausable {
     using ECDSA for bytes32;
+    using MessageHashUtils for bytes32;
 
     /// @dev A struct describing the sale configuration.
     PreLiquidSaleConfig internal saleConfig;

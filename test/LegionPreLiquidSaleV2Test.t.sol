@@ -2,8 +2,9 @@
 pragma solidity 0.8.28;
 
 import { Test, console2, Vm } from "forge-std/Test.sol";
-import { ECDSA } from "@solady/src/utils/ECDSA.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { Initializable } from "@solady/src/utils/Initializable.sol";
+import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
 import { ILegionSale } from "../src/interfaces/ILegionSale.sol";
@@ -24,6 +25,7 @@ import { Constants } from "../src/utils/Constants.sol";
  */
 contract LegionPreLiquidSaleV2Test is Test {
     using ECDSA for bytes32;
+    using MessageHashUtils for bytes32;
 
     struct SaleTestConfig {
         ILegionSale.LegionSaleInitializationParams saleInitParams;
