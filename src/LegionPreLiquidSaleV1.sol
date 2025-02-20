@@ -130,6 +130,9 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
         // Verify that the sale has not ended
         _verifySaleHasNotEnded();
 
+        // Verify that the investor has not refunded
+        _verifyHasNotRefunded();
+
         /// Verify that the signature has not been used
         _verifySignatureNotUsed(signature);
 
