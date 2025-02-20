@@ -2646,40 +2646,6 @@ contract LegionSealedBidAuctionSaleTest is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to distribute tokens if investor has not invested capital
-     */
-    function test_claimTokenAllocation_revertsIfNoCapitalIsPledged() public {
-        // Arrange
-        prepareCreateLegionSealedBidAuction();
-
-        bytes32[] memory claimProofInvestor5 = new bytes32[](2);
-
-        claimProofInvestor5[0] = bytes32(0xab15bf46a7b5a0fed230b26afe212fe8303fc537eb6e007370eabeaf0b869955);
-        claimProofInvestor5[1] = bytes32(0xbe76d3200dd468b9512ea8ec335a3149f5aa5d0d975c3de3cd37afb777182abc);
-
-        vm.warp(refundEndTime() + 1);
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            distributeMerkleRootMalicious, acceptedCapitalMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
-        );
-
-        vm.warp(lockupEndTime() + 1);
-
-        // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.NoCapitalInvested.selector, investor5));
-
-        // Act
-        vm.prank(investor5);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).claimTokenAllocation(
-            4000 * 1e18, claimProofInvestor5
-        );
-    }
-
-    /**
      * @dev Test Case: Attempt to distribute tokens if already distributed once
      */
     function test_claimTokenAllocation_revertsIfTokensAlreadyDistributed() public {

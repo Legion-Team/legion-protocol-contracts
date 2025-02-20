@@ -636,9 +636,6 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
 
         // Check if the investor has already settled their allocation
         if (position.hasSettled) revert Errors.AlreadySettled(_investor);
-
-        // Safeguard to check if the investor has invested capital
-        if (position.investedCapital == 0) revert Errors.NoCapitalInvested(_investor);
     }
 
     /**

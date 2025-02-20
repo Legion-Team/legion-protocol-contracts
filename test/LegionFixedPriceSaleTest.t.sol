@@ -2299,35 +2299,6 @@ contract LegionFixedPriceSaleTest is Test {
     }
 
     /**
-     * @dev Test case: Attempt to claim tokens without having invested capital
-     */
-    function test_claimTokenAllocation_revertsIfNoCapitalIsInvested() public {
-        // Arrange
-        prepareCreateLegionFixedPriceSale();
-
-        bytes32[] memory claimProofInvestor5 = new bytes32[](2);
-
-        claimProofInvestor5[0] = bytes32(0xab15bf46a7b5a0fed230b26afe212fe8303fc537eb6e007370eabeaf0b869955);
-        claimProofInvestor5[1] = bytes32(0xbe76d3200dd468b9512ea8ec335a3149f5aa5d0d975c3de3cd37afb777182abc);
-
-        vm.warp(refundEndTime() + 1);
-
-        vm.prank(legionBouncer);
-        ILegionFixedPriceSale(legionSaleInstance).publishSaleResults(
-            distributeMerkleRootMalicious, acceptedCapitalMerkleRoot, 4000 * 1e18, askTokenDecimals
-        );
-
-        vm.warp(lockupEndTime() + 1);
-
-        // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.NoCapitalInvested.selector, investor5));
-
-        // Act
-        vm.prank(investor5);
-        ILegionFixedPriceSale(legionSaleInstance).claimTokenAllocation(4000 * 1e18, claimProofInvestor5);
-    }
-
-    /**
      * @dev Test case: Attempt to claim tokens that have already been claimed
      */
     function test_claimTokenAllocation_revertsIfTokensAlreadyClaimed() public {
