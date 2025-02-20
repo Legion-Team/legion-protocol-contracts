@@ -133,7 +133,14 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
      * @param capitalRaised The total capital raised by the project.
      * @param acceptedMerkleRoot The Merkle root to verify accepted capital.
      */
-    function publishCapitalRaised(uint256 capitalRaised, bytes32 acceptedMerkleRoot) external onlyLegion {
+    function publishCapitalRaised(
+        uint256 capitalRaised,
+        bytes32 acceptedMerkleRoot
+    )
+        external
+        onlyLegion
+        whenNotPaused
+    {
         // Verify that the sale is not canceled
         _verifySaleNotCanceled();
 
@@ -174,6 +181,7 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
     )
         external
         onlyLegion
+        whenNotPaused
     {
         // Verify that the sale is not canceled
         _verifySaleNotCanceled();

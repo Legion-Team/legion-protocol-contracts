@@ -229,6 +229,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
     )
         external
         onlyLegion
+        whenNotPaused
     {
         /// Verify that the sale has not been canceled
         _verifySaleNotCanceled();
