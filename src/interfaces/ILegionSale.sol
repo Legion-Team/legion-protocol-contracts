@@ -107,6 +107,8 @@ interface ILegionSale {
         uint256 totalTokensAllocated;
         /// @dev The total capital raised from the sale.
         uint256 totalCapitalRaised;
+        /// @dev The total capital withdrawn by the Project, from the sale.
+        uint256 totalCapitalWithdrawn;
         /// @dev The merkle root for verification of token distribution amounts.
         bytes32 claimTokensMerkleRoot;
         /// @dev The merkle root for verification of accepted capital distribution amounts.

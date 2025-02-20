@@ -232,6 +232,9 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
         // Flag that the capital has been withdrawn
         saleStatus.capitalWithdrawn = true;
 
+        // Set the total capital that has been withdrawn
+        saleStatus.totalCapitalWithdrawn = saleStatus.totalCapitalRaised;
+
         // Cache value in memory
         uint256 _totalCapitalRaised = saleStatus.totalCapitalRaised;
 
@@ -257,6 +260,36 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
         // Transfer the Referrer fee to the Legion fee receiver address
         if (_referrerFee != 0) {
             SafeTransferLib.safeTransfer(addressConfig.bidToken, addressConfig.referrerFeeReceiver, _referrerFee);
+        }
+    }
+
+    /**
+     * @notice Cancels an ongoing sale.
+     *
+     * @dev Can be called only by the Project admin address.
+     */
+    function cancelSale() public override(ILegionSale, LegionSale) onlyProject whenNotPaused {
+        // Verify sale has not already been canceled
+        _verifySaleNotCanceled();
+
+        /// Verify that no tokens have been supplied to the sale by the Project
+        _verifyTokensNotSupplied();
+
+        /// Cache the amount of funds to be returned to the sale
+        uint256 capitalToReturn = saleStatus.totalCapitalWithdrawn;
+
+        // Mark sale as canceled
+        saleStatus.isCanceled = true;
+
+        // Emit successfully SaleCanceled
+        emit SaleCanceled();
+
+        /// In case there's capital to return, transfer the funds back to the contract
+        if (capitalToReturn > 0) {
+            /// Set the totalCapitalWithdrawn to zero
+            saleStatus.totalCapitalWithdrawn = 0;
+            /// Transfer the allocated amount of tokens for distribution
+            SafeTransferLib.safeTransferFrom(addressConfig.bidToken, msg.sender, address(this), capitalToReturn);
         }
     }
 

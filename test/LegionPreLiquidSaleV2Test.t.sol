@@ -1187,6 +1187,47 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
+     * @notice Test case: Successfully cancel the ongoing sale by the project admin and return capital to the sale
+     * contract
+     */
+    function test_cancelSale_successfullyCancelsIfCapitalToReturn() public {
+        // Arrange
+        prepareCreateLegionPreLiquidSale();
+        prepareMintAndApproveInvestorTokens();
+        prepareMintAndApproveProjectTokens();
+        prepareInvestorSignatures();
+
+        prepareInvestedCapitalFromAllInvestors();
+
+        vm.prank(legionBouncer);
+        ILegionPreLiquidSaleV2(legionSaleInstance).endSale();
+
+        vm.warp(refundEndTime() + 1);
+
+        vm.prank(legionBouncer);
+        ILegionPreLiquidSaleV2(legionSaleInstance).publishCapitalRaised(10_000 * 1e6, acceptedCapitalMerkleRoot);
+
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSaleV2(legionSaleInstance).withdrawRaisedCapital();
+
+        vm.startPrank(projectAdmin);
+        MockToken(bidToken).mint(projectAdmin, 350 * 1e6);
+        MockToken(bidToken).approve(legionSaleInstance, 10_000 * 1e6);
+        vm.stopPrank();
+
+        // Assert
+        vm.expectEmit();
+        emit ILegionSale.SaleCanceled();
+
+        // Act
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSaleV2(legionSaleInstance).cancelSale();
+
+        // Assert
+        assertEq(bidToken.balanceOf(legionSaleInstance), 10_000 * 1e6);
+    }
+
+    /**
      * @notice Test case: Attempt to cancel the sale if it has already been canceled
      */
     function test_cancelSale_revertsIfSaleAlreadyCanceled() public {
@@ -1205,13 +1246,14 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @notice Test case: Attempt to cancel the sale if results are published
+     * @notice Test case: Attempt to cancel the sale if tokens have been supplied
      */
-    function test_cancelSale_revertsIfResultsArePublished() public {
+    function test_cancelSale_revertsIfTokensSupplied() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
+        prepareMintAndApproveProjectTokens();
 
-        vm.prank(legionBouncer);
+        vm.prank(projectAdmin);
         ILegionPreLiquidSaleV2(legionSaleInstance).endSale();
 
         vm.warp(refundEndTime() + 1);
@@ -1221,8 +1263,11 @@ contract LegionPreLiquidSaleV2Test is Test {
             claimTokensMerkleRoot, 4000 * 1e18, address(askToken), 0
         );
 
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSaleV2(legionSaleInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
+
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleResultsAlreadyPublished.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.TokensAlreadySupplied.selector));
 
         // Act
         vm.prank(projectAdmin);
