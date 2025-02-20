@@ -7,6 +7,10 @@ import { Test, console2, Vm } from "forge-std/Test.sol";
 import { ILegionAddressRegistry } from "../src/interfaces/ILegionAddressRegistry.sol";
 import { LegionAddressRegistry } from "../src/LegionAddressRegistry.sol";
 
+/**
+ * @title Legion Address Registry Test
+ * @notice Test suite for the Legion Address Registry contract
+ */
 contract LegionAddressRegistryTest is Test {
     LegionAddressRegistry public addressRegistry;
 
@@ -20,7 +24,7 @@ contract LegionAddressRegistryTest is Test {
     }
 
     /**
-     * @dev Test Case: Verify that the LegionAddress registry contract initializes correctly with the correct owner
+     * @notice Test Case: Initialize registry and verify correct owner is set
      */
     function test_transferOwnership_successfullySetsTheCorrectOwner() public view {
         // Assert
@@ -28,7 +32,7 @@ contract LegionAddressRegistryTest is Test {
     }
 
     /**
-     * @dev Test Case: Successfully updates address if called by owner
+     * @notice Test Case: Successfully update address when called by owner
      */
     function test_setLegionAddress_successfullyUpdatesAddressIfCalledByOwner() public {
         // Assert
@@ -41,7 +45,7 @@ contract LegionAddressRegistryTest is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to update address by non-owner
+     * @dev Test Case: Attempt to update address when called by non-owner
      */
     function test_setLegionAddress_revertsIfNotCalledByOwner() public {
         // Assert
@@ -53,7 +57,7 @@ contract LegionAddressRegistryTest is Test {
     }
 
     /**
-     * @dev Test Case: Return correct address for set identifier
+     * @notice Test Case: Successfully retrieve previously set Legion address
      */
     function test_getLegionAddress_successfullyReturnsLegionAddress() public {
         // Arrange
@@ -68,7 +72,7 @@ contract LegionAddressRegistryTest is Test {
     }
 
     /**
-     * @dev Test Case: Return zero address in case an address is not set
+     * @notice Test Case: Successfully return zero address for unset address key
      */
     function test_getLegionAddress_successfullyReturnsZeroAddressIfNotSet() public view {
         // Act

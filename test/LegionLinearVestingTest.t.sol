@@ -13,6 +13,10 @@ import { LegionLinearVesting } from "../src/LegionLinearVesting.sol";
 import { LegionVestingFactory } from "../src/LegionVestingFactory.sol";
 import { MockToken } from "../src/mocks/MockToken.sol";
 
+/**
+ * @title Legion Linear Vesting Test
+ * @notice Test suite for the Legion Linear Vesting contract
+ */
 contract LegionLinearVestingTest is Test {
     LegionLinearVesting public linearVestingTemplate;
     LegionVestingFactory public legionVestingFactory;
@@ -33,7 +37,7 @@ contract LegionLinearVestingTest is Test {
     }
 
     /**
-     * @dev Helper method to create a Legion linear vesting schedule instance
+     * @notice Helper method: Create and initialize a Legion linear vesting schedule instance
      */
     function prepareCreateLegionLinearVesting() public {
         legionVestingInstance = legionVestingFactory.createLinearVesting(
@@ -45,7 +49,7 @@ contract LegionLinearVestingTest is Test {
     }
 
     /**
-     * @dev Test Case: Successfully initialize the contract with a valid beneficiary, start timestamp, and duration
+     * @notice Test case: Successfully initialize contract with valid parameters
      */
     function test_createLinearVesting_successfullyDeployWithValidParameters() public {
         // Arrange & Act
@@ -59,7 +63,7 @@ contract LegionLinearVestingTest is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to re-initialize the contract
+     * @dev Test case: Attempt to re-initialize an already initialized contract
      */
     function test_initialize_revertsIfAlreadyInitialized() public {
         // Arrange
@@ -76,7 +80,7 @@ contract LegionLinearVestingTest is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to initialize the `LegionLinearVesting` implementation contract
+     * @dev Test case: Attempt to initialize the implementation contract
      */
     function test_initialize_revertInitializeImplementation() public {
         // Arrange
@@ -92,7 +96,7 @@ contract LegionLinearVestingTest is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to initialize the `LegionLinearVesting` template contract
+     * @dev Test case: Attempt to initialize the template contract
      */
     function test_initialize_revertInitializeTemplate() public {
         // Assert
@@ -105,7 +109,7 @@ contract LegionLinearVestingTest is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to release tokens if cliff has not ended
+     * @dev Test case: Attempt to release tokens before cliff period ends
      */
     function test_release_revertsIfCliffHasNotEndedToken() public {
         // Arrange
@@ -119,7 +123,7 @@ contract LegionLinearVestingTest is Test {
     }
 
     /**
-     * @dev Test Case: Successfully release tokens after cliff has ended.
+     * @notice Test case: Successfully release tokens after cliff period ends
      */
     function test_release_successfullyReleaseTokensAfterCliffHasEnded() public {
         // Arrange
@@ -135,7 +139,7 @@ contract LegionLinearVestingTest is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to release ETH if cliff has not ended
+     * @dev Test case: Attempt to release ETH before cliff period ends
      */
     function test_release_revertsIfCliffHasNotEndedETH() public {
         // Arrange
@@ -149,7 +153,7 @@ contract LegionLinearVestingTest is Test {
     }
 
     /**
-     * @dev Test Case: Successfully release ETH after cliff has ended.
+     * @notice Test case: Successfully release ETH after cliff period ends
      */
     function test_release_successfullyReleaseETHAfterCliffHasEnded() public {
         // Arrange

@@ -17,18 +17,18 @@ pragma solidity 0.8.28;
 // We will pay a fair bounty for any issue that puts users' funds at risk.
 
 /**
- * @title Legion Constants Library.
- * @author Legion.
- * @notice A library used for storing constants shared accross the Legion protocol.
+ * @title Legion Constants Library
+ * @author Legion
+ * @notice A library used for storing constants shared across the Legion protocol.
  */
 library Constants {
-    /// @dev Constant representing 1 hour in seconds.
+    /// @dev Constant representing one hour in seconds
     uint256 internal constant ONE_HOUR = 3600;
 
-    /// @dev Constant representing 2 weeks in seconds.
+    /// @dev Constant representing two weeks in seconds
     uint256 internal constant TWO_WEEKS = 1_209_600;
 
-    /// @dev Constant representing 40 days in seconds.
+    /// @dev Constant representing forty days in seconds
     uint256 internal constant FORTY_DAYS = 3_456_000;
 
     /// @dev Constant representing 3 months in seconds.

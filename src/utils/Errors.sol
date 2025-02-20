@@ -17,9 +17,9 @@ pragma solidity 0.8.28;
 // We will pay a fair bounty for any issue that puts users' funds at risk.
 
 /**
- * @title Legion Errors Library.
- * @author Legion.
- * @notice A library used for storing errors shared accross the Legion protocol.
+ * @title Legion Errors Library
+ * @author Legion
+ * @notice A library used for storing errors shared across the Legion protocol
  */
 library Errors {
     /**
@@ -69,25 +69,11 @@ library Errors {
     error CapitalAlreadyWithdrawn();
 
     /**
-     * @notice Throws when no capital has been invested.
-     *
-     * @param investor The address of the investor
-     */
-    error CapitalNotInvested(address investor);
-
-    /**
      * @notice Throws when the investor is not flagged to have excess capital returned.
      *
      * @param investor The address of the investor.
      */
     error CannotWithdrawExcessInvestedCapital(address investor);
-
-    /**
-     * @notice Throws when the excess capital results have already been published.
-     *
-     * @param merkleRoot The merkle root for distribution of excess capital.
-     */
-    error ExcessCapitalResultsAlreadyPublished(bytes32 merkleRoot);
 
     /**
      * @notice Throws when the claim amount is invalid.
@@ -110,11 +96,6 @@ library Errors {
      * @notice Throws when an invalid amount has been requested for refund.
      */
     error InvalidRefundAmount();
-
-    /**
-     * @notice Throws when an invalid excess amount has been requested for withdrawal.
-     */
-    error InvalidExcessAmount();
 
     /**
      * @notice Throws when an invalid amount has been requested for fee.
@@ -140,11 +121,6 @@ library Errors {
     error InvalidSignature();
 
     /**
-     * @notice Throws when an invalid total supply has been provided.
-     */
-    error InvalidTotalSupply();
-
-    /**
      * @notice Throws when the invested capital amount is not equal to the SAFT amount.
      *
      * @param investor The address of the investor.
@@ -152,30 +128,11 @@ library Errors {
     error InvalidPositionAmount(address investor);
 
     /**
-     * @notice Throws when the merkle proof for the investor is inavlid.
-     *
-     * @param investor The address of the investor.
-     */
-    error InvalidProof(address investor);
-
-    /**
-     * @notice Throws when the investor has withdrawn excess capital.
-     *
-     * @param investor The address of the investor.
-     */
-    error InvestorHasWithdrawnExcess(address investor);
-
-    /**
      * @notice Throws when the investor has refunded.
      *
      * @param investor The address of the investor.
      */
     error InvestorHasRefunded(address investor);
-
-    /**
-     * @notice Throws when the Project is not accepting investments.
-     */
-    error InvestmentNotAccepted();
 
     /**
      * @notice Throws when the salt used to encrypt the bid is invalid.
@@ -227,7 +184,7 @@ library Errors {
     error NotCalledByLegionOrProject();
 
     /**
-     * @notice Throws when capital is pledged during the prefund allocation period.
+     * @notice Throws when capital is pledged during the pre-fund allocation period.
      */
     error PrefundAllocationPeriodNotEnded();
 

@@ -25,16 +25,20 @@ import { ILegionSealedBidAuctionSale } from "./interfaces/ILegionSealedBidAuctio
 import { LegionSale } from "./LegionSale.sol";
 
 /**
- * @title Legion Sealed Bid Auction.
- * @author Legion.
- * @notice A contract used to execute seale bid auctions of ERC20 tokens after TGE.
+ * @title Legion Sealed Bid Auction
+ * @author Legion
+ * @notice A contract used to execute sealed bid auctions of ERC20 tokens after TGE
  */
 contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
     /// @dev A struct describing the sealed bid auction sale configuration.
     SealedBidAuctionSaleConfiguration private sealedBidAuctionSaleConfig;
 
     /**
-     * @notice See {ILegionSealedBidAuctionSale-initialize}.
+     * @notice Initializes the contract with correct parameters.
+     *
+     * @param saleInitParams The Legion sale initialization parameters.
+     * @param sealedBidAuctionSaleInitParams The sealed bid auction sale specific initialization parameters.
+     * @param vestingInitParams The vesting initialization parameters.
      */
     function initialize(
         LegionSaleInitializationParams calldata saleInitParams,
@@ -73,7 +77,11 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
     }
 
     /**
-     * @notice See {ILegionSealedBidAuctionSale-invest}.
+     * @notice Invest capital to the sealed bid auction.
+     *
+     * @param amount The amount of capital invested.
+     * @param sealedBid The encoded sealed bid data.
+     * @param signature The Legion signature for verification.
      */
     function invest(uint256 amount, bytes calldata sealedBid, bytes memory signature) external whenNotPaused {
         // Verify that the investor is allowed to pledge capital
@@ -96,7 +104,7 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
         _verifySaleNotCanceled();
 
         // Verify that the amount pledged is more than the minimum required
-        _verifyMinimumPledgeAmount(amount);
+        _verifyMinimumInvestAmount(amount);
 
         // Verify that the investor has not refunded
         _verifyHasNotRefunded();
@@ -107,7 +115,7 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
         // Increment total pledged capital for the investor
         investorPositions[msg.sender].investedCapital += amount;
 
-        // Emit successfully CapitalInvested
+        // Emit CapitalInvested
         emit CapitalInvested(amount, encryptedAmountOut, salt, msg.sender, block.timestamp);
 
         // Transfer the pledged capital to the contract
@@ -115,7 +123,7 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
     }
 
     /**
-     * @notice See {ILegionSealedBidAuctionSale-initializePublishSaleResults}.
+     * @notice Initializes the process of publishing of sale results, by locking sale cancelation.
      */
     function initializePublishSaleResults() external onlyLegion {
         // Verify that the sale is not canceled
@@ -130,15 +138,23 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
         // Verify that sale results are not already published
         _verifyCanPublishSaleResults();
 
-        // Flag the the sale is locked from canceling
+        // Flag that the sale is locked from canceling
         sealedBidAuctionSaleConfig.cancelLocked = true;
 
-        // Emit successfully PublishSaleResultsInitialized
+        // Emit PublishSaleResultsInitialized
         emit PublishSaleResultsInitialized();
     }
 
     /**
-     * @notice See {ILegionSealedBidAuctionSale-publishSaleResults}.
+     * @notice Publish sale results, once the sale has concluded.
+     *
+     * @dev Can be called only by the Legion admin address.
+     *
+     * @param claimMerkleRoot The merkle root to verify token claims.
+     * @param acceptedMerkleRoot The merkle root to verify accepted capital.
+     * @param tokensAllocated The total amount of tokens allocated for distribution among investors.
+     * @param capitalRaised The total capital raised from the auction.
+     * @param sealedBidPrivateKey the private key used to decrypt sealed bids.
      */
     function publishSaleResults(
         bytes32 claimMerkleRoot,
@@ -180,25 +196,32 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
         // Set the private key used to decrypt sealed bids
         sealedBidAuctionSaleConfig.privateKey = sealedBidPrivateKey;
 
-        // Emit successfully SaleResultsPublished
+        // Emit SaleResultsPublished
         emit SaleResultsPublished(
             claimMerkleRoot, acceptedMerkleRoot, tokensAllocated, capitalRaised, sealedBidPrivateKey
         );
     }
 
     /**
-     * @notice See {ILegionSale-cancelSale}.
+     * @notice Cancels an ongoing sale.
+     *
+     * @dev Can be called only by the Project admin address.
      */
     function cancelSale() public override(ILegionSale, LegionSale) onlyProject whenNotPaused {
         // Call parent method
         super.cancelSale();
 
-        // Verify that canceling the sale is not locked.
+        // Verify that canceling is not locked.
         _verifyCancelNotLocked();
     }
 
     /**
-     * @notice See {ILegionSealedBidAuctionSale-decryptBid}.
+     * @notice Decrypts the sealed bid, once the private key has been published by Legion.
+     *
+     * @dev Can be called only if the private key has been published.
+     *
+     * @param encryptedAmountOut The encrypted bid amount
+     * @param salt The salt used in the encryption process
      */
     function decryptSealedBid(uint256 encryptedAmountOut, uint256 salt) public view returns (uint256) {
         // Verify that the private key has been published by Legion
@@ -211,7 +234,7 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
     }
 
     /**
-     * @notice See {ILegionSealedBidAuctionSale-sealedBidAuctionSaleConfiguration}.
+     * @notice Returns the sealed bid auction sale configuration.
      */
     function sealedBidAuctionSaleConfiguration() external view returns (SealedBidAuctionSaleConfiguration memory) {
         return sealedBidAuctionSaleConfig;
@@ -229,9 +252,9 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
     }
 
     /**
-     * @notice Verify if the public key used to encrpyt the bid is valid.
+     * @notice Verify if the public key used to encrypt the bid is valid
      *
-     * @param _publicKey The public key used to encrypt bids.
+     * @param _publicKey The public key used to encrypt bids
      */
     function _verifyValidPublicKey(Point memory _publicKey) private view {
         // Verify that the _publicKey is a valid point for the encryption library
@@ -271,7 +294,7 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
     }
 
     /**
-     * @notice Verify that the salt used to encrypt the bid is valid.
+     * @notice Verify that the salt used to encrypt the bid is valid
      *
      * @param _salt The salt used for bid encryption
      */
@@ -280,14 +303,14 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
     }
 
     /**
-     * @notice Verify that canceling the is not locked.
+     * @notice Verify that canceling is not locked
      */
     function _verifyCancelNotLocked() private view {
         if (sealedBidAuctionSaleConfig.cancelLocked) revert Errors.CancelLocked();
     }
 
     /**
-     * @notice Verify that canceling is locked.
+     * @notice Verify that canceling is locked
      */
     function _verifyCancelLocked() private view {
         if (!sealedBidAuctionSaleConfig.cancelLocked) revert Errors.CancelNotLocked();

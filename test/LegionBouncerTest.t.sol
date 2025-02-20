@@ -9,6 +9,10 @@ import { ILegionAddressRegistry } from "../src/interfaces/ILegionAddressRegistry
 import { LegionBouncer } from "../src/LegionBouncer.sol";
 import { LegionAddressRegistry } from "../src/LegionAddressRegistry.sol";
 
+/**
+ * @title Legion Bouncer Test
+ * @notice Test suite for the Legion Bouncer contract
+ */
 contract LegionBouncerTest is Test {
     LegionAddressRegistry public addressRegistry;
     LegionBouncer public legionAdmin;
@@ -25,6 +29,7 @@ contract LegionBouncerTest is Test {
     }
 
     /**
+     * @notice Test Case: Successfully execute function call with BROADCASTER_ROLE
      * @dev Test Case: Successfully executes function call with `BROADCASTER_ROLE`
      */
     function test_functionCall_successfullyExecuteOnlyBroadcasterRole() public {
@@ -42,7 +47,8 @@ contract LegionBouncerTest is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to execute function call without `BROADCASTER_ROLE`
+     * @dev Test Case: Attempt to execute function call without BROADCASTER_ROLE
+     * @notice Tests that addresses without BROADCASTER_ROLE cannot execute function calls
      */
     function test_functionCall_revertsIfCalledByNonBroadcasterRole() public {
         // Arrange

@@ -22,18 +22,24 @@ import { ILegionVestingFactory } from "./interfaces/ILegionVestingFactory.sol";
 import { LegionLinearVesting } from "./LegionLinearVesting.sol";
 
 /**
- * @title Legion Vesting Factory.
- * @author Legion.
- * @notice A factory contract for deploying proxy instances of a Legion vesting contracts.
+ * @title Legion Vesting Factory
+ * @author Legion
+ * @notice A factory contract for deploying proxy instances of Legion vesting contracts
  */
 contract LegionVestingFactory is ILegionVestingFactory {
     using LibClone for address;
 
-    /// @dev The LegionLinearVesting implementation contract.
+    /// @dev The LegionLinearVesting implementation contract
     address public immutable linearVestingTemplate = address(new LegionLinearVesting());
 
     /**
-     * @notice See {ILegionLinearVestingFactory-createLinearVesting}.
+     * @notice Creates a new linear vesting contract
+     *
+     * @param beneficiary The address that will receive the vested tokens
+     * @param startTimestamp The Unix timestamp when the vesting period starts
+     * @param durationSeconds The duration of the vesting period in seconds
+     * @param cliffDurationSeconds The duration of the cliff period in seconds
+     * @return linearVestingInstance The address of the deployed LegionLinearVesting instance
      */
     function createLinearVesting(
         address beneficiary,
@@ -47,7 +53,7 @@ contract LegionVestingFactory is ILegionVestingFactory {
         // Deploy a LegionLinearVesting instance
         linearVestingInstance = payable(linearVestingTemplate.clone());
 
-        // Emit successfully NewLinearVestingCreated
+        // Emit NewLinearVestingCreated
         emit NewLinearVestingCreated(beneficiary, startTimestamp, durationSeconds, cliffDurationSeconds);
 
         // Initialize the LegionLinearVesting with the provided configuration

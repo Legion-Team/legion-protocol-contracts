@@ -31,36 +31,42 @@ import { LegionPreLiquidSaleV2 } from "./LegionPreLiquidSaleV2.sol";
 import { LegionSealedBidAuctionSale } from "./LegionSealedBidAuctionSale.sol";
 
 /**
- * @title Legion Sale Factory.
- * @author Legion.
- * @notice A factory contract for deploying proxy instances of Legion sales.
+ * @title Legion Sale Factory
+ * @author Legion
+ * @notice A factory contract for deploying proxy instances of Legion sales
  */
 contract LegionSaleFactory is ILegionSaleFactory, Ownable {
     using LibClone for address;
 
-    /// @dev The LegionFixedPriceSale implementation contract.
+    /// @dev The LegionFixedPriceSale implementation contract
     address public immutable fixedPriceSaleTemplate = address(new LegionFixedPriceSale());
 
-    /// @dev The LegionPreLiquidSaleV1 implementation contract.
+    /// @dev The LegionPreLiquidSaleV1 implementation contract
     address public immutable preLiquidSaleV1Template = address(new LegionPreLiquidSaleV1());
 
-    /// @dev The LegionPreLiquidSaleV2 implementation contract.
+    /// @dev The LegionPreLiquidSaleV2 implementation contract
     address public immutable preLiquidSaleV2Template = address(new LegionPreLiquidSaleV2());
 
-    /// @dev The LegionSealedBidAuctionSale implementation contract.
+    /// @dev The LegionSealedBidAuctionSale implementation contract
     address public immutable sealedBidAuctionTemplate = address(new LegionSealedBidAuctionSale());
 
     /**
-     * @dev Constructor to initialize the LegionSaleFactory.
+     * @dev Constructor to initialize the LegionSaleFactory
      *
-     * @param newOwner The owner of the factory contract.
+     * @param newOwner The owner of the factory contract
      */
     constructor(address newOwner) {
         _initializeOwner(newOwner);
     }
 
     /**
-     * @notice See {ILegionSaleFactory-createFixedPriceSale}.
+     * @notice Deploy a LegionFixedPriceSale contract.
+     *
+     * @param saleInitParams The Legion sale initialization parameters.
+     * @param fixedPriceSaleInitParams The fixed price sale specific initialization parameters.
+     * @param vestingInitParams The vesting initialization parameters.
+     *
+     * @return fixedPriceSaleInstance The address of the FixedPriceSale instance deployed.
      */
     function createFixedPriceSale(
         ILegionSale.LegionSaleInitializationParams memory saleInitParams,
@@ -74,7 +80,7 @@ contract LegionSaleFactory is ILegionSaleFactory, Ownable {
         // Deploy a LegionFixedPriceSale instance
         fixedPriceSaleInstance = payable(fixedPriceSaleTemplate.clone());
 
-        // Emit successfully NewFixedPriceSaleCreated
+        // Emit NewFixedPriceSaleCreated
         emit NewFixedPriceSaleCreated(
             fixedPriceSaleInstance, saleInitParams, fixedPriceSaleInitParams, vestingInitParams
         );
@@ -86,27 +92,36 @@ contract LegionSaleFactory is ILegionSaleFactory, Ownable {
     }
 
     /**
-     * @notice See {ILegionSaleFactory-createPreLiquidSale}.
+     * @notice Deploy a LegionPreLiquidSaleV1 contract.
+     *
+     * @param preLiquidSaleInitParams The Pre-Liquid sale initialization parameters.
+     *
+     * @return preLiquidSaleV1Instance The address of the PreLiquidSale V1 instance deployed.
      */
     function createPreLiquidSaleV1(
         LegionPreLiquidSaleV1.PreLiquidSaleInitializationParams calldata preLiquidSaleInitParams
     )
         external
         onlyOwner
-        returns (address payable preLiquidSaleInstance)
+        returns (address payable preLiquidSaleV1Instance)
     {
-        /// Deploy a LegionPreLiquidSale instance
-        preLiquidSaleInstance = payable(preLiquidSaleV1Template.clone());
+        // Deploy a LegionPreLiquidSale instance
+        preLiquidSaleV1Instance = payable(preLiquidSaleV1Template.clone());
 
-        /// Emit successfully NewPreLiquidSaleCreated
-        emit NewPreLiquidSaleV1Created(preLiquidSaleInstance, preLiquidSaleInitParams);
+        // Emit NewPreLiquidSaleV1Created
+        emit NewPreLiquidSaleV1Created(preLiquidSaleV1Instance, preLiquidSaleInitParams);
 
-        /// Initialize the LegionPreLiquidSale with the provided configuration
-        LegionPreLiquidSaleV1(preLiquidSaleInstance).initialize(preLiquidSaleInitParams);
+        // Initialize the LegionPreLiquidSale with the provided configuration
+        LegionPreLiquidSaleV1(preLiquidSaleV1Instance).initialize(preLiquidSaleInitParams);
     }
 
     /**
-     * @notice See {ILegionSaleFactory-createPreLiquidSaleV2}.
+     * @notice Deploy a LegionPreLiquidSaleV2 contract.
+     *
+     * @param saleInitParams The Legion sale initialization parameters.
+     * @param vestingInitParams The vesting initialization parameters.
+     *
+     * @return preLiquidSaleV2Instance The address of the preLiquidSaleV2Instance deployed.
      */
     function createPreLiquidSaleV2(
         ILegionSale.LegionSaleInitializationParams memory saleInitParams,
@@ -119,7 +134,7 @@ contract LegionSaleFactory is ILegionSaleFactory, Ownable {
         // Deploy a LegionPreLiquidSaleV2 instance
         preLiquidSaleV2Instance = payable(preLiquidSaleV2Template.clone());
 
-        // Emit successfully NewPreLiquidSaleCreated
+        // Emit NewPreLiquidSaleV2Created
         emit NewPreLiquidSaleV2Created(preLiquidSaleV2Instance, saleInitParams, vestingInitParams);
 
         // Initialize the LegionPreLiquidSaleV2 with the provided configuration
@@ -127,7 +142,13 @@ contract LegionSaleFactory is ILegionSaleFactory, Ownable {
     }
 
     /**
-     * @notice See {ILegionSaleFactory-createSealedBidAuction}.
+     * @notice Deploy a LegionSealedBidAuctionSale contract.
+     *
+     * @param saleInitParams The Legion sale initialization parameters.
+     * @param sealedBidAuctionSaleInitParams The sealed bid auction sale specific initialization parameters.
+     * @param vestingInitParams The vesting initialization parameters.
+     *
+     * @return sealedBidAuctionInstance The address of the SealedBidAuction instance deployed.
      */
     function createSealedBidAuction(
         ILegionSale.LegionSaleInitializationParams memory saleInitParams,
@@ -141,7 +162,7 @@ contract LegionSaleFactory is ILegionSaleFactory, Ownable {
         // Deploy a LegionSealedBidAuctionSale instance
         sealedBidAuctionInstance = payable(sealedBidAuctionTemplate.clone());
 
-        // Emit successfully NewSealedBidAuctionCreated
+        // Emit NewSealedBidAuctionCreated
         emit NewSealedBidAuctionCreated(
             sealedBidAuctionInstance, saleInitParams, sealedBidAuctionSaleInitParams, vestingInitParams
         );

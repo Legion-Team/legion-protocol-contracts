@@ -21,7 +21,7 @@ interface ILegionVestingFactory {
      * @notice This event is emitted when a new linear vesting schedule contract is deployed for an investor.
      *
      * @param beneficiary The address of the beneficiary.
-     * @param startTimestamp The start timestamp of the vesting period.
+     * @param startTimestamp The Unix timestamp (seconds) when the vesting period starts.
      * @param durationSeconds The vesting duration in seconds.
      * @param cliffDurationSeconds The vesting cliff duration in seconds.
      */
@@ -32,14 +32,12 @@ interface ILegionVestingFactory {
     /**
      * @notice Deploy a LegionLinearVesting contract.
      *
-     * @dev Can be called only by addresses allowed to deploy.
+     * @param beneficiary The address of the beneficiary.
+     * @param startTimestamp The Unix timestamp (seconds) when the vesting starts.
+     * @param durationSeconds The total duration of the vesting period in seconds.
+     * @param cliffDurationSeconds The duration of the cliff period in seconds.
      *
-     * @param beneficiary The beneficiary.
-     * @param startTimestamp The start timestamp.
-     * @param durationSeconds The duration in seconds.
-     * @param cliffDurationSeconds The cliff duration in seconds.
-     *
-     * @return linearVestingInstance The address of the deployed linearVesting instance.
+     * @return linearVestingInstance The address of the deployed LegionLinearVesting instance.
      */
     function createLinearVesting(
         address beneficiary,

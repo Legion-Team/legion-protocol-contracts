@@ -18,6 +18,10 @@ import { MockToken } from "../src/mocks/MockToken.sol";
 import { Errors } from "../src/utils/Errors.sol";
 import { Constants } from "../src/utils/Constants.sol";
 
+/**
+ * @title Legion Pre-Liquid Sale V2 Test
+ * @notice Test suite for the Legion Pre-Liquid Sale V2 contract
+ */
 contract LegionPreLiquidSaleV2Test is Test {
     using ECDSA for bytes32;
 
@@ -68,6 +72,9 @@ contract LegionPreLiquidSaleV2Test is Test {
     bytes32 acceptedCapitalMerkleRoot = 0x54c416133cce27821e67f6c475e59fcdafb30c065ea8feaac86970c532db0202;
     bytes32 excessCapitalMerkleRootMalicious = 0x04169dca2cf842bea9fcf4df22c9372c6d6f04410bfa446585e287aa1c834974;
 
+    /**
+     * @notice Helper method: Set up test environment and deploy contracts
+     */
     function setUp() public {
         preLiquidSaleV2Template = new LegionPreLiquidSaleV2();
         legionSaleFactory = new LegionSaleFactory(legionBouncer);
@@ -79,7 +86,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Helper method to set the fixed price sale params
+     * @notice Helper method: Set the pre-liquid sale configuration parameters
      */
     function setSaleParams(
         ILegionSale.LegionSaleInitializationParams memory _saleInitParams,
@@ -111,7 +118,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Helper method to create a fixed price sale
+     * @notice Helper method: Create and initialize a pre-liquid sale instance
      */
     function prepareCreateLegionPreLiquidSale() public {
         setSaleParams(
@@ -143,7 +150,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Helper method to mint tokens to investors and approve the sale instance contract
+     * @notice Helper method: Mint tokens to investors and approve the sale instance contract
      */
     function prepareMintAndApproveInvestorTokens() public {
         vm.startPrank(legionBouncer);
@@ -169,7 +176,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Helper method to mint tokens to the project and approve the sale instance contract
+     * @notice Helper method: Mint tokens to the project and approve the sale instance contract
      */
     function prepareMintAndApproveProjectTokens() public {
         vm.startPrank(projectAdmin);
@@ -181,7 +188,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Helper method to prepare investor signatures
+     * @notice Helper method: Prepare investor signatures
      */
     function prepareInvestorSignatures() public {
         address legionSigner = vm.addr(legionSignerPK);
@@ -227,7 +234,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Helper method to invest capital from all investors
+     * @notice Helper method: Invest capital from all investors
      */
     function prepareInvestedCapitalFromAllInvestors() public {
         vm.prank(investor1);
@@ -244,7 +251,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Helper method to prepare LegionAddressRegistry
+     * @notice Helper method: Prepare LegionAddressRegistry
      */
     function prepareLegionAddressRegistry() public {
         vm.startPrank(legionBouncer);
@@ -258,7 +265,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Helper method to get sale start time
+     * @notice Helper method: Get sale start time
      */
     function startTime() public view returns (uint256) {
         ILegionSale.LegionSaleConfiguration memory _saleConfig =
@@ -267,7 +274,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Helper method to get sale end time
+     * @notice Helper method: Get sale end time
      */
     function endTime() public view returns (uint256) {
         ILegionSale.LegionSaleConfiguration memory _saleConfig =
@@ -276,7 +283,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Helper method to get the refund end time
+     * @notice Helper method: Get the refund end time
      */
     function refundEndTime() public view returns (uint256) {
         ILegionSale.LegionSaleConfiguration memory _saleConfig =
@@ -285,7 +292,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Helper method to get the lockup end time
+     * @notice Helper method: Get the lockup end time
      */
     function lockupEndTime() public view returns (uint256) {
         ILegionSale.LegionSaleConfiguration memory _saleConfig =
@@ -294,7 +301,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Helper method to get sale end time
+     * @notice Helper method: Get sale total capital raised
      */
     function capitalRaised() public view returns (uint256 saleTotalCapitalRaised) {
         ILegionSale.LegionSaleStatus memory _saleStatusDetails =
@@ -305,7 +312,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     /* ========== INITIALIZATION TESTS ========== */
 
     /**
-     * @dev Test Case: Successfully initialize the contract with valid parameters.
+     * @notice Test case: Initialize the contract with valid parameters
      */
     function test_createPreLiquidSale_successfullyDeployedWithValidParameters() public {
         // Arrange & Act
@@ -320,7 +327,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to re-initialize the contract
+     * @notice Test case: Attempt to re-initialize an already initialized contract
      */
     function test_initialize_revertsIfAlreadyInitialized() public {
         // Arrange
@@ -336,7 +343,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to initialize the `LegionPreLiquidSaleV2` implementation contract
+     * @notice Test case: Attempt to initialize the LegionPreLiquidSaleV2 implementation contract
      */
     function test_initialize_revertInitializeImplementation() public {
         // Arrange
@@ -352,7 +359,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to initialize the `LegionPreLiquidSaleV2` template contract
+     * @notice Test case: Attempt to initialize the LegionPreLiquidSaleV2 template contract
      */
     function test_initialize_revertInitializeTemplate() public {
         // Assert
@@ -365,7 +372,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to initialize with zero address configuration
+     * @notice Test case: Attempt to initialize with zero address configuration
      */
     function test_createPreLiquidSale_revertsWithZeroAddressProvided() public {
         // Arrange
@@ -401,7 +408,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to initialize with zero value configuration
+     * @notice Test case: Attempt to initialize with zero value configuration
      */
     function test_createPreLiquidSale_revertsWithZeroValueProvided() public {
         // Arrange
@@ -437,7 +444,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to initialize with invalid period configuration (too long)
+     * @notice Test case: Attempt to initialize with invalid period configuration (too long)
      */
     function test_createPreLiquidSale_revertsWithInvalidPeriodConfigTooLong() public {
         // Arrange
@@ -473,7 +480,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to initialize with invalid period configuration (too short)
+     * @notice Test case: Attempt to initialize with invalid period configuration (too short)
      */
     function test_createPreLiquidSale_revertsWithInvalidPeriodConfigTooShort() public {
         // Arrange
@@ -511,7 +518,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     /* ========== PAUSE TESTS ========== */
 
     /**
-     * @dev Test Case: Successfully pause the sale
+     * @notice Test case: Pause the sale
      */
     function test_pauseSale_successfullyPauseTheSale() public {
         // Arrange
@@ -527,7 +534,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to pause sale by non-legion admin
+     * @notice Test case: Attempt to pause sale by non-legion admin
      */
     function test_pauseSale_revertsIfCalledByNonLegionAdmin() public {
         // Arrange
@@ -542,7 +549,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Successfully unpause the sale
+     * @notice Test case: Unpause the sale
      */
     function test_unpauseSale_successfullyUnpauseTheSale() public {
         // Arrange
@@ -561,7 +568,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to unpause the sale by non-legion admin
+     * @notice Test case: Attempt to unpause the sale by non-legion admin
      */
     function test_unpauseSale_revertsIfNotCalledByLegionAdmin() public {
         // Arrange
@@ -581,7 +588,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     /* ========== INVEST TESTS ========== */
 
     /**
-     * @dev Test Case: Successfully invest within the active sale period.
+     * @notice Test case: Successfully invest within the active sale period
      */
     function test_invest_successfullyEmitsCapitalInvested() public {
         // Arrange
@@ -601,7 +608,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to invest after the sale has ended
+     * @notice Test case: Attempt to invest after the sale has ended
      */
     function test_invest_revertsIfSaleHasEnded() public {
         // Arrange
@@ -623,7 +630,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to invest with amount less than the minimum amount
+     * @notice Test case: Attempt to invest with amount less than minimum
      */
     function test_invest_revertsIfAmountLessThanMinimum() public {
         // Arrange
@@ -640,7 +647,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to invest when the sale has been canceled
+     * @notice Test case: Attempt to invest when the sale has been canceled
      */
     function test_invest_revertsIfSaleIsCanceled() public {
         // Arrange
@@ -660,7 +667,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to invest with invalid signature
+     * @notice Test case: Attempt to invest with invalid signature
      */
     function test_invest_revertsIfInvalidSignature() public {
         // Arrange
@@ -677,7 +684,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to invest when the investor has refunded
+     * @notice Test case: Attempt to invest when the investor has refunded
      */
     function test_invest_revertsIfInvestorHasRefunded() public {
         // Arrange
@@ -705,7 +712,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     /* ========== END SALE TESTS ========== */
 
     /**
-     * @dev Test Case: Successfully end the sale
+     * @notice Test case: Successfully end the sale
      */
     function test_endSale_successfullyEmitsSaleEnded() public {
         // Arrange
@@ -721,7 +728,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Successfully initialize the contract when lockup period is less than refund time
+     * @notice Test case: Successfully initialize the contract when lockup period is less than refund time
      */
     function test_endSale_successfullyEndSaleIfLockupPeriodLessThanRefundTime() public {
         // Arrange & Act
@@ -763,7 +770,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to end the sale by non-project or non-legion admin
+     * @notice Test case: Attempt to end the sale by non-project or non-legion admin
      */
     function test_endSale_revertsIfNotCalledByLegionOrProject() public {
         // Arrange
@@ -778,7 +785,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to end the sale if it is paused
+     * @notice Test case: Attempt to end the sale if it is paused
      */
     function test_endSale_revertsIfSaleIsPaused() public {
         // Arrange
@@ -796,7 +803,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to end the sale if it is canceled
+     * @notice Test case: Attempt to end the sale if it is canceled
      */
     function test_endSale_revertsIfSaleIsCanceled() public {
         // Arrange
@@ -814,7 +821,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to end the sale if already ended
+     * @notice Test case: Attempt to end the sale if already ended
      */
     function test_endSale_revertsIfSaleHasEnded() public {
         // Arrange
@@ -834,7 +841,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     /* ========== PUBLISH CAPITAL RAISED TESTS ========== */
 
     /**
-     * @dev Test Case: Successfully publish capital raised and accepted capital merkle root
+     * @notice Test case: Successfully publish capital raised and accepted capital merkle root
      */
     function test_publishCapitalRaised_successfullyEmitsCapitalRaisedPublished() public {
         // Arrange
@@ -855,7 +862,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to publish capital raised by non-legion admin
+     * @notice Test case: Attempt to publish capital raised by non-legion admin
      */
     function test_publishCapitalRaised_revertsIfCalledByNonLegionAdmin() public {
         // Arrange
@@ -875,7 +882,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to publish capital if sale is canceled
+     * @notice Test case: Attempt to publish capital if sale is canceled
      */
     function test_publishCapitalRaised_revertsIfSaleIsCanceled() public {
         // Arrange
@@ -898,7 +905,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to publish capital if sale has not ended
+     * @notice Test case: Attempt to publish capital if sale has not ended
      */
     function test_publishCapitalRaised_revertsIfSaleHasNotEnded() public {
         // Arrange
@@ -913,7 +920,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to publish capital if refund period is not over
+     * @notice Test case: Attempt to publish capital if refund period is not over
      */
     function test_publishCapitalRaised_revertsIfRefundPeriodIsNotOver() public {
         // Arrange
@@ -931,7 +938,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to publish capital raised if already published
+     * @notice Test case: Attempt to publish capital raised if already published
      */
     function test_publishCapitalRaised_revertsIfCapitalAlreadyPublished() public {
         // Arrange
@@ -956,7 +963,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     /* ========== EMERGENCY WITHDRAW TESTS ========== */
 
     /**
-     * @dev Test Case: Successfully withdraw funds through emergencyWithdraw method.
+     * @notice Test case: Successfully withdraw funds through emergency withdraw method
      */
     function test_emergencyWithdraw_successfullyWithdrawByLegionAdmin() public {
         // Arrange
@@ -977,7 +984,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to withdraw by address other than the Legion admin.
+     * @notice Test case: Attempt to withdraw by address other than the Legion admin
      */
     function test_emergencyWithdraw_revertsIfCalledByNonLegionAdmin() public {
         // Arrange
@@ -999,7 +1006,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     /* ========== REFUND TESTS ========== */
 
     /**
-     * @dev Test Case: Successfully refund within the refund period.
+     * @notice Test case: Successfully refund within the refund period
      */
     function test_refund_successfullyEmitsCapitalRefunded() public {
         // Arrange
@@ -1027,7 +1034,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to refund after the refund period has ended
+     * @notice Test case: Attempt to refund after the refund period has ended
      */
     function test_refund_revertsIfRefundPeriodHasEnded() public {
         // Arrange
@@ -1052,7 +1059,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to refund when the sale is canceled
+     * @notice Test case: Attempt to refund when the sale is canceled
      */
     function test_refund_revertsIfSaleIsCanceled() public {
         // Arrange
@@ -1078,7 +1085,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to refund with no capital invested
+     * @notice Test case: Attempt to refund with no capital invested
      */
     function test_refund_revertsIfNoCapitalInvested() public {
         // Arrange
@@ -1097,7 +1104,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt ot refund if already refunded
+     * @notice Test case: Attempt to refund if already refunded
      */
     function test_refund_revertsIfInvestorHasRefunded() public {
         // Arrange
@@ -1126,7 +1133,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     /* ========== CANCEL SALE TESTS ========== */
 
     /**
-     * @dev Test Case: Successfully cancel the ongoing sale by the project admin before results are published
+     * @notice Test case: Successfully cancel the ongoing sale by the project admin before results are published
      */
     function test_cancelSale_successfullyEmitsSaleCanceled() public {
         // Arrange
@@ -1142,7 +1149,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to cancel the sale if it has already been canceled
+     * @notice Test case: Attempt to cancel the sale if it has already been canceled
      */
     function test_cancelSale_revertsIfSaleAlreadyCanceled() public {
         // Arrange
@@ -1160,7 +1167,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to cancel the sale if results are published
+     * @notice Test case: Attempt to cancel the sale if results are published
      */
     function test_cancelSale_revertsIfResultsArePublished() public {
         // Arrange
@@ -1185,7 +1192,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to cancel a sale by non project admin
+     * @notice Test case: Attempt to cancel a sale by non-project admin
      */
     function test_cancelSale_revertsIfCalledByNonProjectAdmin() public {
         // Assert
@@ -1202,7 +1209,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     /* ========== WITHDRAW INVESTED CAPITAL IF CANCELED TESTS ========== */
 
     /**
-     * @dev Test Case: Successfully withdraw invested capital if the sale has been canceled.
+     * @notice Test case: Successfully withdraw invested capital if the sale has been canceled
      */
     function test_withdrawInvestedCapitalIfCanceled_successfullyEmitsCapitalRefundedAfterCancel() public {
         // Arrange
@@ -1229,7 +1236,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to withdraw invested capital when the sale is not canceled
+     * @notice Test case: Attempt to withdraw invested capital when the sale is not canceled
      */
     function test_withdrawInvestedCapitalIfCanceled_revertsIfSaleIsNotCanceled() public {
         // Arrange
@@ -1249,7 +1256,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to withdraw invested capital when no capital was invested
+     * @notice Test case: Attempt to withdraw invested capital when no capital was invested
      */
     function test_withdrawInvestedCapitalIfCanceled_revertsIfNoCapitalInvested() public {
         // Arrange
@@ -1269,7 +1276,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     /* ========== PUBLISH SALE RESULTS TESTS ========== */
 
     /**
-     * @dev Test Case: Successfully publish sale results by the Legion admin.
+     * @notice Test case: Successfully publish sale results by the Legion admin
      */
     function test_publishSaleResults_successfullyEmitsSaleResultsPublished() public {
         // Arrange
@@ -1297,7 +1304,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to publish results by non-Legion admin.
+     * @notice Test case: Attempt to publish results by non-Legion admin
      */
     function test_publishSaleResults_revertsIfCalledByNonLegionAdmin() public {
         // Arrange
@@ -1314,7 +1321,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to publish results for a second time
+     * @notice Test case: Attempt to publish results for a second time
      */
     function test_publishSaleResults_revertsIfResultsAlreadyPublished() public {
         // Arrange
@@ -1341,7 +1348,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to publish results before the refund period is over
+     * @notice Test case: Attempt to publish results before the refund period is over
      */
     function test_publishSaleResults_revertsIfRefundPeriodIsNotOver() public {
         // Arrange
@@ -1363,7 +1370,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to publish results if the sale has been canceled
+     * @notice Test case: Attempt to publish results if the sale has been canceled
      */
     function test_publishSaleResults_revertsIfSaleIsCanceled() public {
         // Arrange
@@ -1382,12 +1389,12 @@ contract LegionPreLiquidSaleV2Test is Test {
         );
     }
 
-    /* ========== SET EXCESS INVESTED CAPITAL TESTS ========== */
+    /* ========== SET ACCEPTED CAPITAL TESTS ========== */
 
     /**
-     * @dev Test Case: Successfully set excess iinvested capital results by the Legion admin.
+     * @notice Test case: Successfully set accepted capital by the Legion admin
      */
-    function test_setExcessInvestedCapital_successfullyEmitsExcessInvestedCapitalSet() public {
+    function test_setAcceptedCapital_successfullyEmitsAcceptedCapitalSet() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
 
@@ -1403,9 +1410,9 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to set excess invested capital by non-Legion admin.
+     * @notice Test case: Attempt to set accepted capital by non-Legion admin
      */
-    function test_setExcessInvestedCapital_revertsIfCalledByNonLegionAdmin() public {
+    function test_setAcceptedCapital_revertsIfCalledByNonLegionAdmin() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
 
@@ -1420,9 +1427,9 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to set excess invested capital if the sale has been canceled
+     * @notice Test case: Attempt to set accepted capital if the sale has been canceled
      */
-    function test_setExcessInvestedCapital_revertsIfSaleIsCanceled() public {
+    function test_setAcceptedCapital_revertsIfSaleIsCanceled() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
 
@@ -1440,7 +1447,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     /* ========== SUPPLY TOKENS TESTS ========== */
 
     /**
-     * @dev Test Case: Successfully supply tokens for distribution by the project admin
+     * @notice Test case: Successfully supply tokens for distribution by the project admin
      */
     function test_supplyTokens_successfullyEmitsTokensSuppliedForDistribution() public {
         // Arrange
@@ -1459,7 +1466,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         // Assert
         vm.expectEmit();
-        emit ILegionSale.TokensSuppliedForDistribution(4000 * 1e18, 100 * 1e18);
+        emit ILegionSale.TokensSuppliedForDistribution(4000 * 1e18, 100 * 1e18, 40 * 1e18);
 
         // Act
         vm.prank(projectAdmin);
@@ -1467,7 +1474,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to supply tokens with incorrect fee amount
+     * @notice Test case: Attempt to supply tokens with incorrect fee amount
      */
     function test_supplyTokens_revertsIfLegionFeeIsIncorrect() public {
         // Arrange
@@ -1493,7 +1500,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Successfully supply tokens with Legion fee 0
+     * @notice Test case: Successfully supply tokens with Legion fee set to zero
      */
     function test_supplyTokens_successfullyEmitsIfLegionFeeIsZero() public {
         // Arrange
@@ -1538,7 +1545,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         // Assert
         vm.expectEmit();
-        emit ILegionSale.TokensSuppliedForDistribution(4000 * 1e18, 0);
+        emit ILegionSale.TokensSuppliedForDistribution(4000 * 1e18, 0, 40 * 1e18);
 
         // Act
         vm.prank(projectAdmin);
@@ -1546,7 +1553,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to supply tokens by non-project admin
+     * @notice Test case: Attempt to supply tokens by non-project admin
      */
     function test_supplyTokens_revertsIfNotCalledByProjectAdmin() public {
         // Arrange
@@ -1571,7 +1578,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to supply tokens when the sale is canceled
+     * @notice Test case: Attempt to supply tokens when the sale is canceled
      */
     function test_supplyTokens_revertsIfSaleIsCanceled() public {
         // Arrange
@@ -1601,7 +1608,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to supply tokens with incorrect amount
+     * @notice Test case: Attempt to supply tokens with incorrect amount
      */
     function test_supplyTokens_revertsIfIncorrectAmountSupplied() public {
         // Arrange
@@ -1626,7 +1633,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to supply tokens if sale results are not published
+     * @notice Test case: Attempt to supply tokens if sale results are not published
      */
     function test_supplyTokens_revertsIfSaleResultsNotPublished() public {
         // Arrange
@@ -1641,7 +1648,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to supply tokens a second time
+     * @notice Test case: Attempt to supply tokens a second time
      */
     function test_supplyTokens_revertsIfTokensAlreadySupplied() public {
         // Arrange
@@ -1670,7 +1677,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to supply tokens if `askToken` is unavailable
+     * @notice Test case: Attempt to supply tokens if askToken is unavailable
      */
     function test_supplyTokens_revertsIfAskTokenUnavailable() public {
         // Arrange
@@ -1720,7 +1727,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     /* ========== CANCEL EXPIRED SALE TESTS ========== */
 
     /**
-     * @dev Test Case: Successfully cancel the sale if the lockup period is over and no tokens have been supplied
+     * @notice Test case: Successfully cancel the sale if the lockup period is over and no tokens have been supplied
      */
     function test_cancelExpiredSale_successfullyEmitsSaleCanceled() public {
         // Arrange
@@ -1738,7 +1745,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to cancel when tokens have been supplied
+     * @notice Test case: Attempt to cancel when tokens have been supplied
      */
     function test_cancelExpiredSale_revertsIfTokensSupplied() public {
         // Arrange
@@ -1770,7 +1777,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to cancel when the sale has already been canceled
+     * @notice Test case: Attempt to cancel when the sale has already been canceled
      */
     function test_cancelExpiredSale_revertsIfAlreadyCanceled() public {
         // Arrange
@@ -1790,7 +1797,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to cancel when the lockup period is not over
+     * @notice Test case: Attempt to cancel when the lockup period is not over
      */
     function test_cancelExpiredSale_revertsIfLockupPeriodNotOver() public {
         // Arrange
@@ -1810,7 +1817,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to cancel when `askToken` is unavailable and results are published
+     * @notice Test case: Attempt to cancel when askToken is unavailable and results are published
      */
     function test_cancelExpiredSale_revertsIfAskTokenUnavailableAndResultsPublished() public {
         // Arrange
@@ -1860,7 +1867,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Cancel when `askToken` is unavailable and results are not published
+     * @notice Test case: Cancel when askToken is unavailable and results are not published
      */
     function test_cancelExpiredSale_successfullyCancelIfAskTokenUnavailableAndResultsNotPublished() public {
         // Arrange
@@ -1905,8 +1912,8 @@ contract LegionPreLiquidSaleV2Test is Test {
     /* ========== WITHDRAW RAISED CAPITAL TESTS ========== */
 
     /**
-     * @dev Test Case: Successfully withdraw capital by the project admin after results are published and tokens are
-     * supplied.
+     * @notice Test case: Successfully withdraw capital by the project admin after results are published and tokens are
+     * supplied
      */
     function test_withdrawCapital_successfullyEmitsCapitalWithdraw() public {
         // Arrange
@@ -1941,7 +1948,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Successfully withdraw capital if the Legion fee is 0
+     * @notice Test case: Successfully withdraw capital if the Legion fee is 0
      */
     function test_withdrawCapital_successfullyEmitsIfLegionFeeIsZero() public {
         // Arrange
@@ -1998,7 +2005,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to withdraw by someone other than the project admin
+     * @notice Test case: Attempt to withdraw by someone other than the project admin
      */
     function test_withdrawCapital_revertsIfNotCalledByProjectAdmin() public {
         // Arrange
@@ -2015,7 +2022,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to withdraw when sale results have not been published
+     * @notice Test case: Attempt to withdraw when sale results have not been published
      */
     function test_withdrawCapital_revertsIfCapitalRaisedNotPublished() public {
         // Arrange
@@ -2035,7 +2042,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to withdraw when the refund period has not ended
+     * @notice Test case: Attempt to withdraw when the refund period has not ended
      */
     function test_withdrawCapital_revertsIfRefundPeriodNotOver() public {
         // Arrange
@@ -2055,7 +2062,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to withdraw when the sale has been canceled by the project
+     * @notice Test case: Attempt to withdraw when the sale has been canceled by the project
      */
     function test_withdrawCapital_revertsIfSaleIsCanceled() public {
         // Arrange
@@ -2078,7 +2085,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to withdraw when the sale has been canceled after expiration
+     * @notice Test case: Attempt to withdraw when the sale has been canceled after expiration
      */
     function test_withdrawCapital_revertsIfExpiredSaleIsCanceled() public {
         // Arrange
@@ -2101,7 +2108,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to withdraw raised capital after capital already withdrawn
+     * @notice Test case: Attempt to withdraw raised capital after capital already withdrawn
      */
     function test_withdrawCapital_revertsIfCapitalAlreadyWithdrawn() public {
         // Arrange
@@ -2134,7 +2141,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     /* ========== WITHDRAW EXCESS INVESTED CAPITAL TESTS ========== */
 
     /**
-     * @dev Test Case: Successfully withdraw excess invested capital after the sale has ended.
+     * @notice Test case: Successfully withdraw excess invested capital after the sale has ended
      */
     function test_withdrawExcessInvestedCapital_successfullyTransfersBackExcessCapital() public {
         // Arrange
@@ -2167,7 +2174,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to claim excess capital if sale is canceled.
+     * @notice Test case: Attempt to claim excess capital if sale is canceled
      */
     function test_withdrawExcessInvestedCapital_revertsIfSaleIsCanceled() public {
         // Arrange
@@ -2192,7 +2199,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to claim excess capital with incorrect merkle proof.
+     * @notice Test case: Attempt to claim excess capital with incorrect merkle proof
      */
     function test_withdrawExcessInvestedCapital_revertsWithIncorrectProof() public {
         // Arrange
@@ -2219,7 +2226,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to claim excess capital if excess capital has already been claimed.
+     * @notice Test case: Attempt to claim excess capital if excess capital has already been claimed
      */
     function test_withdrawExcessInvestedCapital_revertsIfExcessCapitalAlreadyWithdrawn() public {
         // Arrange
@@ -2250,7 +2257,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to claim excess capital if no capital has been invested.
+     * @notice Test case: Attempt to claim excess capital if no capital has been invested
      */
     function test_withdrawExcessInvestedCapital_revertsIfNoCapitalInvested() public {
         // Arrange
@@ -2278,7 +2285,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     /* ========== CLAIM TOKEN ALLOCATION TESTS ========== */
 
     /**
-     * @dev Test Case: Successfully claim tokens after the sale, lockup period, and sale results have been published.
+     * @notice Test case: Successfully claim tokens after the sale, lockup period, and sale results have been published
      */
     function test_claimTokenAllocation_successfullyTransfersTokensToVestingContract() public {
         // Arrange
@@ -2296,7 +2303,8 @@ contract LegionPreLiquidSaleV2Test is Test {
         vm.prank(projectAdmin);
         ILegionPreLiquidSaleV2(legionSaleInstance).endSale();
 
-        vm.warp(refundEndTime() + 1);
+        uint256 refundEnd = refundEndTime();
+        vm.warp(refundEnd + 1);
 
         vm.prank(legionBouncer);
         ILegionPreLiquidSaleV2(legionSaleInstance).publishSaleResults(
@@ -2321,7 +2329,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to claim tokens before the lockup period is over.
+     * @notice Test case: Attempt to claim tokens before the lockup period is over
      */
     function test_claimTokenAllocation_revertsIfLockupPeriodHasNotEnded() public {
         // Arrange
@@ -2356,7 +2364,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to claim more tokens than allocated.
+     * @notice Test case: Attempt to claim more tokens than allocated
      */
     function test_claimTokenAllocation_revertsIfTokensAreMoreThanAllocatedAmount() public {
         // Arrange
@@ -2388,7 +2396,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to claim tokens if investor has not invested capital
+     * @notice Test case: Attempt to claim tokens if investor has not invested capital
      */
     function test_claimTokenAllocation_revertsIfNoCapitalIsInvested() public {
         // Arrange
@@ -2420,7 +2428,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to claim tokens second time
+     * @notice Test case: Attempt to claim tokens second time
      */
     function test_claimTokenAllocation_revertsIfTokensAlreadyClaimed() public {
         // Arrange
@@ -2463,7 +2471,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to claim tokens if the sale is canceled
+     * @notice Test case: Attempt to claim tokens if the sale is canceled
      */
     function test_claimTokenAllocation_revertsIfSaleIsCanceled() public {
         // Arrange
@@ -2501,7 +2509,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to claim tokens if sale results have not been published
+     * @notice Test case: Attempt to claim tokens if sale results have not been published
      */
     function test_claimTokenAllocation_revertsIfSaleResultsNotPublished() public {
         // Arrange
@@ -2523,7 +2531,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to claim tokens if `askToken` is not available
+     * @notice Test case: Attempt to claim tokens if askToken is not available
      */
     function test_claimTokenAllocation_revertsIfAskTokenNotAvailable() public {
         // Arrange
@@ -2570,7 +2578,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     /* ========== RELEASE VESTED TOKENS TESTS ========== */
 
     /**
-     * @dev Test Case: Successfully release tokens from investor vesting contract after vesting distribution.
+     * @notice Test case: Successfully release tokens from investor vesting contract after vesting distribution
      */
     function test_releaseVestedTokens_successfullyReleasesVestedTokensToInvestor() public {
         // Arrange
@@ -2615,7 +2623,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to release tokens if an investor does not have deployed vesting contract
+     * @notice Test case: Attempt to release tokens if an investor does not have deployed vesting contract
      */
     function test_releaseVestedTokens_revertsIfInvestorHasNoVesting() public {
         // Arrange
@@ -2630,7 +2638,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to release tokens if `askToken` is not available
+     * @notice Test case: Attempt to release tokens if askToken is not available
      */
     function test_releaseVestedTokens_revertsIfAskTokenNotAvailable() public {
         // Arrange
@@ -2672,7 +2680,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     /* ========== SYNC LEGION ADDRESSES TESTS ========== */
 
     /**
-     * @dev Test Case: Successfully sync Legion addresses from `LegionAddressRegistry.sol` by Legion
+     * @notice Test case: Successfully sync Legion addresses from LegionAddressRegistry by Legion
      */
     function test_syncLegionAddresses_successfullyEmitsLegionAddressesSynced() public {
         // Arrange
@@ -2693,7 +2701,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to sync Legion addresses from `LegionAddressRegistry.sol` by non Legion admin
+     * @notice Test case: Attempt to sync Legion addresses from LegionAddressRegistry by non-Legion admin
      */
     function test_syncLegionAddresses_revertsIfNotCalledByLegion() public {
         // Arrange

@@ -25,16 +25,19 @@ import { ILegionSale } from "./interfaces/ILegionSale.sol";
 import { LegionSale } from "./LegionSale.sol";
 
 /**
- * @title Legion Pre-Liquid Sale.
- * @author Legion.
- * @notice A contract used to execute pre-liquid sales of ERC20 tokens before TGE.
+ * @title Legion Pre-Liquid Sale V2
+ * @author Legion
+ * @notice A contract used to execute pre-liquid sales of ERC20 tokens before TGE
  */
 contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
-    /// @dev A struct describing the fixed price sale configuration.
+    /// @dev A struct describing the pre-liquid sale configuration
     PreLiquidSaleConfiguration private preLiquidSaleConfig;
 
     /**
-     * @notice See {ILegionPreLiquidSaleV2-initialize}.
+     * @notice Initializes the contract with correct parameters.
+     *
+     * @param saleInitParams The Legion sale initialization parameters.
+     * @param vestingInitParams The vesting initialization parameters.
      */
     function initialize(
         LegionSaleInitializationParams calldata saleInitParams,
@@ -49,15 +52,18 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
         // Set the sale start time
         saleConfig.startTime = block.timestamp;
 
-        /// Set the refund period duration is seconds
+        /// Set the refund period duration in seconds
         preLiquidSaleConfig.refundPeriodSeconds = saleInitParams.refundPeriodSeconds;
 
-        /// Set the lockup period duration is seconds
+        /// Set the lockup period duration in seconds
         preLiquidSaleConfig.lockupPeriodSeconds = saleInitParams.lockupPeriodSeconds;
     }
 
     /**
-     * @notice See {ILegionPreLiquidSaleV2-invest}.
+     * @notice Invest capital to the pre-liquid sale.
+     *
+     * @param amount The amount of capital invested.
+     * @param signature The Legion signature for verification.
      */
     function invest(uint256 amount, bytes memory signature) external whenNotPaused {
         // Verify that the investor is allowed to pledge capital
@@ -69,27 +75,27 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
         // Verify that the sale is not canceled
         _verifySaleNotCanceled();
 
-        // Verify that the amount pledged is more than the minimum required
-        _verifyMinimumPledgeAmount(amount);
+        // Verify that the amount invested is more than the minimum required
+        _verifyMinimumInvestAmount(amount);
 
         // Verify that the investor has not refunded
         _verifyHasNotRefunded();
 
-        // Increment total capital pledged from investors
+        // Increment total capital invested from investors
         saleStatus.totalCapitalInvested += amount;
 
-        // Increment total pledged capital for the investor
+        // Increment total invested capital for the investor
         investorPositions[msg.sender].investedCapital += amount;
 
-        // Emit successfully CapitalInvested
+        // Emit CapitalInvested
         emit CapitalInvested(amount, msg.sender, block.timestamp);
 
-        // Transfer the pledged capital to the contract
+        // Transfer the invested capital to the contract
         SafeTransferLib.safeTransferFrom(addressConfig.bidToken, msg.sender, address(this), amount);
     }
 
     /**
-     * @notice See {ILegionPreLiquidSaleV2-closeSaleApplications}.
+     * @notice End sale by Legion or the Project and set the refund end time.
      */
     function endSale() external onlyLegionOrProject whenNotPaused {
         // Verify that the sale is not canceled
@@ -98,7 +104,7 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
         // Verify that the sale has not ended
         _verifySaleHasNotEnded();
 
-        // Update the `hasEnded` status to false
+        // Update the `hasEnded` status to true
         preLiquidSaleConfig.hasEnded = true;
 
         // Set the `endTime` of the sale
@@ -117,10 +123,16 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
             saleConfig.lockupEndTime = saleConfig.endTime + preLiquidSaleConfig.lockupPeriodSeconds;
         }
 
-        // Emit successfully SaleEnded
+        // Emit SaleEnded successfully
         emit SaleEnded(block.timestamp);
     }
 
+    /**
+     * @notice Publish the total capital raised by the project.
+     *
+     * @param capitalRaised The total capital raised by the project.
+     * @param acceptedMerkleRoot The Merkle root to verify accepted capital.
+     */
     function publishCapitalRaised(uint256 capitalRaised, bytes32 acceptedMerkleRoot) external onlyLegion {
         // Verify that the sale is not canceled
         _verifySaleNotCanceled();
@@ -131,7 +143,7 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
         // Verify that the refund period is over
         _verifyRefundPeriodIsOver();
 
-        // Verify that capital raised can be published
+        // Verify that capital raised can be published.
         _verifyCanPublishCapitalRaised();
 
         // Set the total capital raised to be withdrawn by the project
@@ -145,7 +157,14 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
     }
 
     /**
-     * @notice See {ILegionPreLiquidSaleV2-publishSaleResults}.
+     * @notice Publish sale results, once the sale has concluded.
+     *
+     * @dev Can be called only by the Legion admin address.
+     *
+     * @param claimMerkleRoot The Merkle root to verify token claims.
+     * @param tokensAllocated The total amount of tokens allocated for distribution among investors.
+     * @param askToken The address of the token distributed to investors.
+     * @param vestingStartTime The Unix timestamp (seconds) of the block when the vesting starts.
      */
     function publishSaleResults(
         bytes32 claimMerkleRoot,
@@ -174,7 +193,7 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
         // Set the total tokens to be allocated by the Project team
         saleStatus.totalTokensAllocated = tokensAllocated;
 
-        /// Set the address of the token ditributed to investors
+        /// Set the address of the token distributed to investors
         addressConfig.askToken = askToken;
 
         // Set the vesting start time block timestamp
@@ -184,6 +203,11 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
         emit SaleResultsPublished(claimMerkleRoot, tokensAllocated, askToken, vestingStartTime);
     }
 
+    /**
+     * @notice Withdraw raised capital from the sale contract.
+     *
+     * @dev Can be called only by the Project admin address.
+     */
     function withdrawRaisedCapital() external override(ILegionSale, LegionSale) onlyProject whenNotPaused {
         // verify that the sale has ended
         _verifySaleHasEnded();
@@ -229,7 +253,7 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
     }
 
     /**
-     * @notice See {ILegionPreLiquidSaleV2-preLiquidSaleConfiguration}.
+     * @notice Returns the pre-liquid sale configuration.
      */
     function preLiquidSaleConfiguration() external view returns (PreLiquidSaleConfiguration memory) {
         return preLiquidSaleConfig;
@@ -250,7 +274,7 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
     }
 
     /**
-     * @notice Verify that capital raised can be published
+     * @notice Verify that capital raised can be published.
      */
     function _verifyCanPublishCapitalRaised() internal view {
         if (saleStatus.totalCapitalRaised != 0) revert Errors.CapitalRaisedAlreadyPublished();

@@ -76,7 +76,7 @@ contract LegionSaleFactoryTest is Test {
     }
 
     /**
-     * @dev Helper method to set the fixed price sale configuration
+     * @notice Helper method: Set the fixed price sale configuration
      */
     function setFixedPriceSaleParams(
         ILegionSale.LegionSaleInitializationParams memory _saleInitParams,
@@ -91,7 +91,7 @@ contract LegionSaleFactoryTest is Test {
     }
 
     /**
-     * @dev Helper method to set the pre-liquid sale configuration
+     * @notice Helper method: Set the pre-liquid sale configuration
      */
     function setPreLiquidSaleParams(
         ILegionSale.LegionSaleInitializationParams memory _saleInitParams,
@@ -104,7 +104,7 @@ contract LegionSaleFactoryTest is Test {
     }
 
     /**
-     * @dev Helper method to set the sealed bid auction configuration
+     * @notice Helper method: Set the sealed bid auction configuration
      */
     function setSealedBidAuctionSaleParams(
         ILegionSale.LegionSaleInitializationParams memory _saleInitParams,
@@ -119,7 +119,7 @@ contract LegionSaleFactoryTest is Test {
     }
 
     /**
-     * @dev Helper method to create a pre-liquid sale
+     * @notice Helper method: Create a pre-liquid sale
      */
     function prepareCreateLegionPreLiquidSale() public {
         setPreLiquidSaleParams(
@@ -152,7 +152,7 @@ contract LegionSaleFactoryTest is Test {
     }
 
     /**
-     * @dev Helper method to create a fixed price sale
+     * @notice Helper method: Create a fixed price sale
      */
     function prepareCreateLegionFixedPriceSale() public {
         setFixedPriceSaleParams(
@@ -192,7 +192,7 @@ contract LegionSaleFactoryTest is Test {
     }
 
     /**
-     * @dev Helper method to create a sealed bid auction
+     * @notice Helper method: Create a sealed bid auction
      */
     function prepareCreateLegionSealedBidAuction() public {
         setSealedBidAuctionSaleParams(
@@ -228,7 +228,7 @@ contract LegionSaleFactoryTest is Test {
     }
 
     /**
-     * @dev Helper method to prepare LegionAddressRegistry
+     * @notice Helper method: Prepare LegionAddressRegistry
      */
     function prepareLegionAddressRegistry() public {
         vm.startPrank(legionBouncer);
@@ -244,7 +244,7 @@ contract LegionSaleFactoryTest is Test {
     /* ========== INITIALIZATION TESTS ========== */
 
     /**
-     * @dev Test Case: Verify that the factory contract initializes correctly with the correct owner.
+     * @notice Test case: Verify that the factory contract initializes with the correct owner
      */
     function test_transferOwnership_successfullySetsTheCorrectOwner() public view {
         // Assert
@@ -252,7 +252,7 @@ contract LegionSaleFactoryTest is Test {
     }
 
     /**
-     * @dev Test Case: Successfully create a new LegionFixedPriceSale instance by the owner (Legion).
+     * @notice Test case: Successfully create a new LegionFixedPriceSale instance by the owner
      */
     function test_createFixedPriceSale_successullyCreatesFixedPriceSale() public {
         // Arrange & Act
@@ -263,7 +263,7 @@ contract LegionSaleFactoryTest is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to create a new LegionFixedPriceSale instance by a non-owner account
+     * @notice Test case: Attempt to create a new LegionFixedPriceSale instance by a non-owner account
      */
     function test_createFixedPriceSale_revertsIfNotCalledByOwner() public {
         // Assert
@@ -279,7 +279,7 @@ contract LegionSaleFactoryTest is Test {
     }
 
     /**
-     * @dev Test Case: Initialize with zero address configurations
+     * @notice Test case: Attempt to initialize with zero address configurations
      */
     function test_createFixedPriceSale_revertsWithZeroAddressProvided() public {
         // Arrange
@@ -324,7 +324,7 @@ contract LegionSaleFactoryTest is Test {
     }
 
     /**
-     * @dev Test Case: Initialize with zero value configurations
+     * @notice Test case: Attempt to initialize with zero value configurations
      */
     function test_createFixedPriceSale_revertsWithZeroValueProvided() public {
         // Assert
@@ -340,7 +340,7 @@ contract LegionSaleFactoryTest is Test {
     }
 
     /**
-     * @dev Test Case: Ensure that LegionFixedPriceSale instance is initialized with the supplied configuration.
+     * @notice Test case: Verify LegionFixedPriceSale instance initializes with correct configuration
      */
     function test_createFixedPriceSale_successfullyCreatedWithCorrectConfiguration() public {
         // Arrange & Act
@@ -358,7 +358,7 @@ contract LegionSaleFactoryTest is Test {
     }
 
     /**
-     * @dev Test Case: Successfully create a new LegionPreLiquidSaleV2 instance by the owner (Legion).
+     * @notice Test case: Successfully create a new LegionPreLiquidSaleV2 instance by the owner
      */
     function test_createPreLiquidSale_successullyCreatesPreLiquidSale() public {
         // Arrange & Act
@@ -369,7 +369,7 @@ contract LegionSaleFactoryTest is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to create a new LegionPreLiquidSaleV2 instance by a non-owner account
+     * @notice Test case: Attempt to create a new LegionPreLiquidSaleV2 instance by a non-owner account
      */
     function test_createPreLiquidSale_revertsIfNotCalledByOwner() public {
         // Assert
@@ -383,7 +383,7 @@ contract LegionSaleFactoryTest is Test {
     }
 
     /**
-     * @dev Test Case: Initialize with zero address configurations
+     * @notice Test case: Attempt to initialize with zero address configurations
      */
     function test_createPreLiquidSale_revertsWithZeroAddressProvided() public {
         // Assert
@@ -397,7 +397,7 @@ contract LegionSaleFactoryTest is Test {
     }
 
     /**
-     * @dev Test Case: Initialize with zero value configurations
+     * @notice Test case: Attempt to initialize with zero value configurations
      */
     function test_createPreLiquidSale_revertsWithZeroValueProvided() public {
         // Arrange
@@ -435,7 +435,7 @@ contract LegionSaleFactoryTest is Test {
     }
 
     /**
-     * @dev Test Case: Ensure that LegionPreLiquidSaleV2 instance is initialized with the supplied configuration.
+     * @notice Test case: Verify LegionPreLiquidSaleV2 instance initializes with correct configuration
      */
     function test_createPreLiquidSale_successfullyCreatedWithCorrectConfiguration() public {
         // Arrange & Act
@@ -450,7 +450,7 @@ contract LegionSaleFactoryTest is Test {
     }
 
     /**
-     * @dev Test Case: Successfully create a new LegionSealedBidAuctionSale instance by the owner (Legion).
+     * @notice Test case: Successfully create a new LegionSealedBidAuctionSale instance by the owner
      */
     function test_createSealedBidAuction_successullyCreatesSealedBidAuction() public {
         // Arrange & Act
@@ -461,7 +461,7 @@ contract LegionSaleFactoryTest is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to create a new LegionSealedBidAuctionSale instance by a non-owner account
+     * @notice Test case: Attempt to create a new LegionSealedBidAuctionSale instance by a non-owner account
      */
     function test_createSealedBidAuction_revertsIfNotCalledByOwner() public {
         // Assert
@@ -477,7 +477,7 @@ contract LegionSaleFactoryTest is Test {
     }
 
     /**
-     * @dev Test Case: Initialize with zero address configurations
+     * @notice Test case: Attempt to initialize with zero address configurations
      */
     function test_createSealedBidAuction_revertsWithZeroAddressProvided() public {
         // Arrange
@@ -518,7 +518,7 @@ contract LegionSaleFactoryTest is Test {
     }
 
     /**
-     * @dev Test Case: Initialize with zero value configurations
+     * @notice Test case: Attempt to initialize with zero value configurations
      */
     function test_createSealedBidAuction_revertsWithZeroValueProvided() public {
         // Arrange
@@ -559,7 +559,7 @@ contract LegionSaleFactoryTest is Test {
     }
 
     /**
-     * @dev Test Case: Ensure that LegionSealedBidAuctionSale instance is initialized with the supplied configuration.
+     * @notice Test case: Verify LegionSealedBidAuctionSale instance initializes with correct configuration
      */
     function test_createSealedBidAuction_successfullyCreatedWithCorrectConfiguration() public {
         // Arrange & Act

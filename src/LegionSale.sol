@@ -29,6 +29,11 @@ import { ILegionSale } from "./interfaces/ILegionSale.sol";
 import { ILegionLinearVesting } from "./interfaces/ILegionLinearVesting.sol";
 import { ILegionVestingFactory } from "./interfaces/ILegionVestingFactory.sol";
 
+/**
+ * @title Legion Sale
+ * @author Legion
+ * @notice A contract used for managing token sales in the Legion Protocol
+ */
 abstract contract LegionSale is ILegionSale, Initializable, Pausable {
     using ECDSA for bytes32;
 
@@ -90,7 +95,7 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
     }
 
     /**
-     * @notice See {ILegionSale-refund}.
+     * @notice Request a refund from the sale during the applicable time window.
      */
     function refund() external virtual whenNotPaused {
         // Verify that the refund period is not over
@@ -108,16 +113,16 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
         // Revert in case there's nothing to refund
         if (amountToRefund == 0) revert Errors.InvalidRefundAmount();
 
-        // Set the total pledged capital for the investor to 0
+        // Set the total invested capital for the investor to 0
         investorPositions[msg.sender].investedCapital = 0;
 
         // Flag that the investor has refunded
         investorPositions[msg.sender].hasRefunded = true;
 
-        // Decrement total capital pledged from investors
+        // Decrement total capital invested from investors
         saleStatus.totalCapitalInvested -= amountToRefund;
 
-        // Emit successfully CapitalRefunded
+        // Emit CapitalRefunded
         emit CapitalRefunded(amountToRefund, msg.sender);
 
         // Transfer the refunded amount back to the investor
@@ -125,7 +130,9 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
     }
 
     /**
-     * @notice See {ILegionSale-withdrawRaisedCapital}.
+     * @notice Withdraw raised capital from the sale contract.
+     *
+     * @dev Can be called only by the Project admin address.
      */
     function withdrawRaisedCapital() external virtual onlyProject whenNotPaused {
         // Verify that the refund period is over
@@ -158,7 +165,7 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
         // Calculate Referrer Fee
         uint256 _referrerFee = (saleConfig.referrerFeeOnCapitalRaisedBps * _totalCapitalRaised) / 10_000;
 
-        // Emit successfully CapitalWithdrawn
+        // Emit CapitalWithdrawn
         emit CapitalWithdrawn(_totalCapitalRaised, msg.sender);
 
         // Transfer the raised capital to the project owner
@@ -171,14 +178,17 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
             SafeTransferLib.safeTransfer(addressConfig.bidToken, addressConfig.legionFeeReceiver, _legionFee);
         }
 
-        // Transfer the Referrer fee to the Legion fee receiver address
+        // Transfer the Referrer fee to the Referrer fee receiver address
         if (_referrerFee != 0) {
             SafeTransferLib.safeTransfer(addressConfig.bidToken, addressConfig.referrerFeeReceiver, _referrerFee);
         }
     }
 
     /**
-     * @notice See {ILegionSale-claimTokenAllocation}.
+     * @notice Claims the investor token allocation.
+     *
+     * @param amount The amount to be distributed.
+     * @param proof The merkle proof verification for claiming.
      */
     function claimTokenAllocation(
         uint256 amount,
@@ -210,7 +220,7 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
         // Calculate the remaining amount to be vested
         uint256 amountToBeVested = amount - amountToDistributeOnClaim;
 
-        // Emit successfully TokenAllocationClaimed
+        // Emit TokenAllocationClaimed
         emit TokenAllocationClaimed(amount, msg.sender);
 
         // Deploy vesting and distribute tokens only if there is anything to distribute
@@ -237,7 +247,10 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
     }
 
     /**
-     * @notice See {ILegionSale-withdrawExcessInvestedCapital}.
+     * @notice Withdraw excess capital back to the investor.
+     *
+     * @param amount The amount to be returned.
+     * @param proof The merkle proof verification for the return.
      */
     function withdrawExcessInvestedCapital(uint256 amount, bytes32[] calldata proof) external virtual whenNotPaused {
         // Verify that the sale is not canceled
@@ -253,13 +266,13 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
         investorPositions[msg.sender].hasClaimedExcess = true;
 
         if (amount != 0) {
-            // Decrement the total pledged capital for the investor
+            // Decrement the total invested capital for the investor
             investorPositions[msg.sender].investedCapital -= amount;
 
-            // Decrement total capital pledged from investors
+            // Decrement total capital invested from investors
             saleStatus.totalCapitalInvested -= amount;
 
-            // Emit successfully ExcessCapitalWithdrawn
+            // Emit ExcessCapitalWithdrawn
             emit ExcessCapitalWithdrawn(amount, msg.sender);
 
             // Transfer the excess capital back to the investor
@@ -268,7 +281,7 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
     }
 
     /**
-     * @notice See {ILegionSale-releaseVestedTokens}.
+     * @notice Releases tokens to the investor address.
      */
     function releaseVestedTokens() external virtual askTokenAvailable whenNotPaused {
         // Get the investor position details
@@ -282,7 +295,13 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
     }
 
     /**
-     * @notice See {ILegionSale-supplyTokens}.
+     * @notice Supply tokens once the sale results have been published.
+     *
+     * @dev Can be called only by the Project admin address.
+     *
+     * @param amount The token amount supplied by the project.
+     * @param legionFee The legion fee token amount supplied by the project.
+     * @param referrerFee The referrer fee token amount supplied by the project.
      */
     function supplyTokens(
         uint256 amount,
@@ -313,8 +332,8 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
         // Calculate and verify Legion Fee
         if (referrerFee != (saleConfig.referrerFeeOnTokensSoldBps * amount) / 10_000) revert Errors.InvalidFeeAmount();
 
-        // Emit successfully TokensSuppliedForDistribution
-        emit TokensSuppliedForDistribution(amount, legionFee);
+        // Emit TokensSuppliedForDistribution
+        emit TokensSuppliedForDistribution(amount, legionFee, referrerFee);
 
         // Transfer the allocated amount of tokens for distribution
         SafeTransferLib.safeTransferFrom(addressConfig.askToken, msg.sender, address(this), amount);
@@ -335,7 +354,11 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
     }
 
     /**
-     * @notice See {ILegionSale-setAcceptedCapital}.
+     * @notice Publish merkle root for accepted capital.
+     *
+     * @dev Can be called only by the Legion admin address.
+     *
+     * @param merkleRoot The merkle root to verify against.
      */
     function setAcceptedCapital(bytes32 merkleRoot) external virtual onlyLegion {
         // Verify that the sale is not canceled
@@ -347,12 +370,14 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
         // Set the merkle root for accepted capital
         saleStatus.acceptedCapitalMerkleRoot = merkleRoot;
 
-        // Emit successfully AcceptedCapitalSet
+        // Emit AcceptedCapitalSet
         emit AcceptedCapitalSet(merkleRoot);
     }
 
     /**
-     * @notice See {ILegionSale-cancelSale}.
+     * @notice Cancels an ongoing sale.
+     *
+     * @dev Can be called only by the Project admin address.
      */
     function cancelSale() public virtual onlyProject whenNotPaused {
         // Allow the Project to cancel the sale at any time until results are published
@@ -365,12 +390,12 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
         // Mark sale as canceled
         saleStatus.isCanceled = true;
 
-        // Emit successfully SaleCanceled
+        // Emit SaleCanceled
         emit SaleCanceled();
     }
 
     /**
-     * @notice See {ILegionSale-cancelExpiredSale}.
+     * @notice Cancels a sale in case the project has not supplied tokens after the lockup period is over.
      */
     function cancelExpiredSale() external virtual whenNotPaused {
         // Verify that the lockup period is over
@@ -390,12 +415,12 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
         // Mark sale as canceled
         saleStatus.isCanceled = true;
 
-        // Emit successfully SaleCanceled
+        // Emit SaleCanceled
         emit SaleCanceled();
     }
 
     /**
-     * @notice See {ILegionSale-withdrawInvestedCapitalIfCanceled}.
+     * @notice Withdraws back capital in case the sale has been canceled.
      */
     function withdrawInvestedCapitalIfCanceled() external virtual whenNotPaused {
         // Verify that the sale has been actually canceled
@@ -407,13 +432,13 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
         // Revert in case there's nothing to claim
         if (amountToWithdraw == 0) revert Errors.InvalidWithdrawAmount();
 
-        // Set the total pledged capital for the investor to 0
+        // Set the total invested capital for the investor to 0
         investorPositions[msg.sender].investedCapital = 0;
 
-        // Decrement total capital pledged from investors
+        // Decrement total capital invested from investors
         saleStatus.totalCapitalInvested -= amountToWithdraw;
 
-        // Emit successfully CapitalRefundedAfterCancel
+        // Emit CapitalRefundedAfterCancel
         emit CapitalRefundedAfterCancel(amountToWithdraw, msg.sender);
 
         // Transfer the refunded amount back to the investor
@@ -421,10 +446,16 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
     }
 
     /**
-     * @notice See {ILegionSale-emergencyWithdraw}.
+     * @notice Withdraw tokens from the contract in case of emergency.
+     *
+     * @dev Can be called only by the Legion admin address.
+     *
+     * @param receiver The address of the receiver.
+     * @param token The address of the token to be withdrawn.
+     * @param amount The amount to be withdrawn.
      */
     function emergencyWithdraw(address receiver, address token, uint256 amount) external virtual onlyLegion {
-        // Emit successfully EmergencyWithdraw
+        // Emit EmergencyWithdraw
         emit EmergencyWithdraw(receiver, token, amount);
 
         // Transfer the amount to Legion's address
@@ -432,7 +463,7 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
     }
 
     /**
-     * @notice See {ILegionSale-syncLegionAddresses}.
+     * @notice Syncs active Legion addresses from `LegionAddressRegistry.sol`.
      */
     function syncLegionAddresses() external virtual onlyLegion {
         // Sync the Legion addresses
@@ -440,7 +471,7 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
     }
 
     /**
-     * @notice See {ILegionSale-pauseSale}.
+     * @notice Pauses the sale.
      */
     function pauseSale() external virtual onlyLegion {
         // Pause the sale
@@ -448,7 +479,7 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
     }
 
     /**
-     * @notice See {ILegionSale-unpauseSale}.
+     * @notice Unpauses the sale.
      */
     function unpauseSale() external virtual onlyLegion {
         // Unpause the sale
@@ -456,28 +487,30 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
     }
 
     /**
-     * @notice See {ILegionSale-saleConfiguration}.
+     * @notice Returns the sale configuration.
      */
     function saleConfiguration() external view virtual returns (LegionSaleConfiguration memory) {
         return saleConfig;
     }
 
     /**
-     * @notice See {ILegionSale-vestingConfiguration}.
+     * @notice Returns the vesting configuration.
      */
     function vestingConfiguration() external view virtual returns (LegionVestingConfiguration memory) {
         return vestingConfig;
     }
 
     /**
-     * @notice See {ILegionSale-saleStatusDetails}.
+     * @notice Returns the sale status details.
      */
     function saleStatusDetails() external view virtual returns (LegionSaleStatus memory) {
         return saleStatus;
     }
 
     /**
-     * @notice See {ILegionSale-investorPositionDetails}.
+     * @notice Returns an investor position.
+     *
+     * @param investorAddress The address of the investor.
      */
     function investorPositionDetails(address investorAddress) external view virtual returns (InvestorPosition memory) {
         return investorPositions[investorAddress];
@@ -521,7 +554,7 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
     }
 
     /**
-     * @notice Sync Legion addresses from `LegionAddressRegistry`.
+     * @notice Sync the Legion addresses from `LegionAddressRegistry`.
      */
     function _syncLegionAddresses() internal virtual {
         // Cache Legion addresses from `LegionAddressRegistry`
@@ -534,7 +567,7 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
         vestingConfig.vestingFactory =
             ILegionAddressRegistry(addressConfig.addressRegistry).getLegionAddress(Constants.LEGION_VESTING_FACTORY_ID);
 
-        // Emit successfully LegionAddressesSynced
+        // Emit LegionAddressesSynced
         emit LegionAddressesSynced(
             addressConfig.legionBouncer,
             addressConfig.legionSigner,
@@ -547,7 +580,7 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
      * @notice Create a vesting schedule contract.
      *
      * @param _beneficiary The beneficiary.
-     * @param _startTimestamp The start timestamp.
+     * @param _startTimestamp The Unix timestamp when the vesting starts.
      * @param _durationSeconds The duration in seconds.
      * @param _cliffDurationSeconds The cliff duration in seconds.
      *
@@ -572,9 +605,9 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
     /**
      * @notice Verify if an investor is eligible to claim tokens allocated from the sale.
      *
-     * @param _investor The address of the investor trying to participate.
+     * @param _investor The address of the investor.
      * @param _amount The amount to claim.
-     * @param _proof The merkle proof that the investor is part of the whitelist
+     * @param _proof The Merkle proof that the investor is part of the whitelist.
      */
     function _verifyCanClaimTokenAllocation(
         address _investor,
@@ -599,7 +632,7 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
         // Check if the investor has already settled their allocation
         if (position.hasSettled) revert Errors.AlreadySettled(_investor);
 
-        // Safeguard to check if the investor has pledged capital
+        // Safeguard to check if the investor has invested capital
         if (position.investedCapital == 0) revert Errors.NoCapitalInvested(_investor);
     }
 
@@ -608,7 +641,7 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
      *
      * @param _investor The address of the investor trying to participate.
      * @param _amount The amount to claim.
-     * @param _proof The merkle proof that the investor is part of the whitelist
+     * @param _proof The Merkle proof that the investor is part of the whitelist.
      */
     function _verifyCanClaimExcessCapital(
         address _investor,
@@ -625,7 +658,7 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
         // Check if the investor has already settled their allocation
         if (position.hasClaimedExcess) revert Errors.AlreadyClaimedExcess(_investor);
 
-        // Safeguard to check if the investor has pledged capital
+        // Safeguard to check if the investor has invested capital
         if (position.investedCapital == 0) revert Errors.NoCapitalInvested(_investor);
 
         // Generate the merkle leaf and verify accepted capital
@@ -638,11 +671,11 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
     }
 
     /**
-     * @notice Verify that the amount pledge is more than the minimum required.
+     * @notice Verify that the amount invested is more than the minimum required.
      *
-     * @param _amount The amount being pledged.
+     * @param _amount The amount being invested.
      */
-    function _verifyMinimumPledgeAmount(uint256 _amount) internal view virtual {
+    function _verifyMinimumInvestAmount(uint256 _amount) internal view virtual {
         if (_amount < saleConfig.minimumInvestAmount) revert Errors.InvalidInvestAmount(_amount);
     }
 
@@ -778,7 +811,7 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
                 || saleInitParams.lockupPeriodSeconds == 0
         ) revert Errors.ZeroValueProvided();
 
-        // Check if prefund, allocation, sale, refund and lockup periods are longer than allowed
+        // Check if sale, refund and lockup periods are longer than allowed
         if (
             saleInitParams.salePeriodSeconds > Constants.THREE_MONTHS
                 || saleInitParams.refundPeriodSeconds > Constants.TWO_WEEKS
@@ -787,7 +820,7 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
             revert Errors.InvalidPeriodConfig();
         }
 
-        // Check if prefund, allocation, sale, refund and lockup periods are shorter than allowed
+        // Check if sale, refund and lockup periods are shorter than allowed
         if (
             saleInitParams.salePeriodSeconds < Constants.ONE_HOUR
                 || saleInitParams.refundPeriodSeconds < Constants.ONE_HOUR

@@ -1594,7 +1594,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         // Assert
         vm.expectEmit();
-        emit ILegionSale.TokensSuppliedForDistribution(4000 * 1e18, 100 * 1e18);
+        emit ILegionSale.TokensSuppliedForDistribution(4000 * 1e18, 100 * 1e18, 40 * 1e18);
 
         // Act
         vm.prank(projectAdmin);
@@ -1675,7 +1675,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         // Assert
         vm.expectEmit();
-        emit ILegionSale.TokensSuppliedForDistribution(4000 * 1e18, 0);
+        emit ILegionSale.TokensSuppliedForDistribution(4000 * 1e18, 0, 40 * 1e18);
 
         // Act
         vm.prank(projectAdmin);
@@ -2077,7 +2077,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         );
 
         vm.expectEmit();
-        emit ILegionSale.TokensSuppliedForDistribution(4000 * 1e18, 100 * 1e18);
+        emit ILegionSale.TokensSuppliedForDistribution(4000 * 1e18, 100 * 1e18, 40 * 1e18);
 
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
@@ -2148,7 +2148,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         );
 
         vm.expectEmit();
-        emit ILegionSale.TokensSuppliedForDistribution(4000 * 1e18, 100 * 1e18);
+        emit ILegionSale.TokensSuppliedForDistribution(4000 * 1e18, 100 * 1e18, 40 * 1e18);
 
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);

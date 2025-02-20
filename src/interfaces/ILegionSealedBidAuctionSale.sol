@@ -45,16 +45,16 @@ interface ILegionSealedBidAuctionSale is ILegionSale {
     }
 
     /**
-     * @notice This event is emitted when capital is successfully pledged.
+     * @notice This event is emitted when capital is successfully invested.
      *
-     * @param amount The amount of capital pledged.
-     * @param encryptedAmountOut The encrpyped amount out.
+     * @param amount The amount of capital invested.
+     * @param encryptedAmountOut The encrypted amount out.
      * @param salt The unique salt used in the encryption process.
      * @param investor The address of the investor.
-     * @param pledgeTimestamp The unix timestamp (seconds) of the block when capital has been pledged.
+     * @param investTimestamp The Unix timestamp (seconds) of the block when capital has been invested.
      */
     event CapitalInvested(
-        uint256 amount, uint256 encryptedAmountOut, uint256 salt, address investor, uint256 pledgeTimestamp
+        uint256 amount, uint256 encryptedAmountOut, uint256 salt, address investor, uint256 investTimestamp
     );
 
     /**
@@ -80,7 +80,7 @@ interface ILegionSealedBidAuctionSale is ILegionSale {
     );
 
     /**
-     * @notice Initialized the contract with correct parameters.
+     * @notice Initializes the contract with correct parameters.
      *
      * @param saleInitParams The Legion sale initialization parameters.
      * @param sealedBidAuctionSaleInitParams The sealed bid auction sale specific initialization parameters.
@@ -94,9 +94,9 @@ interface ILegionSealedBidAuctionSale is ILegionSale {
         external;
 
     /**
-     * @notice Pledge capital to the sealed bid auction.
+     * @notice Invest capital to the sealed bid auction.
      *
-     * @param amount The amount of capital pledged.
+     * @param amount The amount of capital invested.
      * @param sealedBid The encoded sealed bid data.
      * @param signature The Legion signature for verification.
      */
@@ -108,15 +108,15 @@ interface ILegionSealedBidAuctionSale is ILegionSale {
     function initializePublishSaleResults() external;
 
     /**
-     * @notice Publish merkle root for distribution of tokens, once the sale has concluded.
+     * @notice Publish sale results, once the sale has concluded.
      *
      * @dev Can be called only by the Legion admin address.
      *
      * @param claimMerkleRoot The merkle root to verify token claims.
      * @param acceptedMerkleRoot The merkle root to verify accepted capital.
      * @param tokensAllocated The total amount of tokens allocated for distribution among investors.
-     * @param capitalRaised The total capital raised from the auction
-     * @param sealedBidPrivateKey the private key used to decrypt sealed bids
+     * @param capitalRaised The total capital raised from the auction.
+     * @param sealedBidPrivateKey the private key used to decrypt sealed bids.
      */
     function publishSaleResults(
         bytes32 claimMerkleRoot,
@@ -130,7 +130,7 @@ interface ILegionSealedBidAuctionSale is ILegionSale {
     /**
      * @notice Decrypts the sealed bid, once the private key has been published by Legion.
      *
-     * @dev Can be called only of the private key has been published.
+     * @dev Can be called only if the private key has been published.
      *
      * @param encryptedAmountOut The encrypted bid amount
      * @param salt The salt used in the encryption process
@@ -138,7 +138,7 @@ interface ILegionSealedBidAuctionSale is ILegionSale {
     function decryptSealedBid(uint256 encryptedAmountOut, uint256 salt) external view returns (uint256);
 
     /**
-     * @notice Returns the seale bid auction sale configuration.
+     * @notice Returns the sealed bid auction sale configuration.
      */
     function sealedBidAuctionSaleConfiguration() external view returns (SealedBidAuctionSaleConfiguration memory);
 }

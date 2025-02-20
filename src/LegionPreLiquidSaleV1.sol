@@ -30,9 +30,8 @@ import { ILegionLinearVesting } from "./interfaces/ILegionLinearVesting.sol";
 import { ILegionVestingFactory } from "./interfaces/ILegionVestingFactory.sol";
 
 /**
- * @title Legion Pre-Liquid Sale.
- * @author Legion.
- * @notice A contract used to execute pre-liquid sales of ERC20 tokens before TGE.
+ * @title Legion Pre-Liquid Sale V1
+ * @notice A contract used to execute pre-liquid sales of ERC20 tokens before TGE
  */
 contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausable {
     using ECDSA for bytes32;
@@ -95,14 +94,23 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
     }
 
     /**
-     * @notice See {ILegionPreLiquidSale-initialize}.
+     * @notice Initializes the contract with correct parameters.
+     *
+     * @param preLiquidSaleInitParams The pre-liquid sale initialization parameters.
      */
     function initialize(PreLiquidSaleInitializationParams calldata preLiquidSaleInitParams) external initializer {
         _setLegionSaleConfig(preLiquidSaleInitParams);
     }
 
     /**
-     * @notice See {ILegionPreLiquidSale-invest}.
+     * @notice Invest capital to the pre-liquid sale.
+     *
+     * @param amount The amount of capital invested.
+     * @param investAmount The amount of capital the investor is allowed to invest, according to the SAFT.
+     * @param tokenAllocationRate The token allocation the investor will receive as a percentage of totalSupply,
+     * represented in 18 decimals precision.
+     * @param saftHash The hash of the Simple Agreement for Future Tokens (SAFT) signed by the investor.
+     * @param signature The signature proving that the investor is allowed to participate.
      */
     function invest(
         uint256 amount,
@@ -166,7 +174,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
     }
 
     /**
-     * @notice See {ILegionPreLiquidSale-refund}.
+     * @notice Get a refund from the sale during the applicable time window.
      */
     function refund() external whenNotPaused {
         /// Verify that the sale is not canceled
@@ -204,7 +212,14 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
     }
 
     /**
-     * @notice See {ILegionPreLiquidSale-setTokenDetails}.
+     * @notice Updates the token details after Token Generation Event (TGE).
+     *
+     * @dev Only callable by Legion.
+     *
+     * @param _askToken The address of the token distributed to investors.
+     * @param _askTokenTotalSupply The total supply of the token distributed to investors.
+     * @param _vestingStartTime The Unix timestamp (seconds) of the block when the vesting starts.
+     * @param _totalTokensAllocated The allocated token amount for distribution to investors.
      */
     function publishTgeDetails(
         address _askToken,
@@ -218,7 +233,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
         /// Verify that the sale has not been canceled
         _verifySaleNotCanceled();
 
-        /// Set the address of the token ditributed to investors
+        /// Set the address of the token distributed to investors
         saleStatus.askToken = _askToken;
 
         /// Set the total supply of the token distributed to investors
@@ -238,7 +253,13 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
     }
 
     /**
-     * @notice See {ILegionPreLiquidSale-supplyTokens}.
+     * @notice Supply tokens for distribution after the Token Generation Event (TGE).
+     *
+     * @dev Only callable by the Project.
+     *
+     * @param amount The amount of tokens to be supplied for distribution.
+     * @param legionFee The Legion fee token amount.
+     * @param referrerFee The Referrer fee token amount.
      */
     function supplyAskTokens(
         uint256 amount,
@@ -266,7 +287,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
         saleStatus.askTokensSupplied = true;
 
         /// Emit successfully TokensSuppliedForDistribution
-        emit TokensSuppliedForDistribution(amount, legionFee);
+        emit TokensSuppliedForDistribution(amount, legionFee, referrerFee);
 
         /// Transfer the allocated amount of tokens for distribution
         SafeTransferLib.safeTransferFrom(saleStatus.askToken, msg.sender, address(this), amount);
@@ -285,7 +306,14 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
     }
 
     /**
-     * @notice See {ILegionPreLiquidSale-updateVestingTerms}.
+     * @notice Updates the vesting terms.
+     *
+     * @dev Only callable by Legion, before the tokens have been supplied by the Project.
+     *
+     * @param _vestingDurationSeconds The vesting schedule duration for the token sold in seconds.
+     * @param _vestingCliffDurationSeconds The vesting cliff duration for the token sold in seconds.
+     * @param _tokenAllocationOnTGERate The token allocation amount released to investors after TGE in 18 decimals
+     * precision.
      */
     function updateVestingTerms(
         uint256 _vestingDurationSeconds,
@@ -308,7 +336,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
         /// Set the vesting duration in seconds
         vestingConfig.vestingDurationSeconds = _vestingDurationSeconds;
 
-        /// Set the vesting cliff duraation in seconds
+        /// Set the vesting cliff duration in seconds
         vestingConfig.vestingCliffDurationSeconds = _vestingCliffDurationSeconds;
 
         /// Set the token allocation on TGE
@@ -319,7 +347,13 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
     }
 
     /**
-     * @notice See {ILegionPreLiquidSale-emergencyWithdraw}.
+     * @notice Withdraw tokens from the contract in case of emergency.
+     *
+     * @dev Can be called only by the Legion admin address.
+     *
+     * @param receiver The address of the receiver.
+     * @param token The address of the token to be withdrawn.
+     * @param amount The amount to be withdrawn.
      */
     function emergencyWithdraw(address receiver, address token, uint256 amount) external onlyLegion {
         /// Emit successfully EmergencyWithdraw
@@ -330,7 +364,9 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
     }
 
     /**
-     * @notice See {ILegionPreLiquidSale-withdrawCapital}.
+     * @notice Withdraw capital from the contract.
+     *
+     * @dev Can be called only by the Project admin address.
      */
     function withdrawRaisedCapital() external onlyProject whenNotPaused {
         /// Verify that the sale is not canceled
@@ -372,7 +408,13 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
     }
 
     /**
-     * @notice See {ILegionPreLiquidSale-claimTokenAllocation}.
+     * @notice Claim token allocation by investors.
+     *
+     * @param investAmount The amount of capital the investor is allowed to invest, according to the SAFT.
+     * @param tokenAllocationRate The token allocation the investor will receive as a percentage of totalSupply,
+     * represented in 18 decimals precision.
+     * @param saftHash The hash of the Simple Agreement for Future Tokens (SAFT) signed by the investor.
+     * @param signature The signature proving that the investor has signed a SAFT.
      */
     function claimAskTokenAllocation(
         uint256 investAmount,
@@ -456,7 +498,9 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
     }
 
     /**
-     * @notice See {ILegionPreLiquidSale-cancelSale}.
+     * @notice Cancel the sale.
+     *
+     * @dev Can be called only by the Project admin address.
      */
     function cancelSale() external onlyProject whenNotPaused {
         /// Verify that the sale has not been canceled
@@ -484,7 +528,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
     }
 
     /**
-     * @notice See {ILegionPreLiquidSale-claimBackCapitalIfSaleIsCanceled}.
+     * @notice Withdraw capital if the sale has been canceled.
      */
     function withdrawCapitalIfSaleIsCanceled() external whenNotPaused {
         /// Verify that the sale has been actually canceled
@@ -510,7 +554,14 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
     }
 
     /**
-     * @notice See {ILegionPreLiquidSale-withdrawExcessCapital}.
+     * @notice Withdraw back excess capital from investors.
+     *
+     * @param amount The amount of excess capital to be withdrawn.
+     * @param investAmount The amount of capital the investor is allowed to invest, according to the SAFT.
+     * @param tokenAllocationRate The token allocation the investor will receive as a percentage of totalSupply,
+     * represented in 18 decimals precision.
+     * @param saftHash The hash of the Simple Agreement for Future Tokens (SAFT) signed by the investor.
+     * @param signature The signature proving that the investor is allowed to participate.
      */
     function withdrawExcessCapital(
         uint256 amount,
@@ -566,7 +617,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
     }
 
     /**
-     * @notice See {ILegionPreLiquidSale-releaseTokens}.
+     * @notice Releases tokens from vesting to the investor address.
      */
     function releaseTokens() external whenNotPaused askTokenAvailable {
         /// Get the investor position details
@@ -580,7 +631,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
     }
 
     /**
-     * @notice See {ILegionPreLiquidSale-endSale}.
+     * @notice Ends the sale.
      */
     function endSale() external onlyLegionOrProject {
         /// Verify that tokens for distribution have not been allocated
@@ -603,14 +654,14 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
     }
 
     /**
-     * @notice See {ILegionPreLiquidSale-syncLegionAddresses}.
+     * @notice Syncs active Legion addresses from `LegionAddressRegistry.sol`.
      */
     function syncLegionAddresses() external onlyLegion {
         _syncLegionAddresses();
     }
 
     /**
-     * @notice See {ILegionSale-pauseSale}.
+     * @notice Pauses the sale.
      */
     function pauseSale() external virtual onlyLegion {
         // Pause the sale
@@ -618,7 +669,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
     }
 
     /**
-     * @notice See {ILegionSale-unpauseSale}.
+     * @notice Unpauses the sale.
      */
     function unpauseSale() external virtual onlyLegion {
         // Unpause the sale
@@ -626,7 +677,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
     }
 
     /**
-     * @notice See {ILegionPreLiquidSale-saleConfig}.
+     * @notice Returns the sale configuration.
      */
     function saleConfiguration() external view returns (PreLiquidSaleConfig memory) {
         /// Get the pre-liquid sale config
@@ -634,7 +685,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
     }
 
     /**
-     * @notice See {ILegionPreLiquidSale-saleStatus}.
+     * @notice Returns the sale status details.
      */
     function saleStatusDetails() external view returns (PreLiquidSaleStatus memory) {
         /// Get the pre-liquid sale status
@@ -642,7 +693,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
     }
 
     /**
-     * @notice See {ILegionPreLiquidSale-saleStatus}.
+     * @notice Returns the sale vesting configuration.
      */
     function vestingConfiguration() external view returns (PreLiquidSaleVestingConfig memory) {
         /// Get the pre-liquid sale vesting config
@@ -650,9 +701,9 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
     }
 
     /**
-     * @notice See {ILegionSale-investorPositionDetails}.
+     * @notice Returns an investor position details.
      */
-    function investorPositionDetails(address investorAddress) external view virtual returns (InvestorPosition memory) {
+    function investorPositionDetails(address investorAddress) external view returns (InvestorPosition memory) {
         return investorPositions[investorAddress];
     }
 
@@ -748,7 +799,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
             revert Errors.ZeroValueProvided();
         }
 
-        /// Check if prefund, allocation, sale, refund and lockup periods are within range
+        /// Check if the refund period is within range
         if (_preLiquidSaleInitParams.refundPeriodSeconds > Constants.TWO_WEEKS) revert Errors.InvalidPeriodConfig();
     }
 

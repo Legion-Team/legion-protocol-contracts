@@ -21,17 +21,17 @@ import { VestingWalletUpgradeable } from "@openzeppelin/contracts-upgradeable/fi
 import { Errors } from "./utils/Errors.sol";
 
 /**
- * @title Legion Linear Vesting.
- * @author Legion.
- * @notice A contract used to release vested tokens to users.
- * @dev The contract fully utilizes OpenZeppelin's VestingWallet.sol implementation.
+ * @title Legion Linear Vesting
+ * @author Legion
+ * @notice A contract used to release vested tokens to users
+ * @dev The contract fully utilizes OpenZeppelin's VestingWallet.sol implementation
  */
 contract LegionLinearVesting is VestingWalletUpgradeable {
-    /// @dev The unix timestamp (seconds) of the block when the cliff ends.
+    /// @dev The Unix timestamp (seconds) of the block when the cliff ends
     uint256 private cliffEndTimestamp;
 
     /**
-     * @notice Throws if an user tries to release tokens before the cliff period has ended
+     * @notice Throws if a user tries to release tokens before the cliff period has ended
      */
     modifier onlyCliffEnded() {
         if (block.timestamp < cliffEndTimestamp) revert Errors.CliffNotEnded(block.timestamp);
@@ -47,11 +47,12 @@ contract LegionLinearVesting is VestingWalletUpgradeable {
     }
 
     /**
-     * @notice Initializes the contract with correct parameters.
+     * @notice Initializes the contract with the correct parameters
      *
-     * @param beneficiary The beneficiary to receive tokens.
-     * @param startTimestamp The start timestamp of the vesting schedule.
-     * @param durationSeconds The vesting duration in seconds.
+     * @param beneficiary The beneficiary to receive tokens
+     * @param startTimestamp The Unix timestamp when the vesting schedule starts
+     * @param durationSeconds The duration of the vesting period in seconds
+     * @param cliffDurationSeconds The duration of the cliff period in seconds
      */
     function initialize(
         address beneficiary,
@@ -70,14 +71,20 @@ contract LegionLinearVesting is VestingWalletUpgradeable {
     }
 
     /**
-     * @notice See {VestingWalletUpgradeable-release}.
+     * @notice Release the native token (ether) that have already vested.
+     *
+     * Emits a {EtherReleased} event.
      */
     function release() public override onlyCliffEnded {
         super.release();
     }
 
     /**
-     * @notice See {VestingWalletUpgradeable-release}.
+     * @notice Release the tokens that have already vested.
+     *
+     * @param token The vested token to release
+     *
+     * Emits a {ERC20Released} event.
      */
     function release(address token) public override onlyCliffEnded {
         super.release(token);

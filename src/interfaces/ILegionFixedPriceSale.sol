@@ -40,14 +40,14 @@ interface ILegionFixedPriceSale is ILegionSale {
     }
 
     /**
-     * @notice This event is emitted when capital is successfully pledged.
+     * @notice This event is emitted when capital is successfully invested.
      *
-     * @param amount The amount of capital pledged.
+     * @param amount The amount of capital invested.
      * @param investor The address of the investor.
-     * @param isPrefund Whether capital is pledged before sale start.
-     * @param pledgeTimestamp The unix timestamp (seconds) of the block when capital has been pledged.
+     * @param isPrefund Whether capital is invested before sale start.
+     * @param investTimestamp The unix timestamp (seconds) of the block when capital has been invested.
      */
-    event CapitalInvested(uint256 amount, address investor, bool isPrefund, uint256 pledgeTimestamp);
+    event CapitalInvested(uint256 amount, address investor, bool isPrefund, uint256 investTimestamp);
 
     /**
      * @notice This event is emitted when sale results are successfully published by the Legion admin.
@@ -59,7 +59,7 @@ interface ILegionFixedPriceSale is ILegionSale {
     event SaleResultsPublished(bytes32 claimMerkleRoot, bytes32 acceptedMerkleRoot, uint256 tokensAllocated);
 
     /**
-     * @notice Initialized the contract with correct parameters.
+     * @notice Initializes the contract with correct parameters.
      *
      * @param saleInitParams The Legion sale initialization parameters.
      * @param fixedPriceSaleInitParams The fixed price sale specific initialization parameters.
@@ -73,15 +73,15 @@ interface ILegionFixedPriceSale is ILegionSale {
         external;
 
     /**
-     * @notice Pledge capital to the fixed price sale.
+     * @notice Invest capital to the fixed price sale.
      *
-     * @param amount The amount of capital pledged.
+     * @param amount The amount of capital invested.
      * @param signature The Legion signature for verification.
      */
     function invest(uint256 amount, bytes memory signature) external;
 
     /**
-     * @notice Publish merkle root for distribution of tokens, once the sale has concluded.
+     * @notice Publish sale results, once the sale has concluded.
      *
      * @dev Can be called only by the Legion admin address.
      *

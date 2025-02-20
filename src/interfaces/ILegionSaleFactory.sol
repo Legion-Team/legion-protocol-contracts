@@ -39,7 +39,7 @@ interface ILegionSaleFactory {
     );
 
     /**
-     * @notice This event is emitted when a new pre-liquid sale is deployed and initialized.
+     * @notice This event is emitted when a new pre-liquid V1 sale is deployed and initialized.
      *
      * @param saleInstance The address of the sale instance deployed.
      * @param preLiquidSaleInitParams The configuration for the pre-liquid sale.
@@ -49,10 +49,11 @@ interface ILegionSaleFactory {
     );
 
     /**
-     * @notice This event is emitted when a new pre-liquid sale is deployed and initialized.
+     * @notice This event is emitted when a new pre-liquid V2 sale is deployed and initialized.
      *
      * @param saleInstance The address of the sale instance deployed.
-     * @param vestingInitParams The vesting initialization params.
+     * @param saleInitParams The Legion sale initialization parameters.
+     * @param vestingInitParams The vesting initialization parameters.
      */
     event NewPreLiquidSaleV2Created(
         address saleInstance,
@@ -82,7 +83,7 @@ interface ILegionSaleFactory {
      * @param fixedPriceSaleInitParams The fixed price sale specific initialization parameters.
      * @param vestingInitParams The vesting initialization parameters.
      *
-     * @return fixedPriceSaleInstance The address of the fixedPriceSaleInstance deployed.
+     * @return fixedPriceSaleInstance The address of the FixedPriceSale instance deployed.
      */
     function createFixedPriceSale(
         ILegionSale.LegionSaleInitializationParams memory saleInitParams,
@@ -93,10 +94,23 @@ interface ILegionSaleFactory {
         returns (address payable fixedPriceSaleInstance);
 
     /**
+     * @notice Deploy a LegionPreLiquidSaleV1 contract.
+     *
+     * @param preLiquidSaleInitParams The Pre-Liquid sale initialization parameters.
+     *
+     * @return preLiquidSaleV1Instance The address of the PreLiquidSale V1 instance deployed.
+     */
+    function createPreLiquidSaleV1(
+        ILegionPreLiquidSaleV1.PreLiquidSaleInitializationParams calldata preLiquidSaleInitParams
+    )
+        external
+        returns (address payable preLiquidSaleV1Instance);
+
+    /**
      * @notice Deploy a LegionPreLiquidSaleV2 contract.
      *
      * @param saleInitParams The Legion sale initialization parameters.
-     * @param vestingInitParams The vesting initialization params.
+     * @param vestingInitParams The vesting initialization parameters.
      *
      * @return preLiquidSaleV2Instance The address of the preLiquidSaleV2Instance deployed.
      */
@@ -114,7 +128,7 @@ interface ILegionSaleFactory {
      * @param sealedBidAuctionSaleInitParams The sealed bid auction sale specific initialization parameters.
      * @param vestingInitParams The vesting initialization parameters.
      *
-     * @return sealedBidAuctionInstance The address of the sealedBidAuctionInstance deployed.
+     * @return sealedBidAuctionInstance The address of the SealedBidAuction instance deployed.
      */
     function createSealedBidAuction(
         ILegionSale.LegionSaleInitializationParams memory saleInitParams,
