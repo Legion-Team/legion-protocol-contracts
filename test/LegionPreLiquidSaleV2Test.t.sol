@@ -482,6 +482,42 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
+     * @dev Test case: Attempt to initialize vesting configuration with invalid values.
+     */
+    function test_createPreLiquidSale_revertsWithInvalidVestingConfig() public {
+        // Arrange
+        setSaleParams(
+            ILegionSale.LegionSaleInitializationParams({
+                salePeriodSeconds: Constants.ONE_HOUR,
+                refundPeriodSeconds: Constants.ONE_HOUR,
+                lockupPeriodSeconds: Constants.ONE_HOUR,
+                legionFeeOnCapitalRaisedBps: 250,
+                legionFeeOnTokensSoldBps: 250,
+                referrerFeeOnCapitalRaisedBps: 100,
+                referrerFeeOnTokensSoldBps: 100,
+                minimumInvestAmount: 1e6,
+                bidToken: address(bidToken),
+                askToken: address(askToken),
+                projectAdmin: address(projectAdmin),
+                addressRegistry: address(legionAddressRegistry),
+                referrerFeeReceiver: address(nonLegionAdmin)
+            }),
+            ILegionSale.LegionVestingInitializationParams({
+                vestingDurationSeconds: Constants.TEN_YEARS,
+                vestingCliffDurationSeconds: Constants.TEN_YEARS + 1,
+                tokenAllocationOnTGERate: 1e18 + 1
+            })
+        );
+
+        // Assert
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidVestingConfig.selector));
+
+        // Act
+        vm.prank(legionBouncer);
+        legionSaleFactory.createPreLiquidSaleV2(testConfig.saleInitParams, testConfig.vestingInitParams);
+    }
+
+    /**
      * @notice Test case: Attempt to initialize with invalid period configuration (too short)
      */
     function test_createPreLiquidSale_revertsWithInvalidPeriodConfigTooShort() public {

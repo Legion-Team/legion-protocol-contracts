@@ -637,6 +637,45 @@ contract LegionSealedBidAuctionSaleTest is Test {
     }
 
     /**
+     * @dev Test case: Attempt to initialize vesting configuration with invalid values.
+     */
+    function test_createSealedBidAuction_revertsWithInvalidVestingConfig() public {
+        // Arrange
+        setSaleParams(
+            ILegionSale.LegionSaleInitializationParams({
+                salePeriodSeconds: Constants.ONE_HOUR - 1,
+                refundPeriodSeconds: Constants.ONE_HOUR - 1,
+                lockupPeriodSeconds: Constants.ONE_HOUR - 1,
+                legionFeeOnCapitalRaisedBps: 250,
+                legionFeeOnTokensSoldBps: 250,
+                referrerFeeOnCapitalRaisedBps: 100,
+                referrerFeeOnTokensSoldBps: 100,
+                minimumInvestAmount: 1e6,
+                bidToken: address(bidToken),
+                askToken: address(askToken),
+                projectAdmin: address(projectAdmin),
+                addressRegistry: address(legionAddressRegistry),
+                referrerFeeReceiver: address(nonLegionAdmin)
+            }),
+            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY }),
+            ILegionSale.LegionVestingInitializationParams({
+                vestingDurationSeconds: Constants.TEN_YEARS,
+                vestingCliffDurationSeconds: Constants.TEN_YEARS + 1,
+                tokenAllocationOnTGERate: 1e18 + 1
+            })
+        );
+
+        // Assert
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidPeriodConfig.selector));
+
+        // Act
+        vm.prank(legionBouncer);
+        legionSaleFactory.createSealedBidAuction(
+            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams, testConfig.vestingInitParams
+        );
+    }
+
+    /**
      * @dev Test Case: Initialize with invalid public key
      */
     function test_createSealedBidAuction_revertsWithInvalidPublicKey() public {

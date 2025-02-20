@@ -88,6 +88,11 @@ library Errors {
     error InvalidTokenAmountSupplied(uint256 amount);
 
     /**
+     * @notice Throws when the vesting configuration is invalid.
+     */
+    error InvalidVestingConfig();
+
+    /**
      * @notice Throws when an invalid amount of tokens has been claimed.
      */
     error InvalidWithdrawAmount();

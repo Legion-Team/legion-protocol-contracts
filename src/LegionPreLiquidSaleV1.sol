@@ -348,6 +348,9 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
         /// Set the token allocation on TGE
         vestingConfig.tokenAllocationOnTGERate = _tokenAllocationOnTGERate;
 
+        /// Verify that the vesting configuration is valid
+        _verifyValidVestingConfig();
+
         /// Emit successfully VestingTermsUpdated
         emit VestingTermsUpdated(_vestingDurationSeconds, _vestingCliffDurationSeconds, _tokenAllocationOnTGERate);
     }
@@ -760,9 +763,13 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
         saleConfig.addressRegistry = preLiquidSaleInitParams.addressRegistry;
         saleConfig.referrerFeeReceiver = preLiquidSaleInitParams.referrerFeeReceiver;
 
+        /// Initialize pre-liquid sale vesting configuration
         vestingConfig.vestingDurationSeconds = preLiquidSaleInitParams.vestingDurationSeconds;
         vestingConfig.vestingCliffDurationSeconds = preLiquidSaleInitParams.vestingCliffDurationSeconds;
         vestingConfig.tokenAllocationOnTGERate = preLiquidSaleInitParams.tokenAllocationOnTGERate;
+
+        /// Verify that the vesting configuration is valid
+        _verifyValidVestingConfig();
 
         /// Cache Legion addresses from `LegionAddressRegistry`
         _syncLegionAddresses();
@@ -929,6 +936,19 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
      */
     function _verifyHasNotRefunded() internal view virtual {
         if (investorPositions[msg.sender].hasRefunded) revert Errors.InvestorHasRefunded(msg.sender);
+    }
+
+    /**
+     * @notice Verify that the vesting configuration is valid.
+     */
+    function _verifyValidVestingConfig() internal view virtual {
+        /// Check if vesting duration is no more than 10 years, if vesting cliff duration is not more than vesting
+        /// duration or the token allocation on TGE rate is no more than 100%
+        if (
+            vestingConfig.vestingDurationSeconds > Constants.TEN_YEARS
+                || vestingConfig.vestingCliffDurationSeconds > vestingConfig.vestingDurationSeconds
+                || vestingConfig.tokenAllocationOnTGERate > 1e18
+        ) revert Errors.InvalidVestingConfig();
     }
 
     /**

@@ -1758,6 +1758,24 @@ contract LegionPreLiquidSaleV1Test is Test {
     }
 
     /**
+     * @dev Test Case: Attempt to update vesting terms with invalid values.
+     */
+    function test_updateVestingTerms_revertsWithInvalidVestingConfig() public {
+        // Arrange
+        prepareCreateLegionPreLiquidSale();
+        prepareMintAndApproveTokens();
+
+        // Assert
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidVestingConfig.selector));
+
+        // Act
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).updateVestingTerms(
+            (Constants.TEN_YEARS + 1), (Constants.TEN_YEARS + 2), (1e18 + 1)
+        );
+    }
+
+    /**
      * @dev Test Case: Attempt to update vesting terms by non-project admin.
      */
     function test_updateVestingTerms_revertsIfCalledByNonProjectAdmin() public {

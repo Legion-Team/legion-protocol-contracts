@@ -40,6 +40,9 @@ library Constants {
     /// @dev Constant representing 1 year in seconds.
     uint256 internal constant ONE_YEAR = 31_536_000;
 
+    /// @dev Constant representing 10 years in seconds.
+    uint256 internal constant TEN_YEARS = 315_360_000;
+
     /// @dev Constant representing the LEGION_BOUNCER unique ID
     bytes32 internal constant LEGION_BOUNCER_ID = bytes32("LEGION_BOUNCER");
 

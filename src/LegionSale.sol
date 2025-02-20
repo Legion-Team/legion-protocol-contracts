@@ -551,6 +551,9 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
         vestingConfig.vestingCliffDurationSeconds = vestingInitParams.vestingCliffDurationSeconds;
         vestingConfig.tokenAllocationOnTGERate = vestingInitParams.tokenAllocationOnTGERate;
 
+        /// Verify that the vesting configuration is valid
+        _verifyValidVestingConfig();
+
         // Cache Legion addresses from `LegionAddressRegistry`
         _syncLegionAddresses();
     }
@@ -830,5 +833,18 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
         ) {
             revert Errors.InvalidPeriodConfig();
         }
+    }
+
+    /**
+     * @notice Verify that the vesting configuration is valid.
+     */
+    function _verifyValidVestingConfig() internal view virtual {
+        /// Check if vesting duration is no more than 10 years, if vesting cliff duration is not more than vesting
+        /// duration or the token allocation on TGE rate is no more than 100%
+        if (
+            vestingConfig.vestingDurationSeconds > Constants.TEN_YEARS
+                || vestingConfig.vestingCliffDurationSeconds > vestingConfig.vestingDurationSeconds
+                || vestingConfig.tokenAllocationOnTGERate > 1e18
+        ) revert Errors.InvalidVestingConfig();
     }
 }
