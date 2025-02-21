@@ -1,15 +1,15 @@
 # Constants
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/9d232ccfd9d55ef7fb8933835be077c1145ee4d5/src/utils/Constants.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/ac3edaa080a44c4acca1531370a76a05f05491f5/src/utils/Constants.sol)
 
 **Author:**
-Legion.
+Legion
 
-A library used for storing constants shared accross the Legion protocol.
+A library used for storing constants shared across the Legion protocol.
 
 
 ## State Variables
 ### ONE_HOUR
-*Constant representing 1 hour in seconds.*
+*Constant representing one hour in seconds*
 
 
 ```solidity
@@ -18,20 +18,20 @@ uint256 internal constant ONE_HOUR = 3600;
 
 
 ### TWO_WEEKS
-*Constant representing 2 weeks in seconds.*
+*Constant representing two weeks in seconds*
 
 
 ```solidity
-uint256 internal constant TWO_WEEKS = 1209600;
+uint256 internal constant TWO_WEEKS = 1_209_600;
 ```
 
 
 ### FORTY_DAYS
-*Constant representing 40 days in seconds.*
+*Constant representing forty days in seconds*
 
 
 ```solidity
-uint256 internal constant FORTY_DAYS = 3456000;
+uint256 internal constant FORTY_DAYS = 3_456_000;
 ```
 
 
@@ -40,7 +40,7 @@ uint256 internal constant FORTY_DAYS = 3456000;
 
 
 ```solidity
-uint256 internal constant THREE_MONTHS = 7776000;
+uint256 internal constant THREE_MONTHS = 7_776_000;
 ```
 
 
@@ -49,7 +49,7 @@ uint256 internal constant THREE_MONTHS = 7776000;
 
 
 ```solidity
-uint256 internal constant SIX_MONTHS = 15780000;
+uint256 internal constant SIX_MONTHS = 15_780_000;
 ```
 
 
@@ -58,7 +58,16 @@ uint256 internal constant SIX_MONTHS = 15780000;
 
 
 ```solidity
-uint256 internal constant ONE_YEAR = 31536000;
+uint256 internal constant ONE_YEAR = 31_536_000;
+```
+
+
+### TEN_YEARS
+*Constant representing 10 years in seconds.*
+
+
+```solidity
+uint256 internal constant TEN_YEARS = 315_360_000;
 ```
 
 

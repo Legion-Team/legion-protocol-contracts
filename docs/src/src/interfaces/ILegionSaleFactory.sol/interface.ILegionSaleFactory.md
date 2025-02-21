@@ -1,5 +1,5 @@
 # ILegionSaleFactory
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/9d232ccfd9d55ef7fb8933835be077c1145ee4d5/src/interfaces/ILegionSaleFactory.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/ac3edaa080a44c4acca1531370a76a05f05491f5/src/interfaces/ILegionSaleFactory.sol)
 
 
 ## Functions
@@ -13,7 +13,9 @@ function createFixedPriceSale(
     ILegionSale.LegionSaleInitializationParams memory saleInitParams,
     ILegionFixedPriceSale.FixedPriceSaleInitializationParams memory fixedPriceSaleInitParams,
     ILegionSale.LegionVestingInitializationParams memory vestingInitParams
-) external returns (address payable fixedPriceSaleInstance);
+)
+    external
+    returns (address payable fixedPriceSaleInstance);
 ```
 **Parameters**
 
@@ -27,32 +29,59 @@ function createFixedPriceSale(
 
 |Name|Type|Description|
 |----|----|-----------|
-|`fixedPriceSaleInstance`|`address payable`|The address of the fixedPriceSaleInstance deployed.|
+|`fixedPriceSaleInstance`|`address payable`|The address of the FixedPriceSale instance deployed.|
 
 
-### createPreLiquidSale
+### createPreLiquidSaleV1
 
-Deploy a LegionPreLiquidSale contract.
+Deploy a LegionPreLiquidSaleV1 contract.
 
 
 ```solidity
-function createPreLiquidSale(
-    ILegionPreLiquidSale.PreLiquidSaleInitializationParams memory preLiquidSaleInitParams,
-    ILegionPreLiquidSale.LegionVestingInitializationParams memory vestingInitParams
-) external returns (address payable preLiquidSaleInstance);
+function createPreLiquidSaleV1(
+    ILegionPreLiquidSaleV1.PreLiquidSaleInitializationParams calldata preLiquidSaleInitParams
+)
+    external
+    returns (address payable preLiquidSaleV1Instance);
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`preLiquidSaleInitParams`|`ILegionPreLiquidSale.PreLiquidSaleInitializationParams`|The pre-liquid sale initialization params.|
-|`vestingInitParams`|`ILegionPreLiquidSale.LegionVestingInitializationParams`|The vesting initialization params.|
+|`preLiquidSaleInitParams`|`ILegionPreLiquidSaleV1.PreLiquidSaleInitializationParams`|The Pre-Liquid sale initialization parameters.|
 
 **Returns**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`preLiquidSaleInstance`|`address payable`|The address of the preLiquidSaleInstance deployed.|
+|`preLiquidSaleV1Instance`|`address payable`|The address of the PreLiquidSale V1 instance deployed.|
+
+
+### createPreLiquidSaleV2
+
+Deploy a LegionPreLiquidSaleV2 contract.
+
+
+```solidity
+function createPreLiquidSaleV2(
+    ILegionSale.LegionSaleInitializationParams memory saleInitParams,
+    ILegionPreLiquidSaleV2.LegionVestingInitializationParams memory vestingInitParams
+)
+    external
+    returns (address payable preLiquidSaleV2Instance);
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`saleInitParams`|`ILegionSale.LegionSaleInitializationParams`|The Legion sale initialization parameters.|
+|`vestingInitParams`|`ILegionPreLiquidSaleV2.LegionVestingInitializationParams`|The vesting initialization parameters.|
+
+**Returns**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`preLiquidSaleV2Instance`|`address payable`|The address of the preLiquidSaleV2Instance deployed.|
 
 
 ### createSealedBidAuction
@@ -65,7 +94,9 @@ function createSealedBidAuction(
     ILegionSale.LegionSaleInitializationParams memory saleInitParams,
     ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams memory sealedBidAuctionSaleInitParams,
     ILegionSale.LegionVestingInitializationParams memory vestingInitParams
-) external returns (address payable sealedBidAuctionInstance);
+)
+    external
+    returns (address payable sealedBidAuctionInstance);
 ```
 **Parameters**
 
@@ -79,7 +110,7 @@ function createSealedBidAuction(
 
 |Name|Type|Description|
 |----|----|-----------|
-|`sealedBidAuctionInstance`|`address payable`|The address of the sealedBidAuctionInstance deployed.|
+|`sealedBidAuctionInstance`|`address payable`|The address of the SealedBidAuction instance deployed.|
 
 
 ## Events
@@ -105,15 +136,13 @@ event NewFixedPriceSaleCreated(
 |`fixedPriceSaleInitParams`|`ILegionFixedPriceSale.FixedPriceSaleInitializationParams`|The fixed price sale specific initialization parameters.|
 |`vestingInitParams`|`ILegionSale.LegionVestingInitializationParams`|The vesting initialization parameters.|
 
-### NewPreLiquidSaleCreated
-This event is emitted when a new pre-liquid sale is deployed and initialized.
+### NewPreLiquidSaleV1Created
+This event is emitted when a new pre-liquid V1 sale is deployed and initialized.
 
 
 ```solidity
-event NewPreLiquidSaleCreated(
-    address saleInstance,
-    ILegionPreLiquidSale.PreLiquidSaleInitializationParams preLiquidSaleInitParams,
-    ILegionPreLiquidSale.LegionVestingInitializationParams vestingInitParams
+event NewPreLiquidSaleV1Created(
+    address saleInstance, ILegionPreLiquidSaleV1.PreLiquidSaleInitializationParams preLiquidSaleInitParams
 );
 ```
 
@@ -122,8 +151,27 @@ event NewPreLiquidSaleCreated(
 |Name|Type|Description|
 |----|----|-----------|
 |`saleInstance`|`address`|The address of the sale instance deployed.|
-|`preLiquidSaleInitParams`|`ILegionPreLiquidSale.PreLiquidSaleInitializationParams`|The pre-liquid sale initialization params.|
-|`vestingInitParams`|`ILegionPreLiquidSale.LegionVestingInitializationParams`|The vesting initialization params.|
+|`preLiquidSaleInitParams`|`ILegionPreLiquidSaleV1.PreLiquidSaleInitializationParams`|The configuration for the pre-liquid sale.|
+
+### NewPreLiquidSaleV2Created
+This event is emitted when a new pre-liquid V2 sale is deployed and initialized.
+
+
+```solidity
+event NewPreLiquidSaleV2Created(
+    address saleInstance,
+    ILegionSale.LegionSaleInitializationParams saleInitParams,
+    ILegionPreLiquidSaleV2.LegionVestingInitializationParams vestingInitParams
+);
+```
+
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`saleInstance`|`address`|The address of the sale instance deployed.|
+|`saleInitParams`|`ILegionSale.LegionSaleInitializationParams`|The Legion sale initialization parameters.|
+|`vestingInitParams`|`ILegionPreLiquidSaleV2.LegionVestingInitializationParams`|The vesting initialization parameters.|
 
 ### NewSealedBidAuctionCreated
 This event is emitted when a new sealed bid auction is deployed and initialized.

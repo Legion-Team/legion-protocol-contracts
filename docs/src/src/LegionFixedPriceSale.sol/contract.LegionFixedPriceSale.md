@@ -1,18 +1,18 @@
 # LegionFixedPriceSale
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/9d232ccfd9d55ef7fb8933835be077c1145ee4d5/src/LegionFixedPriceSale.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/ac3edaa080a44c4acca1531370a76a05f05491f5/src/LegionFixedPriceSale.sol)
 
 **Inherits:**
 [LegionSale](/src/LegionSale.sol/abstract.LegionSale.md), [ILegionFixedPriceSale](/src/interfaces/ILegionFixedPriceSale.sol/interface.ILegionFixedPriceSale.md)
 
 **Author:**
-Legion.
+Legion
 
-A contract used to execute fixed price sales of ERC20 tokens after TGE.
+A contract used to execute fixed-price sales of ERC20 tokens after TGE
 
 
 ## State Variables
 ### fixedPriceSaleConfig
-*A struct describing the fixed price sale configuration.*
+*A struct describing the fixed-price sale configuration*
 
 
 ```solidity
@@ -23,7 +23,7 @@ FixedPriceSaleConfiguration private fixedPriceSaleConfig;
 ## Functions
 ### initialize
 
-See [ILegionFixedPriceSale-initialize](/src/LegionPreLiquidSale.sol/contract.LegionPreLiquidSale.md#initialize).
+Initializes the contract with correct parameters.
 
 
 ```solidity
@@ -31,30 +31,65 @@ function initialize(
     LegionSaleInitializationParams calldata saleInitParams,
     FixedPriceSaleInitializationParams calldata fixedPriceSaleInitParams,
     LegionVestingInitializationParams calldata vestingInitParams
-) external initializer;
+)
+    external
+    initializer;
 ```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`saleInitParams`|`LegionSaleInitializationParams`|The Legion sale initialization parameters.|
+|`fixedPriceSaleInitParams`|`FixedPriceSaleInitializationParams`|The fixed price sale specific initialization parameters.|
+|`vestingInitParams`|`LegionVestingInitializationParams`|The vesting initialization parameters.|
+
 
 ### invest
 
-See [ILegionFixedPriceSale-invest](/src/LegionPreLiquidSale.sol/contract.LegionPreLiquidSale.md#invest).
+Invest capital to the fixed price sale.
 
 
 ```solidity
 function invest(uint256 amount, bytes memory signature) external whenNotPaused;
 ```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`amount`|`uint256`|The amount of capital invested.|
+|`signature`|`bytes`|The Legion signature for verification.|
+
 
 ### publishSaleResults
 
-See [ILegionFixedPriceSale-publishSaleResults](/src/LegionSealedBidAuctionSale.sol/contract.LegionSealedBidAuctionSale.md#publishsaleresults).
+Publish sale results, once the sale has concluded.
+
+*Can be called only by the Legion admin address.*
 
 
 ```solidity
-function publishSaleResults(bytes32 merkleRoot, uint256 tokensAllocated, uint8 askTokenDecimals) external onlyLegion;
+function publishSaleResults(
+    bytes32 claimMerkleRoot,
+    bytes32 acceptedMerkleRoot,
+    uint256 tokensAllocated,
+    uint8 askTokenDecimals
+)
+    external
+    onlyLegion;
 ```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`claimMerkleRoot`|`bytes32`|The merkle root to verify token claims.|
+|`acceptedMerkleRoot`|`bytes32`|The merkle root to verify accepted capital.|
+|`tokensAllocated`|`uint256`|The total amount of tokens allocated for distribution among investors.|
+|`askTokenDecimals`|`uint8`|The decimals number of the ask token.|
+
 
 ### fixedPriceSaleConfiguration
 
-See [ILegionFixedPriceSale-fixedPriceSaleConfiguration](/src/interfaces/ILegionFixedPriceSale.sol/interface.ILegionFixedPriceSale.md#fixedpricesaleconfiguration).
+Returns the fixed price sale configuration.
 
 
 ```solidity
@@ -63,7 +98,7 @@ function fixedPriceSaleConfiguration() external view returns (FixedPriceSaleConf
 
 ### _isPrefund
 
-Verify if prefund period is active (before sale startTime).
+Verify whether the prefund period is active (before sale startTime)
 
 
 ```solidity
@@ -72,7 +107,7 @@ function _isPrefund() private view returns (bool);
 
 ### _verifyNotPrefundAllocationPeriod
 
-Verify if prefund allocation period is active (after prefundEndTime and before sale startTime).
+Verify whether the prefund allocation period is active (after prefundEndTime and before sale startTime)
 
 
 ```solidity
@@ -81,7 +116,7 @@ function _verifyNotPrefundAllocationPeriod() private view;
 
 ### _verifyValidParams
 
-Verify if the sale initialization parameters are valid.
+Verify whether the sale initialization parameters are valid
 
 
 ```solidity

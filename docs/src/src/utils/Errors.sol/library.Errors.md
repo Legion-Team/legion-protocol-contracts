@@ -1,10 +1,10 @@
 # Errors
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/9d232ccfd9d55ef7fb8933835be077c1145ee4d5/src/utils/Errors.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/ac3edaa080a44c4acca1531370a76a05f05491f5/src/utils/Errors.sol)
 
 **Author:**
-Legion.
+Legion
 
-A library used for storing errors shared accross the Legion protocol.
+A library used for storing errors shared across the Legion protocol
 
 
 ## Errors
@@ -82,14 +82,6 @@ error CliffNotEnded(uint256 currentTimestamp);
 |----|----|-----------|
 |`currentTimestamp`|`uint256`|The current block timestamp.|
 
-### CannotWithdrawCapital
-Throws when the Project tries to withdraw more than the allowed capital.
-
-
-```solidity
-error CannotWithdrawCapital();
-```
-
 ### CapitalAlreadyWithdrawn
 Throws when capital has already been withdrawn by the Project.
 
@@ -98,26 +90,20 @@ Throws when capital has already been withdrawn by the Project.
 error CapitalAlreadyWithdrawn();
 ```
 
-### CapitalNotInvested
-Throws when no capital has been invested.
+### CapitalNotRaised
+Throws when no capital has been raised.
 
 
 ```solidity
-error CapitalNotInvested(address investor);
+error CapitalNotRaised();
 ```
 
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`investor`|`address`|The address of the investor|
-
-### CannotWithdrawExcessInvestedCapitall
+### CannotWithdrawExcessInvestedCapital
 Throws when the investor is not flagged to have excess capital returned.
 
 
 ```solidity
-error CannotWithdrawExcessInvestedCapitall(address investor);
+error CannotWithdrawExcessInvestedCapital(address investor);
 ```
 
 **Parameters**
@@ -126,19 +112,13 @@ error CannotWithdrawExcessInvestedCapitall(address investor);
 |----|----|-----------|
 |`investor`|`address`|The address of the investor.|
 
-### ExcessCapitalResultsAlreadyPublished
-Throws when the excess capital results have already been published.
+### InvalidClaimAmount
+Throws when the claim amount is invalid.
 
 
 ```solidity
-error ExcessCapitalResultsAlreadyPublished(bytes32 merkleRoot);
+error InvalidClaimAmount();
 ```
-
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`merkleRoot`|`bytes32`|The merkle root for distribution of excess capital.|
 
 ### InvalidTokenAmountSupplied
 Throws when an invalid amount of tokens has been supplied by the project.
@@ -153,6 +133,14 @@ error InvalidTokenAmountSupplied(uint256 amount);
 |Name|Type|Description|
 |----|----|-----------|
 |`amount`|`uint256`|The amount of tokens supplied.|
+
+### InvalidVestingConfig
+Throws when the vesting configuration is invalid.
+
+
+```solidity
+error InvalidVestingConfig();
+```
 
 ### InvalidWithdrawAmount
 Throws when an invalid amount of tokens has been claimed.
@@ -208,14 +196,6 @@ Throws when an invalid signature has been provided when pledging capital.
 error InvalidSignature();
 ```
 
-### InvalidTotalSupply
-Throws when an invalid total supply has been provided.
-
-
-```solidity
-error InvalidTotalSupply();
-```
-
 ### InvalidPositionAmount
 Throws when the invested capital amount is not equal to the SAFT amount.
 
@@ -230,12 +210,12 @@ error InvalidPositionAmount(address investor);
 |----|----|-----------|
 |`investor`|`address`|The address of the investor.|
 
-### InvalidProof
-Throws when the merkle proof for the investor is inavlid.
+### InvestorHasRefunded
+Throws when the investor has refunded.
 
 
 ```solidity
-error InvalidProof(address investor);
+error InvestorHasRefunded(address investor);
 ```
 
 **Parameters**
@@ -244,13 +224,19 @@ error InvalidProof(address investor);
 |----|----|-----------|
 |`investor`|`address`|The address of the investor.|
 
-### InvestmentNotAccepted
-Throws when the Project is not accepting investments.
+### InvestorHasClaimedExcess
+Throws when the investor has claimed excess capital invested.
 
 
 ```solidity
-error InvestmentNotAccepted();
+error InvestorHasClaimedExcess(address investor);
 ```
+
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`investor`|`address`|The address of the investor.|
 
 ### InvalidSalt
 Throws when the salt used to encrypt the bid is invalid.
@@ -328,8 +314,16 @@ Throws when not called by the Project.
 error NotCalledByProject();
 ```
 
+### NotCalledByLegionOrProject
+Throws when not called by Legion or the Project.
+
+
+```solidity
+error NotCalledByLegionOrProject();
+```
+
 ### PrefundAllocationPeriodNotEnded
-Throws when capital is pledged during the prefund allocation period.
+Throws when capital is pledged during the pre-fund allocation period.
 
 
 ```solidity
@@ -416,12 +410,42 @@ Throws when the sale results are not published.
 error SaleResultsNotPublished();
 ```
 
+### SignatureAlreadyUsed
+Throws when the signature has already been used.
+
+
+```solidity
+error SignatureAlreadyUsed(bytes signature);
+```
+
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`signature`|`bytes`|The signature that has been used.|
+
+### CapitalRaisedNotPublished
+Throws when the raised capital has not published.
+
+
+```solidity
+error CapitalRaisedNotPublished();
+```
+
 ### SaleResultsAlreadyPublished
 Throws when the sale results have been already published.
 
 
 ```solidity
 error SaleResultsAlreadyPublished();
+```
+
+### CapitalRaisedAlreadyPublished
+Throws when the raised capital have been already published.
+
+
+```solidity
+error CapitalRaisedAlreadyPublished();
 ```
 
 ### TokensAlreadyAllocated
@@ -454,14 +478,6 @@ Throws when tokens have not been supplied.
 
 ```solidity
 error TokensNotSupplied();
-```
-
-### UnableToClaimTokenAllocation
-Throws when investor is unable to claim token allocation.
-
-
-```solidity
-error UnableToClaimTokenAllocation();
 ```
 
 ### ZeroAddressProvided

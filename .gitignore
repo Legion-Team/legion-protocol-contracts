@@ -15,9 +15,6 @@ package-lock.json
 pnpm-lock.yaml
 yarn.lock
 
-# Docs
-docs/
-
 # Ignores development broadcast logs
 !broadcast
 broadcast/*

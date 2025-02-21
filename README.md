@@ -224,7 +224,7 @@ The `LegionAddressRegistry` contract maintains a registry of key addresses used 
 - `setLegionAddress`: Sets an address in the registry.
 - `getLegionAddress`: Retrieves an address from the registry.
 
-### 8. Legion Bouncer
+### Legion Bouncer
 
 The `LegionBouncer` contract serves as a single point of interaction between Legion and the other contracts in the protocol that require Legion admin access. Two roles are defined: `DEFAULT_ADMIN` and `BROADCASTER`. The `DEFAULT_ADMIN` can grant and revoke `BROADCASTER` roles, whereas the `BROADCASTER` role is only able to perform `functionCall` operations to external contracts.
 

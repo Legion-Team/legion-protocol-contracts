@@ -25,7 +25,7 @@ jobs:
       - name: Run Forge build
         run: |
           forge --version
-          forge build --sizes
+          forge build --names
         id: build
 
       - name: Run Forge tests
@@ -70,14 +70,4 @@ jobs:
 
       - name: Prune coverage
         run: |
-          lcov --remove ./lcov.info -o ./lcov-filtered.info 'test/*' 'script/*' 'src/utils/*'
-
-  finish:
-    needs: forge-coverage
-    if: ${{ always() }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Coveralls Finished
-        uses: coverallsapp/github-action@v2
-        with:
-          parallel-finished: true
+          lcov --remove ./lcov.info -o ./lcov-filtered.info

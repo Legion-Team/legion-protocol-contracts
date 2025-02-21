@@ -1,8 +1,13 @@
 # LegionSale
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/9d232ccfd9d55ef7fb8933835be077c1145ee4d5/src/LegionSale.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/ac3edaa080a44c4acca1531370a76a05f05491f5/src/LegionSale.sol)
 
 **Inherits:**
 [ILegionSale](/src/interfaces/ILegionSale.sol/interface.ILegionSale.md), Initializable, Pausable
+
+**Author:**
+Legion
+
+A contract used for managing token sales in the Legion Protocol
 
 
 ## State Variables
@@ -70,6 +75,15 @@ Throws if called by any account other than the Project.
 modifier onlyProject();
 ```
 
+### onlyLegionOrProject
+
+Throws if called by any account other than Legion or the Project.
+
+
+```solidity
+modifier onlyLegionOrProject();
+```
+
 ### askTokenAvailable
 
 Throws when method is called and the `askToken` is unavailable.
@@ -90,7 +104,7 @@ constructor();
 
 ### refund
 
-See [ILegionSale-refund](/src/interfaces/ILegionSale.sol/interface.ILegionSale.md#refund).
+Request a refund from the sale during the applicable time window.
 
 
 ```solidity
@@ -99,7 +113,9 @@ function refund() external virtual whenNotPaused;
 
 ### withdrawRaisedCapital
 
-See [ILegionSale-withdrawRaisedCapital](/src/interfaces/ILegionSale.sol/interface.ILegionSale.md#withdrawraisedcapital).
+Withdraw raised capital from the sale contract.
+
+*Can be called only by the Project admin address.*
 
 
 ```solidity
@@ -108,29 +124,46 @@ function withdrawRaisedCapital() external virtual onlyProject whenNotPaused;
 
 ### claimTokenAllocation
 
-See [ILegionSale-claimTokenAllocation](/src/interfaces/ILegionSale.sol/interface.ILegionSale.md#claimtokenallocation).
+Claims the investor token allocation.
 
 
 ```solidity
-function claimTokenAllocation(uint256 amount, bytes32[] calldata proof)
+function claimTokenAllocation(
+    uint256 amount,
+    bytes32[] calldata proof
+)
     external
     virtual
     askTokenAvailable
     whenNotPaused;
 ```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`amount`|`uint256`|The amount to be distributed.|
+|`proof`|`bytes32[]`|The merkle proof verification for claiming.|
+
 
 ### withdrawExcessInvestedCapital
 
-See [ILegionSale-withdrawExcessInvestedCapital](/src/interfaces/ILegionSale.sol/interface.ILegionSale.md#withdrawexcessinvestedcapital).
+Withdraw excess capital back to the investor.
 
 
 ```solidity
 function withdrawExcessInvestedCapital(uint256 amount, bytes32[] calldata proof) external virtual whenNotPaused;
 ```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`amount`|`uint256`|The amount to be returned.|
+|`proof`|`bytes32[]`|The merkle proof verification for the return.|
+
 
 ### releaseVestedTokens
 
-See [ILegionSale-releaseVestedTokens](/src/interfaces/ILegionSale.sol/interface.ILegionSale.md#releasevestedtokens).
+Releases tokens to the investor address.
 
 
 ```solidity
@@ -139,25 +172,54 @@ function releaseVestedTokens() external virtual askTokenAvailable whenNotPaused;
 
 ### supplyTokens
 
-See [ILegionSale-supplyTokens](/src/interfaces/ILegionSale.sol/interface.ILegionSale.md#supplytokens).
+Supply tokens once the sale results have been published.
+
+*Can be called only by the Project admin address.*
 
 
 ```solidity
-function supplyTokens(uint256 amount, uint256 legionFee) external virtual onlyProject askTokenAvailable whenNotPaused;
+function supplyTokens(
+    uint256 amount,
+    uint256 legionFee,
+    uint256 referrerFee
+)
+    external
+    virtual
+    onlyProject
+    askTokenAvailable
+    whenNotPaused;
 ```
+**Parameters**
 
-### setExcessInvestedCapital
+|Name|Type|Description|
+|----|----|-----------|
+|`amount`|`uint256`|The token amount supplied by the project.|
+|`legionFee`|`uint256`|The legion fee token amount supplied by the project.|
+|`referrerFee`|`uint256`|The referrer fee token amount supplied by the project.|
 
-See [ILegionSale-setExcessInvestedCapital](/src/interfaces/ILegionSale.sol/interface.ILegionSale.md#setexcessinvestedcapital).
+
+### setAcceptedCapital
+
+Publish merkle root for accepted capital.
+
+*Can be called only by the Legion admin address.*
 
 
 ```solidity
-function setExcessInvestedCapital(bytes32 merkleRoot) external virtual onlyLegion;
+function setAcceptedCapital(bytes32 merkleRoot) external virtual onlyLegion;
 ```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`merkleRoot`|`bytes32`|The merkle root to verify against.|
+
 
 ### cancelSale
 
-See [ILegionSale-cancelSale](/src/interfaces/ILegionSale.sol/interface.ILegionSale.md#cancelsale).
+Cancels an ongoing sale.
+
+*Can be called only by the Project admin address.*
 
 
 ```solidity
@@ -166,7 +228,7 @@ function cancelSale() public virtual onlyProject whenNotPaused;
 
 ### cancelExpiredSale
 
-See [ILegionSale-cancelExpiredSale](/src/interfaces/ILegionSale.sol/interface.ILegionSale.md#cancelexpiredsale).
+Cancels a sale in case the project has not supplied tokens after the lockup period is over.
 
 
 ```solidity
@@ -175,7 +237,7 @@ function cancelExpiredSale() external virtual whenNotPaused;
 
 ### withdrawInvestedCapitalIfCanceled
 
-See [ILegionSale-withdrawInvestedCapitalIfCanceled](/src/interfaces/ILegionSale.sol/interface.ILegionSale.md#withdrawinvestedcapitalifcanceled).
+Withdraws back capital in case the sale has been canceled.
 
 
 ```solidity
@@ -184,16 +246,26 @@ function withdrawInvestedCapitalIfCanceled() external virtual whenNotPaused;
 
 ### emergencyWithdraw
 
-See [ILegionSale-emergencyWithdraw](/src/interfaces/ILegionSale.sol/interface.ILegionSale.md#emergencywithdraw).
+Withdraw tokens from the contract in case of emergency.
+
+*Can be called only by the Legion admin address.*
 
 
 ```solidity
 function emergencyWithdraw(address receiver, address token, uint256 amount) external virtual onlyLegion;
 ```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`receiver`|`address`|The address of the receiver.|
+|`token`|`address`|The address of the token to be withdrawn.|
+|`amount`|`uint256`|The amount to be withdrawn.|
+
 
 ### syncLegionAddresses
 
-See [ILegionSale-syncLegionAddresses](/src/interfaces/ILegionSale.sol/interface.ILegionSale.md#synclegionaddresses).
+Syncs active Legion addresses from `LegionAddressRegistry.sol`.
 
 
 ```solidity
@@ -202,7 +274,7 @@ function syncLegionAddresses() external virtual onlyLegion;
 
 ### pauseSale
 
-See [ILegionSale-pauseSale](/src/interfaces/ILegionSale.sol/interface.ILegionSale.md#pausesale).
+Pauses the sale.
 
 
 ```solidity
@@ -211,7 +283,7 @@ function pauseSale() external virtual onlyLegion;
 
 ### unpauseSale
 
-See [ILegionSale-unpauseSale](/src/interfaces/ILegionSale.sol/interface.ILegionSale.md#unpausesale).
+Unpauses the sale.
 
 
 ```solidity
@@ -220,7 +292,7 @@ function unpauseSale() external virtual onlyLegion;
 
 ### saleConfiguration
 
-See [ILegionSale-saleConfiguration](/src/interfaces/ILegionSale.sol/interface.ILegionSale.md#saleconfiguration).
+Returns the sale configuration.
 
 
 ```solidity
@@ -229,7 +301,7 @@ function saleConfiguration() external view virtual returns (LegionSaleConfigurat
 
 ### vestingConfiguration
 
-See [ILegionSale-vestingConfiguration](/src/interfaces/ILegionSale.sol/interface.ILegionSale.md#vestingconfiguration).
+Returns the vesting configuration.
 
 
 ```solidity
@@ -238,7 +310,7 @@ function vestingConfiguration() external view virtual returns (LegionVestingConf
 
 ### saleStatusDetails
 
-See [ILegionSale-saleStatusDetails](/src/interfaces/ILegionSale.sol/interface.ILegionSale.md#salestatusdetails).
+Returns the sale status details.
 
 
 ```solidity
@@ -247,12 +319,18 @@ function saleStatusDetails() external view virtual returns (LegionSaleStatus mem
 
 ### investorPositionDetails
 
-See [ILegionSale-investorPositionDetails](/src/interfaces/ILegionSale.sol/interface.ILegionSale.md#investorpositiondetails).
+Returns an investor position.
 
 
 ```solidity
 function investorPositionDetails(address investorAddress) external view virtual returns (InvestorPosition memory);
 ```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`investorAddress`|`address`|The address of the investor.|
+
 
 ### _setLegionSaleConfig
 
@@ -263,12 +341,17 @@ Sets the sale and vesting params.
 function _setLegionSaleConfig(
     LegionSaleInitializationParams calldata saleInitParams,
     LegionVestingInitializationParams calldata vestingInitParams
-) internal virtual onlyInitializing;
+)
+    internal
+    virtual
+    onlyInitializing;
 ```
 
 ### _syncLegionAddresses
 
-Sync Legion addresses from `LegionAddressRegistry`.
+Verify that the vesting configuration is valid
+
+Sync the Legion addresses from `LegionAddressRegistry`.
 
 
 ```solidity
@@ -286,14 +369,17 @@ function _createVesting(
     uint64 _startTimestamp,
     uint64 _durationSeconds,
     uint64 _cliffDurationSeconds
-) internal virtual returns (address payable vestingInstance);
+)
+    internal
+    virtual
+    returns (address payable vestingInstance);
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
 |`_beneficiary`|`address`|The beneficiary.|
-|`_startTimestamp`|`uint64`|The start timestamp.|
+|`_startTimestamp`|`uint64`|The Unix timestamp when the vesting starts.|
 |`_durationSeconds`|`uint64`|The duration in seconds.|
 |`_cliffDurationSeconds`|`uint64`|The cliff duration in seconds.|
 
@@ -310,7 +396,11 @@ Verify if an investor is eligible to claim tokens allocated from the sale.
 
 
 ```solidity
-function _verifyCanClaimTokenAllocation(address _investor, uint256 _amount, bytes32[] calldata _proof)
+function _verifyCanClaimTokenAllocation(
+    address _investor,
+    uint256 _amount,
+    bytes32[] calldata _proof
+)
     internal
     view
     virtual;
@@ -319,9 +409,9 @@ function _verifyCanClaimTokenAllocation(address _investor, uint256 _amount, byte
 
 |Name|Type|Description|
 |----|----|-----------|
-|`_investor`|`address`|The address of the investor trying to participate.|
+|`_investor`|`address`|The address of the investor.|
 |`_amount`|`uint256`|The amount to claim.|
-|`_proof`|`bytes32[]`|The merkle proof that the investor is part of the whitelist|
+|`_proof`|`bytes32[]`|The Merkle proof that the investor is part of the whitelist.|
 
 
 ### _verifyCanClaimExcessCapital
@@ -330,7 +420,11 @@ Verify if an investor is eligible to get excess capital back.
 
 
 ```solidity
-function _verifyCanClaimExcessCapital(address _investor, uint256 _amount, bytes32[] calldata _proof)
+function _verifyCanClaimExcessCapital(
+    address _investor,
+    uint256 _amount,
+    bytes32[] calldata _proof
+)
     internal
     view
     virtual;
@@ -341,32 +435,23 @@ function _verifyCanClaimExcessCapital(address _investor, uint256 _amount, bytes3
 |----|----|-----------|
 |`_investor`|`address`|The address of the investor trying to participate.|
 |`_amount`|`uint256`|The amount to claim.|
-|`_proof`|`bytes32[]`|The merkle proof that the investor is part of the whitelist|
+|`_proof`|`bytes32[]`|The Merkle proof that the investor is part of the whitelist.|
 
 
-### _verifyMinimumPledgeAmount
+### _verifyMinimumInvestAmount
 
-Verify that the amount pledge is more than the minimum required.
+Verify that the amount invested is more than the minimum required.
 
 
 ```solidity
-function _verifyMinimumPledgeAmount(uint256 _amount) internal view virtual;
+function _verifyMinimumInvestAmount(uint256 _amount) internal view virtual;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`_amount`|`uint256`|The amount being pledged.|
+|`_amount`|`uint256`|The amount being invested.|
 
-
-### _verifySaleHasEnded
-
-Verify that the sale has ended.
-
-
-```solidity
-function _verifySaleHasEnded() internal view virtual;
-```
 
 ### _verifySaleHasNotEnded
 
@@ -446,15 +531,6 @@ Verify if Legion can publish sale results.
 function _verifyCanPublishSaleResults() internal view virtual;
 ```
 
-### _verifyCanPublishExcessCapitalResults
-
-Verify if Legion can publish the excess capital results.
-
-
-```solidity
-function _verifyCanPublishExcessCapitalResults() internal view virtual;
-```
-
 ### _verifySaleNotCanceled
 
 Verify that the sale is not canceled.
@@ -515,6 +591,24 @@ Verify that the project can withdraw capital.
 function _verifyCanWithdrawCapital() internal view virtual;
 ```
 
+### _verifyHasNotRefunded
+
+Verify that the investor has not received a refund.
+
+
+```solidity
+function _verifyHasNotRefunded() internal view virtual;
+```
+
+### _verifyHasNotClaimedExcess
+
+Verify that the investor has not claimed excess capital.
+
+
+```solidity
+function _verifyHasNotClaimedExcess() internal view virtual;
+```
+
 ### _verifyValidInitParams
 
 Verify the common sale configuration is valid.
@@ -522,5 +616,14 @@ Verify the common sale configuration is valid.
 
 ```solidity
 function _verifyValidInitParams(LegionSaleInitializationParams memory saleInitParams) internal view virtual;
+```
+
+### _verifyValidVestingConfig
+
+Verify that the vesting configuration is valid.
+
+
+```solidity
+function _verifyValidVestingConfig() internal view virtual;
 ```
 

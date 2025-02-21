@@ -1,20 +1,20 @@
 # LegionLinearVesting
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/9d232ccfd9d55ef7fb8933835be077c1145ee4d5/src/LegionLinearVesting.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/ac3edaa080a44c4acca1531370a76a05f05491f5/src/LegionLinearVesting.sol)
 
 **Inherits:**
 VestingWalletUpgradeable
 
 **Author:**
-Legion.
+Legion
 
-A contract used to release vested tokens to users.
+A contract used to release vested tokens to users
 
-*The contract fully utilizes OpenZeppelin's VestingWallet.sol implementation.*
+*The contract fully utilizes OpenZeppelin's VestingWallet.sol implementation*
 
 
 ## State Variables
 ### cliffEndTimestamp
-*The unix timestamp (seconds) of the block when the cliff ends.*
+*The Unix timestamp (seconds) of the block when the cliff ends*
 
 
 ```solidity
@@ -25,7 +25,7 @@ uint256 private cliffEndTimestamp;
 ## Functions
 ### onlyCliffEnded
 
-Throws if an user tries to release tokens before the cliff period has ended
+Throws if a user tries to release tokens before the cliff period has ended
 
 
 ```solidity
@@ -43,11 +43,16 @@ constructor();
 
 ### initialize
 
-Initializes the contract with correct parameters.
+Initializes the contract with the correct parameters
 
 
 ```solidity
-function initialize(address beneficiary, uint64 startTimestamp, uint64 durationSeconds, uint64 cliffDurationSeconds)
+function initialize(
+    address beneficiary,
+    uint64 startTimestamp,
+    uint64 durationSeconds,
+    uint64 cliffDurationSeconds
+)
     public
     initializer;
 ```
@@ -55,15 +60,16 @@ function initialize(address beneficiary, uint64 startTimestamp, uint64 durationS
 
 |Name|Type|Description|
 |----|----|-----------|
-|`beneficiary`|`address`|The beneficiary to receive tokens.|
-|`startTimestamp`|`uint64`|The start timestamp of the vesting schedule.|
-|`durationSeconds`|`uint64`|The vesting duration in seconds.|
-|`cliffDurationSeconds`|`uint64`||
+|`beneficiary`|`address`|The beneficiary to receive tokens|
+|`startTimestamp`|`uint64`|The Unix timestamp when the vesting schedule starts|
+|`durationSeconds`|`uint64`|The duration of the vesting period in seconds|
+|`cliffDurationSeconds`|`uint64`|The duration of the cliff period in seconds|
 
 
 ### release
 
-See [VestingWalletUpgradeable-release](/src/interfaces/ILegionLinearVesting.sol/interface.ILegionLinearVesting.md#release).
+Release the native token (ether) that have already vested.
+Emits a {EtherReleased} event.
 
 
 ```solidity
@@ -72,12 +78,18 @@ function release() public override onlyCliffEnded;
 
 ### release
 
-See [VestingWalletUpgradeable-release](/src/interfaces/ILegionLinearVesting.sol/interface.ILegionLinearVesting.md#release).
+Release the tokens that have already vested.
 
 
 ```solidity
 function release(address token) public override onlyCliffEnded;
 ```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`token`|`address`|The vested token to release Emits a {ERC20Released} event.|
+
 
 ### cliffEnd
 

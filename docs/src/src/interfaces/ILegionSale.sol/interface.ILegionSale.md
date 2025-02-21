@@ -1,5 +1,5 @@
 # ILegionSale
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/9d232ccfd9d55ef7fb8933835be077c1145ee4d5/src/interfaces/ILegionSale.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/ac3edaa080a44c4acca1531370a76a05f05491f5/src/interfaces/ILegionSale.sol)
 
 
 ## Functions
@@ -14,7 +14,7 @@ function refund() external;
 
 ### withdrawRaisedCapital
 
-Withdraw capital from the sale contract.
+Withdraw raised capital from the sale contract.
 
 *Can be called only by the Project admin address.*
 
@@ -41,7 +41,7 @@ function claimTokenAllocation(uint256 amount, bytes32[] calldata proof) external
 
 ### withdrawExcessInvestedCapital
 
-Claim excess capital back to the investor.
+Withdraw excess capital back to the investor.
 
 
 ```solidity
@@ -72,25 +72,26 @@ Supply tokens once the sale results have been published.
 
 
 ```solidity
-function supplyTokens(uint256 amount, uint256 legionFee) external;
+function supplyTokens(uint256 amount, uint256 legionFee, uint256 referrerFee) external;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
 |`amount`|`uint256`|The token amount supplied by the project.|
-|`legionFee`|`uint256`|The token amount supplied by the project.|
+|`legionFee`|`uint256`|The legion fee token amount supplied by the project.|
+|`referrerFee`|`uint256`|The referrer fee token amount supplied by the project.|
 
 
-### setExcessInvestedCapital
+### setAcceptedCapital
 
-Publish merkle root for distribution of excess capital, once the sale has concluded.
+Publish merkle root for accepted capital.
 
 *Can be called only by the Legion admin address.*
 
 
 ```solidity
-function setExcessInvestedCapital(bytes32 merkleRoot) external;
+function setAcceptedCapital(bytes32 merkleRoot) external;
 ```
 **Parameters**
 
@@ -149,7 +150,7 @@ function emergencyWithdraw(address receiver, address token, uint256 amount) exte
 
 ### syncLegionAddresses
 
-Syncs active Legion addresses from `LegionAddressRegistry.sol`
+Syncs active Legion addresses from `LegionAddressRegistry.sol`.
 
 
 ```solidity
@@ -248,7 +249,8 @@ event CapitalRefunded(uint256 amount, address investor);
 |`investor`|`address`|The address of the investor who requested the refund.|
 
 ### CapitalRefundedAfterCancel
-This event is emitted when capital is successfully refunded to the investor after a sale has been canceled.
+This event is emitted when capital is successfully refunded to the investor after a sale has been
+canceled.
 
 
 ```solidity
@@ -277,22 +279,22 @@ event ExcessCapitalWithdrawn(uint256 amount, address investor);
 |`amount`|`uint256`|The amount of capital refunded to the investor.|
 |`investor`|`address`|The address of the investor who requested the refund.|
 
-### ExcessInvestedCapitalSet
-This event is emitted when excess capital results are successfully published by the Legion admin.
+### AcceptedCapitalSet
+This event is emitted when accepted capital has been successfully published by the Legion admin.
 
 
 ```solidity
-event ExcessInvestedCapitalSet(bytes32 merkleRoot);
+event AcceptedCapitalSet(bytes32 merkleRoot);
 ```
 
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`merkleRoot`|`bytes32`|The claim merkle root published.|
+|`merkleRoot`|`bytes32`|The accepted capital merkle root published.|
 
 ### EmergencyWithdraw
-This event is emitted when excess capital results are successfully published by the Legion admin.
+This event is emitted when an emergency withdrawal of funds is performed by Legion.
 
 
 ```solidity
@@ -308,7 +310,7 @@ event EmergencyWithdraw(address receiver, address token, uint256 amount);
 |`amount`|`uint256`|The amount to be withdrawn.|
 
 ### LegionAddressesSynced
-This event is emitted when excess capital results are successfully published by the Legion admin.
+This event is emitted when Legion addresses are successfully synced.
 
 
 ```solidity
@@ -339,7 +341,7 @@ This event is emitted when tokens are successfully supplied for distribution by 
 
 
 ```solidity
-event TokensSuppliedForDistribution(uint256 amount, uint256 legionFee);
+event TokensSuppliedForDistribution(uint256 amount, uint256 legionFee, uint256 referrerFee);
 ```
 
 **Parameters**
@@ -348,13 +350,14 @@ event TokensSuppliedForDistribution(uint256 amount, uint256 legionFee);
 |----|----|-----------|
 |`amount`|`uint256`|The amount of tokens supplied for distribution.|
 |`legionFee`|`uint256`|The fee amount collected by Legion.|
+|`referrerFee`|`uint256`|The fee amount collected by the referrer.|
 
 ### TokenAllocationClaimed
 This event is emitted when tokens are successfully claimed by the investor.
 
 
 ```solidity
-event TokenAllocationClaimed(uint256 amount, address investor, address vesting);
+event TokenAllocationClaimed(uint256 amount, address investor);
 ```
 
 **Parameters**
@@ -363,7 +366,6 @@ event TokenAllocationClaimed(uint256 amount, address investor, address vesting);
 |----|----|-----------|
 |`amount`|`uint256`|The amount of tokens distributed to the vesting contract.|
 |`investor`|`address`|The address of the investor owning the vesting contract.|
-|`vesting`|`address`|The address of the vesting instance deployed.|
 
 ## Structs
 ### LegionSaleInitializationParams
@@ -377,11 +379,14 @@ struct LegionSaleInitializationParams {
     uint256 lockupPeriodSeconds;
     uint256 legionFeeOnCapitalRaisedBps;
     uint256 legionFeeOnTokensSoldBps;
+    uint256 referrerFeeOnCapitalRaisedBps;
+    uint256 referrerFeeOnTokensSoldBps;
     uint256 minimumInvestAmount;
     address bidToken;
     address askToken;
     address projectAdmin;
     address addressRegistry;
+    address referrerFeeReceiver;
 }
 ```
 
@@ -393,6 +398,7 @@ A struct describing the Legion vesting initialization params.
 struct LegionVestingInitializationParams {
     uint256 vestingDurationSeconds;
     uint256 vestingCliffDurationSeconds;
+    uint256 tokenAllocationOnTGERate;
 }
 ```
 
@@ -408,6 +414,8 @@ struct LegionSaleConfiguration {
     uint256 lockupEndTime;
     uint256 legionFeeOnCapitalRaisedBps;
     uint256 legionFeeOnTokensSoldBps;
+    uint256 referrerFeeOnCapitalRaisedBps;
+    uint256 referrerFeeOnTokensSoldBps;
     uint256 minimumInvestAmount;
 }
 ```
@@ -425,6 +433,7 @@ struct LegionSaleAddressConfiguration {
     address legionBouncer;
     address legionSigner;
     address legionFeeReceiver;
+    address referrerFeeReceiver;
 }
 ```
 
@@ -437,8 +446,9 @@ struct LegionSaleStatus {
     uint256 totalCapitalInvested;
     uint256 totalTokensAllocated;
     uint256 totalCapitalRaised;
+    uint256 totalCapitalWithdrawn;
     bytes32 claimTokensMerkleRoot;
-    bytes32 excessCapitalMerkleRoot;
+    bytes32 acceptedCapitalMerkleRoot;
     bool isCanceled;
     bool tokensSupplied;
     bool capitalWithdrawn;
@@ -453,6 +463,7 @@ A struct describing the vesting configuration.
 struct LegionVestingConfiguration {
     uint256 vestingDurationSeconds;
     uint256 vestingCliffDurationSeconds;
+    uint256 tokenAllocationOnTGERate;
     uint256 vestingStartTime;
     address vestingFactory;
 }
@@ -467,6 +478,7 @@ struct InvestorPosition {
     uint256 investedCapital;
     bool hasSettled;
     bool hasClaimedExcess;
+    bool hasRefunded;
     address vestingAddress;
 }
 ```

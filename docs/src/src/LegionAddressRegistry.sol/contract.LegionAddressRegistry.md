@@ -1,18 +1,18 @@
 # LegionAddressRegistry
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/9d232ccfd9d55ef7fb8933835be077c1145ee4d5/src/LegionAddressRegistry.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/ac3edaa080a44c4acca1531370a76a05f05491f5/src/LegionAddressRegistry.sol)
 
 **Inherits:**
 [ILegionAddressRegistry](/src/interfaces/ILegionAddressRegistry.sol/interface.ILegionAddressRegistry.md), Ownable
 
 **Author:**
-Legion.
+Legion
 
-A contract used to keep state of all addresses used in the Legion Protocol.
+A contract used to maintain the state of all addresses used in the Legion Protocol
 
 
 ## State Variables
 ### _legionAddresses
-*Mapping of unique identifier to a Legion address.*
+*Mapping of unique identifiers to Legion addresses*
 
 
 ```solidity
@@ -23,7 +23,7 @@ mapping(bytes32 => address) private _legionAddresses;
 ## Functions
 ### constructor
 
-*Constructor to initialize the LegionAddressRegistry.*
+*Constructor to initialize the LegionAddressRegistry*
 
 
 ```solidity
@@ -33,24 +33,43 @@ constructor(address newOwner);
 
 |Name|Type|Description|
 |----|----|-----------|
-|`newOwner`|`address`|The owner of the registry contract.|
+|`newOwner`|`address`|The owner of the registry contract|
 
 
 ### setLegionAddress
 
-See [ILegionAddressRegistry-setLegionAddress](/src/interfaces/ILegionAddressRegistry.sol/interface.ILegionAddressRegistry.md#setlegionaddress).
+Sets a Legion address for the given identifier
 
 
 ```solidity
 function setLegionAddress(bytes32 id, address updatedAddress) external onlyOwner;
 ```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`id`|`bytes32`|The unique identifier for the address|
+|`updatedAddress`|`address`|The new address to set|
+
 
 ### getLegionAddress
 
-See [ILegionAddressRegistry-getLegionAddress](/src/interfaces/ILegionAddressRegistry.sol/interface.ILegionAddressRegistry.md#getlegionaddress).
+Returns the Legion address for the given identifier
 
 
 ```solidity
 function getLegionAddress(bytes32 id) public view returns (address);
 ```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`id`|`bytes32`|The unique identifier for the address|
+
+**Returns**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`<none>`|`address`|The registered Legion address|
+
 

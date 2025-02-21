@@ -1,13 +1,13 @@
 # LegionSealedBidAuctionSale
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/9d232ccfd9d55ef7fb8933835be077c1145ee4d5/src/LegionSealedBidAuctionSale.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/ac3edaa080a44c4acca1531370a76a05f05491f5/src/LegionSealedBidAuctionSale.sol)
 
 **Inherits:**
 [LegionSale](/src/LegionSale.sol/abstract.LegionSale.md), [ILegionSealedBidAuctionSale](/src/interfaces/ILegionSealedBidAuctionSale.sol/interface.ILegionSealedBidAuctionSale.md)
 
 **Author:**
-Legion.
+Legion
 
-A contract used to execute seale bid auctions of ERC20 tokens after TGE.
+A contract used to execute sealed bid auctions of ERC20 tokens after TGE
 
 
 ## State Variables
@@ -23,7 +23,7 @@ SealedBidAuctionSaleConfiguration private sealedBidAuctionSaleConfig;
 ## Functions
 ### initialize
 
-See [ILegionSealedBidAuctionSale-initialize](/src/interfaces/ILegionFixedPriceSale.sol/interface.ILegionFixedPriceSale.md#initialize).
+Initializes the contract with correct parameters.
 
 
 ```solidity
@@ -31,21 +31,39 @@ function initialize(
     LegionSaleInitializationParams calldata saleInitParams,
     SealedBidAuctionSaleInitializationParams calldata sealedBidAuctionSaleInitParams,
     LegionVestingInitializationParams calldata vestingInitParams
-) external initializer;
+)
+    external
+    initializer;
 ```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`saleInitParams`|`LegionSaleInitializationParams`|The Legion sale initialization parameters.|
+|`sealedBidAuctionSaleInitParams`|`SealedBidAuctionSaleInitializationParams`|The sealed bid auction sale specific initialization parameters.|
+|`vestingInitParams`|`LegionVestingInitializationParams`|The vesting initialization parameters.|
+
 
 ### invest
 
-See [ILegionSealedBidAuctionSale-invest](/src/interfaces/ILegionFixedPriceSale.sol/interface.ILegionFixedPriceSale.md#invest).
+Invest capital to the sealed bid auction.
 
 
 ```solidity
 function invest(uint256 amount, bytes calldata sealedBid, bytes memory signature) external whenNotPaused;
 ```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`amount`|`uint256`|The amount of capital invested.|
+|`sealedBid`|`bytes`|The encoded sealed bid data.|
+|`signature`|`bytes`|The Legion signature for verification.|
+
 
 ### initializePublishSaleResults
 
-See [ILegionSealedBidAuctionSale-initializePublishSaleResults](/src/interfaces/ILegionSealedBidAuctionSale.sol/interface.ILegionSealedBidAuctionSale.md#initializepublishsaleresults).
+Initializes the process of publishing of sale results, by locking sale cancelation.
 
 
 ```solidity
@@ -54,21 +72,38 @@ function initializePublishSaleResults() external onlyLegion;
 
 ### publishSaleResults
 
-See [ILegionSealedBidAuctionSale-publishSaleResults](/src/interfaces/ILegionFixedPriceSale.sol/interface.ILegionFixedPriceSale.md#publishsaleresults).
+Publish sale results, once the sale has concluded.
+
+*Can be called only by the Legion admin address.*
 
 
 ```solidity
 function publishSaleResults(
-    bytes32 merkleRoot,
+    bytes32 claimMerkleRoot,
+    bytes32 acceptedMerkleRoot,
     uint256 tokensAllocated,
     uint256 capitalRaised,
     uint256 sealedBidPrivateKey
-) external onlyLegion;
+)
+    external
+    onlyLegion;
 ```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`claimMerkleRoot`|`bytes32`|The merkle root to verify token claims.|
+|`acceptedMerkleRoot`|`bytes32`|The merkle root to verify accepted capital.|
+|`tokensAllocated`|`uint256`|The total amount of tokens allocated for distribution among investors.|
+|`capitalRaised`|`uint256`|The total capital raised from the auction.|
+|`sealedBidPrivateKey`|`uint256`|the private key used to decrypt sealed bids.|
+
 
 ### cancelSale
 
-See [ILegionSale-cancelSale](/src/LegionSale.sol/abstract.LegionSale.md#cancelsale).
+Cancels an ongoing sale.
+
+*Can be called only by the Project admin address.*
 
 
 ```solidity
@@ -77,16 +112,25 @@ function cancelSale() public override(ILegionSale, LegionSale) onlyProject whenN
 
 ### decryptSealedBid
 
-See {ILegionSealedBidAuctionSale-decryptBid}.
+Decrypts the sealed bid, once the private key has been published by Legion.
+
+*Can be called only if the private key has been published.*
 
 
 ```solidity
 function decryptSealedBid(uint256 encryptedAmountOut, uint256 salt) public view returns (uint256);
 ```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`encryptedAmountOut`|`uint256`|The encrypted bid amount|
+|`salt`|`uint256`|The salt used in the encryption process|
+
 
 ### sealedBidAuctionSaleConfiguration
 
-See [ILegionSealedBidAuctionSale-sealedBidAuctionSaleConfiguration](/src/interfaces/ILegionSealedBidAuctionSale.sol/interface.ILegionSealedBidAuctionSale.md#sealedbidauctionsaleconfiguration).
+Returns the sealed bid auction sale configuration.
 
 
 ```solidity
@@ -106,7 +150,7 @@ function _verifyValidParams(SealedBidAuctionSaleInitializationParams calldata se
 
 ### _verifyValidPublicKey
 
-Verify if the public key used to encrpyt the bid is valid.
+Verify if the public key used to encrypt the bid is valid
 
 
 ```solidity
@@ -116,7 +160,7 @@ function _verifyValidPublicKey(Point memory _publicKey) private view;
 
 |Name|Type|Description|
 |----|----|-----------|
-|`_publicKey`|`Point`|The public key used to encrypt bids.|
+|`_publicKey`|`Point`|The public key used to encrypt bids|
 
 
 ### _verifyValidPrivateKey
@@ -145,7 +189,7 @@ function _verifyPrivateKeyIsPublished() private view;
 
 ### _verifyValidSalt
 
-Verify that the salt used to encrypt the bid is valid.
+Verify that the salt used to encrypt the bid is valid
 
 
 ```solidity
@@ -160,7 +204,7 @@ function _verifyValidSalt(uint256 _salt) private view;
 
 ### _verifyCancelNotLocked
 
-Verify that canceling the is not locked.
+Verify that canceling is not locked
 
 
 ```solidity
@@ -169,7 +213,7 @@ function _verifyCancelNotLocked() private view;
 
 ### _verifyCancelLocked
 
-Verify that canceling is locked.
+Verify that canceling is locked
 
 
 ```solidity

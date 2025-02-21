@@ -1,17 +1,24 @@
 # ECIES
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/9d232ccfd9d55ef7fb8933835be077c1145ee4d5/src/lib/ECIES.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/ac3edaa080a44c4acca1531370a76a05f05491f5/src/lib/ECIES.sol)
 
 **Author:**
 Oighty
 
-This library implements a simplified version of the Elliptic Curve Integrated Encryption Scheme (ECIES) using the alt_bn128 curve.
+This library implements a simplified version of the Elliptic Curve Integrated Encryption Scheme (ECIES)
+using the alt_bn128 curve.
 
-*The alt_bn128 curve is used since there are precompiled contracts for point addition, calar multiplication, and pairing that make it gas efficient.
-XOR encryption is used with the derived symmetric key, which is not as secure as modern encryption algorithms, but is simple and cheap to implement.
-We use keccak256 as the key derivation function, which, as a hash-based key derivation function, is susceptible to dictionary attacks, but is sufficient for our purposes.
-As a result of the relative weakness of the symmetric encryption and key derivation function, we rely on the security of the elliptic curve to hide the shared secret.
-Recent advances in attacks on the alt_bn128 curve have reduced the expected security of the curve to ~98 bits.
-Therefore, this implementation should not be used to secure value directly. It can be used to secure data which, if compromised, would not be catastrophic.
+*The alt_bn128 curve is used since there are precompiled contracts for point addition, calar multiplication,
+and pairing that make it gas efficient.
+XOR encryption is used with the derived symmetric key, which is not as secure as modern encryption
+algorithms, but is simple and cheap to implement.
+We use keccak256 as the key derivation function, which, as a hash-based key derivation function, is
+susceptible to dictionary attacks, but is sufficient for our purposes.
+As a result of the relative weakness of the symmetric encryption and key derivation function, we rely on the
+security of the elliptic curve to hide the shared secret.
+Recent advances in attacks on the alt_bn128 curve have reduced the expected security of the curve to ~98
+bits.
+Therefore, this implementation should not be used to secure value directly. It can be used to secure data
+which, if compromised, would not be catastrophic.
 Inspired by:
 - https://cryptobook.nakov.com/asymmetric-key-ciphers/ecies-public-key-encryption
 - https://billatnapier.medium.com/how-do-i-implement-symmetric-key-encryption-in-ethereum-14afffff6e42
@@ -41,7 +48,8 @@ uint256 public constant FIELD_MODULUS =
 
 We use a hash function to derive a symmetric key from the shared secret and a provided salt.
 
-*This is not as secure as modern key derivation functions, since hash-based keys are susceptible to dictionary attacks.
+*This is not as secure as modern key derivation functions, since hash-based keys are susceptible to
+dictionary attacks.
 However, it is simple and cheap to implement, and is sufficient for our purposes.
 The salt prevents duplication even if a shared secret is reused.*
 
@@ -52,7 +60,8 @@ function deriveSymmetricKey(uint256 sharedSecret_, uint256 s1_) public pure retu
 
 ### recoverSharedSecret
 
-Recover the shared secret as the x-coordinate of the EC point computed as the multiplication of the ciphertext public key and the private key.
+Recover the shared secret as the x-coordinate of the EC point computed as the multiplication of the
+ciphertext public key and the private key.
 
 
 ```solidity
@@ -61,13 +70,20 @@ function recoverSharedSecret(Point memory ciphertextPubKey_, uint256 privateKey_
 
 ### decrypt
 
-Decrypt a message using the provided ciphertext, ciphertext public key, and private key from the recipient.
+Decrypt a message using the provided ciphertext, ciphertext public key, and private key from the
+recipient.
 
-*We use XOR encryption. The security of the algorithm relies on the security of the elliptic curve to hide the shared secret.*
+*We use XOR encryption. The security of the algorithm relies on the security of the elliptic curve to
+hide the shared secret.*
 
 
 ```solidity
-function decrypt(uint256 ciphertext_, Point memory ciphertextPubKey_, uint256 privateKey_, uint256 salt_)
+function decrypt(
+    uint256 ciphertext_,
+    Point memory ciphertextPubKey_,
+    uint256 privateKey_,
+    uint256 salt_
+)
     public
     view
     returns (uint256 message_);
@@ -90,11 +106,17 @@ function decrypt(uint256 ciphertext_, Point memory ciphertextPubKey_, uint256 pr
 
 ### encrypt
 
-Encrypt a message using the provided recipient public key and the sender private key. Note: sending the private key to an RPC can leak it. This should be used locally.
+Encrypt a message using the provided recipient public key and the sender private key. Note: sending the
+private key to an RPC can leak it. This should be used locally.
 
 
 ```solidity
-function encrypt(uint256 message_, Point memory recipientPubKey_, uint256 privateKey_, uint256 salt_)
+function encrypt(
+    uint256 message_,
+    Point memory recipientPubKey_,
+    uint256 privateKey_,
+    uint256 salt_
+)
     public
     view
     returns (uint256 ciphertext_, Point memory messagePubKey_);
@@ -118,7 +140,8 @@ function encrypt(uint256 message_, Point memory recipientPubKey_, uint256 privat
 
 ### calcPubKey
 
-Calculate the point on the generator curve that corresponds to the provided private key. This is used as the public key.
+Calculate the point on the generator curve that corresponds to the provided private key. This is used as
+the public key.
 
 
 ```solidity
@@ -156,7 +179,8 @@ function isOnBn128(Point memory p) public pure returns (bool);
 
 ### isValid
 
-Checks whether a point is valid. We consider a point valid if it is on the curve and not the generator point or the point at infinity.
+Checks whether a point is valid. We consider a point valid if it is on the curve and not the generator
+point or the point at infinity.
 
 
 ```solidity
