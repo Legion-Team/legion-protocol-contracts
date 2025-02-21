@@ -448,6 +448,16 @@ interface ILegionPreLiquidSaleV1 {
     function syncLegionAddresses() external;
 
     /**
+     * @notice Pauses the sale.
+     */
+    function pauseSale() external;
+
+    /**
+     * @notice Unpauses the sale.
+     */
+    function unpauseSale() external;
+
+    /**
      * @notice Returns the sale configuration.
      */
     function saleConfiguration() external view returns (PreLiquidSaleConfig memory);

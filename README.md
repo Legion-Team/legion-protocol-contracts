@@ -25,7 +25,7 @@ Legion is a groundbreaking platform that connects value-added network participan
 
 ## Overview
 
-The Legion protocol consists of smart contracts designed to facilitate different types of ERC20 token sales and manage related operations. The first supported types of sales are a traditional **Fixed Price Sale**, **Sealed Bid Auction Sale**, and a **Pre-Liquid Token Sale**. Below is an overview of all the key actors, along with a description of the functionality for each contract.
+The Legion protocol consists of smart contracts designed to facilitate different types of ERC20 token sales and manage related operations. The first supported types of sales are a traditional **Fixed Price Sale**, **Sealed Bid Auction Sale**, **Pre-Liquid Token Sale V1**, and **Pre-Liquid Token Sale V2**. Below is an overview of all the key actors, along with a description of the functionality for each contract.
 
 **Key Actors:**
 
@@ -120,15 +120,17 @@ Every sealed bid auction consists of three stages, explained below:
 - `cancelExpiredSale`: Cancels the sale if it has expired.
 - `withdrawInvestedCapitalIfCanceled`: Allows investors to claim back their capital if the sale is canceled.
 
-### Pre-Liquid Token Sale
+### Pre-Liquid Token Sale V1
 
-The `LegionPreLiquidSaleV2` contract is used to execute pre-liquid sales of ERC20 tokens **before** the Token Generation Event (TGE). It manages the entire lifecycle of the sale, including investing, refunds, raised capital withdrawal, token distribution for vesting, and sale cancellation.
+The `LegionPreLiquidSaleV1` contract is used to execute pre-liquid sales of ERC20 tokens **before** the Token Generation Event (TGE). It manages the entire lifecycle of the sale, including investing, refunds, raised capital withdrawal, token distribution for vesting, and sale cancellation.
 
 The main difference with the other types of sales Legion offers is that the pre-liquid sale commences before the token actually exists and is deployed (Pre-TGE). Only whitelisted users are allowed to invest in the sale, once they have signed a legally binding SAFT (Simple Agreement for Future Tokens). Once TGE occurs, Legion publishes the data on-chain, and projects supply the tokens for distribution.
 
-As there is a certain time gap between the period when capital is raised and the TGE, projects are allowed to withdraw capital before they supply the tokens, as they might need early access to it. However, once any raised capital is withdrawn, no changes are allowed to the `saftMerkleRoot` and `vestingTerms`.
+As there is a certain time gap between the period when capital is raised and the TGE, projects are allowed to withdraw capital before they supply the tokens, as they might need early access to it. However, once any raised capital is withdrawn, no changes are allowed to the configuration of the sale.
 
-In comparison to other sale contracts, the `LegionPreLiquidSaleV2` is more asynchronous; however, its stages can be described as follows:
+In comparison to other sale contracts, the `LegionPreLiquidSaleV1` is more asynchronous; however, its stages can be described as follows:
+
+#### Pre-Liquid Token Sale V1 Stages:
 
 1. **Active Investment Period**: The stage where whitelisted users invest capital and investments are accepted.
 2. **Refund Period**: This stage is required by the MiCA regulation, where users can receive a refund if they decide. In the case of a pre-liquid sale, the refund period is counted individually for each investor.
@@ -142,14 +144,49 @@ In comparison to other sale contracts, the `LegionPreLiquidSaleV2` is more async
 - `refund`: Allows investors to receive a full refund within 14 days since their investment (MiCA).
 - `publishTgeDetails`: Publishes the TGE details, called by Legion.
 - `supplyTokens`: Allows the project admin to supply tokens for the sale.
-- `updateSAFTMerkleRoot`: Allows Legion to update the SAFT Merkle root.
 - `updateVestingTerms`: Allows the project admin to update the vesting terms for the pre-liquid sale.
+- `publishCapitalRaised`: Publishes the capital raised amount by the Project.
 - `withdrawRaisedCapital`: Allows the project admin to withdraw raised capital.
 - `claimTokenAllocation`: Allows investors to claim their token allocation, after TGE and tokens are supplied by the project.
 - `cancelSale`: Allows the project admin to cancel the sale.
 - `withdrawInvestedCapitalIfCanceled`: Allows investors to withdraw back their capital if the sale is canceled.
 - `withdrawExcessInvestedCapital`: Allows investors to withdraw excess capital in case they've provided more than the amount according to the SAFT has been lowered.
 - `endSale`: Allows the project admin to pause/unpause accepting investments to the sale.
+
+### Pre-Liquid Token Sale V2
+
+The `LegionPreLiquidSaleV2` contract is used to execute pre-liquid sales of ERC20 tokens **before** the Token Generation Event (TGE). It manages the entire lifecycle of the sale, including investing, refunds, raised capital withdrawal, token distribution for vesting, and sale cancellation.
+
+In comparison to `LegionPreLiquidSaleV1`, in `LegionPreLiquidSaleV2` investors deposit the max amount of funds the want to allocate and then the Project reviews and accepts certain amount. If the amount accepted is less than the deposited amount, the investor is allowed to withdraw the excess.
+
+As there is a certain time gap between the period when capital is raised and the TGE, projects are allowed to withdraw capital before they supply the tokens, as they might need early access to it. However, once any raised capital is withdrawn, no changes are allowed to the saftMerkleRoot and vestingTerms.
+
+In comparison to other sale contracts, the `LegionPreLiquidSaleV2` is more asynchronous; however, its stages can be described as follows:
+
+#### Pre-Liquid Token Sale V2 Stages:
+
+1. **Pre-Deposit Period**: The stage where investors apply for allocation by depositing the max amount they are willing to allocate.
+2. **Acceptance Period**: The stage where Projects accept investor's allocations. If investors have deposited more than the accepted amount, they are allowed to withdraw the excess amount immediately after being approved/rejected. Alternatively, they can wait until the end of the refund period for the opportunity to receive higher allocation.
+3. **Refund Period**: This stage is required by the MiCA regulation, where users can receive a refund if they decide. In the case of a pre-liquid sale, the refund period is counted individually for each investor.
+4. **Capital Withdrawal**: Once a refund period for an investor is over, projects are allowed to withdraw the raised capital from this investor.
+5. **Token Claims**: After the TGE details are published by Legion and tokens are supplied by the project, investors are allowed to claim their tokens into the vesting contract deployed for them.
+
+#### Key Functions:
+
+- `initialize`: Initializes the sale with configuration parameters.
+- `invest`: Allows investors to invest capital during the prefund and active sale.
+- `refund`: Allows investors to request a refund within the refund stage.
+- `withdrawRaisedCapital`: Enables the project admin to withdraw raised capital post-sale.
+- `claimTokenAllocation`: Allows investors to claim their token allocation.
+- `withdrawExcessInvestedCapital`: Allows investors to withdraw excess invested capital from the sale contract.
+- `releaseTokens`: Releases vested tokens to investors.
+- `supplyTokens`: Allows the project admin to supply tokens for the sale.
+- `publishSaleResults`: Publishes the results of the pre-liquid token sale.
+- `publishCapitalRaised`: Publishes the capital raised amount by the Project.
+- `setAcceptedCapital`: Sets the accepted capital by the Project for an investor.
+- `cancelSale`: Allows the project admin to cancel the sale.
+- `cancelExpiredSale`: Cancels the sale if it has expired.
+- `claimBackCapitalIfCanceled`: Allows investors to claim back their capital if the sale is canceled.
 
 ### Sale Factory
 
@@ -159,6 +196,7 @@ The `LegionSaleFactory` contract is a factory responsible for deploying proxy in
 
 - `createFixedPriceSale`: Deploys a new instance of `LegionFixedPriceSale`.
 - `createSealedBidAuction`: Deploys a new instance of `LegionSealedBidAuctionSale`.
+- `createPreLiquidSaleV1`: Deploys a new instance of `LegionPreLiquidSaleV1`.
 - `createPreLiquidSaleV2`: Deploys a new instance of `LegionPreLiquidSaleV2`.
 
 ### Linear Vesting

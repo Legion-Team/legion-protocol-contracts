@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import { Ownable } from "@solady/src/auth/Ownable.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { Test, console2, Vm } from "forge-std/Test.sol";
 
 import { Initializable } from "@solady/src/utils/Initializable.sol";
@@ -497,6 +498,76 @@ contract LegionPreLiquidSaleV1Test is Test {
         // Act
         vm.prank(legionBouncer);
         legionSaleFactory.createPreLiquidSaleV1(preLiquidSaleInitParams);
+    }
+
+    /* ========== PAUSE TESTS ========== */
+
+    /**
+     * @notice Test case: Pause the sale
+     */
+    function test_pauseSale_successfullyPauseTheSale() public {
+        // Arrange
+        prepareCreateLegionPreLiquidSale();
+
+        // Assert
+        vm.expectEmit();
+        emit Pausable.Paused(legionBouncer);
+
+        // Act
+        vm.prank(legionBouncer);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).pauseSale();
+    }
+
+    /**
+     * @notice Test case: Attempt to pause sale by non-legion admin
+     */
+    function test_pauseSale_revertsIfCalledByNonLegionAdmin() public {
+        // Arrange
+        prepareCreateLegionPreLiquidSale();
+
+        // Assert
+        vm.expectRevert(abi.encodeWithSelector(Errors.NotCalledByLegion.selector));
+
+        // Act
+        vm.prank(nonLegionAdmin);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).pauseSale();
+    }
+
+    /**
+     * @notice Test case: Unpause the sale
+     */
+    function test_unpauseSale_successfullyUnpauseTheSale() public {
+        // Arrange
+        prepareCreateLegionPreLiquidSale();
+
+        vm.prank(legionBouncer);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).pauseSale();
+
+        // Assert
+        vm.expectEmit();
+        emit Pausable.Unpaused(legionBouncer);
+
+        // Act
+        vm.prank(legionBouncer);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).unpauseSale();
+    }
+
+    /**
+     * @notice Test case: Attempt to unpause the sale by non-legion admin
+     */
+    function test_unpauseSale_revertsIfNotCalledByLegionAdmin() public {
+        // Arrange
+        prepareCreateLegionPreLiquidSale();
+
+        vm.prank(legionBouncer);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).pauseSale();
+
+        // Assert
+        vm.expectRevert(abi.encodeWithSelector(Errors.NotCalledByLegion.selector));
+
+        // Act
+        vm.prank(nonLegionAdmin);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).unpauseSale();
     }
 
     /* ========== INVEST TESTS ========== */
