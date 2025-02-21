@@ -239,6 +239,9 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
         /// Verify that the sale has not been canceled
         _verifySaleNotCanceled();
 
+        /// Verify that the sale has ended
+        _verifySaleHasEnded();
+
         /// Veriify that the refund period is over
         _verifyRefundPeriodIsOver();
 
@@ -253,9 +256,6 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
 
         /// Set the total allocated amount of token for distribution.
         saleStatus.totalTokensAllocated = _totalTokensAllocated;
-
-        /// Set `hasEnded` status to true
-        if (!saleStatus.hasEnded) saleStatus.hasEnded = true;
 
         /// Emit successfully TgeDetailsPublished
         emit TgeDetailsPublished(_askToken, _askTokenTotalSupply, _vestingStartTime, _totalTokensAllocated);
@@ -645,12 +645,12 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
     /**
      * @notice Ends the sale.
      */
-    function endSale() external onlyLegionOrProject {
-        /// Verify that tokens for distribution have not been allocated
-        _verifyTokensNotAllocated();
-
+    function endSale() external onlyLegionOrProject whenNotPaused {
         // Verify that the sale has not ended
         _verifySaleHasNotEnded();
+
+        /// Verify that the sale has not been canceled
+        _verifySaleNotCanceled();
 
         // Update the `hasEnded` status to false
         saleStatus.hasEnded = true;

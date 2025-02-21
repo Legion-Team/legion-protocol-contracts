@@ -929,6 +929,9 @@ contract LegionPreLiquidSaleV1Test is Test {
             signatureInv1
         );
 
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
+
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
         vm.prank(legionBouncer);
@@ -968,6 +971,9 @@ contract LegionPreLiquidSaleV1Test is Test {
             0x0000000000000000000000000000000000000000000000000000000000000003,
             signatureInv1
         );
+
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
 
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
@@ -1071,6 +1077,9 @@ contract LegionPreLiquidSaleV1Test is Test {
             signatureInv1
         );
 
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
+
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
         vm.prank(legionBouncer);
@@ -1106,6 +1115,9 @@ contract LegionPreLiquidSaleV1Test is Test {
             0x0000000000000000000000000000000000000000000000000000000000000003,
             signatureInv1
         );
+
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
 
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
@@ -1145,6 +1157,9 @@ contract LegionPreLiquidSaleV1Test is Test {
             signatureInv1
         );
 
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
+
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
         vm.prank(legionBouncer);
@@ -1183,6 +1198,9 @@ contract LegionPreLiquidSaleV1Test is Test {
             signatureInv1
         );
 
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
+
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
         // Assert
@@ -1212,6 +1230,9 @@ contract LegionPreLiquidSaleV1Test is Test {
             0x0000000000000000000000000000000000000000000000000000000000000003,
             signatureInv1
         );
+
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
 
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
@@ -1247,6 +1268,9 @@ contract LegionPreLiquidSaleV1Test is Test {
             0x0000000000000000000000000000000000000000000000000000000000000003,
             signatureInv1
         );
+
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
 
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
@@ -1804,6 +1828,9 @@ contract LegionPreLiquidSaleV1Test is Test {
         prepareCreateLegionPreLiquidSale();
         prepareMintAndApproveTokens();
 
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
+
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
         vm.prank(legionBouncer);
@@ -1881,6 +1908,9 @@ contract LegionPreLiquidSaleV1Test is Test {
             signatureInv1
         );
 
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
+
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
         vm.prank(legionBouncer);
@@ -1927,6 +1957,9 @@ contract LegionPreLiquidSaleV1Test is Test {
             0x0000000000000000000000000000000000000000000000000000000000000003,
             signatureInv1
         );
+
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
 
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
@@ -1996,6 +2029,9 @@ contract LegionPreLiquidSaleV1Test is Test {
             signatureInv1
         );
 
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
+
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
         vm.prank(legionBouncer);
@@ -2039,6 +2075,9 @@ contract LegionPreLiquidSaleV1Test is Test {
             signatureInv1
         );
 
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
+
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
         vm.prank(legionBouncer);
@@ -2078,6 +2117,9 @@ contract LegionPreLiquidSaleV1Test is Test {
             0x0000000000000000000000000000000000000000000000000000000000000003,
             signatureInv1
         );
+
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
 
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
@@ -2132,6 +2174,9 @@ contract LegionPreLiquidSaleV1Test is Test {
             signatureInv1
         );
 
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
+
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
         vm.prank(legionBouncer);
@@ -2180,6 +2225,9 @@ contract LegionPreLiquidSaleV1Test is Test {
             signatureInv1
         );
 
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
+
         vm.warp(block.timestamp + TWO_WEEKS + 1);
 
         vm.prank(legionBouncer);
@@ -2203,7 +2251,7 @@ contract LegionPreLiquidSaleV1Test is Test {
     /**
      * @notice Test case: Successfully end sale by project admin
      */
-    function test_toggleInvestmentAccepted_successfullyEmitsToggleInvestmentAccepted() public {
+    function test_endSale_successfullyEndsSale() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
         prepareMintAndApproveTokens();
@@ -2222,7 +2270,7 @@ contract LegionPreLiquidSaleV1Test is Test {
     /**
      * @dev Test case: Attempt to end sale without project admin permissions
      */
-    function test_toggleInvestmentAccepted_revertsIfCalledByNonProjectAdmin() public {
+    function test_endSale_revertsIfCalledByNonProjectAdmin() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
         prepareMintAndApproveTokens();
@@ -2234,29 +2282,6 @@ contract LegionPreLiquidSaleV1Test is Test {
 
         // Act
         vm.prank(nonProjectAdmin);
-        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
-    }
-
-    /**
-     * @dev Test case: Attempt to end sale after tokens are allocated
-     */
-    function test_toggleInvestmentAccepted_revertsIfTokensAllocated() public {
-        // Arrange
-        prepareCreateLegionPreLiquidSale();
-        prepareMintAndApproveTokens();
-
-        vm.warp(block.timestamp + TWO_WEEKS + 1);
-
-        vm.prank(legionBouncer);
-        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).publishTgeDetails(
-            address(askToken), 1_000_000 * 1e18, (block.timestamp + TWO_WEEKS + 2), 20_000 * 1e18
-        );
-
-        // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.TokensAlreadyAllocated.selector));
-
-        // Act
-        vm.prank(projectAdmin);
         ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
     }
 
