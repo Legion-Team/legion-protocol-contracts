@@ -70,6 +70,13 @@ interface ILegionPreLiquidSaleV1 {
     event CapitalWithdrawn(uint256 amount);
 
     /**
+     * @notice This event is emitted when the capital raised is successfully published by the Legion admin.
+     *
+     * @param capitalRaised The total capital raised by the project.
+     */
+    event CapitalRaisedPublished(uint256 capitalRaised);
+
+    /**
      * @notice This event is emitted when an emergency withdrawal of funds is performed by Legion.
      *
      * @param receiver The address of the receiver.
@@ -217,6 +224,8 @@ interface ILegionPreLiquidSaleV1 {
         uint256 askTokenTotalSupply;
         /// @dev The total capital invested by investors.
         uint256 totalCapitalInvested;
+        /// @dev The total capital raised from the sale.
+        uint256 totalCapitalRaised;
         /// @dev The total amount of tokens allocated to investors.
         uint256 totalTokensAllocated;
         /// @dev The total capital withdrawn by the Project, from the sale.
@@ -425,6 +434,13 @@ interface ILegionPreLiquidSaleV1 {
      * @notice Ends the sale.
      */
     function endSale() external;
+
+    /**
+     * @notice Publish the total capital raised by the project.
+     *
+     * @param capitalRaised The total capital raised by the project.
+     */
+    function publishCapitalRaised(uint256 capitalRaised) external;
 
     /**
      * @notice Syncs active Legion addresses from `LegionAddressRegistry.sol`.

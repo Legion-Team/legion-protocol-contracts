@@ -394,7 +394,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
         _verifyCanWithdrawCapital();
 
         /// Account for the capital withdrawn
-        saleStatus.totalCapitalWithdrawn = saleStatus.totalCapitalInvested;
+        saleStatus.totalCapitalWithdrawn = saleStatus.totalCapitalRaised;
 
         /// Calculate Legion Fee
         uint256 legionFee = (saleConfig.legionFeeOnCapitalRaisedBps * saleStatus.totalCapitalWithdrawn) / 10_000;
@@ -666,6 +666,31 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
     }
 
     /**
+     * @notice Publish the total capital raised by the project.
+     *
+     * @param capitalRaised The total capital raised by the project.
+     */
+    function publishCapitalRaised(uint256 capitalRaised) external onlyLegion whenNotPaused {
+        // Verify that the sale is not canceled
+        _verifySaleNotCanceled();
+
+        // verify that the sale has ended
+        _verifySaleHasEnded();
+
+        // Verify that the refund period is over
+        _verifyRefundPeriodIsOver();
+
+        // Verify that capital raised can be published.
+        _verifyCanPublishCapitalRaised();
+
+        // Set the total capital raised to be withdrawn by the project
+        saleStatus.totalCapitalRaised = capitalRaised;
+
+        // Emit successfully CapitalRaisedPublished
+        emit CapitalRaisedPublished(capitalRaised);
+    }
+
+    /**
      * @notice Syncs active Legion addresses from `LegionAddressRegistry.sol`.
      */
     function syncLegionAddresses() external onlyLegion {
@@ -914,6 +939,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
      */
     function _verifyCanWithdrawCapital() internal view virtual {
         if (saleStatus.totalCapitalWithdrawn > 0) revert Errors.CapitalAlreadyWithdrawn();
+        if (saleStatus.totalCapitalRaised == 0) revert Errors.CapitalNotRaised();
     }
 
     /**
@@ -939,6 +965,13 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
      */
     function _verifyHasNotRefunded() internal view virtual {
         if (investorPositions[msg.sender].hasRefunded) revert Errors.InvestorHasRefunded(msg.sender);
+    }
+
+    /**
+     * @notice Verify that capital raised can be published.
+     */
+    function _verifyCanPublishCapitalRaised() internal view {
+        if (saleStatus.totalCapitalRaised != 0) revert Errors.CapitalRaisedAlreadyPublished();
     }
 
     /**

@@ -829,6 +829,9 @@ contract LegionPreLiquidSaleV1Test is Test {
 
         vm.warp(block.timestamp + REFUND_PERIOD_SECONDS + 1 days);
 
+        vm.prank(legionBouncer);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).publishCapitalRaised(10_000 * 1e6);
+
         vm.prank(projectAdmin);
         ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).withdrawRaisedCapital();
 
@@ -1348,6 +1351,128 @@ contract LegionPreLiquidSaleV1Test is Test {
         );
     }
 
+    /* ========== PUBLISH CAPITAL RAISED TESTS ========== */
+
+    /**
+     * @notice Test case: Successfully publish capital raised and accepted capital merkle root
+     */
+    function test_publishCapitalRaised_successfullyEmitsCapitalRaisedPublished() public {
+        // Arrange
+        prepareCreateLegionPreLiquidSale();
+
+        vm.prank(legionBouncer);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
+
+        vm.warp(block.timestamp + 1 days + REFUND_PERIOD_SECONDS);
+
+        // Assert
+        vm.expectEmit();
+        emit ILegionPreLiquidSaleV1.CapitalRaisedPublished(10_000 * 1e6);
+
+        // Act
+        vm.prank(legionBouncer);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).publishCapitalRaised(10_000 * 1e6);
+    }
+
+    /**
+     * @notice Test case: Attempt to publish capital raised by non-legion admin
+     */
+    function test_publishCapitalRaised_revertsIfCalledByNonLegionAdmin() public {
+        // Arrange
+        prepareCreateLegionPreLiquidSale();
+
+        vm.prank(legionBouncer);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
+
+        vm.warp(block.timestamp + 1 days + REFUND_PERIOD_SECONDS);
+
+        // Assert
+        vm.expectRevert(abi.encodeWithSelector(Errors.NotCalledByLegion.selector));
+
+        // Act
+        vm.prank(nonLegionAdmin);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).publishCapitalRaised(10_000 * 1e6);
+    }
+
+    /**
+     * @notice Test case: Attempt to publish capital if sale is canceled
+     */
+    function test_publishCapitalRaised_revertsIfSaleIsCanceled() public {
+        // Arrange
+        prepareCreateLegionPreLiquidSale();
+
+        vm.prank(legionBouncer);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
+
+        vm.warp(block.timestamp + 1 days + REFUND_PERIOD_SECONDS);
+
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).cancelSale();
+
+        // Assert
+        vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
+
+        // Act
+        vm.prank(legionBouncer);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).publishCapitalRaised(10_000 * 1e6);
+    }
+
+    /**
+     * @notice Test case: Attempt to publish capital if sale has not ended
+     */
+    function test_publishCapitalRaised_revertsIfSaleHasNotEnded() public {
+        // Arrange
+        prepareCreateLegionPreLiquidSale();
+
+        // Assert
+        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasNotEnded.selector));
+
+        // Act
+        vm.prank(legionBouncer);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).publishCapitalRaised(10_000 * 1e6);
+    }
+
+    /**
+     * @notice Test case: Attempt to publish capital if refund period is not over
+     */
+    function test_publishCapitalRaised_revertsIfRefundPeriodIsNotOver() public {
+        // Arrange
+        prepareCreateLegionPreLiquidSale();
+
+        vm.prank(legionBouncer);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
+
+        // Assert
+        vm.expectRevert(abi.encodeWithSelector(Errors.RefundPeriodIsNotOver.selector));
+
+        // Act
+        vm.prank(legionBouncer);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).publishCapitalRaised(10_000 * 1e6);
+    }
+
+    /**
+     * @notice Test case: Attempt to publish capital raised if already published
+     */
+    function test_publishCapitalRaised_revertsIfCapitalAlreadyPublished() public {
+        // Arrange
+        prepareCreateLegionPreLiquidSale();
+
+        vm.prank(legionBouncer);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
+
+        vm.warp(block.timestamp + 1 days + REFUND_PERIOD_SECONDS);
+
+        vm.prank(legionBouncer);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).publishCapitalRaised(10_000 * 1e6);
+
+        // Assert
+        vm.expectRevert(abi.encodeWithSelector(Errors.CapitalRaisedAlreadyPublished.selector));
+
+        // Act
+        vm.prank(legionBouncer);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).publishCapitalRaised(10_000 * 1e6);
+    }
+
     /* ========== WITHDRAW RAISED CAPITAL TESTS ========== */
 
     /**
@@ -1374,6 +1499,9 @@ contract LegionPreLiquidSaleV1Test is Test {
         ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
 
         vm.warp(block.timestamp + 1 days + REFUND_PERIOD_SECONDS);
+
+        vm.prank(legionBouncer);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).publishCapitalRaised(10_000 * 1e6);
 
         // Assert
         vm.expectEmit();
@@ -1872,6 +2000,9 @@ contract LegionPreLiquidSaleV1Test is Test {
         ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
 
         vm.warp(block.timestamp + REFUND_PERIOD_SECONDS + 1 days);
+
+        vm.prank(legionBouncer);
+        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).publishCapitalRaised(10_000 * 1e6);
 
         vm.prank(projectAdmin);
         ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).withdrawRaisedCapital();

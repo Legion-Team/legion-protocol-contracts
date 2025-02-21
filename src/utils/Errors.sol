@@ -69,6 +69,11 @@ library Errors {
     error CapitalAlreadyWithdrawn();
 
     /**
+     * @notice Throws when no capital has been raised.
+     */
+    error CapitalNotRaised();
+
+    /**
      * @notice Throws when the investor is not flagged to have excess capital returned.
      *
      * @param investor The address of the investor.

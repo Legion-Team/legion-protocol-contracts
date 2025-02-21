@@ -786,6 +786,7 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
      */
     function _verifyCanWithdrawCapital() internal view virtual {
         if (saleStatus.capitalWithdrawn) revert Errors.CapitalAlreadyWithdrawn();
+        if (saleStatus.totalCapitalRaised == 0) revert Errors.CapitalNotRaised();
     }
 
     /**
