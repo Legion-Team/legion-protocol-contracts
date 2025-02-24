@@ -12,12 +12,12 @@ import { Errors } from "../src/utils/Errors.sol";
 import { Constants } from "../src/utils/Constants.sol";
 import { ILegionSale } from "../src/interfaces/ILegionSale.sol";
 import { ILegionSealedBidAuctionSale } from "../src/interfaces/ILegionSealedBidAuctionSale.sol";
-import { ILegionSaleFactory } from "../src/interfaces/ILegionSaleFactory.sol";
+import { ILegionSealedBidAuctionSaleFactory } from "../src/interfaces/factories/ILegionSealedBidAuctionSaleFactory.sol";
 import { LegionAddressRegistry } from "../src/LegionAddressRegistry.sol";
 import { LegionBouncer } from "../src/LegionBouncer.sol";
 import { LegionSealedBidAuctionSale } from "../src/LegionSealedBidAuctionSale.sol";
-import { LegionSaleFactory } from "../src/LegionSaleFactory.sol";
-import { LegionVestingFactory } from "../src/LegionVestingFactory.sol";
+import { LegionSealedBidAuctionSaleFactory } from "../src/factories/LegionSealedBidAuctionSaleFactory.sol";
+import { LegionVestingFactory } from "../src/factories/LegionVestingFactory.sol";
 import { MockToken } from "../src/mocks/MockToken.sol";
 
 contract LegionSealedBidAuctionSaleTest is Test {
@@ -35,7 +35,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
     LegionSealedBidAuctionSale sealedBidAuctionTemplate;
 
     LegionAddressRegistry legionAddressRegistry;
-    LegionSaleFactory legionSaleFactory;
+    LegionSealedBidAuctionSaleFactory legionSaleFactory;
     LegionVestingFactory legionVestingFactory;
 
     MockToken bidToken;
@@ -93,7 +93,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
     function setUp() public {
         sealedBidAuctionTemplate = new LegionSealedBidAuctionSale();
-        legionSaleFactory = new LegionSaleFactory(legionBouncer);
+        legionSaleFactory = new LegionSealedBidAuctionSaleFactory(legionBouncer);
         legionVestingFactory = new LegionVestingFactory();
         legionAddressRegistry = new LegionAddressRegistry(legionBouncer);
         bidToken = new MockToken("USD Coin", "USDC", 6);

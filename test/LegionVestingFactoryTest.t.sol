@@ -6,9 +6,9 @@ import { Test, console2, Vm } from "forge-std/Test.sol";
 
 import { Errors } from "../src/utils/Errors.sol";
 import { Constants } from "../src/utils/Constants.sol";
-import { ILegionVestingFactory } from "../src/interfaces/ILegionVestingFactory.sol";
+import { ILegionVestingFactory } from "../src/interfaces/factories/ILegionVestingFactory.sol";
 import { LegionLinearVesting } from "../src/LegionLinearVesting.sol";
-import { LegionVestingFactory } from "../src/LegionVestingFactory.sol";
+import { LegionVestingFactory } from "../src/factories/LegionVestingFactory.sol";
 
 contract LegionVestingFactoryTest is Test {
     LegionVestingFactory public legionVestingFactory;

@@ -188,16 +188,37 @@ In comparison to other sale contracts, the `LegionPreLiquidSaleV2` is more async
 - `cancelExpiredSale`: Cancels the sale if it has expired.
 - `claimBackCapitalIfCanceled`: Allows investors to claim back their capital if the sale is canceled.
 
-### Sale Factory
+### Fixed Price Sale Factory
 
-The `LegionSaleFactory` contract is a factory responsible for deploying proxy instances of the Legion sale contracts. It creates new sales by cloning the existing templates and initializing them with specific configurations.
+The `LegionFixedPriceSaleFactory` contract is a factory responsible for deploying proxy instances of the Legion fixed price sale contracts. It creates new sales by cloning the existing templates and initializing them with specific configurations.
 
 #### Key Functions:
 
 - `createFixedPriceSale`: Deploys a new instance of `LegionFixedPriceSale`.
-- `createSealedBidAuction`: Deploys a new instance of `LegionSealedBidAuctionSale`.
+
+### Pre-Liquid Sale V1 Factory
+
+The `LegionPreLiquidSaleV1Factory` contract is a factory responsible for deploying proxy instances of the Legion pre-liquid sale V1 contracts. It creates new sales by cloning the existing templates and initializing them with specific configurations.
+
+#### Key Functions:
+
 - `createPreLiquidSaleV1`: Deploys a new instance of `LegionPreLiquidSaleV1`.
+
+### Pre-Liquid Sale V2 Factory
+
+The `LegionPreLiquidSaleV2Factory` contract is a factory responsible for deploying proxy instances of the Legion pre-liquid sale V2 contracts. It creates new sales by cloning the existing templates and initializing them with specific configurations.
+
+#### Key Functions:
+
 - `createPreLiquidSaleV2`: Deploys a new instance of `LegionPreLiquidSaleV2`.
+
+### Sealed Bid Auction Sale Factory
+
+The `LegionSealedBidAuctionSaleFactory` contract is a factory responsible for deploying proxy instances of the Legion sealed bid auction sale contracts. It creates new sales by cloning the existing templates and initializing them with specific configurations.
+
+#### Key Functions:
+
+- `createSealedBidAuction`: Deploys a new instance of `LegionSealedBidAuctionSale`.
 
 ### Linear Vesting
 

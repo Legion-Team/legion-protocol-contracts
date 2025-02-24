@@ -2,7 +2,7 @@
 pragma solidity 0.8.28;
 
 import { Script, console2 } from "forge-std/Script.sol";
-import { LegionVestingFactory } from "../src/LegionVestingFactory.sol";
+import { LegionVestingFactory } from "../src/factories/LegionVestingFactory.sol";
 
 contract LegionVestingFactoryScript is Script {
     function setUp() public { }

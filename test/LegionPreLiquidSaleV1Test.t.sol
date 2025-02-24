@@ -9,12 +9,12 @@ import { Test, console2, Vm } from "forge-std/Test.sol";
 
 import { Initializable } from "@solady/src/utils/Initializable.sol";
 import { ILegionPreLiquidSaleV1 } from "../src/interfaces/ILegionPreLiquidSaleV1.sol";
-import { ILegionSaleFactory } from "../src/interfaces/ILegionSaleFactory.sol";
+import { ILegionPreLiquidSaleV1Factory } from "../src/interfaces/factories/ILegionPreLiquidSaleV1Factory.sol";
 import { LegionAddressRegistry } from "../src/LegionAddressRegistry.sol";
 import { LegionBouncer } from "../src/LegionBouncer.sol";
 import { LegionPreLiquidSaleV1 } from "../src/LegionPreLiquidSaleV1.sol";
-import { LegionSaleFactory } from "../src/LegionSaleFactory.sol";
-import { LegionVestingFactory } from "../src/LegionVestingFactory.sol";
+import { LegionPreLiquidSaleV1Factory } from "../src/factories/LegionPreLiquidSaleV1Factory.sol";
+import { LegionVestingFactory } from "../src/factories/LegionVestingFactory.sol";
 import { MockToken } from "../src/mocks/MockToken.sol";
 import { Errors } from "../src/utils/Errors.sol";
 import { Constants } from "../src/utils/Constants.sol";
@@ -31,7 +31,7 @@ contract LegionPreLiquidSaleV1Test is Test {
 
     LegionAddressRegistry legionAddressRegistry;
     LegionPreLiquidSaleV1 preLiquidSaleV1Template;
-    LegionSaleFactory legionSaleFactory;
+    LegionPreLiquidSaleV1Factory legionSaleFactory;
     LegionVestingFactory legionVestingFactory;
 
     MockToken bidToken;
@@ -80,7 +80,7 @@ contract LegionPreLiquidSaleV1Test is Test {
      */
     function setUp() public {
         preLiquidSaleV1Template = new LegionPreLiquidSaleV1();
-        legionSaleFactory = new LegionSaleFactory(legionBouncer);
+        legionSaleFactory = new LegionPreLiquidSaleV1Factory(legionBouncer);
         legionVestingFactory = new LegionVestingFactory();
         legionAddressRegistry = new LegionAddressRegistry(legionBouncer);
         bidToken = new MockToken("USD Coin", "USDC", 6);

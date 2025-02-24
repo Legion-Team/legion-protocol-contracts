@@ -9,12 +9,12 @@ import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
 import { ILegionSale } from "../src/interfaces/ILegionSale.sol";
 import { ILegionFixedPriceSale } from "../src/interfaces/ILegionFixedPriceSale.sol";
-import { ILegionSaleFactory } from "../src/interfaces/ILegionSaleFactory.sol";
+import { ILegionFixedPriceSaleFactory } from "../src/interfaces/factories/ILegionFixedPriceSaleFactory.sol";
 import { LegionAddressRegistry } from "../src/LegionAddressRegistry.sol";
 import { LegionBouncer } from "../src/LegionBouncer.sol";
 import { LegionFixedPriceSale } from "../src/LegionFixedPriceSale.sol";
-import { LegionSaleFactory } from "../src/LegionSaleFactory.sol";
-import { LegionVestingFactory } from "../src/LegionVestingFactory.sol";
+import { LegionFixedPriceSaleFactory } from "../src/factories/LegionFixedPriceSaleFactory.sol";
+import { LegionVestingFactory } from "../src/factories/LegionVestingFactory.sol";
 import { MockToken } from "../src/mocks/MockToken.sol";
 import { Errors } from "../src/utils/Errors.sol";
 import { Constants } from "../src/utils/Constants.sol";
@@ -37,7 +37,7 @@ contract LegionFixedPriceSaleTest is Test {
 
     LegionFixedPriceSale fixedPriceSaleTemplate;
     LegionAddressRegistry legionAddressRegistry;
-    LegionSaleFactory legionSaleFactory;
+    LegionFixedPriceSaleFactory legionSaleFactory;
     LegionVestingFactory legionVestingFactory;
 
     MockToken bidToken;
@@ -82,7 +82,7 @@ contract LegionFixedPriceSaleTest is Test {
      */
     function setUp() public {
         fixedPriceSaleTemplate = new LegionFixedPriceSale();
-        legionSaleFactory = new LegionSaleFactory(legionBouncer);
+        legionSaleFactory = new LegionFixedPriceSaleFactory(legionBouncer);
         legionVestingFactory = new LegionVestingFactory();
         legionAddressRegistry = new LegionAddressRegistry(legionBouncer);
         bidToken = new MockToken("USD Coin", "USDC", 6);

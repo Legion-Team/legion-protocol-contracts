@@ -28,7 +28,7 @@ import { Errors } from "./utils/Errors.sol";
 import { ILegionAddressRegistry } from "./interfaces/ILegionAddressRegistry.sol";
 import { ILegionSale } from "./interfaces/ILegionSale.sol";
 import { ILegionLinearVesting } from "./interfaces/ILegionLinearVesting.sol";
-import { ILegionVestingFactory } from "./interfaces/ILegionVestingFactory.sol";
+import { ILegionVestingFactory } from "./interfaces/factories/ILegionVestingFactory.sol";
 
 /**
  * @title Legion Sale
