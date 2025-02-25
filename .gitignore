@@ -10,12 +10,10 @@ out
 .DS_Store
 .pnp.*
 lcov.info
+lcov-filtered.info
 package-lock.json
 pnpm-lock.yaml
 yarn.lock
-
-# Docs
-docs/
 
 # Ignores development broadcast logs
 !broadcast

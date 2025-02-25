@@ -1,267 +1,222 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
+
+//       ___       ___           ___                       ___           ___
+//      /\__\     /\  \         /\  \          ___        /\  \         /\__\
+//     /:/  /    /::\  \       /::\  \        /\  \      /::\  \       /::|  |
+//    /:/  /    /:/\:\  \     /:/\:\  \       \:\  \    /:/\:\  \     /:|:|  |
+//   /:/  /    /::\~\:\  \   /:/  \:\  \      /::\__\  /:/  \:\  \   /:/|:|  |__
+//  /:/__/    /:/\:\ \:\__\ /:/__/_\:\__\  __/:/\/__/ /:/__/ \:\__\ /:/ |:| /\__\
+//  \:\  \    \:\~\:\ \/__/ \:\  /\ \/__/ /\/:/  /    \:\  \ /:/  / \/__|:|/:/  /
+//   \:\  \    \:\ \:\__\    \:\ \:\__\   \::/__/      \:\  /:/  /      |:/:/  /
+//    \:\  \    \:\ \/__/     \:\/:/  /    \:\__\       \:\/:/  /       |::/  /
+//     \:\__\    \:\__\        \::/  /      \/__/        \::/  /        /:/  /
+//      \/__/     \/__/         \/__/                     \/__/         \/__/
+//
+// If you find a bug, please contact security[at]legion.cc
+// We will pay a fair bounty for any issue that puts users' funds at risk.
+
+import { SafeTransferLib } from "@solady/src/utils/SafeTransferLib.sol";
+
+import { Constants } from "./utils/Constants.sol";
+import { Errors } from "./utils/Errors.sol";
+import { ILegionFixedPriceSale } from "./interfaces/ILegionFixedPriceSale.sol";
+import { LegionSale } from "./LegionSale.sol";
 
 /**
- * ██      ███████  ██████  ██  ██████  ███    ██
- * ██      ██      ██       ██ ██    ██ ████   ██
- * ██      █████   ██   ███ ██ ██    ██ ██ ██  ██
- * ██      ██      ██    ██ ██ ██    ██ ██  ██ ██
- * ███████ ███████  ██████  ██  ██████  ██   ████
- *
- * If you find a bug, please contact security(at)legion.cc
- * We will pay a fair bounty for any issue that puts user's funds at risk.
- *
+ * @title Legion Fixed Price Sale
+ * @author Legion
+ * @notice A contract used to execute fixed-price sales of ERC20 tokens after TGE
  */
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
-import {LegionBaseSale} from "./LegionBaseSale.sol";
-
-import {ILegionAddressRegistry} from "./interfaces/ILegionAddressRegistry.sol";
-import {ILegionFixedPriceSale} from "./interfaces/ILegionFixedPriceSale.sol";
-import {ILegionLinearVesting} from "./interfaces/ILegionLinearVesting.sol";
-import {ILegionVestingFactory} from "./interfaces/ILegionVestingFactory.sol";
-
-/**
- * @title Legion Fixed Price Sale.
- * @author Legion.
- * @notice A contract used to execute fixed price sales of ERC20 tokens after TGE.
- */
-contract LegionFixedPriceSale is LegionBaseSale, ILegionFixedPriceSale {
-    using SafeERC20 for IERC20;
-
-    /// @dev The prefund period duration in seconds.
-    uint256 private prefundPeriodSeconds;
-
-    /// @dev The prefund allocation period duration in seconds.
-    uint256 private prefundAllocationPeriodSeconds;
-
-    /// @dev The price of the token being sold denominated in the token used to raise capital.
-    uint256 private tokenPrice;
-
-    /// @dev The unix timestamp (seconds) of the block when the prefund starts.
-    uint256 private prefundStartTime;
-
-    /// @dev The unix timestamp (seconds) of the block when the prefund ends.
-    uint256 private prefundEndTime;
+contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
+    /// @dev A struct describing the fixed-price sale configuration
+    FixedPriceSaleConfiguration private fixedPriceSaleConfig;
 
     /**
-     * @notice See {ILegionFixedPriceSale-initialize}.
+     * @notice Initializes the contract with correct parameters.
+     *
+     * @param saleInitParams The Legion sale initialization parameters.
+     * @param fixedPriceSaleInitParams The fixed price sale specific initialization parameters.
+     * @param vestingInitParams The vesting initialization parameters.
      */
-    function initialize(FixedPriceSaleConfig calldata fixedPriceSaleConfig) external initializer {
-        /// Initialize fixed price sale configuration
-        prefundPeriodSeconds = fixedPriceSaleConfig.prefundPeriodSeconds;
-        prefundAllocationPeriodSeconds = fixedPriceSaleConfig.prefundAllocationPeriodSeconds;
-        salePeriodSeconds = fixedPriceSaleConfig.salePeriodSeconds;
-        refundPeriodSeconds = fixedPriceSaleConfig.refundPeriodSeconds;
-        lockupPeriodSeconds = fixedPriceSaleConfig.lockupPeriodSeconds;
-        vestingDurationSeconds = fixedPriceSaleConfig.vestingDurationSeconds;
-        vestingCliffDurationSeconds = fixedPriceSaleConfig.vestingCliffDurationSeconds;
-        legionFeeOnCapitalRaisedBps = fixedPriceSaleConfig.legionFeeOnCapitalRaisedBps;
-        legionFeeOnTokensSoldBps = fixedPriceSaleConfig.legionFeeOnTokensSoldBps;
-        minimumPledgeAmount = fixedPriceSaleConfig.minimumPledgeAmount;
-        tokenPrice = fixedPriceSaleConfig.tokenPrice;
-        bidToken = fixedPriceSaleConfig.bidToken;
-        askToken = fixedPriceSaleConfig.askToken;
-        projectAdmin = fixedPriceSaleConfig.projectAdmin;
-        addressRegistry = fixedPriceSaleConfig.addressRegistry;
+    function initialize(
+        LegionSaleInitializationParams calldata saleInitParams,
+        FixedPriceSaleInitializationParams calldata fixedPriceSaleInitParams,
+        LegionVestingInitializationParams calldata vestingInitParams
+    )
+        external
+        initializer
+    {
+        // Verify if the sale initialization parameters are valid.
+        _verifyValidParams(fixedPriceSaleInitParams);
 
-        /// Calculate and set prefundStartTime, prefundEndTime, startTime, endTime and refundEndTime
-        prefundStartTime = block.timestamp;
-        prefundEndTime = prefundStartTime + fixedPriceSaleConfig.prefundPeriodSeconds;
-        startTime = prefundEndTime + fixedPriceSaleConfig.prefundAllocationPeriodSeconds;
-        endTime = startTime + fixedPriceSaleConfig.salePeriodSeconds;
-        refundEndTime = endTime + fixedPriceSaleConfig.refundPeriodSeconds;
+        // Init and set the sale common params
+        _setLegionSaleConfig(saleInitParams, vestingInitParams);
 
-        /// Check if lockupPeriodSeconds is less than refundPeriodSeconds
-        /// lockupEndTime should be at least refundEndTime
-        if (fixedPriceSaleConfig.lockupPeriodSeconds <= fixedPriceSaleConfig.refundPeriodSeconds) {
-            /// If yes, set lockupEndTime to be refundEndTime
-            lockupEndTime = refundEndTime;
+        // Set the fixed price sale specific configuration
+        fixedPriceSaleConfig.tokenPrice = fixedPriceSaleInitParams.tokenPrice;
+
+        // Calculate and set prefundStartTime, prefundEndTime, startTime, endTime and refundEndTime
+        fixedPriceSaleConfig.prefundStartTime = block.timestamp;
+        fixedPriceSaleConfig.prefundEndTime =
+            fixedPriceSaleConfig.prefundStartTime + fixedPriceSaleInitParams.prefundPeriodSeconds;
+
+        saleConfig.startTime =
+            fixedPriceSaleConfig.prefundEndTime + fixedPriceSaleInitParams.prefundAllocationPeriodSeconds;
+        saleConfig.endTime = saleConfig.startTime + saleInitParams.salePeriodSeconds;
+        saleConfig.refundEndTime = saleConfig.endTime + saleInitParams.refundPeriodSeconds;
+
+        // Check if lockupPeriodSeconds is less than refundPeriodSeconds
+        // lockupEndTime should be at least refundEndTime
+        if (saleInitParams.lockupPeriodSeconds <= saleInitParams.refundPeriodSeconds) {
+            // If yes, set lockupEndTime to be refundEndTime
+            saleConfig.lockupEndTime = saleConfig.refundEndTime;
         } else {
-            /// If no, calculate the lockupEndTime
-            lockupEndTime = endTime + fixedPriceSaleConfig.lockupPeriodSeconds;
+            // If no, calculate the lockupEndTime
+            saleConfig.lockupEndTime = saleConfig.endTime + saleInitParams.lockupPeriodSeconds;
         }
 
         // Set the vestingStartTime to begin when lockupEndTime is reached
-        vestingStartTime = lockupEndTime;
-
-        /// Verify if the sale configuration is valid
-        _verifyValidConfig(fixedPriceSaleConfig);
-
-        /// Cache Legion addresses from `LegionAddressRegistry`
-        legionBouncer = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_BOUNCER_ID);
-        legionSigner = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_SIGNER_ID);
-        legionFeeReceiver = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_FEE_RECEIVER_ID);
-        vestingFactory = ILegionAddressRegistry(addressRegistry).getLegionAddress(LEGION_VESTING_FACTORY_ID);
+        vestingConfig.vestingStartTime = saleConfig.lockupEndTime;
     }
 
     /**
-     * @notice See {ILegionFixedPriceSale-pledgeCapital}.
+     * @notice Invest capital to the fixed price sale.
+     *
+     * @param amount The amount of capital invested.
+     * @param signature The Legion signature for verification.
      */
-    function pledgeCapital(uint256 amount, bytes memory signature) external {
-        /// Verify that the investor is allowed to pledge capital
+    function invest(uint256 amount, bytes memory signature) external whenNotPaused {
+        // Verify that the investor is allowed to invest capital
         _verifyLegionSignature(signature);
 
-        /// Verify that pledge is not during the prefund allocation period
+        // Verify that invest is not during the prefund allocation period
         _verifyNotPrefundAllocationPeriod();
 
-        /// Verify that the sale has not ended
+        // Verify that the sale has not ended
         _verifySaleHasNotEnded();
 
-        /// Verify that the sale is not canceled
+        // Verify that the sale is not canceled
         _verifySaleNotCanceled();
 
-        /// Verify that the amount pledged is more than the minimum required
-        _verifyMinimumPledgeAmount(amount);
+        // Verify that the amount invested is more than the minimum required
+        _verifyMinimumInvestAmount(amount);
 
-        /// Increment total capital pledged from investors
-        totalCapitalPledged += amount;
+        // Verify that the investor has not refunded
+        _verifyHasNotRefunded();
 
-        /// Increment total pledged capital for the investor
-        investorPositions[msg.sender].pledgedCapital += amount;
+        // Verify that the investor has not claimed excess capital
+        _verifyHasNotClaimedExcess();
 
-        /// Flag if capital is pledged during the prefund period
+        // Increment total capital invested from investors
+        saleStatus.totalCapitalInvested += amount;
+
+        // Increment total invested capital for the investor
+        investorPositions[msg.sender].investedCapital += amount;
+
+        // Flag if capital is invested during the prefund period
         bool isPrefund = _isPrefund();
 
-        /// Emit successfully CapitalPledged
-        emit CapitalPledged(amount, msg.sender, isPrefund, block.timestamp);
+        // Emit successfully CapitalInvested
+        emit CapitalInvested(amount, msg.sender, isPrefund, block.timestamp);
 
-        /// Transfer the pledged capital to the contract
-        IERC20(bidToken).safeTransferFrom(msg.sender, address(this), amount);
+        // Transfer the invested capital to the contract
+        SafeTransferLib.safeTransferFrom(addressConfig.bidToken, msg.sender, address(this), amount);
     }
 
     /**
-     * @notice See {ILegionFixedPriceSale-publishSaleResults}.
+     * @notice Publish sale results, once the sale has concluded.
+     *
+     * @dev Can be called only by the Legion admin address.
+     *
+     * @param claimMerkleRoot The merkle root to verify token claims.
+     * @param acceptedMerkleRoot The merkle root to verify accepted capital.
+     * @param tokensAllocated The total amount of tokens allocated for distribution among investors.
+     * @param askTokenDecimals The decimals number of the ask token.
      */
-    function publishSaleResults(bytes32 merkleRoot, uint256 tokensAllocated, uint8 askTokenDecimals)
+    function publishSaleResults(
+        bytes32 claimMerkleRoot,
+        bytes32 acceptedMerkleRoot,
+        uint256 tokensAllocated,
+        uint8 askTokenDecimals
+    )
         external
         onlyLegion
     {
-        /// Verify that the sale is not canceled
+        // Verify that the sale is not canceled
         _verifySaleNotCanceled();
 
-        /// Verify that the refund period is over
+        // Verify that the refund period is over
         _verifyRefundPeriodIsOver();
 
-        /// Verify that sale results are not already published
+        // Verify that sale results are not already published
         _verifyCanPublishSaleResults();
 
-        /// Set the merkle root for claiming tokens
-        claimTokensMerkleRoot = merkleRoot;
+        // Set the merkle root for claiming tokens
+        saleStatus.claimTokensMerkleRoot = claimMerkleRoot;
 
-        /// Set the total tokens to be allocated by the Project team
-        totalTokensAllocated = tokensAllocated;
+        // Set the merkle root for accepted capital
+        saleStatus.acceptedCapitalMerkleRoot = acceptedMerkleRoot;
 
-        /// Set the total capital raised to be withdrawn by the project
-        totalCapitalRaised = (tokensAllocated * tokenPrice) / (10 ** askTokenDecimals);
+        // Set the total tokens to be allocated by the Project team
+        saleStatus.totalTokensAllocated = tokensAllocated;
 
-        /// Emit successfully SaleResultsPublished
-        emit SaleResultsPublished(merkleRoot, tokensAllocated);
+        // Set the total capital raised to be withdrawn by the project
+        saleStatus.totalCapitalRaised = (tokensAllocated * fixedPriceSaleConfig.tokenPrice) / (10 ** askTokenDecimals);
+
+        // Emit successfully SaleResultsPublished
+        emit SaleResultsPublished(claimMerkleRoot, acceptedMerkleRoot, tokensAllocated);
     }
 
     /**
-     * @notice See {ILegionFixedPriceSale-saleConfiguration}.
+     * @notice Returns the fixed price sale configuration.
      */
-    function saleConfiguration() external view returns (FixedPriceSaleConfig memory saleConfig) {
-        /// Get the fixed price sale config
-        saleConfig = FixedPriceSaleConfig(
-            prefundPeriodSeconds,
-            prefundAllocationPeriodSeconds,
-            salePeriodSeconds,
-            refundPeriodSeconds,
-            lockupPeriodSeconds,
-            vestingDurationSeconds,
-            vestingCliffDurationSeconds,
-            legionFeeOnCapitalRaisedBps,
-            legionFeeOnTokensSoldBps,
-            minimumPledgeAmount,
-            tokenPrice,
-            bidToken,
-            askToken,
-            projectAdmin,
-            addressRegistry
-        );
+    function fixedPriceSaleConfiguration() external view returns (FixedPriceSaleConfiguration memory) {
+        return fixedPriceSaleConfig;
     }
 
     /**
-     * @notice See {ILegionFixedPriceSale-saleStatus}.
-     */
-    function saleStatus() external view returns (FixedPriceSaleStatus memory fixedPriceSaleStatus) {
-        /// Get the fixed price sale status
-        fixedPriceSaleStatus = FixedPriceSaleStatus(
-            prefundStartTime,
-            prefundEndTime,
-            startTime,
-            endTime,
-            refundEndTime,
-            lockupEndTime,
-            vestingStartTime,
-            totalCapitalPledged,
-            totalTokensAllocated,
-            totalCapitalRaised,
-            claimTokensMerkleRoot,
-            excessCapitalMerkleRoot,
-            isCanceled,
-            tokensSupplied,
-            capitalWithdrawn
-        );
-    }
-
-    /**
-     * @notice Verify if prefund period is active (before sale startTime).
+     * @notice Verify whether the prefund period is active (before sale startTime)
      */
     function _isPrefund() private view returns (bool) {
-        return (block.timestamp < prefundEndTime);
+        return (block.timestamp < fixedPriceSaleConfig.prefundEndTime);
     }
 
     /**
-     * @notice Verify if prefund allocation period is active (after prefundEndTime and before sale startTime).
+     * @notice Verify whether the prefund allocation period is active (after prefundEndTime and before sale startTime)
      */
     function _verifyNotPrefundAllocationPeriod() private view {
-        if (block.timestamp >= prefundEndTime && block.timestamp < startTime) revert PrefundAllocationPeriodNotEnded();
+        if (block.timestamp >= fixedPriceSaleConfig.prefundEndTime && block.timestamp < saleConfig.startTime) {
+            revert Errors.PrefundAllocationPeriodNotEnded();
+        }
     }
 
     /**
-     * @notice Verify if the sale configuration is valid.
-     *
-     * @param _fixedPriceSaleConfig The configuration for the fixed price sale.
+     * @notice Verify whether the sale initialization parameters are valid
      */
-    function _verifyValidConfig(FixedPriceSaleConfig calldata _fixedPriceSaleConfig) private pure {
-        /// Check for zero addresses provided
+    function _verifyValidParams(FixedPriceSaleInitializationParams calldata fixedPriceSaleInitParams) private pure {
+        // Check for zero values provided
         if (
-            _fixedPriceSaleConfig.bidToken == address(0) || _fixedPriceSaleConfig.projectAdmin == address(0)
-                || _fixedPriceSaleConfig.addressRegistry == address(0)
+            fixedPriceSaleInitParams.prefundPeriodSeconds == 0
+                || fixedPriceSaleInitParams.prefundAllocationPeriodSeconds == 0 || fixedPriceSaleInitParams.tokenPrice == 0
         ) {
-            revert ZeroAddressProvided();
+            revert Errors.ZeroValueProvided();
         }
 
-        /// Check for zero values provided
+        // Check whether prefund and allocation periods are longer than allowed
         if (
-            _fixedPriceSaleConfig.prefundPeriodSeconds == 0 || _fixedPriceSaleConfig.prefundAllocationPeriodSeconds == 0
-                || _fixedPriceSaleConfig.salePeriodSeconds == 0 || _fixedPriceSaleConfig.refundPeriodSeconds == 0
-                || _fixedPriceSaleConfig.lockupPeriodSeconds == 0 || _fixedPriceSaleConfig.tokenPrice == 0
-        ) revert ZeroValueProvided();
+            fixedPriceSaleInitParams.prefundPeriodSeconds > Constants.THREE_MONTHS
+                || fixedPriceSaleInitParams.prefundAllocationPeriodSeconds > Constants.TWO_WEEKS
+        ) {
+            revert Errors.InvalidPeriodConfig();
+        }
 
-        /// Check if prefund, allocation, sale, refund and lockup periods are longer than allowed
+        // Check whether prefund and allocation periods are shorter than allowed
         if (
-            _fixedPriceSaleConfig.prefundPeriodSeconds > THREE_MONTHS
-                || _fixedPriceSaleConfig.prefundAllocationPeriodSeconds > TWO_WEEKS
-                || _fixedPriceSaleConfig.salePeriodSeconds > THREE_MONTHS
-                || _fixedPriceSaleConfig.refundPeriodSeconds > TWO_WEEKS
-                || _fixedPriceSaleConfig.lockupPeriodSeconds > SIX_MONTHS
-        ) revert InvalidPeriodConfig();
-
-        /// Check if prefund, allocation, sale, refund and lockup periods are shorter than allowed
-        if (
-            _fixedPriceSaleConfig.prefundPeriodSeconds < ONE_HOUR
-                || _fixedPriceSaleConfig.prefundAllocationPeriodSeconds < ONE_HOUR
-                || _fixedPriceSaleConfig.salePeriodSeconds < ONE_HOUR
-                || _fixedPriceSaleConfig.refundPeriodSeconds < ONE_HOUR
-                || _fixedPriceSaleConfig.lockupPeriodSeconds < ONE_HOUR
-        ) revert InvalidPeriodConfig();
+            fixedPriceSaleInitParams.prefundPeriodSeconds < Constants.ONE_HOUR
+                || fixedPriceSaleInitParams.prefundAllocationPeriodSeconds < Constants.ONE_HOUR
+        ) {
+            revert Errors.InvalidPeriodConfig();
+        }
     }
 }

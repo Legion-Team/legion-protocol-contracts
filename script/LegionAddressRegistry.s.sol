@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
-import {Script, console2} from "forge-std/Script.sol";
-import {LegionAddressRegistry} from "../src/LegionAddressRegistry.sol";
-import {LegionAccessControl} from "../src/LegionAccessControl.sol";
+import { Script, console2 } from "forge-std/Script.sol";
+import { LegionAddressRegistry } from "../src/LegionAddressRegistry.sol";
+import { LegionBouncer } from "../src/LegionBouncer.sol";
 
 contract LegionAddressRegistryScript is Script {
-    function setUp() public {}
+    function setUp() public { }
 
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
@@ -20,28 +20,28 @@ contract LegionAddressRegistryScript is Script {
 
         LegionAddressRegistry addressRegistry = new LegionAddressRegistry(legionBouncer);
 
-        LegionAccessControl(legionBouncer).functionCall(
+        LegionBouncer(legionBouncer).functionCall(
             address(addressRegistry),
             abi.encodeWithSelector(
                 LegionAddressRegistry.setLegionAddress.selector, bytes32("LEGION_BOUNCER"), legionBouncer
             )
         );
 
-        LegionAccessControl(legionBouncer).functionCall(
+        LegionBouncer(legionBouncer).functionCall(
             address(addressRegistry),
             abi.encodeWithSelector(
                 LegionAddressRegistry.setLegionAddress.selector, bytes32("LEGION_SIGNER"), legionSigner
             )
         );
 
-        LegionAccessControl(legionBouncer).functionCall(
+        LegionBouncer(legionBouncer).functionCall(
             address(addressRegistry),
             abi.encodeWithSelector(
                 LegionAddressRegistry.setLegionAddress.selector, bytes32("LEGION_FEE_RECEIVER"), legionFeeReceiver
             )
         );
 
-        LegionAccessControl(legionBouncer).functionCall(
+        LegionBouncer(legionBouncer).functionCall(
             address(addressRegistry),
             abi.encodeWithSelector(
                 LegionAddressRegistry.setLegionAddress.selector, bytes32("LEGION_VESTING_FACTORY"), legionVestingFactory

@@ -1,41 +1,40 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
+
+//       ___       ___           ___                       ___           ___
+//      /\__\     /\  \         /\  \          ___        /\  \         /\__\
+//     /:/  /    /::\  \       /::\  \        /\  \      /::\  \       /::|  |
+//    /:/  /    /:/\:\  \     /:/\:\  \       \:\  \    /:/\:\  \     /:|:|  |
+//   /:/  /    /::\~\:\  \   /:/  \:\  \      /::\__\  /:/  \:\  \   /:/|:|  |__
+//  /:/__/    /:/\:\ \:\__\ /:/__/_\:\__\  __/:/\/__/ /:/__/ \:\__\ /:/ |:| /\__\
+//  \:\  \    \:\~\:\ \/__/ \:\  /\ \/__/ /\/:/  /    \:\  \ /:/  / \/__|:|/:/  /
+//   \:\  \    \:\ \:\__\    \:\ \:\__\   \::/__/      \:\  /:/  /      |:/:/  /
+//    \:\  \    \:\ \/__/     \:\/:/  /    \:\__\       \:\/:/  /       |::/  /
+//     \:\__\    \:\__\        \::/  /      \/__/        \::/  /        /:/  /
+//      \/__/     \/__/         \/__/                     \/__/         \/__/
+//
+// If you find a bug, please contact security[at]legion.cc
+// We will pay a fair bounty for any issue that puts users' funds at risk.
+
+import { VestingWalletUpgradeable } from "@openzeppelin/contracts-upgradeable/finance/VestingWalletUpgradeable.sol";
+
+import { Errors } from "./utils/Errors.sol";
 
 /**
- * ██      ███████  ██████  ██  ██████  ███    ██
- * ██      ██      ██       ██ ██    ██ ████   ██
- * ██      █████   ██   ███ ██ ██    ██ ██ ██  ██
- * ██      ██      ██    ██ ██ ██    ██ ██  ██ ██
- * ███████ ███████  ██████  ██  ██████  ██   ████
- *
- * If you find a bug, please contact security(at)legion.cc
- * We will pay a fair bounty for any issue that puts user's funds at risk.
- *
- */
-import {VestingWalletUpgradeable} from "@openzeppelin/contracts-upgradeable/finance/VestingWalletUpgradeable.sol";
-
-/**
- * @title Legion Linear Vesting.
- * @author Legion.
- * @notice A contract used to release vested tokens to users.
- * @dev The contract fully utilizes OpenZeppelin's VestingWallet.sol implementation.
+ * @title Legion Linear Vesting
+ * @author Legion
+ * @notice A contract used to release vested tokens to users
+ * @dev The contract fully utilizes OpenZeppelin's VestingWallet.sol implementation
  */
 contract LegionLinearVesting is VestingWalletUpgradeable {
-    /// @dev The unix timestamp (seconds) of the block when the cliff ends.
+    /// @dev The Unix timestamp (seconds) of the block when the cliff ends
     uint256 private cliffEndTimestamp;
 
     /**
-     * @notice Throws when an user tries to release tokens before the cliff period has ended.
-     *
-     * @param currentTimestamp The current block timestamp.
-     */
-    error CliffNotEnded(uint256 currentTimestamp);
-
-    /**
-     * @notice Throws if an user tries to release tokens before the cliff period has ended
+     * @notice Throws if a user tries to release tokens before the cliff period has ended
      */
     modifier onlyCliffEnded() {
-        if (block.timestamp < cliffEndTimestamp) revert CliffNotEnded(block.timestamp);
+        if (block.timestamp < cliffEndTimestamp) revert Errors.CliffNotEnded(block.timestamp);
         _;
     }
 
@@ -43,37 +42,49 @@ contract LegionLinearVesting is VestingWalletUpgradeable {
      * @dev LegionLinearVesting constructor.
      */
     constructor() {
-        /// Disable initialization
+        // Disable initialization
         _disableInitializers();
     }
 
     /**
-     * @notice Initializes the contract with correct parameters.
+     * @notice Initializes the contract with the correct parameters
      *
-     * @param beneficiary The beneficiary to receive tokens.
-     * @param startTimestamp The start timestamp of the vesting schedule.
-     * @param durationSeconds The vesting duration in seconds.
+     * @param beneficiary The beneficiary to receive tokens
+     * @param startTimestamp The Unix timestamp when the vesting schedule starts
+     * @param durationSeconds The duration of the vesting period in seconds
+     * @param cliffDurationSeconds The duration of the cliff period in seconds
      */
-    function initialize(address beneficiary, uint64 startTimestamp, uint64 durationSeconds, uint64 cliffDurationSeconds)
+    function initialize(
+        address beneficiary,
+        uint64 startTimestamp,
+        uint64 durationSeconds,
+        uint64 cliffDurationSeconds
+    )
         public
         initializer
     {
-        /// Initialize the LegionLinearVesting clone
+        // Initialize the LegionLinearVesting clone
         __VestingWallet_init(beneficiary, startTimestamp, durationSeconds);
 
-        /// Set the cliff end timestamp, based on the cliff duration
+        // Set the cliff end timestamp, based on the cliff duration
         cliffEndTimestamp = startTimestamp + cliffDurationSeconds;
     }
 
     /**
-     * @notice See {VestingWalletUpgradeable-release}.
+     * @notice Release the native token (ether) that have already vested.
+     *
+     * Emits a {EtherReleased} event.
      */
     function release() public override onlyCliffEnded {
         super.release();
     }
 
     /**
-     * @notice See {VestingWalletUpgradeable-release}.
+     * @notice Release the tokens that have already vested.
+     *
+     * @param token The vested token to release
+     *
+     * Emits a {ERC20Released} event.
      */
     function release(address token) public override onlyCliffEnded {
         super.release(token);
