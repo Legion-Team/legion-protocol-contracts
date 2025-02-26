@@ -1,5 +1,5 @@
 # LegionPreLiquidSaleV1
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/1a165deeea33dfd2b1dca142bf23d06b547c39a3/src/LegionPreLiquidSaleV1.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/e045131669c5801ab2e88b13e55002362a64c068/src/LegionPreLiquidSaleV1.sol)
 
 **Inherits:**
 [ILegionPreLiquidSaleV1](/src/interfaces/ILegionPreLiquidSaleV1.sol/interface.ILegionPreLiquidSaleV1.md), Initializable, Pausable

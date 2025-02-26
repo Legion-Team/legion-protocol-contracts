@@ -1,5 +1,5 @@
 # ILegionVestingFactory
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/1a165deeea33dfd2b1dca142bf23d06b547c39a3/src/interfaces/factories/ILegionVestingFactory.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/e045131669c5801ab2e88b13e55002362a64c068/src/interfaces/factories/ILegionVestingFactory.sol)
 
 
 ## Functions
@@ -53,4 +53,30 @@ event NewLinearVestingCreated(
 |`startTimestamp`|`uint64`|The Unix timestamp (seconds) when the vesting period starts.|
 |`durationSeconds`|`uint64`|The vesting duration in seconds.|
 |`cliffDurationSeconds`|`uint64`|The vesting cliff duration in seconds.|
+
+### NewLinearEpochVestingCreated
+This event is emitted when a new linear epoch vesting schedule contract is deployed for an investor.
+
+
+```solidity
+event NewLinearEpochVestingCreated(
+    address beneficiary,
+    uint64 startTimestamp,
+    uint64 durationSeconds,
+    uint64 cliffDurationSeconds,
+    uint256 epochDurationSeconds,
+    uint256 numberOfEpochs
+);
+```
+
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`beneficiary`|`address`|The address of the beneficiary.|
+|`startTimestamp`|`uint64`|The Unix timestamp (seconds) when the vesting period starts.|
+|`durationSeconds`|`uint64`|The vesting duration in seconds.|
+|`cliffDurationSeconds`|`uint64`|The vesting cliff duration in seconds.|
+|`epochDurationSeconds`|`uint256`|The duration of each epoch in seconds|
+|`numberOfEpochs`|`uint256`|The number of epochs|
 

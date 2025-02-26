@@ -27,7 +27,7 @@ import { Constants } from "./utils/Constants.sol";
 import { Errors } from "./utils/Errors.sol";
 import { ILegionAddressRegistry } from "./interfaces/ILegionAddressRegistry.sol";
 import { ILegionPreLiquidSaleV1 } from "./interfaces/ILegionPreLiquidSaleV1.sol";
-import { ILegionLinearVesting } from "./interfaces/ILegionLinearVesting.sol";
+import { ILegionLinearVesting } from "./interfaces/vesting/ILegionLinearVesting.sol";
 import { ILegionVestingFactory } from "./interfaces/factories/ILegionVestingFactory.sol";
 
 /**
