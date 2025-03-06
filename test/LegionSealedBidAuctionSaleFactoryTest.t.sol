@@ -9,6 +9,7 @@ import { Errors } from "../src/utils/Errors.sol";
 import { Constants } from "../src/utils/Constants.sol";
 import { ILegionSale } from "../src/interfaces/ILegionSale.sol";
 import { ILegionSealedBidAuctionSale } from "../src/interfaces/ILegionSealedBidAuctionSale.sol";
+import { ILegionVestingManager } from "../src/interfaces/vesting/ILegionVestingManager.sol";
 import { LegionAddressRegistry } from "../src/LegionAddressRegistry.sol";
 import { LegionSealedBidAuctionSale } from "../src/LegionSealedBidAuctionSale.sol";
 import { LegionSealedBidAuctionSaleFactory } from "../src/factories/LegionSealedBidAuctionSaleFactory.sol";
@@ -23,7 +24,6 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
     struct SealedBidAuctionSaleTestConfig {
         ILegionSale.LegionSaleInitializationParams saleInitParams;
         ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams sealedBidAuctionSaleInitParams;
-        ILegionSale.LegionVestingInitializationParams vestingInitParams;
     }
 
     SaleTestConfig testConfig;
@@ -62,14 +62,12 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
      */
     function setSealedBidAuctionSaleParams(
         ILegionSale.LegionSaleInitializationParams memory _saleInitParams,
-        ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams memory _sealedBidAuctionSaleInitParams,
-        ILegionSale.LegionVestingInitializationParams memory _vestingInitParams
+        ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams memory _sealedBidAuctionSaleInitParams
     )
         public
     {
         testConfig.sealedBidAuctionSaleTestConfig.saleInitParams = _saleInitParams;
         testConfig.sealedBidAuctionSaleTestConfig.sealedBidAuctionSaleInitParams = _sealedBidAuctionSaleInitParams;
-        testConfig.sealedBidAuctionSaleTestConfig.vestingInitParams = _vestingInitParams;
     }
 
     /**
@@ -80,7 +78,6 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: Constants.ONE_HOUR,
                 refundPeriodSeconds: Constants.TWO_WEEKS,
-                lockupPeriodSeconds: Constants.FORTY_DAYS,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -92,19 +89,13 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: address(nonOwner)
             }),
-            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
-            })
+            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
 
         vm.prank(legionBouncer);
         legionSealedBidAuctionInstance = legionSaleFactory.createSealedBidAuction(
             testConfig.sealedBidAuctionSaleTestConfig.saleInitParams,
-            testConfig.sealedBidAuctionSaleTestConfig.sealedBidAuctionSaleInitParams,
-            testConfig.sealedBidAuctionSaleTestConfig.vestingInitParams
+            testConfig.sealedBidAuctionSaleTestConfig.sealedBidAuctionSaleInitParams
         );
     }
 
@@ -154,8 +145,7 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
         vm.prank(nonOwner);
         legionSaleFactory.createSealedBidAuction(
             testConfig.sealedBidAuctionSaleTestConfig.saleInitParams,
-            testConfig.sealedBidAuctionSaleTestConfig.sealedBidAuctionSaleInitParams,
-            testConfig.sealedBidAuctionSaleTestConfig.vestingInitParams
+            testConfig.sealedBidAuctionSaleTestConfig.sealedBidAuctionSaleInitParams
         );
     }
 
@@ -168,7 +158,6 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: Constants.ONE_HOUR,
                 refundPeriodSeconds: Constants.TWO_WEEKS,
-                lockupPeriodSeconds: Constants.FORTY_DAYS,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -180,12 +169,7 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
                 addressRegistry: address(0),
                 referrerFeeReceiver: address(0)
             }),
-            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
-            })
+            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
 
         // Assert
@@ -195,8 +179,7 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
         vm.prank(legionBouncer);
         legionSaleFactory.createSealedBidAuction(
             testConfig.sealedBidAuctionSaleTestConfig.saleInitParams,
-            testConfig.sealedBidAuctionSaleTestConfig.sealedBidAuctionSaleInitParams,
-            testConfig.sealedBidAuctionSaleTestConfig.vestingInitParams
+            testConfig.sealedBidAuctionSaleTestConfig.sealedBidAuctionSaleInitParams
         );
     }
 
@@ -209,7 +192,6 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: 0,
                 refundPeriodSeconds: 0,
-                lockupPeriodSeconds: 0,
                 legionFeeOnCapitalRaisedBps: 0,
                 legionFeeOnTokensSoldBps: 0,
                 referrerFeeOnCapitalRaisedBps: 0,
@@ -221,12 +203,7 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: address(nonOwner)
             }),
-            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
-            })
+            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
 
         // Assert
@@ -236,8 +213,7 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
         vm.prank(legionBouncer);
         legionSaleFactory.createSealedBidAuction(
             testConfig.sealedBidAuctionSaleTestConfig.saleInitParams,
-            testConfig.sealedBidAuctionSaleTestConfig.sealedBidAuctionSaleInitParams,
-            testConfig.sealedBidAuctionSaleTestConfig.vestingInitParams
+            testConfig.sealedBidAuctionSaleTestConfig.sealedBidAuctionSaleInitParams
         );
     }
 
@@ -251,14 +227,13 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
         ILegionSealedBidAuctionSale.SealedBidAuctionSaleConfiguration memory _sealedBidAuctionSaleConfig =
             LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).sealedBidAuctionSaleConfiguration();
 
-        ILegionSale.LegionVestingConfiguration memory _vestingConfig =
+        ILegionVestingManager.LegionVestingConfig memory _vestingConfig =
             LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).vestingConfiguration();
 
         // Assert
         assertEq(_sealedBidAuctionSaleConfig.publicKey.x, PUBLIC_KEY.x);
         assertEq(_sealedBidAuctionSaleConfig.publicKey.y, PUBLIC_KEY.y);
 
-        assertEq(_vestingConfig.vestingDurationSeconds, Constants.ONE_YEAR);
-        assertEq(_vestingConfig.vestingCliffDurationSeconds, Constants.ONE_HOUR);
+        assertEq(_vestingConfig.vestingFactory, address(legionVestingFactory));
     }
 }

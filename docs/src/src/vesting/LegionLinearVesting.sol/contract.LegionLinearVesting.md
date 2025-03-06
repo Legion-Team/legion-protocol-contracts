@@ -1,5 +1,5 @@
 # LegionLinearVesting
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/e045131669c5801ab2e88b13e55002362a64c068/src/vesting/LegionLinearVesting.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/403bdd1306f0ded0348e98e53aacfa2a88287653/src/vesting/LegionLinearVesting.sol)
 
 **Inherits:**
 VestingWalletUpgradeable
@@ -99,4 +99,28 @@ Returns the cliff end timestamp.
 ```solidity
 function cliffEnd() public view returns (uint256);
 ```
+
+### _verifyValidVestingConfig
+
+Verify that the vesting configuration is valid.
+
+
+```solidity
+function _verifyValidVestingConfig(
+    uint256 vestingDurationSeconds,
+    uint256 vestingCliffDurationSeconds,
+    uint256 tokenAllocationOnTGERate
+)
+    internal
+    view
+    virtual;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`vestingDurationSeconds`|`uint256`|The duration of the vesting period in seconds|
+|`vestingCliffDurationSeconds`|`uint256`|The duration of the cliff period in seconds|
+|`tokenAllocationOnTGERate`|`uint256`|The token allocation on TGE rate|
+
 

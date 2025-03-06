@@ -84,12 +84,10 @@ interface ILegionSealedBidAuctionSale is ILegionSale {
      *
      * @param saleInitParams The Legion sale initialization parameters.
      * @param sealedBidAuctionSaleInitParams The sealed bid auction sale specific initialization parameters.
-     * @param vestingInitParams The vesting initialization parameters.
      */
     function initialize(
         LegionSaleInitializationParams calldata saleInitParams,
-        SealedBidAuctionSaleInitializationParams calldata sealedBidAuctionSaleInitParams,
-        LegionVestingInitializationParams calldata vestingInitParams
+        SealedBidAuctionSaleInitializationParams calldata sealedBidAuctionSaleInitParams
     )
         external;
 

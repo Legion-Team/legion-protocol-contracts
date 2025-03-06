@@ -9,6 +9,7 @@ import { Errors } from "../src/utils/Errors.sol";
 import { Constants } from "../src/utils/Constants.sol";
 import { ILegionSale } from "../src/interfaces/ILegionSale.sol";
 import { ILegionFixedPriceSale } from "../src/interfaces/ILegionFixedPriceSale.sol";
+import { ILegionVestingManager } from "../src/interfaces/vesting/ILegionVestingManager.sol";
 import { LegionAddressRegistry } from "../src/LegionAddressRegistry.sol";
 import { LegionFixedPriceSale } from "../src/LegionFixedPriceSale.sol";
 import { LegionFixedPriceSaleFactory } from "../src/factories/LegionFixedPriceSaleFactory.sol";
@@ -23,7 +24,6 @@ contract LegionFixedPriceSaleFactoryTest is Test {
     struct FixedPriceSaleTestConfig {
         ILegionSale.LegionSaleInitializationParams saleInitParams;
         ILegionFixedPriceSale.FixedPriceSaleInitializationParams fixedPriceSaleInitParams;
-        ILegionSale.LegionVestingInitializationParams vestingInitParams;
     }
 
     SaleTestConfig testConfig;
@@ -60,14 +60,12 @@ contract LegionFixedPriceSaleFactoryTest is Test {
      */
     function setFixedPriceSaleParams(
         ILegionSale.LegionSaleInitializationParams memory _saleInitParams,
-        ILegionFixedPriceSale.FixedPriceSaleInitializationParams memory _fixedPriceSaleInitParams,
-        ILegionSale.LegionVestingInitializationParams memory _vestingInitParams
+        ILegionFixedPriceSale.FixedPriceSaleInitializationParams memory _fixedPriceSaleInitParams
     )
         public
     {
         testConfig.fixedPriceSaleTestConfig.saleInitParams = _saleInitParams;
         testConfig.fixedPriceSaleTestConfig.fixedPriceSaleInitParams = _fixedPriceSaleInitParams;
-        testConfig.fixedPriceSaleTestConfig.vestingInitParams = _vestingInitParams;
     }
 
     /**
@@ -78,7 +76,6 @@ contract LegionFixedPriceSaleFactoryTest is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: Constants.ONE_HOUR,
                 refundPeriodSeconds: Constants.TWO_WEEKS,
-                lockupPeriodSeconds: Constants.FORTY_DAYS,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -94,19 +91,13 @@ contract LegionFixedPriceSaleFactoryTest is Test {
                 prefundPeriodSeconds: Constants.ONE_HOUR,
                 prefundAllocationPeriodSeconds: Constants.ONE_HOUR,
                 tokenPrice: 1e18
-            }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
             })
         );
 
         vm.prank(legionBouncer);
         legionFixedPriceSaleInstance = legionSaleFactory.createFixedPriceSale(
             testConfig.fixedPriceSaleTestConfig.saleInitParams,
-            testConfig.fixedPriceSaleTestConfig.fixedPriceSaleInitParams,
-            testConfig.fixedPriceSaleTestConfig.vestingInitParams
+            testConfig.fixedPriceSaleTestConfig.fixedPriceSaleInitParams
         );
     }
 
@@ -156,8 +147,7 @@ contract LegionFixedPriceSaleFactoryTest is Test {
         vm.prank(nonOwner);
         legionSaleFactory.createFixedPriceSale(
             testConfig.fixedPriceSaleTestConfig.saleInitParams,
-            testConfig.fixedPriceSaleTestConfig.fixedPriceSaleInitParams,
-            testConfig.fixedPriceSaleTestConfig.vestingInitParams
+            testConfig.fixedPriceSaleTestConfig.fixedPriceSaleInitParams
         );
     }
 
@@ -170,7 +160,6 @@ contract LegionFixedPriceSaleFactoryTest is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: Constants.ONE_HOUR,
                 refundPeriodSeconds: Constants.TWO_WEEKS,
-                lockupPeriodSeconds: Constants.FORTY_DAYS,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -186,11 +175,6 @@ contract LegionFixedPriceSaleFactoryTest is Test {
                 prefundPeriodSeconds: Constants.ONE_HOUR,
                 prefundAllocationPeriodSeconds: Constants.ONE_HOUR,
                 tokenPrice: 1e18
-            }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
             })
         );
 
@@ -201,8 +185,7 @@ contract LegionFixedPriceSaleFactoryTest is Test {
         vm.prank(legionBouncer);
         legionSaleFactory.createFixedPriceSale(
             testConfig.fixedPriceSaleTestConfig.saleInitParams,
-            testConfig.fixedPriceSaleTestConfig.fixedPriceSaleInitParams,
-            testConfig.fixedPriceSaleTestConfig.vestingInitParams
+            testConfig.fixedPriceSaleTestConfig.fixedPriceSaleInitParams
         );
     }
 
@@ -217,8 +200,7 @@ contract LegionFixedPriceSaleFactoryTest is Test {
         vm.prank(legionBouncer);
         legionSaleFactory.createFixedPriceSale(
             testConfig.fixedPriceSaleTestConfig.saleInitParams,
-            testConfig.fixedPriceSaleTestConfig.fixedPriceSaleInitParams,
-            testConfig.fixedPriceSaleTestConfig.vestingInitParams
+            testConfig.fixedPriceSaleTestConfig.fixedPriceSaleInitParams
         );
     }
 
@@ -229,14 +211,13 @@ contract LegionFixedPriceSaleFactoryTest is Test {
         // Arrange & Act
         prepareCreateLegionFixedPriceSale();
 
-        ILegionSale.LegionVestingConfiguration memory _vestingConfig =
+        ILegionVestingManager.LegionVestingConfig memory _vestingConfig =
             LegionFixedPriceSale(payable(legionFixedPriceSaleInstance)).vestingConfiguration();
         ILegionFixedPriceSale.FixedPriceSaleConfiguration memory _fixedPriceSaleConfig =
             LegionFixedPriceSale(payable(legionFixedPriceSaleInstance)).fixedPriceSaleConfiguration();
 
         // Assert
         assertEq(_fixedPriceSaleConfig.tokenPrice, 1e18);
-        assertEq(_vestingConfig.vestingDurationSeconds, Constants.ONE_YEAR);
-        assertEq(_vestingConfig.vestingCliffDurationSeconds, Constants.ONE_HOUR);
+        assertEq(_vestingConfig.vestingFactory, address(legionVestingFactory));
     }
 }
