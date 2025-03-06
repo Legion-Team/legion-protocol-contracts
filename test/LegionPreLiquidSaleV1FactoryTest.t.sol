@@ -78,9 +78,6 @@ contract LegionPreLiquidSaleV1FactoryTest is Test {
         setPreLiquidSaleParams(
             ILegionPreLiquidSaleV1.PreLiquidSaleInitializationParams({
                 refundPeriodSeconds: Constants.TWO_WEEKS,
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -164,9 +161,6 @@ contract LegionPreLiquidSaleV1FactoryTest is Test {
         setPreLiquidSaleParams(
             ILegionPreLiquidSaleV1.PreLiquidSaleInitializationParams({
                 refundPeriodSeconds: 0,
-                vestingDurationSeconds: 0,
-                vestingCliffDurationSeconds: 0,
-                tokenAllocationOnTGERate: 0,
                 legionFeeOnCapitalRaisedBps: 0,
                 legionFeeOnTokensSoldBps: 0,
                 referrerFeeOnCapitalRaisedBps: 0,

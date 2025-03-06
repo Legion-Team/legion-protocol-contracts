@@ -49,14 +49,12 @@ contract LegionFixedPriceSaleFactory is ILegionFixedPriceSaleFactory, Ownable {
      *
      * @param saleInitParams The Legion sale initialization parameters.
      * @param fixedPriceSaleInitParams The fixed price sale specific initialization parameters.
-     * @param vestingInitParams The vesting initialization parameters.
      *
      * @return fixedPriceSaleInstance The address of the FixedPriceSale instance deployed.
      */
     function createFixedPriceSale(
         ILegionSale.LegionSaleInitializationParams memory saleInitParams,
-        ILegionFixedPriceSale.FixedPriceSaleInitializationParams memory fixedPriceSaleInitParams,
-        ILegionSale.LegionVestingInitializationParams memory vestingInitParams
+        ILegionFixedPriceSale.FixedPriceSaleInitializationParams memory fixedPriceSaleInitParams
     )
         external
         onlyOwner
@@ -66,13 +64,9 @@ contract LegionFixedPriceSaleFactory is ILegionFixedPriceSaleFactory, Ownable {
         fixedPriceSaleInstance = payable(fixedPriceSaleTemplate.clone());
 
         // Emit NewFixedPriceSaleCreated
-        emit NewFixedPriceSaleCreated(
-            fixedPriceSaleInstance, saleInitParams, fixedPriceSaleInitParams, vestingInitParams
-        );
+        emit NewFixedPriceSaleCreated(fixedPriceSaleInstance, saleInitParams, fixedPriceSaleInitParams);
 
         // Initialize the LegionFixedPriceSale with the provided configuration
-        LegionFixedPriceSale(fixedPriceSaleInstance).initialize(
-            saleInitParams, fixedPriceSaleInitParams, vestingInitParams
-        );
+        LegionFixedPriceSale(fixedPriceSaleInstance).initialize(saleInitParams, fixedPriceSaleInitParams);
     }
 }

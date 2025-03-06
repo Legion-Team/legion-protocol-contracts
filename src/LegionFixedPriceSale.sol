@@ -37,12 +37,10 @@ contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
      *
      * @param saleInitParams The Legion sale initialization parameters.
      * @param fixedPriceSaleInitParams The fixed price sale specific initialization parameters.
-     * @param vestingInitParams The vesting initialization parameters.
      */
     function initialize(
         LegionSaleInitializationParams calldata saleInitParams,
-        FixedPriceSaleInitializationParams calldata fixedPriceSaleInitParams,
-        LegionVestingInitializationParams calldata vestingInitParams
+        FixedPriceSaleInitializationParams calldata fixedPriceSaleInitParams
     )
         external
         initializer
@@ -51,7 +49,7 @@ contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
         _verifyValidParams(fixedPriceSaleInitParams);
 
         // Init and set the sale common params
-        _setLegionSaleConfig(saleInitParams, vestingInitParams);
+        _setLegionSaleConfig(saleInitParams);
 
         // Set the fixed price sale specific configuration
         fixedPriceSaleConfig.tokenPrice = fixedPriceSaleInitParams.tokenPrice;
@@ -65,19 +63,6 @@ contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
             fixedPriceSaleConfig.prefundEndTime + fixedPriceSaleInitParams.prefundAllocationPeriodSeconds;
         saleConfig.endTime = saleConfig.startTime + saleInitParams.salePeriodSeconds;
         saleConfig.refundEndTime = saleConfig.endTime + saleInitParams.refundPeriodSeconds;
-
-        // Check if lockupPeriodSeconds is less than refundPeriodSeconds
-        // lockupEndTime should be at least refundEndTime
-        if (saleInitParams.lockupPeriodSeconds <= saleInitParams.refundPeriodSeconds) {
-            // If yes, set lockupEndTime to be refundEndTime
-            saleConfig.lockupEndTime = saleConfig.refundEndTime;
-        } else {
-            // If no, calculate the lockupEndTime
-            saleConfig.lockupEndTime = saleConfig.endTime + saleInitParams.lockupPeriodSeconds;
-        }
-
-        // Set the vestingStartTime to begin when lockupEndTime is reached
-        vestingConfig.vestingStartTime = saleConfig.lockupEndTime;
     }
 
     /**

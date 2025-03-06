@@ -13,6 +13,7 @@ import { Constants } from "../src/utils/Constants.sol";
 import { ILegionSale } from "../src/interfaces/ILegionSale.sol";
 import { ILegionSealedBidAuctionSale } from "../src/interfaces/ILegionSealedBidAuctionSale.sol";
 import { ILegionSealedBidAuctionSaleFactory } from "../src/interfaces/factories/ILegionSealedBidAuctionSaleFactory.sol";
+import { ILegionVestingManager } from "../src/interfaces/vesting/ILegionVestingManager.sol";
 import { LegionAddressRegistry } from "../src/LegionAddressRegistry.sol";
 import { LegionBouncer } from "../src/LegionBouncer.sol";
 import { LegionSealedBidAuctionSale } from "../src/LegionSealedBidAuctionSale.sol";
@@ -27,8 +28,9 @@ contract LegionSealedBidAuctionSaleTest is Test {
     struct SaleTestConfig {
         ILegionSale.LegionSaleInitializationParams saleInitParams;
         ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams sealedBidAuctionSaleInitParams;
-        ILegionSale.LegionVestingInitializationParams vestingInitParams;
     }
+
+    ILegionVestingManager.LegionInvestorVestingConfig investorVestingConfig;
 
     SaleTestConfig testConfig;
 
@@ -106,15 +108,13 @@ contract LegionSealedBidAuctionSaleTest is Test {
      */
     function setSaleParams(
         ILegionSale.LegionSaleInitializationParams memory _saleInitParams,
-        ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams memory _sealedBidAuctionSaleInitParams,
-        ILegionSale.LegionVestingInitializationParams memory _vestingInitParams
+        ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams memory _sealedBidAuctionSaleInitParams
     )
         public
     {
         testConfig.saleInitParams = ILegionSale.LegionSaleInitializationParams({
             salePeriodSeconds: _saleInitParams.salePeriodSeconds,
             refundPeriodSeconds: _saleInitParams.refundPeriodSeconds,
-            lockupPeriodSeconds: _saleInitParams.lockupPeriodSeconds,
             legionFeeOnCapitalRaisedBps: _saleInitParams.legionFeeOnCapitalRaisedBps,
             legionFeeOnTokensSoldBps: _saleInitParams.legionFeeOnTokensSoldBps,
             referrerFeeOnCapitalRaisedBps: _saleInitParams.referrerFeeOnCapitalRaisedBps,
@@ -130,12 +130,6 @@ contract LegionSealedBidAuctionSaleTest is Test {
         testConfig.sealedBidAuctionSaleInitParams = ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({
             publicKey: _sealedBidAuctionSaleInitParams.publicKey
         });
-
-        testConfig.vestingInitParams = ILegionSale.LegionVestingInitializationParams({
-            vestingDurationSeconds: _vestingInitParams.vestingDurationSeconds,
-            vestingCliffDurationSeconds: _vestingInitParams.vestingCliffDurationSeconds,
-            tokenAllocationOnTGERate: _vestingInitParams.tokenAllocationOnTGERate
-        });
     }
 
     /**
@@ -146,7 +140,6 @@ contract LegionSealedBidAuctionSaleTest is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: Constants.ONE_HOUR,
                 refundPeriodSeconds: Constants.TWO_WEEKS,
-                lockupPeriodSeconds: Constants.FORTY_DAYS,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -158,17 +151,12 @@ contract LegionSealedBidAuctionSaleTest is Test {
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: address(nonLegionAdmin)
             }),
-            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 100_000_000_000_000_000
-            })
+            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
 
         vm.prank(legionBouncer);
         legionSealedBidAuctionInstance = legionSaleFactory.createSealedBidAuction(
-            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams, testConfig.vestingInitParams
+            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams
         );
     }
 
@@ -354,15 +342,6 @@ contract LegionSealedBidAuctionSaleTest is Test {
     }
 
     /**
-     * @dev Helper method to get the lockup end time
-     */
-    function lockupEndTime() public view returns (uint256) {
-        ILegionSale.LegionSaleConfiguration memory _saleConfig =
-            LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).saleConfiguration();
-        return _saleConfig.lockupEndTime;
-    }
-
-    /**
      * @dev Helper method to get sale end time
      */
     function capitalRaised() public view returns (uint256 saleTotalCapitalRaised) {
@@ -383,15 +362,14 @@ contract LegionSealedBidAuctionSaleTest is Test {
         ILegionSealedBidAuctionSale.SealedBidAuctionSaleConfiguration memory _sealedBidAuctionSaleConfig =
             LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).sealedBidAuctionSaleConfiguration();
 
-        ILegionSale.LegionVestingConfiguration memory _vestingConfig =
+        ILegionVestingManager.LegionVestingConfig memory _vestingConfig =
             LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).vestingConfiguration();
 
         // Assert
         assertEq(_sealedBidAuctionSaleConfig.publicKey.x, PUBLIC_KEY.x);
         assertEq(_sealedBidAuctionSaleConfig.publicKey.y, PUBLIC_KEY.y);
 
-        assertEq(_vestingConfig.vestingDurationSeconds, Constants.ONE_YEAR);
-        assertEq(_vestingConfig.vestingCliffDurationSeconds, Constants.ONE_HOUR);
+        assertEq(_vestingConfig.vestingFactory, address(legionVestingFactory));
     }
 
     /**
@@ -403,7 +381,6 @@ contract LegionSealedBidAuctionSaleTest is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: Constants.ONE_HOUR,
                 refundPeriodSeconds: Constants.TWO_WEEKS,
-                lockupPeriodSeconds: Constants.TWO_WEEKS - 1,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -415,24 +392,19 @@ contract LegionSealedBidAuctionSaleTest is Test {
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: address(nonLegionAdmin)
             }),
-            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
-            })
+            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
 
         vm.prank(legionBouncer);
         legionSealedBidAuctionInstance = legionSaleFactory.createSealedBidAuction(
-            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams, testConfig.vestingInitParams
+            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams
         );
 
         ILegionSale.LegionSaleConfiguration memory _saleConfig =
             LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).saleConfiguration();
 
         // Assert
-        assertEq(_saleConfig.lockupEndTime, _saleConfig.refundEndTime);
+        assertEq(_saleConfig.refundEndTime, _saleConfig.refundEndTime);
     }
 
     /**
@@ -447,7 +419,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         // Act
         LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).initialize(
-            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams, testConfig.vestingInitParams
+            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams
         );
     }
 
@@ -463,7 +435,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         // Act
         LegionSealedBidAuctionSale(payable(sealedBidAuctionImplementation)).initialize(
-            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams, testConfig.vestingInitParams
+            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams
         );
     }
 
@@ -476,7 +448,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         // Act
         LegionSealedBidAuctionSale(sealedBidAuctionTemplate).initialize(
-            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams, testConfig.vestingInitParams
+            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams
         );
     }
 
@@ -489,7 +461,6 @@ contract LegionSealedBidAuctionSaleTest is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: Constants.ONE_HOUR,
                 refundPeriodSeconds: Constants.TWO_WEEKS,
-                lockupPeriodSeconds: Constants.FORTY_DAYS,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -501,12 +472,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
                 addressRegistry: address(0),
                 referrerFeeReceiver: address(0)
             }),
-            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
-            })
+            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
 
         // Assert
@@ -514,9 +480,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        legionSaleFactory.createSealedBidAuction(
-            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams, testConfig.vestingInitParams
-        );
+        legionSaleFactory.createSealedBidAuction(testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams);
     }
 
     /**
@@ -528,7 +492,6 @@ contract LegionSealedBidAuctionSaleTest is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: 0,
                 refundPeriodSeconds: 0,
-                lockupPeriodSeconds: 0,
                 legionFeeOnCapitalRaisedBps: 0,
                 legionFeeOnTokensSoldBps: 0,
                 referrerFeeOnCapitalRaisedBps: 0,
@@ -540,12 +503,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: address(nonLegionAdmin)
             }),
-            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
-            })
+            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
 
         // Assert
@@ -553,9 +511,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        legionSaleFactory.createSealedBidAuction(
-            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams, testConfig.vestingInitParams
-        );
+        legionSaleFactory.createSealedBidAuction(testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams);
     }
 
     /**
@@ -567,7 +523,6 @@ contract LegionSealedBidAuctionSaleTest is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: Constants.THREE_MONTHS + 1,
                 refundPeriodSeconds: Constants.TWO_WEEKS + 1,
-                lockupPeriodSeconds: Constants.SIX_MONTHS + 1,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -579,12 +534,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: address(nonLegionAdmin)
             }),
-            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
-            })
+            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
 
         // Assert
@@ -592,9 +542,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        legionSaleFactory.createSealedBidAuction(
-            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams, testConfig.vestingInitParams
-        );
+        legionSaleFactory.createSealedBidAuction(testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams);
     }
 
     /**
@@ -606,7 +554,6 @@ contract LegionSealedBidAuctionSaleTest is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: Constants.ONE_HOUR - 1,
                 refundPeriodSeconds: Constants.ONE_HOUR - 1,
-                lockupPeriodSeconds: Constants.ONE_HOUR - 1,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -618,12 +565,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: address(nonLegionAdmin)
             }),
-            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
-            })
+            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
 
         // Assert
@@ -631,9 +573,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        legionSaleFactory.createSealedBidAuction(
-            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams, testConfig.vestingInitParams
-        );
+        legionSaleFactory.createSealedBidAuction(testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams);
     }
 
     /**
@@ -645,7 +585,6 @@ contract LegionSealedBidAuctionSaleTest is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: Constants.ONE_HOUR - 1,
                 refundPeriodSeconds: Constants.ONE_HOUR - 1,
-                lockupPeriodSeconds: Constants.ONE_HOUR - 1,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -657,12 +596,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: address(nonLegionAdmin)
             }),
-            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.TEN_YEARS,
-                vestingCliffDurationSeconds: Constants.TEN_YEARS + 1,
-                tokenAllocationOnTGERate: 1e18 + 1
-            })
+            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
 
         // Assert
@@ -670,9 +604,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        legionSaleFactory.createSealedBidAuction(
-            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams, testConfig.vestingInitParams
-        );
+        legionSaleFactory.createSealedBidAuction(testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams);
     }
 
     /**
@@ -684,7 +616,6 @@ contract LegionSealedBidAuctionSaleTest is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: Constants.ONE_HOUR,
                 refundPeriodSeconds: Constants.TWO_WEEKS,
-                lockupPeriodSeconds: Constants.FORTY_DAYS,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -696,12 +627,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: address(nonLegionAdmin)
             }),
-            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: INVALID_PUBLIC_KEY_1 }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
-            })
+            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: INVALID_PUBLIC_KEY_1 })
         );
 
         // Assert
@@ -709,9 +635,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        legionSaleFactory.createSealedBidAuction(
-            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams, testConfig.vestingInitParams
-        );
+        legionSaleFactory.createSealedBidAuction(testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams);
     }
 
     /* ========== PAUSE TESTS ========== */
@@ -1712,7 +1636,6 @@ contract LegionSealedBidAuctionSaleTest is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: Constants.ONE_HOUR,
                 refundPeriodSeconds: Constants.TWO_WEEKS,
-                lockupPeriodSeconds: Constants.FORTY_DAYS,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 0,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -1724,17 +1647,12 @@ contract LegionSealedBidAuctionSaleTest is Test {
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: address(nonLegionAdmin)
             }),
-            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
-            })
+            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
 
         vm.prank(legionBouncer);
         legionSealedBidAuctionInstance = legionSaleFactory.createSealedBidAuction(
-            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams, testConfig.vestingInitParams
+            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams
         );
 
         prepareMintAndApproveProjectTokens();
@@ -1792,10 +1710,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
             claimTokensMerkleRoot, acceptedCapitalMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
-        vm.warp(lockupEndTime() + 1);
+        vm.warp(refundEndTime() + 1);
 
         vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelExpiredSale();
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelSale();
 
         // Assert
         vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
@@ -1885,7 +1803,6 @@ contract LegionSealedBidAuctionSaleTest is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: Constants.ONE_HOUR,
                 refundPeriodSeconds: Constants.TWO_WEEKS,
-                lockupPeriodSeconds: Constants.FORTY_DAYS,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -1897,17 +1814,12 @@ contract LegionSealedBidAuctionSaleTest is Test {
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: address(nonLegionAdmin)
             }),
-            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
-            })
+            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
 
         vm.prank(legionBouncer);
         legionSealedBidAuctionInstance = legionSaleFactory.createSealedBidAuction(
-            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams, testConfig.vestingInitParams
+            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams
         );
 
         vm.warp(refundEndTime() + 1);
@@ -1926,205 +1838,6 @@ contract LegionSealedBidAuctionSaleTest is Test {
         // Act
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
-    }
-
-    /* ========== CANCEL EXPIRED SALE TESTS ========== */
-
-    /**
-     * @dev Test Case: Successfully cancel the sale if the lockup period is over and no tokens have been supplied
-     */
-    function test_cancelExpiredSale_successfullyEmitsSaleCanceled() public {
-        // Arrange
-        prepareCreateLegionSealedBidAuction();
-
-        vm.warp(lockupEndTime() + 1);
-
-        // Assert
-        vm.expectEmit();
-        emit ILegionSale.SaleCanceled();
-
-        // Act
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelExpiredSale();
-    }
-
-    /**
-     * @dev Test Case: Attempt to cancel when tokens have been supplied
-     */
-    function test_cancelExpiredSale_revertsIfTokensSupplied() public {
-        // Arrange
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveProjectTokens();
-
-        vm.warp(refundEndTime() + 1);
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, acceptedCapitalMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
-        );
-
-        vm.prank(projectAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
-
-        vm.warp(lockupEndTime() + 1);
-
-        // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.TokensAlreadySupplied.selector));
-
-        // Act
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelExpiredSale();
-    }
-
-    /**
-     * @dev Test Case: Attempt to cancel when the sale has already been canceled
-     */
-    function test_cancelExpiredSale_revertsIfAlreadyCanceled() public {
-        // Arrange
-        prepareCreateLegionSealedBidAuction();
-
-        vm.warp(refundEndTime() + 1);
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, acceptedCapitalMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
-        );
-
-        vm.warp(lockupEndTime() + 1);
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelExpiredSale();
-
-        // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
-
-        // Act
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelExpiredSale();
-    }
-
-    /**
-     * @dev Test Case: Attempt to cancel when the lockup period is not over
-     */
-    function test_cancelExpiredSale_revertsIfLockupPeriodNotOver() public {
-        // Arrange
-        prepareCreateLegionSealedBidAuction();
-
-        vm.warp(lockupEndTime() - 1);
-
-        // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.LockupPeriodIsNotOver.selector));
-
-        // Act
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelExpiredSale();
-    }
-
-    /**
-     * @dev Test Case: Attempt to cancel when `askToken` is unavailable and results are published
-     */
-    function test_cancelExpiredSale_revertsIfAskTokenUnavailableAndResultsPublished() public {
-        // Arrange
-        prepareSealedBidData();
-
-        setSaleParams(
-            ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: Constants.ONE_HOUR,
-                refundPeriodSeconds: Constants.TWO_WEEKS,
-                lockupPeriodSeconds: Constants.FORTY_DAYS,
-                legionFeeOnCapitalRaisedBps: 250,
-                legionFeeOnTokensSoldBps: 250,
-                referrerFeeOnCapitalRaisedBps: 100,
-                referrerFeeOnTokensSoldBps: 100,
-                minimumInvestAmount: 1e6,
-                bidToken: address(bidToken),
-                askToken: address(0),
-                projectAdmin: address(projectAdmin),
-                addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: address(nonLegionAdmin)
-            }),
-            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
-            })
-        );
-
-        vm.prank(legionBouncer);
-        legionSealedBidAuctionInstance = legionSaleFactory.createSealedBidAuction(
-            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams, testConfig.vestingInitParams
-        );
-
-        vm.warp(refundEndTime() + 1);
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, acceptedCapitalMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
-        );
-
-        vm.warp(lockupEndTime() + 1);
-
-        // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleResultsAlreadyPublished.selector));
-
-        // Act
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelExpiredSale();
-    }
-
-    /**
-     * @dev Test Case: Cancel when `askToken` is unavailable and results are not published
-     */
-    function test_cancelExpiredSale_successfullyCancelIfAskTokenUnavailableAndResultsNotPublished() public {
-        // Arrange
-        setSaleParams(
-            ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: Constants.ONE_HOUR,
-                refundPeriodSeconds: Constants.TWO_WEEKS,
-                lockupPeriodSeconds: Constants.FORTY_DAYS,
-                legionFeeOnCapitalRaisedBps: 250,
-                legionFeeOnTokensSoldBps: 250,
-                referrerFeeOnCapitalRaisedBps: 100,
-                referrerFeeOnTokensSoldBps: 100,
-                minimumInvestAmount: 1e6,
-                bidToken: address(bidToken),
-                askToken: address(0),
-                projectAdmin: address(projectAdmin),
-                addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: address(nonLegionAdmin)
-            }),
-            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
-            })
-        );
-
-        vm.prank(legionBouncer);
-        legionSealedBidAuctionInstance = legionSaleFactory.createSealedBidAuction(
-            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams, testConfig.vestingInitParams
-        );
-
-        vm.warp(lockupEndTime() + 1);
-
-        // Assert
-        vm.expectEmit();
-        emit ILegionSale.SaleCanceled();
-
-        // Act
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelExpiredSale();
     }
 
     /* ========== WITHDRAW RAISED CAPITAL TESTS ========== */
@@ -2183,7 +1896,6 @@ contract LegionSealedBidAuctionSaleTest is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: Constants.ONE_HOUR,
                 refundPeriodSeconds: Constants.TWO_WEEKS,
-                lockupPeriodSeconds: Constants.FORTY_DAYS,
                 legionFeeOnCapitalRaisedBps: 0,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -2195,17 +1907,12 @@ contract LegionSealedBidAuctionSaleTest is Test {
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: address(nonLegionAdmin)
             }),
-            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
-            })
+            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
 
         vm.prank(legionBouncer);
         legionSealedBidAuctionInstance = legionSaleFactory.createSealedBidAuction(
-            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams, testConfig.vestingInitParams
+            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams
         );
 
         prepareMintAndApproveInvestorTokens();
@@ -2342,10 +2049,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
         // Arrange
         prepareCreateLegionSealedBidAuction();
 
-        vm.warp(lockupEndTime() + 1);
+        vm.warp(refundEndTime() + 1);
 
         vm.prank(nonProjectAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelExpiredSale();
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelSale();
 
         // Assert
         vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
@@ -2589,12 +2296,12 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
 
-        vm.warp(lockupEndTime() + 1);
+        vm.warp(refundEndTime() + 1);
 
         // Act
         vm.prank(investor2);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).claimTokenAllocation(
-            1000 * 1e18, claimProofInvestor2
+            1000 * 1e18, investorVestingConfig, claimProofInvestor2
         );
 
         ILegionSale.InvestorPosition memory _investorPosition =
@@ -2630,7 +2337,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
             claimTokensMerkleRoot, acceptedCapitalMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
-        vm.warp(lockupEndTime() - 1);
+        vm.warp(refundEndTime() - 1);
 
         // Assert
         vm.expectRevert(abi.encodeWithSelector(Errors.LockupPeriodIsNotOver.selector));
@@ -2638,7 +2345,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         // Act
         vm.prank(investor2);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).claimTokenAllocation(
-            1000 * 1e18, claimProofInvestor2
+            1000 * 1e18, investorVestingConfig, claimProofInvestor2
         );
     }
 
@@ -2668,7 +2375,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
             claimTokensMerkleRoot, acceptedCapitalMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
-        vm.warp(lockupEndTime() + 1);
+        vm.warp(refundEndTime() + 1);
 
         // Assert
         vm.expectRevert(abi.encodeWithSelector(Errors.NotInClaimWhitelist.selector, investor2));
@@ -2676,7 +2383,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         // Act
         vm.prank(investor2);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).claimTokenAllocation(
-            2000 * 1e18, claimProofInvestor2
+            2000 * 1e18, investorVestingConfig, claimProofInvestor2
         );
     }
 
@@ -2710,11 +2417,11 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
 
-        vm.warp(lockupEndTime() + 1);
+        vm.warp(refundEndTime() + 1);
 
         vm.prank(investor2);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).claimTokenAllocation(
-            1000 * 1e18, claimProofInvestor2
+            1000 * 1e18, investorVestingConfig, claimProofInvestor2
         );
 
         // Assert
@@ -2723,7 +2430,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         // Act
         vm.prank(investor2);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).claimTokenAllocation(
-            1000 * 1e18, claimProofInvestor2
+            1000 * 1e18, investorVestingConfig, claimProofInvestor2
         );
     }
 
@@ -2754,10 +2461,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
             claimTokensMerkleRoot, acceptedCapitalMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
-        vm.warp(lockupEndTime() + 1);
+        vm.warp(refundEndTime() + 1);
 
         vm.prank(nonProjectAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelExpiredSale();
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelSale();
 
         // Assert
         vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
@@ -2765,7 +2472,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         // Act
         vm.prank(investor2);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).claimTokenAllocation(
-            1000 * 1e18, claimProofInvestor2
+            1000 * 1e18, investorVestingConfig, claimProofInvestor2
         );
     }
 
@@ -2781,7 +2488,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         claimProofInvestor2[0] = bytes32(0x2054afa66e2c4ccd7ade9889c78d8cf4a46f716980dafb935d11ce1e564fa39c);
         claimProofInvestor2[1] = bytes32(0xa2144e298b31c1e3aa896eab357fd937fb7a574cc7237959b432e96a9423492c);
 
-        vm.warp(lockupEndTime() + 1);
+        vm.warp(refundEndTime() + 1);
 
         // Assert
         vm.expectRevert(abi.encodeWithSelector(Errors.SaleResultsNotPublished.selector));
@@ -2789,7 +2496,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         // Act
         vm.prank(investor2);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).claimTokenAllocation(
-            1000 * 1e18, claimProofInvestor2
+            1000 * 1e18, investorVestingConfig, claimProofInvestor2
         );
     }
 
@@ -2802,7 +2509,6 @@ contract LegionSealedBidAuctionSaleTest is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: Constants.ONE_HOUR,
                 refundPeriodSeconds: Constants.TWO_WEEKS,
-                lockupPeriodSeconds: Constants.FORTY_DAYS,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -2814,17 +2520,12 @@ contract LegionSealedBidAuctionSaleTest is Test {
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: address(nonLegionAdmin)
             }),
-            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
-            })
+            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
 
         vm.prank(legionBouncer);
         legionSealedBidAuctionInstance = legionSaleFactory.createSealedBidAuction(
-            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams, testConfig.vestingInitParams
+            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams
         );
 
         bytes32[] memory claimProofInvestor2 = new bytes32[](2);
@@ -2838,7 +2539,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         // Act
         vm.prank(investor2);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).claimTokenAllocation(
-            1000 * 1e18, claimProofInvestor2
+            1000 * 1e18, investorVestingConfig, claimProofInvestor2
         );
     }
 
@@ -2874,14 +2575,14 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
 
-        vm.warp(lockupEndTime() + 1);
+        vm.warp(refundEndTime() + 1);
 
         vm.prank(investor2);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).claimTokenAllocation(
-            1000 * 1e18, claimProofInvestor2
+            1000 * 1e18, investorVestingConfig, claimProofInvestor2
         );
 
-        vm.warp(lockupEndTime() + Constants.ONE_HOUR + 1);
+        vm.warp(refundEndTime() + Constants.ONE_HOUR + 1);
 
         // Act
         vm.prank(investor2);
@@ -2915,7 +2616,6 @@ contract LegionSealedBidAuctionSaleTest is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: Constants.ONE_HOUR,
                 refundPeriodSeconds: Constants.TWO_WEEKS,
-                lockupPeriodSeconds: Constants.FORTY_DAYS,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -2927,17 +2627,12 @@ contract LegionSealedBidAuctionSaleTest is Test {
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: address(nonLegionAdmin)
             }),
-            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
-            })
+            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
 
         vm.prank(legionBouncer);
         legionSealedBidAuctionInstance = legionSaleFactory.createSealedBidAuction(
-            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams, testConfig.vestingInitParams
+            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams
         );
 
         // Assert
