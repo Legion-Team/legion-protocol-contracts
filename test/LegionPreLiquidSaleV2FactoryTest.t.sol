@@ -22,7 +22,6 @@ contract LegionPreLiquidSaleV2FactoryTest is Test {
 
     struct PreLiquidSaleTestConfig {
         ILegionSale.LegionSaleInitializationParams saleInitParams;
-        ILegionSale.LegionVestingInitializationParams vestingInitParams;
     }
 
     SaleTestConfig testConfig;
@@ -59,14 +58,8 @@ contract LegionPreLiquidSaleV2FactoryTest is Test {
     /**
      * @notice Helper method: Set the pre-liquid sale configuration
      */
-    function setPreLiquidSaleParams(
-        ILegionSale.LegionSaleInitializationParams memory _saleInitParams,
-        ILegionSale.LegionVestingInitializationParams memory _vestingInitParams
-    )
-        public
-    {
+    function setPreLiquidSaleParams(ILegionSale.LegionSaleInitializationParams memory _saleInitParams) public {
         testConfig.preLiquidSaleTestConfig.saleInitParams = _saleInitParams;
-        testConfig.preLiquidSaleTestConfig.vestingInitParams = _vestingInitParams;
     }
 
     /**
@@ -77,7 +70,6 @@ contract LegionPreLiquidSaleV2FactoryTest is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: Constants.ONE_HOUR,
                 refundPeriodSeconds: Constants.TWO_WEEKS,
-                lockupPeriodSeconds: Constants.FORTY_DAYS,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -88,18 +80,12 @@ contract LegionPreLiquidSaleV2FactoryTest is Test {
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: address(nonOwner)
-            }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
             })
         );
 
         vm.prank(legionBouncer);
-        legionPreLiquidSaleInstance = legionSaleFactory.createPreLiquidSaleV2(
-            testConfig.preLiquidSaleTestConfig.saleInitParams, testConfig.preLiquidSaleTestConfig.vestingInitParams
-        );
+        legionPreLiquidSaleInstance =
+            legionSaleFactory.createPreLiquidSaleV2(testConfig.preLiquidSaleTestConfig.saleInitParams);
     }
 
     /**
@@ -146,9 +132,7 @@ contract LegionPreLiquidSaleV2FactoryTest is Test {
 
         // Act
         vm.prank(nonOwner);
-        legionSaleFactory.createPreLiquidSaleV2(
-            testConfig.preLiquidSaleTestConfig.saleInitParams, testConfig.preLiquidSaleTestConfig.vestingInitParams
-        );
+        legionSaleFactory.createPreLiquidSaleV2(testConfig.preLiquidSaleTestConfig.saleInitParams);
     }
 
     /**
@@ -160,9 +144,7 @@ contract LegionPreLiquidSaleV2FactoryTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        legionSaleFactory.createPreLiquidSaleV2(
-            testConfig.preLiquidSaleTestConfig.saleInitParams, testConfig.preLiquidSaleTestConfig.vestingInitParams
-        );
+        legionSaleFactory.createPreLiquidSaleV2(testConfig.preLiquidSaleTestConfig.saleInitParams);
     }
 
     /**
@@ -174,7 +156,6 @@ contract LegionPreLiquidSaleV2FactoryTest is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: 0,
                 refundPeriodSeconds: 0,
-                lockupPeriodSeconds: 0,
                 legionFeeOnCapitalRaisedBps: 0,
                 legionFeeOnTokensSoldBps: 0,
                 referrerFeeOnCapitalRaisedBps: 0,
@@ -185,11 +166,6 @@ contract LegionPreLiquidSaleV2FactoryTest is Test {
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: address(nonOwner)
-            }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
             })
         );
 
@@ -198,9 +174,7 @@ contract LegionPreLiquidSaleV2FactoryTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        legionSaleFactory.createPreLiquidSaleV2(
-            testConfig.preLiquidSaleTestConfig.saleInitParams, testConfig.preLiquidSaleTestConfig.vestingInitParams
-        );
+        legionSaleFactory.createPreLiquidSaleV2(testConfig.preLiquidSaleTestConfig.saleInitParams);
     }
 
     /**

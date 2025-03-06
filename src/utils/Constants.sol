@@ -28,14 +28,8 @@ library Constants {
     /// @dev Constant representing two weeks in seconds
     uint256 internal constant TWO_WEEKS = 1_209_600;
 
-    /// @dev Constant representing forty days in seconds
-    uint256 internal constant FORTY_DAYS = 3_456_000;
-
     /// @dev Constant representing 3 months in seconds.
     uint256 internal constant THREE_MONTHS = 7_776_000;
-
-    /// @dev Constant representing 6 months in seconds.
-    uint256 internal constant SIX_MONTHS = 15_780_000;
 
     /// @dev Constant representing 1 year in seconds.
     uint256 internal constant ONE_YEAR = 31_536_000;

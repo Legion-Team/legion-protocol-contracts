@@ -25,6 +25,7 @@ import { SafeTransferLib } from "@solady/src/utils/SafeTransferLib.sol";
 
 import { Constants } from "./utils/Constants.sol";
 import { Errors } from "./utils/Errors.sol";
+import { LegionVestingManager } from "./vesting/LegionVestingManager.sol";
 import { ILegionAddressRegistry } from "./interfaces/ILegionAddressRegistry.sol";
 import { ILegionSale } from "./interfaces/ILegionSale.sol";
 import { ILegionLinearVesting } from "./interfaces/vesting/ILegionLinearVesting.sol";
@@ -35,7 +36,7 @@ import { ILegionVestingFactory } from "./interfaces/factories/ILegionVestingFact
  * @author Legion
  * @notice A contract used for managing token sales in the Legion Protocol
  */
-abstract contract LegionSale is ILegionSale, Initializable, Pausable {
+abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable, Pausable {
     using ECDSA for bytes32;
     using MessageHashUtils for bytes32;
 
@@ -44,9 +45,6 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
 
     /// @dev A struct describing the sale addresses configuration.
     LegionSaleAddressConfiguration internal addressConfig;
-
-    /// @dev A struct describing the vesting configuration.
-    LegionVestingConfiguration internal vestingConfig;
 
     /// @dev A struct describing the sale status.
     LegionSaleStatus internal saleStatus;
@@ -190,10 +188,12 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
      * @notice Claims the investor token allocation.
      *
      * @param amount The amount to be distributed.
+     * @param investorVestingConfig The vesting configuration for the investor.
      * @param proof The merkle proof verification for claiming.
      */
     function claimTokenAllocation(
         uint256 amount,
+        LegionVestingManager.LegionInvestorVestingConfig calldata investorVestingConfig,
         bytes32[] calldata proof
     )
         external
@@ -201,23 +201,29 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
         askTokenAvailable
         whenNotPaused
     {
+        // Verify that the sale is not canceled
+        _verifySaleNotCanceled();
+
+        // Verify that the vesting configuration is valid
+        _verifyValidLinearVestingConfig(investorVestingConfig);
+
+        // Verify that the lockup period is over
+        _verifyRefundPeriodIsOver();
+
         // Verify that sales results have been published
         _verifySaleResultsArePublished();
 
         // Verify that the investor is eligible to claim the requested amount
-        _verifyCanClaimTokenAllocation(msg.sender, amount, proof);
+        _verifyCanClaimTokenAllocation(msg.sender, amount, investorVestingConfig, proof);
 
-        // Verify that the sale is not canceled
-        _verifySaleNotCanceled();
-
-        // Verify that the lockup period is over
-        _verifyLockupPeriodIsOver();
+        /// Load the investor position
+        InvestorPosition storage position = investorPositions[msg.sender];
 
         // Mark that the token amount has been settled
-        investorPositions[msg.sender].hasSettled = true;
+        position.hasSettled = true;
 
         // Calculate the amount to be distributed on claim
-        uint256 amountToDistributeOnClaim = amount * vestingConfig.tokenAllocationOnTGERate / 1e18;
+        uint256 amountToDistributeOnClaim = amount * investorVestingConfig.tokenAllocationOnTGERate / 1e18;
 
         // Calculate the remaining amount to be vested
         uint256 amountToBeVested = amount - amountToDistributeOnClaim;
@@ -228,15 +234,10 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
         // Deploy vesting and distribute tokens only if there is anything to distribute
         if (amountToBeVested != 0) {
             // Deploy a linear vesting schedule contract
-            address payable vestingAddress = _createVesting(
-                msg.sender,
-                uint64(vestingConfig.vestingStartTime),
-                uint64(vestingConfig.vestingDurationSeconds),
-                uint64(vestingConfig.vestingCliffDurationSeconds)
-            );
+            address payable vestingAddress = _createVesting(investorVestingConfig);
 
             // Save the vesting address for the investor
-            investorPositions[msg.sender].vestingAddress = vestingAddress;
+            position.vestingAddress = vestingAddress;
 
             // Transfer the allocated amount of tokens for distribution
             SafeTransferLib.safeTransfer(addressConfig.askToken, vestingAddress, amountToBeVested);
@@ -316,11 +317,11 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
         askTokenAvailable
         whenNotPaused
     {
-        // Verify that tokens can be supplied for distribution
-        _verifyCanSupplyTokens(amount);
-
         // Verify that the sale is not canceled
         _verifySaleNotCanceled();
+
+        // Verify that tokens can be supplied for distribution
+        _verifyCanSupplyTokens(amount);
 
         // Verify that tokens have not been supplied
         _verifyTokensNotSupplied();
@@ -383,36 +384,10 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
      */
     function cancelSale() public virtual onlyProject whenNotPaused {
         // Allow the Project to cancel the sale at any time until results are published
-        // Results are published after the refund period is over
         _verifySaleResultsNotPublished();
 
         // Verify sale has not already been canceled
         _verifySaleNotCanceled();
-
-        // Mark sale as canceled
-        saleStatus.isCanceled = true;
-
-        // Emit SaleCanceled
-        emit SaleCanceled();
-    }
-
-    /**
-     * @notice Cancels a sale in case the project has not supplied tokens after the lockup period is over.
-     */
-    function cancelExpiredSale() external virtual whenNotPaused {
-        // Verify that the lockup period is over
-        _verifyLockupPeriodIsOver();
-
-        // Verify sale has not already been canceled
-        _verifySaleNotCanceled();
-
-        if (addressConfig.askToken != address(0)) {
-            // Verify that no tokens have been supplied by the project
-            _verifyTokensNotSupplied();
-        } else {
-            // Verify that the sale results have not been published
-            _verifySaleResultsNotPublished();
-        }
 
         // Mark sale as canceled
         saleStatus.isCanceled = true;
@@ -498,7 +473,7 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
     /**
      * @notice Returns the vesting configuration.
      */
-    function vestingConfiguration() external view virtual returns (LegionVestingConfiguration memory) {
+    function vestingConfiguration() external view virtual returns (LegionVestingConfig memory) {
         return vestingConfig;
     }
 
@@ -519,12 +494,36 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
     }
 
     /**
+     * @notice Returns the investor vesting status.
+     *
+     * @param investor The address of the investor.
+     */
+    function investorVestingStatus(address investor)
+        external
+        view
+        returns (LegionInvestorVestingStatus memory vestingStatus)
+    {
+        /// Get the investor position details
+        address investorVestingAddress = investorPositions[investor].vestingAddress;
+
+        // Return the investor vesting status
+        investorVestingAddress != address(0)
+            ? vestingStatus = LegionInvestorVestingStatus(
+                ILegionLinearVesting(investorVestingAddress).start(),
+                ILegionLinearVesting(investorVestingAddress).end(),
+                ILegionLinearVesting(investorVestingAddress).cliffEnd(),
+                ILegionLinearVesting(investorVestingAddress).duration(),
+                ILegionLinearVesting(investorVestingAddress).released(),
+                ILegionLinearVesting(investorVestingAddress).releasable(),
+                ILegionLinearVesting(investorVestingAddress).vestedAmount(addressConfig.askToken, uint64(block.timestamp))
+            )
+            : vestingStatus;
+    }
+
+    /**
      * @notice Sets the sale and vesting params.
      */
-    function _setLegionSaleConfig(
-        LegionSaleInitializationParams calldata saleInitParams,
-        LegionVestingInitializationParams calldata vestingInitParams
-    )
+    function _setLegionSaleConfig(LegionSaleInitializationParams calldata saleInitParams)
         internal
         virtual
         onlyInitializing
@@ -545,14 +544,6 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
         addressConfig.projectAdmin = saleInitParams.projectAdmin;
         addressConfig.addressRegistry = saleInitParams.addressRegistry;
         addressConfig.referrerFeeReceiver = saleInitParams.referrerFeeReceiver;
-
-        // Set the vesting configuration
-        vestingConfig.vestingDurationSeconds = vestingInitParams.vestingDurationSeconds;
-        vestingConfig.vestingCliffDurationSeconds = vestingInitParams.vestingCliffDurationSeconds;
-        vestingConfig.tokenAllocationOnTGERate = vestingInitParams.tokenAllocationOnTGERate;
-
-        /// Verify that the vesting configuration is valid
-        _verifyValidVestingConfig();
 
         // Cache Legion addresses from `LegionAddressRegistry`
         _syncLegionAddresses();
@@ -582,41 +573,17 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
     }
 
     /**
-     * @notice Create a vesting schedule contract.
-     *
-     * @param _beneficiary The beneficiary.
-     * @param _startTimestamp The Unix timestamp when the vesting starts.
-     * @param _durationSeconds The duration in seconds.
-     * @param _cliffDurationSeconds The cliff duration in seconds.
-     *
-     * @return vestingInstance The address of the deployed vesting instance.
-     */
-    function _createVesting(
-        address _beneficiary,
-        uint64 _startTimestamp,
-        uint64 _durationSeconds,
-        uint64 _cliffDurationSeconds
-    )
-        internal
-        virtual
-        returns (address payable vestingInstance)
-    {
-        // Deploy a vesting schedule instance
-        vestingInstance = ILegionVestingFactory(vestingConfig.vestingFactory).createLinearVesting(
-            _beneficiary, _startTimestamp, _durationSeconds, _cliffDurationSeconds
-        );
-    }
-
-    /**
      * @notice Verify if an investor is eligible to claim tokens allocated from the sale.
      *
      * @param _investor The address of the investor.
      * @param _amount The amount to claim.
+     * @param investorVestingConfig The vesting configuration for the investor.
      * @param _proof The Merkle proof that the investor is part of the whitelist.
      */
     function _verifyCanClaimTokenAllocation(
         address _investor,
         uint256 _amount,
+        LegionVestingManager.LegionInvestorVestingConfig calldata investorVestingConfig,
         bytes32[] calldata _proof
     )
         internal
@@ -624,7 +591,7 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
         virtual
     {
         // Generate the merkle leaf
-        bytes32 leaf = keccak256(bytes.concat(keccak256(abi.encode(_investor, _amount))));
+        bytes32 leaf = keccak256(bytes.concat(keccak256(abi.encode(_investor, _amount, investorVestingConfig))));
 
         // Load the investor position
         InvestorPosition memory position = investorPositions[_investor];
@@ -700,13 +667,6 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
      */
     function _verifyRefundPeriodIsNotOver() internal view virtual {
         if (block.timestamp >= saleConfig.refundEndTime) revert Errors.RefundPeriodIsOver();
-    }
-
-    /**
-     * @notice Verify that the lockup period is over.
-     */
-    function _verifyLockupPeriodIsOver() internal view virtual {
-        if (block.timestamp < saleConfig.lockupEndTime) revert Errors.LockupPeriodIsNotOver();
     }
 
     /**
@@ -816,16 +776,14 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
         }
 
         // Check for zero values provided
-        if (
-            saleInitParams.salePeriodSeconds == 0 || saleInitParams.refundPeriodSeconds == 0
-                || saleInitParams.lockupPeriodSeconds == 0
-        ) revert Errors.ZeroValueProvided();
+        if (saleInitParams.salePeriodSeconds == 0 || saleInitParams.refundPeriodSeconds == 0) {
+            revert Errors.ZeroValueProvided();
+        }
 
         // Check if sale, refund and lockup periods are longer than allowed
         if (
             saleInitParams.salePeriodSeconds > Constants.THREE_MONTHS
                 || saleInitParams.refundPeriodSeconds > Constants.TWO_WEEKS
-                || saleInitParams.lockupPeriodSeconds > Constants.SIX_MONTHS
         ) {
             revert Errors.InvalidPeriodConfig();
         }
@@ -834,22 +792,8 @@ abstract contract LegionSale is ILegionSale, Initializable, Pausable {
         if (
             saleInitParams.salePeriodSeconds < Constants.ONE_HOUR
                 || saleInitParams.refundPeriodSeconds < Constants.ONE_HOUR
-                || saleInitParams.lockupPeriodSeconds < Constants.ONE_HOUR
         ) {
             revert Errors.InvalidPeriodConfig();
         }
-    }
-
-    /**
-     * @notice Verify that the vesting configuration is valid.
-     */
-    function _verifyValidVestingConfig() internal view virtual {
-        /// Check if vesting duration is no more than 10 years, if vesting cliff duration is not more than vesting
-        /// duration or the token allocation on TGE rate is no more than 100%
-        if (
-            vestingConfig.vestingDurationSeconds > Constants.TEN_YEARS
-                || vestingConfig.vestingCliffDurationSeconds > vestingConfig.vestingDurationSeconds
-                || vestingConfig.tokenAllocationOnTGERate > 1e18
-        ) revert Errors.InvalidVestingConfig();
     }
 }

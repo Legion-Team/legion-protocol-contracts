@@ -1,5 +1,5 @@
 # Errors
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/e045131669c5801ab2e88b13e55002362a64c068/src/utils/Errors.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/a0becaf0413338ea78e3b0a0ce4527f7e1695849/src/utils/Errors.sol)
 
 **Author:**
 Legion
@@ -262,14 +262,6 @@ Throws when an invalid bid private key is provided to decrypt a bid.
 error InvalidBidPrivateKey();
 ```
 
-### LockupPeriodIsNotOver
-Throws when the lockup period is not over.
-
-
-```solidity
-error LockupPeriodIsNotOver();
-```
-
 ### NotInClaimWhitelist
 Throws when the investor is not in the claim whitelist for tokens.
 
@@ -328,14 +320,6 @@ Throws when capital is pledged during the pre-fund allocation period.
 
 ```solidity
 error PrefundAllocationPeriodNotEnded();
-```
-
-### ProjectHasWithdrawnCapital
-Throws when the Project has withdrawn capital.
-
-
-```solidity
-error ProjectHasWithdrawnCapital();
 ```
 
 ### PrivateKeyAlreadyPublished

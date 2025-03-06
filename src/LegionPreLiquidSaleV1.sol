@@ -25,6 +25,7 @@ import { SafeTransferLib } from "@solady/src/utils/SafeTransferLib.sol";
 
 import { Constants } from "./utils/Constants.sol";
 import { Errors } from "./utils/Errors.sol";
+import { LegionVestingManager } from "./vesting/LegionVestingManager.sol";
 import { ILegionAddressRegistry } from "./interfaces/ILegionAddressRegistry.sol";
 import { ILegionPreLiquidSaleV1 } from "./interfaces/ILegionPreLiquidSaleV1.sol";
 import { ILegionLinearVesting } from "./interfaces/vesting/ILegionLinearVesting.sol";
@@ -34,15 +35,12 @@ import { ILegionVestingFactory } from "./interfaces/factories/ILegionVestingFact
  * @title Legion Pre-Liquid Sale V1
  * @notice A contract used to execute pre-liquid sales of ERC20 tokens before TGE
  */
-contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausable {
+contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, LegionVestingManager, Initializable, Pausable {
     using ECDSA for bytes32;
     using MessageHashUtils for bytes32;
 
     /// @dev A struct describing the sale configuration.
     PreLiquidSaleConfig internal saleConfig;
-
-    /// @dev A struct describing the vesting configuration.
-    PreLiquidSaleVestingConfig internal vestingConfig;
 
     /// @dev A struct describing the sale status.
     PreLiquidSaleStatus internal saleStatus;
@@ -111,15 +109,13 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
      * @param investAmount The amount of capital the investor is allowed to invest, according to the SAFT.
      * @param tokenAllocationRate The token allocation the investor will receive as a percentage of totalSupply,
      * represented in 18 decimals precision.
-     * @param saftHash The hash of the Simple Agreement for Future Tokens (SAFT) signed by the investor.
-     * @param signature The signature proving that the investor is allowed to participate.
+     * @param investSignature The signature proving that the investor is allowed to participate.
      */
     function invest(
         uint256 amount,
         uint256 investAmount,
         uint256 tokenAllocationRate,
-        bytes32 saftHash,
-        bytes memory signature
+        bytes memory investSignature
     )
         external
         whenNotPaused
@@ -134,7 +130,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
         _verifyHasNotRefunded();
 
         /// Verify that the signature has not been used
-        _verifySignatureNotUsed(signature);
+        _verifySignatureNotUsed(investSignature);
 
         /// Load the investor position
         InvestorPosition storage position = investorPositions[msg.sender];
@@ -146,33 +142,16 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
         position.investedCapital += amount;
 
         /// Mark the signature as used
-        usedSignatures[msg.sender][signature] = true;
+        usedSignatures[msg.sender][investSignature] = true;
 
-        // Cache the capital invest timestamp
-        if (position.cachedInvestTimestamp == 0) {
-            position.cachedInvestTimestamp = block.timestamp;
-        }
-
-        /// Cache the SAFT amount the investor is allowed to invest
-        if (position.cachedInvestAmount != investAmount) {
-            position.cachedInvestAmount = investAmount;
-        }
-
-        /// Cache the token allocation rate in 18 decimals precision
-        if (position.cachedTokenAllocationRate != tokenAllocationRate) {
-            position.cachedTokenAllocationRate = tokenAllocationRate;
-        }
-
-        /// Cache the hash of the SAFT signed by the investor
-        if (position.cachedSAFTHash != saftHash) {
-            position.cachedSAFTHash = saftHash;
-        }
+        /// Update the investor position
+        _updateInvestorPosition(investAmount, tokenAllocationRate);
 
         /// Verify that the investor position is valid
-        _verifyValidPosition(signature, SaleAction.INVEST);
+        _verifyValidPosition(investSignature, SaleAction.INVEST);
 
         /// Emit successfully CapitalInvested
-        emit CapitalInvested(amount, msg.sender, tokenAllocationRate, saftHash, block.timestamp);
+        emit CapitalInvested(amount, msg.sender, tokenAllocationRate, block.timestamp);
 
         /// Transfer the invested capital to the contract
         SafeTransferLib.safeTransferFrom(saleConfig.bidToken, msg.sender, address(this), amount);
@@ -223,13 +202,11 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
      *
      * @param _askToken The address of the token distributed to investors.
      * @param _askTokenTotalSupply The total supply of the token distributed to investors.
-     * @param _vestingStartTime The Unix timestamp (seconds) of the block when the vesting starts.
      * @param _totalTokensAllocated The allocated token amount for distribution to investors.
      */
     function publishTgeDetails(
         address _askToken,
         uint256 _askTokenTotalSupply,
-        uint256 _vestingStartTime,
         uint256 _totalTokensAllocated
     )
         external
@@ -251,14 +228,11 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
         /// Set the total supply of the token distributed to investors
         saleStatus.askTokenTotalSupply = _askTokenTotalSupply;
 
-        /// Set the vesting start time block timestamp
-        vestingConfig.vestingStartTime = _vestingStartTime;
-
         /// Set the total allocated amount of token for distribution.
         saleStatus.totalTokensAllocated = _totalTokensAllocated;
 
         /// Emit successfully TgeDetailsPublished
-        emit TgeDetailsPublished(_askToken, _askTokenTotalSupply, _vestingStartTime, _totalTokensAllocated);
+        emit TgeDetailsPublished(_askToken, _askTokenTotalSupply, _totalTokensAllocated);
     }
 
     /**
@@ -270,7 +244,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
      * @param legionFee The Legion fee token amount.
      * @param referrerFee The Referrer fee token amount.
      */
-    function supplyAskTokens(
+    function supplyTokens(
         uint256 amount,
         uint256 legionFee,
         uint256 referrerFee
@@ -312,50 +286,6 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
                 saleStatus.askToken, msg.sender, saleConfig.referrerFeeReceiver, referrerFee
             );
         }
-    }
-
-    /**
-     * @notice Updates the vesting terms.
-     *
-     * @dev Only callable by Legion, before the tokens have been supplied by the Project.
-     *
-     * @param _vestingDurationSeconds The vesting schedule duration for the token sold in seconds.
-     * @param _vestingCliffDurationSeconds The vesting cliff duration for the token sold in seconds.
-     * @param _tokenAllocationOnTGERate The token allocation amount released to investors after TGE in 18 decimals
-     * precision.
-     */
-    function updateVestingTerms(
-        uint256 _vestingDurationSeconds,
-        uint256 _vestingCliffDurationSeconds,
-        uint256 _tokenAllocationOnTGERate
-    )
-        external
-        onlyProject
-        whenNotPaused
-    {
-        /// Verify that the sale is not canceled
-        _verifySaleNotCanceled();
-
-        /// Verify that the project has not withdrawn any capital
-        _verifyNoCapitalWithdrawn();
-
-        /// Verify that tokens for distribution have not been allocated
-        _verifyTokensNotAllocated();
-
-        /// Set the vesting duration in seconds
-        vestingConfig.vestingDurationSeconds = _vestingDurationSeconds;
-
-        /// Set the vesting cliff duration in seconds
-        vestingConfig.vestingCliffDurationSeconds = _vestingCliffDurationSeconds;
-
-        /// Set the token allocation on TGE
-        vestingConfig.tokenAllocationOnTGERate = _tokenAllocationOnTGERate;
-
-        /// Verify that the vesting configuration is valid
-        _verifyValidVestingConfig();
-
-        /// Emit successfully VestingTermsUpdated
-        emit VestingTermsUpdated(_vestingDurationSeconds, _vestingCliffDurationSeconds, _tokenAllocationOnTGERate);
     }
 
     /**
@@ -425,14 +355,16 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
      * @param investAmount The amount of capital the investor is allowed to invest, according to the SAFT.
      * @param tokenAllocationRate The token allocation the investor will receive as a percentage of totalSupply,
      * represented in 18 decimals precision.
-     * @param saftHash The hash of the Simple Agreement for Future Tokens (SAFT) signed by the investor.
-     * @param signature The signature proving that the investor has signed a SAFT.
+     * @param investorVestingConfig The vesting configuration for the investor.
+     * @param investSignature The signature proving that the investor has signed a SAFT.
+     * @param vestingSignature The signature proving that investor vesting terms are valid.
      */
-    function claimAskTokenAllocation(
+    function claimTokenAllocation(
         uint256 investAmount,
         uint256 tokenAllocationRate,
-        bytes32 saftHash,
-        bytes memory signature
+        LegionVestingManager.LegionInvestorVestingConfig calldata investorVestingConfig,
+        bytes memory investSignature,
+        bytes memory vestingSignature
     )
         external
         whenNotPaused
@@ -441,35 +373,29 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
         /// Verify that the sale has not been canceled
         _verifySaleNotCanceled();
 
-        /// Load the investor position
-        InvestorPosition storage position = investorPositions[msg.sender];
-
-        /// Cache the SAFT amount the investor is allowed to invest
-        if (position.cachedInvestAmount != investAmount) {
-            position.cachedInvestAmount = investAmount;
-        }
-
-        /// Cache the token allocation rate in 18 decimals precision
-        if (position.cachedTokenAllocationRate != tokenAllocationRate) {
-            position.cachedTokenAllocationRate = tokenAllocationRate;
-        }
-
-        /// Cache the hash of the SAFT signed by the investor
-        if (position.cachedSAFTHash != saftHash) {
-            position.cachedSAFTHash = saftHash;
-        }
+        // Verify that the vesting configuration is valid
+        _verifyValidLinearVestingConfig(investorVestingConfig);
 
         /// Verify that the investor can claim the token allocation
         _verifyCanClaimTokenAllocation();
 
+        /// Update the investor position
+        _updateInvestorPosition(investAmount, tokenAllocationRate);
+
         /// Verify that the investor position is valid
-        _verifyValidPosition(signature, SaleAction.CLAIM_TOKEN_ALLOCATION);
+        _verifyValidPosition(investSignature, SaleAction.CLAIM_TOKEN_ALLOCATION);
+
+        /// Verify that the investor vesting terms are valid
+        _verifyValidVestingPosition(vestingSignature, investorVestingConfig);
 
         /// Verify that the signature has not been used
-        _verifySignatureNotUsed(signature);
+        _verifySignatureNotUsed(investSignature);
+
+        /// Load the investor position
+        InvestorPosition storage position = investorPositions[msg.sender];
 
         /// Mark the signature as used
-        usedSignatures[msg.sender][signature] = true;
+        usedSignatures[msg.sender][investSignature] = true;
 
         /// Mark that the token amount has been settled
         position.hasSettled = true;
@@ -478,7 +404,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
         uint256 totalAmount = saleStatus.askTokenTotalSupply * position.cachedTokenAllocationRate / 1e18;
 
         /// Calculate the amount to be distributed on claim
-        uint256 amountToDistributeOnClaim = totalAmount * vestingConfig.tokenAllocationOnTGERate / 1e18;
+        uint256 amountToDistributeOnClaim = totalAmount * investorVestingConfig.tokenAllocationOnTGERate / 1e18;
 
         /// Calculate the remaining amount to be vested
         uint256 amountToBeVested = totalAmount - amountToDistributeOnClaim;
@@ -488,13 +414,8 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
 
         // Deploy vesting and distribute tokens only if there is anything to distribute
         if (amountToBeVested != 0) {
-            /// Deploy a linear vesting schedule contract
-            address payable vestingAddress = _createVesting(
-                msg.sender,
-                uint64(vestingConfig.vestingStartTime),
-                uint64(vestingConfig.vestingDurationSeconds),
-                uint64(vestingConfig.vestingCliffDurationSeconds)
-            );
+            /// Deploy a vesting schedule contract
+            address payable vestingAddress = _createVesting(investorVestingConfig);
 
             /// Save the vesting address for the investor
             position.vestingAddress = vestingAddress;
@@ -542,7 +463,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
     /**
      * @notice Withdraw capital if the sale has been canceled.
      */
-    function withdrawCapitalIfSaleIsCanceled() external whenNotPaused {
+    function withdrawInvestedCapitalIfCanceled() external whenNotPaused {
         /// Verify that the sale has been actually canceled
         _verifySaleIsCanceled();
 
@@ -572,15 +493,13 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
      * @param investAmount The amount of capital the investor is allowed to invest, according to the SAFT.
      * @param tokenAllocationRate The token allocation the investor will receive as a percentage of totalSupply,
      * represented in 18 decimals precision.
-     * @param saftHash The hash of the Simple Agreement for Future Tokens (SAFT) signed by the investor.
-     * @param signature The signature proving that the investor is allowed to participate.
+     * @param investSignature The signature proving that the investor is allowed to participate.
      */
-    function withdrawExcessCapital(
+    function withdrawExcessInvestedCapital(
         uint256 amount,
         uint256 investAmount,
         uint256 tokenAllocationRate,
-        bytes32 saftHash,
-        bytes memory signature
+        bytes memory investSignature
     )
         external
         whenNotPaused
@@ -589,7 +508,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
         _verifySaleNotCanceled();
 
         /// Verify that the signature has not been used
-        _verifySignatureNotUsed(signature);
+        _verifySignatureNotUsed(investSignature);
 
         /// Load the investor position
         InvestorPosition storage position = investorPositions[msg.sender];
@@ -601,28 +520,16 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
         position.investedCapital -= amount;
 
         /// Mark the signature as used
-        usedSignatures[msg.sender][signature] = true;
+        usedSignatures[msg.sender][investSignature] = true;
 
-        /// Cache the maximum amount the investor is allowed to invest
-        if (position.cachedInvestAmount != investAmount) {
-            position.cachedInvestAmount = investAmount;
-        }
-
-        /// Cache the token allocation rate in 18 decimals precision
-        if (position.cachedTokenAllocationRate != tokenAllocationRate) {
-            position.cachedTokenAllocationRate = tokenAllocationRate;
-        }
-
-        /// Cache the hash of the SAFT signed by the investor
-        if (position.cachedSAFTHash != saftHash) {
-            position.cachedSAFTHash = saftHash;
-        }
+        /// Update the investor position
+        _updateInvestorPosition(investAmount, tokenAllocationRate);
 
         /// Verify that the investor position is valid
-        _verifyValidPosition(signature, SaleAction.WITHDRAW_EXCESS_CAPITAL);
+        _verifyValidPosition(investSignature, SaleAction.WITHDRAW_EXCESS_CAPITAL);
 
         /// Emit successfully ExcessCapitalWithdrawn
-        emit ExcessCapitalWithdrawn(amount, msg.sender, tokenAllocationRate, saftHash, block.timestamp);
+        emit ExcessCapitalWithdrawn(amount, msg.sender, tokenAllocationRate, block.timestamp);
 
         /// Transfer the excess capital to the investor
         SafeTransferLib.safeTransfer(saleConfig.bidToken, msg.sender, amount);
@@ -631,7 +538,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
     /**
      * @notice Releases tokens from vesting to the investor address.
      */
-    function releaseTokens() external whenNotPaused askTokenAvailable {
+    function releaseVestedTokens() external whenNotPaused askTokenAvailable {
         /// Get the investor position details
         InvestorPosition memory position = investorPositions[msg.sender];
 
@@ -730,10 +637,9 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
     }
 
     /**
-     * @notice Returns the sale vesting configuration.
+     * @notice Returns the vesting configuration.
      */
-    function vestingConfiguration() external view returns (PreLiquidSaleVestingConfig memory) {
-        /// Get the pre-liquid sale vesting config
+    function vestingConfiguration() external view virtual returns (LegionVestingManager.LegionVestingConfig memory) {
         return vestingConfig;
     }
 
@@ -745,28 +651,30 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
     }
 
     /**
-     * @notice Create a vesting schedule contract.
+     * @notice Returns the investor vesting status.
      *
-     * @param _beneficiary The beneficiary.
-     * @param _startTimestamp The start timestamp.
-     * @param _durationSeconds The duration in seconds.
-     * @param _cliffDurationSeconds The cliff duration in seconds.
-     *
-     * @return vestingInstance The address of the deployed vesting instance.
+     * @param investor The address of the investor.
      */
-    function _createVesting(
-        address _beneficiary,
-        uint64 _startTimestamp,
-        uint64 _durationSeconds,
-        uint64 _cliffDurationSeconds
-    )
-        internal
-        returns (address payable vestingInstance)
+    function investorVestingStatus(address investor)
+        external
+        view
+        returns (LegionInvestorVestingStatus memory vestingStatus)
     {
-        /// Deploy a vesting schedule instance
-        vestingInstance = ILegionVestingFactory(saleConfig.vestingFactory).createLinearVesting(
-            _beneficiary, _startTimestamp, _durationSeconds, _cliffDurationSeconds
-        );
+        /// Get the investor position details
+        address investorVestingAddress = investorPositions[investor].vestingAddress;
+
+        // Return the investor vesting status
+        investorVestingAddress != address(0)
+            ? vestingStatus = LegionInvestorVestingStatus(
+                ILegionLinearVesting(investorVestingAddress).start(),
+                ILegionLinearVesting(investorVestingAddress).end(),
+                ILegionLinearVesting(investorVestingAddress).cliffEnd(),
+                ILegionLinearVesting(investorVestingAddress).duration(),
+                ILegionLinearVesting(investorVestingAddress).released(),
+                ILegionLinearVesting(investorVestingAddress).releasable(),
+                ILegionLinearVesting(investorVestingAddress).vestedAmount(saleStatus.askToken, uint64(block.timestamp))
+            )
+            : vestingStatus;
     }
 
     /**
@@ -791,14 +699,6 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
         saleConfig.addressRegistry = preLiquidSaleInitParams.addressRegistry;
         saleConfig.referrerFeeReceiver = preLiquidSaleInitParams.referrerFeeReceiver;
 
-        /// Initialize pre-liquid sale vesting configuration
-        vestingConfig.vestingDurationSeconds = preLiquidSaleInitParams.vestingDurationSeconds;
-        vestingConfig.vestingCliffDurationSeconds = preLiquidSaleInitParams.vestingCliffDurationSeconds;
-        vestingConfig.tokenAllocationOnTGERate = preLiquidSaleInitParams.tokenAllocationOnTGERate;
-
-        /// Verify that the vesting configuration is valid
-        _verifyValidVestingConfig();
-
         /// Cache Legion addresses from `LegionAddressRegistry`
         _syncLegionAddresses();
     }
@@ -814,13 +714,38 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
             ILegionAddressRegistry(saleConfig.addressRegistry).getLegionAddress(Constants.LEGION_SIGNER_ID);
         saleConfig.legionFeeReceiver =
             ILegionAddressRegistry(saleConfig.addressRegistry).getLegionAddress(Constants.LEGION_FEE_RECEIVER_ID);
-        saleConfig.vestingFactory =
+        vestingConfig.vestingFactory =
             ILegionAddressRegistry(saleConfig.addressRegistry).getLegionAddress(Constants.LEGION_VESTING_FACTORY_ID);
 
         // Emit successfully LegionAddressesSynced
         emit LegionAddressesSynced(
-            saleConfig.legionBouncer, saleConfig.legionSigner, saleConfig.legionFeeReceiver, saleConfig.vestingFactory
+            saleConfig.legionBouncer,
+            saleConfig.legionSigner,
+            saleConfig.legionFeeReceiver,
+            vestingConfig.vestingFactory
         );
+    }
+
+    /**
+     * @notice Update the investor position.
+     *
+     * @param investAmount The amount of capital the investor is allowed to invest.
+     * @param tokenAllocationRate The token allocation the investor will receive as a percentage of totalSupply,
+     * represented in 18 decimals precision.
+     */
+    function _updateInvestorPosition(uint256 investAmount, uint256 tokenAllocationRate) internal virtual {
+        /// Load the investor position
+        InvestorPosition storage position = investorPositions[msg.sender];
+
+        /// Cache the SAFT amount the investor is allowed to invest
+        if (position.cachedInvestAmount != investAmount) {
+            position.cachedInvestAmount = investAmount;
+        }
+
+        /// Cache the token allocation rate in 18 decimals precision
+        if (position.cachedTokenAllocationRate != tokenAllocationRate) {
+            position.cachedTokenAllocationRate = tokenAllocationRate;
+        }
     }
 
     /**
@@ -861,14 +786,6 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
     }
 
     /**
-     * @notice Verify if the tokens for distribution have not been allocated.
-     */
-    function _verifyTokensNotAllocated() private view {
-        /// Revert if the tokens for distribution have already been allocated
-        if (saleStatus.totalTokensAllocated > 0) revert Errors.TokensAlreadyAllocated();
-    }
-
-    /**
      * @notice Verify that the sale is not canceled.
      */
     function _verifySaleNotCanceled() internal view {
@@ -883,15 +800,8 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
     }
 
     /**
-     * @notice Verify that the Project has not withdrawn any capital.
-     */
-    function _verifyNoCapitalWithdrawn() internal view {
-        if (saleStatus.totalCapitalWithdrawn > 0) revert Errors.ProjectHasWithdrawnCapital();
-    }
-    /**
      * @notice Verify that the sale has not ended.
      */
-
     function _verifySaleHasNotEnded() internal view {
         if (saleStatus.hasEnded) revert Errors.SaleHasEnded();
     }
@@ -975,19 +885,6 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
     }
 
     /**
-     * @notice Verify that the vesting configuration is valid.
-     */
-    function _verifyValidVestingConfig() internal view virtual {
-        /// Check if vesting duration is no more than 10 years, if vesting cliff duration is not more than vesting
-        /// duration or the token allocation on TGE rate is no more than 100%
-        if (
-            vestingConfig.vestingDurationSeconds > Constants.TEN_YEARS
-                || vestingConfig.vestingCliffDurationSeconds > vestingConfig.vestingDurationSeconds
-                || vestingConfig.tokenAllocationOnTGERate > 1e18
-        ) revert Errors.InvalidVestingConfig();
-    }
-
-    /**
      * @notice Verify if the investor position is valid
      *
      * @param signature The signature proving the investor is part of the whitelist
@@ -1010,12 +907,32 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, Initializable, Pausabl
                 block.chainid,
                 uint256(position.cachedInvestAmount),
                 uint256(position.cachedTokenAllocationRate),
-                bytes32(uint256(position.cachedSAFTHash)),
                 actionType
             )
         ).toEthSignedMessageHash();
 
         /// Verify the signature
         if (_data.recover(signature) != saleConfig.legionSigner) revert Errors.InvalidSignature();
+    }
+
+    /**
+     * @notice Verify if the investor vesting position is valid
+     *
+     * @param vestingSignature The signature proving that investor vesting terms are valid.
+     * @param investorVestingConfig The vesting configuration for the investor.
+     */
+    function _verifyValidVestingPosition(
+        bytes memory vestingSignature,
+        LegionVestingManager.LegionInvestorVestingConfig calldata investorVestingConfig
+    )
+        internal
+        view
+    {
+        /// Construct the signed data
+        bytes32 _data = keccak256(abi.encode(msg.sender, address(this), block.chainid, investorVestingConfig))
+            .toEthSignedMessageHash();
+
+        /// Verify the signature
+        if (_data.recover(vestingSignature) != saleConfig.legionSigner) revert Errors.InvalidSignature();
     }
 }

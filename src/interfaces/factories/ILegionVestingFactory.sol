@@ -66,4 +66,27 @@ interface ILegionVestingFactory {
     )
         external
         returns (address payable linearVestingInstance);
+
+    /**
+     * @notice Deploy a LegionLinearEpochVesting contract.
+     *
+     * @param beneficiary The address that will receive the vested tokens
+     * @param startTimestamp The Unix timestamp when the vesting period starts
+     * @param durationSeconds The duration of the vesting period in seconds
+     * @param cliffDurationSeconds The duration of the cliff period in seconds
+     * @param epochDurationSeconds The duration of each epoch in seconds
+     * @param numberOfEpochs The number of epochs
+     *
+     * @return linearEpochVestingInstance The address of the deployed LegionLinearEpochVesting instance.
+     */
+    function createLinearEpochVesting(
+        address beneficiary,
+        uint64 startTimestamp,
+        uint64 durationSeconds,
+        uint64 cliffDurationSeconds,
+        uint256 epochDurationSeconds,
+        uint256 numberOfEpochs
+    )
+        external
+        returns (address payable linearEpochVestingInstance);
 }

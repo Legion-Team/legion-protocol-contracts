@@ -71,4 +71,9 @@ interface ILegionLinearEpochVesting {
      * @notice See {VestingWalletUpgradeable-vestedAmount}.
      */
     function vestedAmount(address token, uint64 timestamp) external view returns (uint256);
+
+    /**
+     * @notice Returns the cliff end timestamp.
+     */
+    function cliffEnd() external view returns (uint256);
 }

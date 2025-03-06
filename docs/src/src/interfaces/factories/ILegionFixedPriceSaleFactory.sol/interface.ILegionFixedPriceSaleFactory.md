@@ -1,5 +1,5 @@
 # ILegionFixedPriceSaleFactory
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/e045131669c5801ab2e88b13e55002362a64c068/src/interfaces/factories/ILegionFixedPriceSaleFactory.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/a0becaf0413338ea78e3b0a0ce4527f7e1695849/src/interfaces/factories/ILegionFixedPriceSaleFactory.sol)
 
 
 ## Functions
@@ -11,8 +11,7 @@ Deploy a LegionFixedPriceSale contract.
 ```solidity
 function createFixedPriceSale(
     ILegionSale.LegionSaleInitializationParams memory saleInitParams,
-    ILegionFixedPriceSale.FixedPriceSaleInitializationParams memory fixedPriceSaleInitParams,
-    ILegionSale.LegionVestingInitializationParams memory vestingInitParams
+    ILegionFixedPriceSale.FixedPriceSaleInitializationParams memory fixedPriceSaleInitParams
 )
     external
     returns (address payable fixedPriceSaleInstance);
@@ -23,7 +22,6 @@ function createFixedPriceSale(
 |----|----|-----------|
 |`saleInitParams`|`ILegionSale.LegionSaleInitializationParams`|The Legion sale initialization parameters.|
 |`fixedPriceSaleInitParams`|`ILegionFixedPriceSale.FixedPriceSaleInitializationParams`|The fixed price sale specific initialization parameters.|
-|`vestingInitParams`|`ILegionSale.LegionVestingInitializationParams`|The vesting initialization parameters.|
 
 **Returns**
 
@@ -41,8 +39,7 @@ This event is emitted when a new fixed price sale is deployed and initialized.
 event NewFixedPriceSaleCreated(
     address saleInstance,
     ILegionSale.LegionSaleInitializationParams saleInitParams,
-    ILegionFixedPriceSale.FixedPriceSaleInitializationParams fixedPriceSaleInitParams,
-    ILegionSale.LegionVestingInitializationParams vestingInitParams
+    ILegionFixedPriceSale.FixedPriceSaleInitializationParams fixedPriceSaleInitParams
 );
 ```
 
@@ -53,5 +50,4 @@ event NewFixedPriceSaleCreated(
 |`saleInstance`|`address`|The address of the sale instance deployed.|
 |`saleInitParams`|`ILegionSale.LegionSaleInitializationParams`|The Legion sale initialization parameters.|
 |`fixedPriceSaleInitParams`|`ILegionFixedPriceSale.FixedPriceSaleInitializationParams`|The fixed price sale specific initialization parameters.|
-|`vestingInitParams`|`ILegionSale.LegionVestingInitializationParams`|The vesting initialization parameters.|
 

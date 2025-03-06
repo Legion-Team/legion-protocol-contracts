@@ -1,5 +1,5 @@
 # MockToken
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/e045131669c5801ab2e88b13e55002362a64c068/src/mocks/MockToken.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/a0becaf0413338ea78e3b0a0ce4527f7e1695849/src/mocks/MockToken.sol)
 
 **Inherits:**
 ERC20

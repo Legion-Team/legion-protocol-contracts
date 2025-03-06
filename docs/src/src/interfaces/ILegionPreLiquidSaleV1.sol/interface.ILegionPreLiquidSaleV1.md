@@ -1,5 +1,5 @@
 # ILegionPreLiquidSaleV1
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/e045131669c5801ab2e88b13e55002362a64c068/src/interfaces/ILegionPreLiquidSaleV1.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/a0becaf0413338ea78e3b0a0ce4527f7e1695849/src/interfaces/ILegionPreLiquidSaleV1.sol)
 
 
 ## Functions
@@ -28,8 +28,7 @@ function invest(
     uint256 amount,
     uint256 investAmount,
     uint256 tokenAllocationRate,
-    bytes32 saftHash,
-    bytes memory signature
+    bytes memory investSignature
 )
     external;
 ```
@@ -40,8 +39,7 @@ function invest(
 |`amount`|`uint256`|The amount of capital invested.|
 |`investAmount`|`uint256`|The amount of capital the investor is allowed to invest, according to the SAFT.|
 |`tokenAllocationRate`|`uint256`|The token allocation the investor will receive as a percentage of totalSupply, represented in 18 decimals precision.|
-|`saftHash`|`bytes32`|The hash of the Simple Agreement for Future Tokens (SAFT) signed by the investor.|
-|`signature`|`bytes`|The signature proving that the investor is allowed to participate.|
+|`investSignature`|`bytes`|The signature proving that the investor is allowed to participate.|
 
 
 ### refund
@@ -61,13 +59,7 @@ Updates the token details after Token Generation Event (TGE).
 
 
 ```solidity
-function publishTgeDetails(
-    address _askToken,
-    uint256 _askTokenTotalSupply,
-    uint256 _vestingStartTime,
-    uint256 _totalTokensAllocated
-)
-    external;
+function publishTgeDetails(address _askToken, uint256 _askTokenTotalSupply, uint256 _totalTokensAllocated) external;
 ```
 **Parameters**
 
@@ -75,11 +67,10 @@ function publishTgeDetails(
 |----|----|-----------|
 |`_askToken`|`address`|The address of the token distributed to investors.|
 |`_askTokenTotalSupply`|`uint256`|The total supply of the token distributed to investors.|
-|`_vestingStartTime`|`uint256`|The Unix timestamp (seconds) of the block when the vesting starts.|
 |`_totalTokensAllocated`|`uint256`|The allocated token amount for distribution to investors.|
 
 
-### supplyAskTokens
+### supplyTokens
 
 Supply tokens for distribution after the Token Generation Event (TGE).
 
@@ -87,7 +78,7 @@ Supply tokens for distribution after the Token Generation Event (TGE).
 
 
 ```solidity
-function supplyAskTokens(uint256 amount, uint256 legionFee, uint256 referrerFee) external;
+function supplyTokens(uint256 amount, uint256 legionFee, uint256 referrerFee) external;
 ```
 **Parameters**
 
@@ -96,30 +87,6 @@ function supplyAskTokens(uint256 amount, uint256 legionFee, uint256 referrerFee)
 |`amount`|`uint256`|The amount of tokens to be supplied for distribution.|
 |`legionFee`|`uint256`|The Legion fee token amount.|
 |`referrerFee`|`uint256`|The Referrer fee token amount.|
-
-
-### updateVestingTerms
-
-Updates the vesting terms.
-
-*Only callable by Legion, before the tokens have been supplied by the Project.*
-
-
-```solidity
-function updateVestingTerms(
-    uint256 vestingDurationSeconds,
-    uint256 vestingCliffDurationSeconds,
-    uint256 tokenAllocationOnTGERate
-)
-    external;
-```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`vestingDurationSeconds`|`uint256`|The vesting schedule duration for the token sold in seconds.|
-|`vestingCliffDurationSeconds`|`uint256`|The vesting cliff duration for the token sold in seconds.|
-|`tokenAllocationOnTGERate`|`uint256`|The token allocation amount released to investors after TGE in 18 decimals precision.|
 
 
 ### emergencyWithdraw
@@ -152,17 +119,18 @@ Withdraw capital from the contract.
 function withdrawRaisedCapital() external;
 ```
 
-### claimAskTokenAllocation
+### claimTokenAllocation
 
 Claim token allocation by investors.
 
 
 ```solidity
-function claimAskTokenAllocation(
+function claimTokenAllocation(
     uint256 investAmount,
     uint256 tokenAllocationRate,
-    bytes32 saftHash,
-    bytes memory signature
+    ILegionVestingManager.LegionInvestorVestingConfig calldata investorVestingConfig,
+    bytes memory investSignature,
+    bytes memory vestingSignature
 )
     external;
 ```
@@ -172,8 +140,9 @@ function claimAskTokenAllocation(
 |----|----|-----------|
 |`investAmount`|`uint256`|The amount of capital the investor is allowed to invest, according to the SAFT.|
 |`tokenAllocationRate`|`uint256`|The token allocation the investor will receive as a percentage of totalSupply, represented in 18 decimals precision.|
-|`saftHash`|`bytes32`|The hash of the Simple Agreement for Future Tokens (SAFT) signed by the investor.|
-|`signature`|`bytes`|The signature proving that the investor has signed a SAFT.|
+|`investorVestingConfig`|`ILegionVestingManager.LegionInvestorVestingConfig`|The vesting configuration for the investor.|
+|`investSignature`|`bytes`|The signature proving that the investor has signed a SAFT.|
+|`vestingSignature`|`bytes`|The signature proving that investor vesting terms are valid.|
 
 
 ### cancelSale
@@ -187,27 +156,26 @@ Cancel the sale.
 function cancelSale() external;
 ```
 
-### withdrawCapitalIfSaleIsCanceled
+### withdrawInvestedCapitalIfCanceled
 
 Withdraw capital if the sale has been canceled.
 
 
 ```solidity
-function withdrawCapitalIfSaleIsCanceled() external;
+function withdrawInvestedCapitalIfCanceled() external;
 ```
 
-### withdrawExcessCapital
+### withdrawExcessInvestedCapital
 
 Withdraw back excess capital from investors.
 
 
 ```solidity
-function withdrawExcessCapital(
+function withdrawExcessInvestedCapital(
     uint256 amount,
     uint256 investAmount,
     uint256 tokenAllocationRate,
-    bytes32 saftHash,
-    bytes memory signature
+    bytes memory investSignature
 )
     external;
 ```
@@ -218,17 +186,16 @@ function withdrawExcessCapital(
 |`amount`|`uint256`|The amount of excess capital to be withdrawn.|
 |`investAmount`|`uint256`|The amount of capital the investor is allowed to invest, according to the SAFT.|
 |`tokenAllocationRate`|`uint256`|The token allocation the investor will receive as a percentage of totalSupply, represented in 18 decimals precision.|
-|`saftHash`|`bytes32`|The hash of the Simple Agreement for Future Tokens (SAFT) signed by the investor.|
-|`signature`|`bytes`|The signature proving that the investor is allowed to participate.|
+|`investSignature`|`bytes`|The signature proving that the investor is allowed to participate.|
 
 
-### releaseTokens
+### releaseVestedTokens
 
 Releases tokens from vesting to the investor address.
 
 
 ```solidity
-function releaseTokens() external;
+function releaseVestedTokens() external;
 ```
 
 ### endSale
@@ -300,15 +267,6 @@ Returns the sale status details.
 function saleStatusDetails() external view returns (PreLiquidSaleStatus memory);
 ```
 
-### vestingConfiguration
-
-Returns the sale vesting configuration.
-
-
-```solidity
-function vestingConfiguration() external view returns (PreLiquidSaleVestingConfig memory);
-```
-
 ### investorPositionDetails
 
 Returns an investor position details.
@@ -318,15 +276,31 @@ Returns an investor position details.
 function investorPositionDetails(address investorAddress) external view returns (InvestorPosition memory);
 ```
 
+### investorVestingStatus
+
+Returns the investor vesting status.
+
+
+```solidity
+function investorVestingStatus(address investor)
+    external
+    view
+    returns (ILegionVestingManager.LegionInvestorVestingStatus memory);
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`investor`|`address`|The address of the investor.|
+
+
 ## Events
 ### CapitalInvested
 This event is emitted when capital is successfully invested.
 
 
 ```solidity
-event CapitalInvested(
-    uint256 amount, address investor, uint256 tokenAllocationRate, bytes32 saftHash, uint256 investTimestamp
-);
+event CapitalInvested(uint256 amount, address investor, uint256 tokenAllocationRate, uint256 investTimestamp);
 ```
 
 **Parameters**
@@ -336,7 +310,6 @@ event CapitalInvested(
 |`amount`|`uint256`|The amount of capital invested.|
 |`investor`|`address`|The address of the investor.|
 |`tokenAllocationRate`|`uint256`|The token allocation the investor will receive as a percentage of totalSupply, represented in 18 decimals precision.|
-|`saftHash`|`bytes32`|The hash of the Simple Agreement for Future Tokens (SAFT) signed by the investor.|
 |`investTimestamp`|`uint256`|The Unix timestamp (seconds) of the block when capital has been invested.|
 
 ### ExcessCapitalWithdrawn
@@ -344,9 +317,7 @@ This event is emitted when excess capital is successfully withdrawn.
 
 
 ```solidity
-event ExcessCapitalWithdrawn(
-    uint256 amount, address investor, uint256 tokenAllocationRate, bytes32 saftHash, uint256 investTimestamp
-);
+event ExcessCapitalWithdrawn(uint256 amount, address investor, uint256 tokenAllocationRate, uint256 investTimestamp);
 ```
 
 **Parameters**
@@ -356,7 +327,6 @@ event ExcessCapitalWithdrawn(
 |`amount`|`uint256`|The amount of capital withdrawn.|
 |`investor`|`address`|The address of the investor.|
 |`tokenAllocationRate`|`uint256`|The token allocation the investor will receive as a percentage of totalSupply, represented in 18 decimals precision.|
-|`saftHash`|`bytes32`|The hash of the Simple Agreement for Future Tokens (SAFT) signed by the investor.|
 |`investTimestamp`|`uint256`|The Unix timestamp (seconds) of the block when capital has been invested.|
 
 ### CapitalRefunded
@@ -466,9 +436,7 @@ This event is emitted when the token details have been set by the Legion admin.
 
 
 ```solidity
-event TgeDetailsPublished(
-    address tokenAddress, uint256 totalSupply, uint256 vestingStartTime, uint256 allocatedTokenAmount
-);
+event TgeDetailsPublished(address tokenAddress, uint256 totalSupply, uint256 allocatedTokenAmount);
 ```
 
 **Parameters**
@@ -477,7 +445,6 @@ event TgeDetailsPublished(
 |----|----|-----------|
 |`tokenAddress`|`address`|The address of the token distributed to investors.|
 |`totalSupply`|`uint256`|The total supply of the token distributed to investors.|
-|`vestingStartTime`|`uint256`|The Unix timestamp (seconds) of the block when the vesting starts.|
 |`allocatedTokenAmount`|`uint256`|The allocated token amount for distribution to investors.|
 
 ### TokenAllocationClaimed
@@ -512,38 +479,6 @@ event TokensSuppliedForDistribution(uint256 amount, uint256 legionFee, uint256 r
 |`legionFee`|`uint256`|The fee amount collected by Legion.|
 |`referrerFee`|`uint256`|The fee amount collected by the referrer.|
 
-### VestingTermsUpdated
-This event is emitted when vesting terms have been successfully updated by the project admin.
-
-
-```solidity
-event VestingTermsUpdated(
-    uint256 _vestingDurationSeconds, uint256 _vestingCliffDurationSeconds, uint256 _tokenAllocationOnTGERate
-);
-```
-
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`_vestingDurationSeconds`|`uint256`|The vesting schedule duration for the token sold in seconds.|
-|`_vestingCliffDurationSeconds`|`uint256`|The vesting cliff duration for the token sold in seconds.|
-|`_tokenAllocationOnTGERate`|`uint256`|The token allocation amount released to investors after TGE in 18 decimals precision.|
-
-### ExcessCapitalRefunded
-This event is emitted when excess capital is successfully refunded to the investor.
-
-
-```solidity
-event ExcessCapitalRefunded(uint256 amount);
-```
-
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`amount`|`uint256`|The amount of excess capital refunded to the investor.|
-
 ### SaleEnded
 This event is emitted when the sale has ended.
 
@@ -566,9 +501,6 @@ A struct describing the pre-liquid sale initialization params.
 ```solidity
 struct PreLiquidSaleInitializationParams {
     uint256 refundPeriodSeconds;
-    uint256 vestingDurationSeconds;
-    uint256 vestingCliffDurationSeconds;
-    uint256 tokenAllocationOnTGERate;
     uint256 legionFeeOnCapitalRaisedBps;
     uint256 legionFeeOnTokensSoldBps;
     uint256 referrerFeeOnCapitalRaisedBps;
@@ -598,7 +530,6 @@ struct PreLiquidSaleConfig {
     address legionSigner;
     address legionFeeReceiver;
     address referrerFeeReceiver;
-    address vestingFactory;
 }
 ```
 
@@ -622,19 +553,6 @@ struct PreLiquidSaleStatus {
 }
 ```
 
-### PreLiquidSaleVestingConfig
-A struct describing the pre-liquid sale vesting configuration.
-
-
-```solidity
-struct PreLiquidSaleVestingConfig {
-    uint256 vestingStartTime;
-    uint256 vestingDurationSeconds;
-    uint256 vestingCliffDurationSeconds;
-    uint256 tokenAllocationOnTGERate;
-}
-```
-
 ### InvestorPosition
 A struct describing the investor position during the sale.
 
@@ -642,10 +560,8 @@ A struct describing the investor position during the sale.
 ```solidity
 struct InvestorPosition {
     uint256 investedCapital;
-    uint256 cachedInvestTimestamp;
     uint256 cachedInvestAmount;
     uint256 cachedTokenAllocationRate;
-    bytes32 cachedSAFTHash;
     bool hasRefunded;
     bool hasSettled;
     address vestingAddress;

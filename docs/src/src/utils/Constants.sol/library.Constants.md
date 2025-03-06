@@ -1,5 +1,5 @@
 # Constants
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/e045131669c5801ab2e88b13e55002362a64c068/src/utils/Constants.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/a0becaf0413338ea78e3b0a0ce4527f7e1695849/src/utils/Constants.sol)
 
 **Author:**
 Legion
@@ -26,30 +26,12 @@ uint256 internal constant TWO_WEEKS = 1_209_600;
 ```
 
 
-### FORTY_DAYS
-*Constant representing forty days in seconds*
-
-
-```solidity
-uint256 internal constant FORTY_DAYS = 3_456_000;
-```
-
-
 ### THREE_MONTHS
 *Constant representing 3 months in seconds.*
 
 
 ```solidity
 uint256 internal constant THREE_MONTHS = 7_776_000;
-```
-
-
-### SIX_MONTHS
-*Constant representing 6 months in seconds.*
-
-
-```solidity
-uint256 internal constant SIX_MONTHS = 15_780_000;
 ```
 
 

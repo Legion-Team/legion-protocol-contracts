@@ -1,5 +1,5 @@
 # ILegionLinearEpochVesting
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/e045131669c5801ab2e88b13e55002362a64c068/src/interfaces/vesting/ILegionLinearEpochVesting.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/a0becaf0413338ea78e3b0a0ce4527f7e1695849/src/interfaces/vesting/ILegionLinearEpochVesting.sol)
 
 
 ## Functions
@@ -100,5 +100,14 @@ See [VestingWalletUpgradeable-vestedAmount](/lib/openzeppelin-contracts-upgradea
 
 ```solidity
 function vestedAmount(address token, uint64 timestamp) external view returns (uint256);
+```
+
+### cliffEnd
+
+Returns the cliff end timestamp.
+
+
+```solidity
+function cliffEnd() external view returns (uint256);
 ```
 
