@@ -63,12 +63,10 @@ interface ILegionFixedPriceSale is ILegionSale {
      *
      * @param saleInitParams The Legion sale initialization parameters.
      * @param fixedPriceSaleInitParams The fixed price sale specific initialization parameters.
-     * @param vestingInitParams The vesting initialization parameters.
      */
     function initialize(
         LegionSaleInitializationParams calldata saleInitParams,
-        FixedPriceSaleInitializationParams calldata fixedPriceSaleInitParams,
-        LegionVestingInitializationParams calldata vestingInitParams
+        FixedPriceSaleInitializationParams calldata fixedPriceSaleInitParams
     )
         external;
 

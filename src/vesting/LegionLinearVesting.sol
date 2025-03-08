@@ -18,7 +18,8 @@ pragma solidity 0.8.28;
 
 import { VestingWalletUpgradeable } from "@openzeppelin/contracts-upgradeable/finance/VestingWalletUpgradeable.sol";
 
-import { Errors } from "./utils/Errors.sol";
+import { Constants } from "../utils/Constants.sol";
+import { Errors } from "../utils/Errors.sol";
 
 /**
  * @title Legion Linear Vesting
@@ -63,6 +64,9 @@ contract LegionLinearVesting is VestingWalletUpgradeable {
         public
         initializer
     {
+        // Verify the vesting configuration
+        _verifyValidVestingConfig(durationSeconds, cliffDurationSeconds, 1e18);
+
         // Initialize the LegionLinearVesting clone
         __VestingWallet_init(beneficiary, startTimestamp, durationSeconds);
 
@@ -95,5 +99,29 @@ contract LegionLinearVesting is VestingWalletUpgradeable {
      */
     function cliffEnd() public view returns (uint256) {
         return cliffEndTimestamp;
+    }
+
+    /**
+     * @notice Verify that the vesting configuration is valid.
+     *
+     * @param vestingDurationSeconds The duration of the vesting period in seconds
+     * @param vestingCliffDurationSeconds The duration of the cliff period in seconds
+     * @param tokenAllocationOnTGERate The token allocation on TGE rate
+     */
+    function _verifyValidVestingConfig(
+        uint256 vestingDurationSeconds,
+        uint256 vestingCliffDurationSeconds,
+        uint256 tokenAllocationOnTGERate
+    )
+        internal
+        view
+        virtual
+    {
+        /// Check if vesting duration is no more than 10 years, if vesting cliff duration is not more than vesting
+        /// duration or the token allocation on TGE rate is no more than 100%
+        if (
+            vestingDurationSeconds > Constants.TEN_YEARS || vestingCliffDurationSeconds > vestingDurationSeconds
+                || tokenAllocationOnTGERate > 1e18
+        ) revert Errors.InvalidVestingConfig();
     }
 }
