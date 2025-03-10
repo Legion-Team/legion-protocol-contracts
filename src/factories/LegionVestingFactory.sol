@@ -19,7 +19,8 @@ pragma solidity 0.8.28;
 import { LibClone } from "@solady/src/utils/LibClone.sol";
 
 import { ILegionVestingFactory } from "../interfaces/factories/ILegionVestingFactory.sol";
-import { LegionLinearVesting } from "../LegionLinearVesting.sol";
+import { LegionLinearVesting } from "../vesting/LegionLinearVesting.sol";
+import { LegionLinearEpochVesting } from "../vesting/LegionLinearEpochVesting.sol";
 
 /**
  * @title Legion Vesting Factory
@@ -31,6 +32,9 @@ contract LegionVestingFactory is ILegionVestingFactory {
 
     /// @dev The LegionLinearVesting implementation contract
     address public immutable linearVestingTemplate = address(new LegionLinearVesting());
+
+    /// @dev The LegionLinearVesting implementation contract
+    address public immutable linearEpochVestingTemplate = address(new LegionLinearEpochVesting());
 
     /**
      * @notice Creates a new linear vesting contract
@@ -59,6 +63,42 @@ contract LegionVestingFactory is ILegionVestingFactory {
         // Initialize the LegionLinearVesting with the provided configuration
         LegionLinearVesting(linearVestingInstance).initialize(
             beneficiary, startTimestamp, durationSeconds, cliffDurationSeconds
+        );
+    }
+
+    /**
+     * @notice Creates a new linear epoch vesting contract
+     *
+     * @param beneficiary The address that will receive the vested tokens
+     * @param startTimestamp The Unix timestamp when the vesting period starts
+     * @param durationSeconds The duration of the vesting period in seconds
+     * @param cliffDurationSeconds The duration of the cliff period in seconds
+     * @param epochDurationSeconds The duration of each epoch in seconds
+     * @param numberOfEpochs The number of epochs
+     * @return linearEpochVestingInstance The address of the deployed LegionLinearVesting instance
+     */
+    function createLinearEpochVesting(
+        address beneficiary,
+        uint64 startTimestamp,
+        uint64 durationSeconds,
+        uint64 cliffDurationSeconds,
+        uint256 epochDurationSeconds,
+        uint256 numberOfEpochs
+    )
+        external
+        returns (address payable linearEpochVestingInstance)
+    {
+        // Deploy a LegionLinearVesting instance
+        linearEpochVestingInstance = payable(linearEpochVestingTemplate.clone());
+
+        // Emit NewLinearVestingCreated
+        emit NewLinearEpochVestingCreated(
+            beneficiary, startTimestamp, durationSeconds, cliffDurationSeconds, epochDurationSeconds, numberOfEpochs
+        );
+
+        // Initialize the LegionLinearVesting with the provided configuration
+        LegionLinearEpochVesting(linearEpochVestingInstance).initialize(
+            beneficiary, startTimestamp, durationSeconds, cliffDurationSeconds, epochDurationSeconds, numberOfEpochs
         );
     }
 }

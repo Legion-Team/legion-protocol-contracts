@@ -9,7 +9,7 @@ import { Test, console2, Vm } from "forge-std/Test.sol";
 import { Errors } from "../src/utils/Errors.sol";
 import { Constants } from "../src/utils/Constants.sol";
 import { ILegionVestingFactory } from "../src/interfaces/factories/ILegionVestingFactory.sol";
-import { LegionLinearVesting } from "../src/LegionLinearVesting.sol";
+import { LegionLinearVesting } from "../src/vesting/LegionLinearVesting.sol";
 import { LegionVestingFactory } from "../src/factories/LegionVestingFactory.sol";
 import { MockToken } from "../src/mocks/MockToken.sol";
 
@@ -126,6 +126,22 @@ contract LegionLinearVestingTest is Test {
      * @notice Test case: Successfully release tokens after cliff period ends
      */
     function test_release_successfullyReleaseTokensAfterCliffHasEnded() public {
+        // Arrange
+        prepareCreateLegionLinearVesting();
+
+        vm.warp(block.timestamp + Constants.ONE_HOUR + 1);
+
+        // Assert
+        vm.expectEmit();
+        emit VestingWalletUpgradeable.ERC20Released(address(askToken), 114_186_960_933_536_276);
+        // Act
+        LegionLinearVesting(payable(legionVestingInstance)).release(address(askToken));
+    }
+
+    /**
+     * @notice Test case: Successfully release tokens after cliff period ends
+     */
+    function test_release_successfullyReleaseTokensAfterEpochsHaveElpased() public {
         // Arrange
         prepareCreateLegionLinearVesting();
 
