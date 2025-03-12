@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
 import { Ownable } from "@solady/src/auth/Ownable.sol";
 import { Test, console2, Vm } from "forge-std/Test.sol";
