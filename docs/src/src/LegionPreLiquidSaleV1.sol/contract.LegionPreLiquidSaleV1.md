@@ -1,8 +1,8 @@
 # LegionPreLiquidSaleV1
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/1a165deeea33dfd2b1dca142bf23d06b547c39a3/src/LegionPreLiquidSaleV1.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/a0becaf0413338ea78e3b0a0ce4527f7e1695849/src/LegionPreLiquidSaleV1.sol)
 
 **Inherits:**
-[ILegionPreLiquidSaleV1](/src/interfaces/ILegionPreLiquidSaleV1.sol/interface.ILegionPreLiquidSaleV1.md), Initializable, Pausable
+[ILegionPreLiquidSaleV1](/src/interfaces/ILegionPreLiquidSaleV1.sol/interface.ILegionPreLiquidSaleV1.md), [LegionVestingManager](/src/vesting/LegionVestingManager.sol/abstract.LegionVestingManager.md), Initializable, Pausable
 
 A contract used to execute pre-liquid sales of ERC20 tokens before TGE
 
@@ -14,15 +14,6 @@ A contract used to execute pre-liquid sales of ERC20 tokens before TGE
 
 ```solidity
 PreLiquidSaleConfig internal saleConfig;
-```
-
-
-### vestingConfig
-*A struct describing the vesting configuration.*
-
-
-```solidity
-PreLiquidSaleVestingConfig internal vestingConfig;
 ```
 
 
@@ -126,8 +117,7 @@ function invest(
     uint256 amount,
     uint256 investAmount,
     uint256 tokenAllocationRate,
-    bytes32 saftHash,
-    bytes memory signature
+    bytes memory investSignature
 )
     external
     whenNotPaused;
@@ -139,8 +129,7 @@ function invest(
 |`amount`|`uint256`|The amount of capital invested.|
 |`investAmount`|`uint256`|The amount of capital the investor is allowed to invest, according to the SAFT.|
 |`tokenAllocationRate`|`uint256`|The token allocation the investor will receive as a percentage of totalSupply, represented in 18 decimals precision.|
-|`saftHash`|`bytes32`|The hash of the Simple Agreement for Future Tokens (SAFT) signed by the investor.|
-|`signature`|`bytes`|The signature proving that the investor is allowed to participate.|
+|`investSignature`|`bytes`|The signature proving that the investor is allowed to participate.|
 
 
 ### refund
@@ -151,9 +140,7 @@ Load the investor position
 Increment total capital invested from investors
 Increment total capital for the investor
 Mark the signature as used
-Cache the SAFT amount the investor is allowed to invest
-Cache the token allocation rate in 18 decimals precision
-Cache the hash of the SAFT signed by the investor
+Update the investor position
 Verify that the investor position is valid
 Emit successfully CapitalInvested
 Transfer the invested capital to the contract
@@ -186,7 +173,6 @@ Updates the token details after Token Generation Event (TGE).
 function publishTgeDetails(
     address _askToken,
     uint256 _askTokenTotalSupply,
-    uint256 _vestingStartTime,
     uint256 _totalTokensAllocated
 )
     external
@@ -199,18 +185,16 @@ function publishTgeDetails(
 |----|----|-----------|
 |`_askToken`|`address`|The address of the token distributed to investors.|
 |`_askTokenTotalSupply`|`uint256`|The total supply of the token distributed to investors.|
-|`_vestingStartTime`|`uint256`|The Unix timestamp (seconds) of the block when the vesting starts.|
 |`_totalTokensAllocated`|`uint256`|The allocated token amount for distribution to investors.|
 
 
-### supplyAskTokens
+### supplyTokens
 
 Verify that the sale has not been canceled
 Verify that the sale has ended
 Veriify that the refund period is over
 Set the address of the token distributed to investors
 Set the total supply of the token distributed to investors
-Set the vesting start time block timestamp
 Set the total allocated amount of token for distribution.
 Emit successfully TgeDetailsPublished
 
@@ -220,7 +204,7 @@ Supply tokens for distribution after the Token Generation Event (TGE).
 
 
 ```solidity
-function supplyAskTokens(
+function supplyTokens(
     uint256 amount,
     uint256 legionFee,
     uint256 referrerFee
@@ -239,7 +223,7 @@ function supplyAskTokens(
 |`referrerFee`|`uint256`|The Referrer fee token amount.|
 
 
-### updateVestingTerms
+### emergencyWithdraw
 
 Verify that the sale is not canceled
 Verify that tokens can be supplied for distribution
@@ -250,41 +234,6 @@ Emit successfully TokensSuppliedForDistribution
 Transfer the allocated amount of tokens for distribution
 Transfer the Legion fee to the Legion fee receiver address
 Transfer the Legion fee to the Legion fee receiver address
-
-Updates the vesting terms.
-
-*Only callable by Legion, before the tokens have been supplied by the Project.*
-
-
-```solidity
-function updateVestingTerms(
-    uint256 _vestingDurationSeconds,
-    uint256 _vestingCliffDurationSeconds,
-    uint256 _tokenAllocationOnTGERate
-)
-    external
-    onlyProject
-    whenNotPaused;
-```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`_vestingDurationSeconds`|`uint256`|The vesting schedule duration for the token sold in seconds.|
-|`_vestingCliffDurationSeconds`|`uint256`|The vesting cliff duration for the token sold in seconds.|
-|`_tokenAllocationOnTGERate`|`uint256`|The token allocation amount released to investors after TGE in 18 decimals precision.|
-
-
-### emergencyWithdraw
-
-Verify that the sale is not canceled
-Verify that the project has not withdrawn any capital
-Verify that tokens for distribution have not been allocated
-Set the vesting duration in seconds
-Set the vesting cliff duration in seconds
-Set the token allocation on TGE
-Verify that the vesting configuration is valid
-Emit successfully VestingTermsUpdated
 
 Withdraw tokens from the contract in case of emergency.
 
@@ -317,7 +266,7 @@ Withdraw capital from the contract.
 function withdrawRaisedCapital() external onlyProject whenNotPaused;
 ```
 
-### claimAskTokenAllocation
+### claimTokenAllocation
 
 Verify that the sale is not canceled
 Verify that the sale has ended
@@ -334,11 +283,12 @@ Claim token allocation by investors.
 
 
 ```solidity
-function claimAskTokenAllocation(
+function claimTokenAllocation(
     uint256 investAmount,
     uint256 tokenAllocationRate,
-    bytes32 saftHash,
-    bytes memory signature
+    LegionVestingManager.LegionInvestorVestingConfig calldata investorVestingConfig,
+    bytes memory investSignature,
+    bytes memory vestingSignature
 )
     external
     whenNotPaused
@@ -350,27 +300,27 @@ function claimAskTokenAllocation(
 |----|----|-----------|
 |`investAmount`|`uint256`|The amount of capital the investor is allowed to invest, according to the SAFT.|
 |`tokenAllocationRate`|`uint256`|The token allocation the investor will receive as a percentage of totalSupply, represented in 18 decimals precision.|
-|`saftHash`|`bytes32`|The hash of the Simple Agreement for Future Tokens (SAFT) signed by the investor.|
-|`signature`|`bytes`|The signature proving that the investor has signed a SAFT.|
+|`investorVestingConfig`|`LegionVestingManager.LegionInvestorVestingConfig`|The vesting configuration for the investor.|
+|`investSignature`|`bytes`|The signature proving that the investor has signed a SAFT.|
+|`vestingSignature`|`bytes`|The signature proving that investor vesting terms are valid.|
 
 
 ### cancelSale
 
 Verify that the sale has not been canceled
-Load the investor position
-Cache the SAFT amount the investor is allowed to invest
-Cache the token allocation rate in 18 decimals precision
-Cache the hash of the SAFT signed by the investor
 Verify that the investor can claim the token allocation
+Update the investor position
 Verify that the investor position is valid
+Verify that the investor vesting terms are valid
 Verify that the signature has not been used
+Load the investor position
 Mark the signature as used
 Mark that the token amount has been settled
 Calculate the total token amount to be claimed
 Calculate the amount to be distributed on claim
 Calculate the remaining amount to be vested
 Emit successfully TokenAllocationClaimed
-Deploy a linear vesting schedule contract
+Deploy a vesting schedule contract
 Save the vesting address for the investor
 Transfer the allocated amount of tokens for distribution
 Transfer the allocated amount of tokens for distribution on claim
@@ -384,7 +334,7 @@ Cancel the sale.
 function cancelSale() external onlyProject whenNotPaused;
 ```
 
-### withdrawCapitalIfSaleIsCanceled
+### withdrawInvestedCapitalIfCanceled
 
 Verify that the sale has not been canceled
 Verify that no tokens have been supplied to the sale by the Project
@@ -399,10 +349,10 @@ Withdraw capital if the sale has been canceled.
 
 
 ```solidity
-function withdrawCapitalIfSaleIsCanceled() external whenNotPaused;
+function withdrawInvestedCapitalIfCanceled() external whenNotPaused;
 ```
 
-### withdrawExcessCapital
+### withdrawExcessInvestedCapital
 
 Verify that the sale has been actually canceled
 Cache the amount to refund in memory
@@ -416,12 +366,11 @@ Withdraw back excess capital from investors.
 
 
 ```solidity
-function withdrawExcessCapital(
+function withdrawExcessInvestedCapital(
     uint256 amount,
     uint256 investAmount,
     uint256 tokenAllocationRate,
-    bytes32 saftHash,
-    bytes memory signature
+    bytes memory investSignature
 )
     external
     whenNotPaused;
@@ -433,11 +382,10 @@ function withdrawExcessCapital(
 |`amount`|`uint256`|The amount of excess capital to be withdrawn.|
 |`investAmount`|`uint256`|The amount of capital the investor is allowed to invest, according to the SAFT.|
 |`tokenAllocationRate`|`uint256`|The token allocation the investor will receive as a percentage of totalSupply, represented in 18 decimals precision.|
-|`saftHash`|`bytes32`|The hash of the Simple Agreement for Future Tokens (SAFT) signed by the investor.|
-|`signature`|`bytes`|The signature proving that the investor is allowed to participate.|
+|`investSignature`|`bytes`|The signature proving that the investor is allowed to participate.|
 
 
-### releaseTokens
+### releaseVestedTokens
 
 Verify that the sale has not been canceled
 Verify that the signature has not been used
@@ -445,9 +393,7 @@ Load the investor position
 Decrement total capital invested from investors
 Decrement total investor capital for the investor
 Mark the signature as used
-Cache the maximum amount the investor is allowed to invest
-Cache the token allocation rate in 18 decimals precision
-Cache the hash of the SAFT signed by the investor
+Update the investor position
 Verify that the investor position is valid
 Emit successfully ExcessCapitalWithdrawn
 Transfer the excess capital to the investor
@@ -456,7 +402,7 @@ Releases tokens from vesting to the investor address.
 
 
 ```solidity
-function releaseTokens() external whenNotPaused askTokenAvailable;
+function releaseVestedTokens() external whenNotPaused askTokenAvailable;
 ```
 
 ### endSale
@@ -541,16 +487,14 @@ function saleStatusDetails() external view returns (PreLiquidSaleStatus memory);
 
 Get the pre-liquid sale status
 
-Returns the sale vesting configuration.
+Returns the vesting configuration.
 
 
 ```solidity
-function vestingConfiguration() external view returns (PreLiquidSaleVestingConfig memory);
+function vestingConfiguration() external view virtual returns (LegionVestingManager.LegionVestingConfig memory);
 ```
 
 ### investorPositionDetails
-
-Get the pre-liquid sale vesting config
 
 Returns an investor position details.
 
@@ -559,40 +503,27 @@ Returns an investor position details.
 function investorPositionDetails(address investorAddress) external view returns (InvestorPosition memory);
 ```
 
-### _createVesting
+### investorVestingStatus
 
-Create a vesting schedule contract.
+Returns the investor vesting status.
 
 
 ```solidity
-function _createVesting(
-    address _beneficiary,
-    uint64 _startTimestamp,
-    uint64 _durationSeconds,
-    uint64 _cliffDurationSeconds
-)
-    internal
-    returns (address payable vestingInstance);
+function investorVestingStatus(address investor)
+    external
+    view
+    returns (LegionInvestorVestingStatus memory vestingStatus);
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`_beneficiary`|`address`|The beneficiary.|
-|`_startTimestamp`|`uint64`|The start timestamp.|
-|`_durationSeconds`|`uint64`|The duration in seconds.|
-|`_cliffDurationSeconds`|`uint64`|The cliff duration in seconds.|
-
-**Returns**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`vestingInstance`|`address payable`|The address of the deployed vesting instance.|
+|`investor`|`address`|The address of the investor.|
 
 
 ### _setLegionSaleConfig
 
-Deploy a vesting schedule instance
+Get the investor position details
 
 Sets the sale and vesting params.
 
@@ -608,8 +539,6 @@ function _setLegionSaleConfig(PreLiquidSaleInitializationParams calldata preLiqu
 
 Verify if the sale configuration is valid
 Initialize pre-liquid sale configuration
-Initialize pre-liquid sale vesting configuration
-Verify that the vesting configuration is valid
 Cache Legion addresses from `LegionAddressRegistry`
 
 Sync Legion addresses from `LegionAddressRegistry`.
@@ -619,7 +548,27 @@ Sync Legion addresses from `LegionAddressRegistry`.
 function _syncLegionAddresses() internal virtual;
 ```
 
+### _updateInvestorPosition
+
+Update the investor position.
+
+
+```solidity
+function _updateInvestorPosition(uint256 investAmount, uint256 tokenAllocationRate) internal virtual;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`investAmount`|`uint256`|The amount of capital the investor is allowed to invest.|
+|`tokenAllocationRate`|`uint256`|The token allocation the investor will receive as a percentage of totalSupply, represented in 18 decimals precision.|
+
+
 ### _verifyValidConfig
+
+Load the investor position
+Cache the SAFT amount the investor is allowed to invest
+Cache the token allocation rate in 18 decimals precision
 
 Verify if the sale configuration is valid.
 
@@ -653,22 +602,11 @@ function _verifyCanSupplyTokens(uint256 _amount) private view;
 |`_amount`|`uint256`|The amount to supply.|
 
 
-### _verifyTokensNotAllocated
+### _verifySaleNotCanceled
 
 Revert if Legion has not set the total amount of tokens allocated for distribution
 Revert if tokens have already been supplied
 Revert if the amount of tokens supplied is different than the amount set by Legion
-
-Verify if the tokens for distribution have not been allocated.
-
-
-```solidity
-function _verifyTokensNotAllocated() private view;
-```
-
-### _verifySaleNotCanceled
-
-Revert if the tokens for distribution have already been allocated
 
 Verify that the sale is not canceled.
 
@@ -684,15 +622,6 @@ Verify that the sale is canceled.
 
 ```solidity
 function _verifySaleIsCanceled() internal view;
-```
-
-### _verifyNoCapitalWithdrawn
-
-Verify that the Project has not withdrawn any capital.
-
-
-```solidity
-function _verifyNoCapitalWithdrawn() internal view;
 ```
 
 ### _verifySaleHasNotEnded
@@ -797,19 +726,7 @@ Verify that capital raised can be published.
 function _verifyCanPublishCapitalRaised() internal view;
 ```
 
-### _verifyValidVestingConfig
-
-Verify that the vesting configuration is valid.
-
-
-```solidity
-function _verifyValidVestingConfig() internal view virtual;
-```
-
 ### _verifyValidPosition
-
-Check if vesting duration is no more than 10 years, if vesting cliff duration is not more than vesting
-duration or the token allocation on TGE rate is no more than 100%
 
 Verify if the investor position is valid
 
@@ -823,5 +740,31 @@ function _verifyValidPosition(bytes memory signature, SaleAction actionType) int
 |----|----|-----------|
 |`signature`|`bytes`|The signature proving the investor is part of the whitelist|
 |`actionType`|`SaleAction`|The type of sale action|
+
+
+### _verifyValidVestingPosition
+
+Load the investor position
+Verify that the amount invested is equal to the SAFT amount
+Construct the signed data
+Verify the signature
+
+Verify if the investor vesting position is valid
+
+
+```solidity
+function _verifyValidVestingPosition(
+    bytes memory vestingSignature,
+    LegionVestingManager.LegionInvestorVestingConfig calldata investorVestingConfig
+)
+    internal
+    view;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`vestingSignature`|`bytes`|The signature proving that investor vesting terms are valid.|
+|`investorVestingConfig`|`LegionVestingManager.LegionInvestorVestingConfig`|The vesting configuration for the investor.|
 
 

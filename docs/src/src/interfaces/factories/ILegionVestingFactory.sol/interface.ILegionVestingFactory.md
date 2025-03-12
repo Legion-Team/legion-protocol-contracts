@@ -1,5 +1,5 @@
 # ILegionVestingFactory
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/1a165deeea33dfd2b1dca142bf23d06b547c39a3/src/interfaces/factories/ILegionVestingFactory.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/a0becaf0413338ea78e3b0a0ce4527f7e1695849/src/interfaces/factories/ILegionVestingFactory.sol)
 
 
 ## Functions
@@ -34,6 +34,41 @@ function createLinearVesting(
 |`linearVestingInstance`|`address payable`|The address of the deployed LegionLinearVesting instance.|
 
 
+### createLinearEpochVesting
+
+Deploy a LegionLinearEpochVesting contract.
+
+
+```solidity
+function createLinearEpochVesting(
+    address beneficiary,
+    uint64 startTimestamp,
+    uint64 durationSeconds,
+    uint64 cliffDurationSeconds,
+    uint256 epochDurationSeconds,
+    uint256 numberOfEpochs
+)
+    external
+    returns (address payable linearEpochVestingInstance);
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`beneficiary`|`address`|The address that will receive the vested tokens|
+|`startTimestamp`|`uint64`|The Unix timestamp when the vesting period starts|
+|`durationSeconds`|`uint64`|The duration of the vesting period in seconds|
+|`cliffDurationSeconds`|`uint64`|The duration of the cliff period in seconds|
+|`epochDurationSeconds`|`uint256`|The duration of each epoch in seconds|
+|`numberOfEpochs`|`uint256`|The number of epochs|
+
+**Returns**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`linearEpochVestingInstance`|`address payable`|The address of the deployed LegionLinearEpochVesting instance.|
+
+
 ## Events
 ### NewLinearVestingCreated
 This event is emitted when a new linear vesting schedule contract is deployed for an investor.
@@ -53,4 +88,30 @@ event NewLinearVestingCreated(
 |`startTimestamp`|`uint64`|The Unix timestamp (seconds) when the vesting period starts.|
 |`durationSeconds`|`uint64`|The vesting duration in seconds.|
 |`cliffDurationSeconds`|`uint64`|The vesting cliff duration in seconds.|
+
+### NewLinearEpochVestingCreated
+This event is emitted when a new linear epoch vesting schedule contract is deployed for an investor.
+
+
+```solidity
+event NewLinearEpochVestingCreated(
+    address beneficiary,
+    uint64 startTimestamp,
+    uint64 durationSeconds,
+    uint64 cliffDurationSeconds,
+    uint256 epochDurationSeconds,
+    uint256 numberOfEpochs
+);
+```
+
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`beneficiary`|`address`|The address of the beneficiary.|
+|`startTimestamp`|`uint64`|The Unix timestamp (seconds) when the vesting period starts.|
+|`durationSeconds`|`uint64`|The vesting duration in seconds.|
+|`cliffDurationSeconds`|`uint64`|The vesting cliff duration in seconds.|
+|`epochDurationSeconds`|`uint256`|The duration of each epoch in seconds|
+|`numberOfEpochs`|`uint256`|The number of epochs|
 

@@ -72,7 +72,6 @@ Every fixed price sale consists of 5 stages, explained below:
 - `publishSaleResults`: Publishes the results of the fixed price sale.
 - `setAcceptedCapital`: Publishes the results for excess capital pledged to the sale.
 - `cancelSale`: Allows the project admin to cancel the sale.
-- `cancelExpiredSale`: Cancels the sale if it has expired.
 - `withdrawInvestedCapitalIfCanceled`: Allows investors to claim back their capital if the sale is canceled.
 
 ### Sealed Bid Auction Sale
@@ -104,7 +103,6 @@ Every sealed bid auction consists of three stages, explained below:
 - `publishSaleResults`: Publishes the results of the sealed bid auction.
 - `setAcceptedCapital`: Publishes the results for excess capital pledged to the sale.
 - `cancelSale`: Allows the project admin to cancel the sale.
-- `cancelExpiredSale`: Cancels the sale if it has expired.
 - `withdrawInvestedCapitalIfCanceled`: Allows investors to claim back their capital if the sale is canceled.
 
 ### Pre-Liquid Token Sale V1
@@ -129,15 +127,15 @@ In comparison to other sale contracts, the `LegionPreLiquidSaleV1` is more async
 - `initialize`: Initializes the sale with configuration parameters.
 - `invest`: Allows whitelisted users (SAFT signers) to invest in the pre-liquid sale.
 - `refund`: Allows investors to receive a full refund within 14 days since their investment (MiCA).
-- `publishTgeDetails`: Publishes the TGE details, called by Legion.
-- `supplyTokens`: Allows the project admin to supply tokens for the sale.
-- `updateVestingTerms`: Allows the project admin to update the vesting terms for the pre-liquid sale.
-- `publishCapitalRaised`: Publishes the capital raised amount by the Project.
 - `withdrawRaisedCapital`: Allows the project admin to withdraw raised capital.
 - `claimTokenAllocation`: Allows investors to claim their token allocation, after TGE and tokens are supplied by the project.
+- `withdrawExcessInvestedCapital`: Allows investors to withdraw excess capital in case they've provided more than the amount according to the SAFT has been lowered.
+- `releaseVestedTokens`: Releases vested tokens to investors.
+- `publishTgeDetails`: Publishes the TGE details, called by Legion.
+- `supplyTokens`: Allows the project admin to supply tokens for the sale.
+- `publishCapitalRaised`: Publishes the capital raised amount by the Project.
 - `cancelSale`: Allows the project admin to cancel the sale.
 - `withdrawInvestedCapitalIfCanceled`: Allows investors to withdraw back their capital if the sale is canceled.
-- `withdrawExcessInvestedCapital`: Allows investors to withdraw excess capital in case they've provided more than the amount according to the SAFT has been lowered.
 - `endSale`: Allows the project admin to pause/unpause accepting investments to the sale.
 
 ### Pre-Liquid Token Sale V2
@@ -166,14 +164,13 @@ In comparison to other sale contracts, the `LegionPreLiquidSaleV2` is more async
 - `withdrawRaisedCapital`: Enables the project admin to withdraw raised capital post-sale.
 - `claimTokenAllocation`: Allows investors to claim their token allocation.
 - `withdrawExcessInvestedCapital`: Allows investors to withdraw excess invested capital from the sale contract.
-- `releaseTokens`: Releases vested tokens to investors.
+- `releaseVestedTokens`: Releases vested tokens to investors.
 - `supplyTokens`: Allows the project admin to supply tokens for the sale.
 - `publishSaleResults`: Publishes the results of the pre-liquid token sale.
 - `publishCapitalRaised`: Publishes the capital raised amount by the Project.
 - `setAcceptedCapital`: Sets the accepted capital by the Project for an investor.
 - `cancelSale`: Allows the project admin to cancel the sale.
-- `cancelExpiredSale`: Cancels the sale if it has expired.
-- `claimBackCapitalIfCanceled`: Allows investors to claim back their capital if the sale is canceled.
+- `withdrawInvestedCapitalIfCanceled`: Allows investors to withdraw back their capital if the sale is canceled.
 
 ### Fixed Price Sale Factory
 
@@ -215,6 +212,14 @@ The `LegionLinearVesting` contract handles the linear vesting of tokens for inve
 
 - `initialize`: Initializes the vesting contract with the beneficiary, start timestamp, and vesting duration.
 
+### Linear Epoch Vesting
+
+The `LegionLinearEpochVesting` contract handles the linear epoch vesting of tokens for investors. It releases vested tokens over a specified duration in epochs, ensuring that tokens are distributed gradually according to a predefined schedule.
+
+#### Key Functions:
+
+- `initialize`: Initializes the vesting contract with the beneficiary, start timestamp, vesting duration, epoch duration, number of epochs.
+
 ### Vesting Factory
 
 The `LegionVestingFactory` contract is a factory for deploying proxy instances of Legion vesting contracts. It allows for the creation of new vesting schedule contracts.
@@ -222,6 +227,7 @@ The `LegionVestingFactory` contract is a factory for deploying proxy instances o
 #### Key Functions:
 
 - `createLinearVesting`: Creates a new instance of `LegionLinearVesting`.
+- `createLinearEpochVesting`: Creates a new instance of `LegionLinearEpohVesting`.
 
 ### Address Registry
 

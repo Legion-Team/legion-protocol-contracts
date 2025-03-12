@@ -26,13 +26,11 @@ interface ILegionFixedPriceSaleFactory {
      * @param saleInstance The address of the sale instance deployed.
      * @param saleInitParams The Legion sale initialization parameters.
      * @param fixedPriceSaleInitParams The fixed price sale specific initialization parameters.
-     * @param vestingInitParams The vesting initialization parameters.
      */
     event NewFixedPriceSaleCreated(
         address saleInstance,
         ILegionSale.LegionSaleInitializationParams saleInitParams,
-        ILegionFixedPriceSale.FixedPriceSaleInitializationParams fixedPriceSaleInitParams,
-        ILegionSale.LegionVestingInitializationParams vestingInitParams
+        ILegionFixedPriceSale.FixedPriceSaleInitializationParams fixedPriceSaleInitParams
     );
 
     /**
@@ -40,14 +38,12 @@ interface ILegionFixedPriceSaleFactory {
      *
      * @param saleInitParams The Legion sale initialization parameters.
      * @param fixedPriceSaleInitParams The fixed price sale specific initialization parameters.
-     * @param vestingInitParams The vesting initialization parameters.
      *
      * @return fixedPriceSaleInstance The address of the FixedPriceSale instance deployed.
      */
     function createFixedPriceSale(
         ILegionSale.LegionSaleInitializationParams memory saleInitParams,
-        ILegionFixedPriceSale.FixedPriceSaleInitializationParams memory fixedPriceSaleInitParams,
-        ILegionSale.LegionVestingInitializationParams memory vestingInitParams
+        ILegionFixedPriceSale.FixedPriceSaleInitializationParams memory fixedPriceSaleInitParams
     )
         external
         returns (address payable fixedPriceSaleInstance);

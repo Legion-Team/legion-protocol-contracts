@@ -1,5 +1,5 @@
 # LegionSealedBidAuctionSaleFactory
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/1a165deeea33dfd2b1dca142bf23d06b547c39a3/src/factories/LegionSealedBidAuctionSaleFactory.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/a0becaf0413338ea78e3b0a0ce4527f7e1695849/src/factories/LegionSealedBidAuctionSaleFactory.sol)
 
 **Inherits:**
 [ILegionSealedBidAuctionSaleFactory](/src/interfaces/factories/ILegionSealedBidAuctionSaleFactory.sol/interface.ILegionSealedBidAuctionSaleFactory.md), Ownable
@@ -44,8 +44,7 @@ Deploy a LegionSealedBidAuctionSale contract.
 ```solidity
 function createSealedBidAuction(
     ILegionSale.LegionSaleInitializationParams memory saleInitParams,
-    ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams memory sealedBidAuctionSaleInitParams,
-    ILegionSale.LegionVestingInitializationParams memory vestingInitParams
+    ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams memory sealedBidAuctionSaleInitParams
 )
     external
     onlyOwner
@@ -57,7 +56,6 @@ function createSealedBidAuction(
 |----|----|-----------|
 |`saleInitParams`|`ILegionSale.LegionSaleInitializationParams`|The Legion sale initialization parameters.|
 |`sealedBidAuctionSaleInitParams`|`ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams`|The sealed bid auction sale specific initialization parameters.|
-|`vestingInitParams`|`ILegionSale.LegionVestingInitializationParams`|The vesting initialization parameters.|
 
 **Returns**
 

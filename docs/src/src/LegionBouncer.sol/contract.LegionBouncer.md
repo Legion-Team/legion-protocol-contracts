@@ -1,5 +1,5 @@
 # LegionBouncer
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/1a165deeea33dfd2b1dca142bf23d06b547c39a3/src/LegionBouncer.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/a0becaf0413338ea78e3b0a0ce4527f7e1695849/src/LegionBouncer.sol)
 
 **Inherits:**
 [ILegionBouncer](/src/interfaces/ILegionBouncer.sol/interface.ILegionBouncer.md), OwnableRoles

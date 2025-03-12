@@ -49,14 +49,12 @@ contract LegionSealedBidAuctionSaleFactory is ILegionSealedBidAuctionSaleFactory
      *
      * @param saleInitParams The Legion sale initialization parameters.
      * @param sealedBidAuctionSaleInitParams The sealed bid auction sale specific initialization parameters.
-     * @param vestingInitParams The vesting initialization parameters.
      *
      * @return sealedBidAuctionInstance The address of the SealedBidAuction instance deployed.
      */
     function createSealedBidAuction(
         ILegionSale.LegionSaleInitializationParams memory saleInitParams,
-        ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams memory sealedBidAuctionSaleInitParams,
-        ILegionSale.LegionVestingInitializationParams memory vestingInitParams
+        ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams memory sealedBidAuctionSaleInitParams
     )
         external
         onlyOwner
@@ -66,13 +64,9 @@ contract LegionSealedBidAuctionSaleFactory is ILegionSealedBidAuctionSaleFactory
         sealedBidAuctionInstance = payable(sealedBidAuctionTemplate.clone());
 
         // Emit NewSealedBidAuctionCreated
-        emit NewSealedBidAuctionCreated(
-            sealedBidAuctionInstance, saleInitParams, sealedBidAuctionSaleInitParams, vestingInitParams
-        );
+        emit NewSealedBidAuctionCreated(sealedBidAuctionInstance, saleInitParams, sealedBidAuctionSaleInitParams);
 
         // Initialize the LegionSealedBidAuctionSale with the provided configuration
-        LegionSealedBidAuctionSale(sealedBidAuctionInstance).initialize(
-            saleInitParams, sealedBidAuctionSaleInitParams, vestingInitParams
-        );
+        LegionSealedBidAuctionSale(sealedBidAuctionInstance).initialize(saleInitParams, sealedBidAuctionSaleInitParams);
     }
 }
