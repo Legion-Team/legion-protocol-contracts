@@ -25,26 +25,17 @@ interface ILegionPreLiquidSaleV2Factory {
      *
      * @param saleInstance The address of the sale instance deployed.
      * @param saleInitParams The Legion sale initialization parameters.
-     * @param vestingInitParams The vesting initialization parameters.
      */
-    event NewPreLiquidSaleV2Created(
-        address saleInstance,
-        ILegionSale.LegionSaleInitializationParams saleInitParams,
-        ILegionPreLiquidSaleV2.LegionVestingInitializationParams vestingInitParams
-    );
+    event NewPreLiquidSaleV2Created(address saleInstance, ILegionSale.LegionSaleInitializationParams saleInitParams);
 
     /**
      * @notice Deploy a LegionPreLiquidSaleV2 contract.
      *
      * @param saleInitParams The Legion sale initialization parameters.
-     * @param vestingInitParams The vesting initialization parameters.
      *
      * @return preLiquidSaleV2Instance The address of the preLiquidSaleV2Instance deployed.
      */
-    function createPreLiquidSaleV2(
-        ILegionSale.LegionSaleInitializationParams memory saleInitParams,
-        ILegionPreLiquidSaleV2.LegionVestingInitializationParams memory vestingInitParams
-    )
+    function createPreLiquidSaleV2(ILegionSale.LegionSaleInitializationParams memory saleInitParams)
         external
         returns (address payable preLiquidSaleV2Instance);
 }

@@ -44,11 +44,8 @@ interface ILegionPreLiquidSaleV2 is ILegionSale {
      * @param claimMerkleRoot The merkle root to verify token claims.
      * @param tokensAllocated The amount of tokens allocated from the sale.
      * @param tokenAddress The address of the token distributed to investors.
-     * @param vestingStartTime The Unix timestamp (seconds) of the block when the vesting starts.
      */
-    event SaleResultsPublished(
-        bytes32 claimMerkleRoot, uint256 tokensAllocated, address tokenAddress, uint256 vestingStartTime
-    );
+    event SaleResultsPublished(bytes32 claimMerkleRoot, uint256 tokensAllocated, address tokenAddress);
 
     /**
      * @notice This event is emitted when the capital raised is successfully published by the Legion admin.
@@ -69,13 +66,8 @@ interface ILegionPreLiquidSaleV2 is ILegionSale {
      * @notice Initializes the contract with correct parameters.
      *
      * @param saleInitParams The Legion sale initialization parameters.
-     * @param vestingInitParams The vesting initialization parameters.
      */
-    function initialize(
-        LegionSaleInitializationParams calldata saleInitParams,
-        LegionVestingInitializationParams calldata vestingInitParams
-    )
-        external;
+    function initialize(LegionSaleInitializationParams calldata saleInitParams) external;
 
     /**
      * @notice Invest capital to the fixed price sale.
@@ -93,15 +85,8 @@ interface ILegionPreLiquidSaleV2 is ILegionSale {
      * @param claimMerkleRoot The merkle root to verify token claims.
      * @param tokensAllocated The total amount of tokens allocated for distribution among investors.
      * @param askToken The address of the token distributed to investors.
-     * @param vestingStartTime The Unix timestamp (seconds) of the block when the vesting starts.
      */
-    function publishSaleResults(
-        bytes32 claimMerkleRoot,
-        uint256 tokensAllocated,
-        address askToken,
-        uint256 vestingStartTime
-    )
-        external;
+    function publishSaleResults(bytes32 claimMerkleRoot, uint256 tokensAllocated, address askToken) external;
 
     /**
      * @notice Publish the total capital raised by the project.

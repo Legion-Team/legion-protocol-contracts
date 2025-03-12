@@ -38,12 +38,10 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
      *
      * @param saleInitParams The Legion sale initialization parameters.
      * @param sealedBidAuctionSaleInitParams The sealed bid auction sale specific initialization parameters.
-     * @param vestingInitParams The vesting initialization parameters.
      */
     function initialize(
         LegionSaleInitializationParams calldata saleInitParams,
-        SealedBidAuctionSaleInitializationParams calldata sealedBidAuctionSaleInitParams,
-        LegionVestingInitializationParams calldata vestingInitParams
+        SealedBidAuctionSaleInitializationParams calldata sealedBidAuctionSaleInitParams
     )
         external
         initializer
@@ -52,7 +50,7 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
         _verifyValidParams(sealedBidAuctionSaleInitParams);
 
         // Init and set the sale common params
-        _setLegionSaleConfig(saleInitParams, vestingInitParams);
+        _setLegionSaleConfig(saleInitParams);
 
         // Set the sealed bid auction sale specific configuration
         (sealedBidAuctionSaleConfig.publicKey) = sealedBidAuctionSaleInitParams.publicKey;
@@ -61,19 +59,6 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
         saleConfig.startTime = block.timestamp;
         saleConfig.endTime = saleConfig.startTime + saleInitParams.salePeriodSeconds;
         saleConfig.refundEndTime = saleConfig.endTime + saleInitParams.refundPeriodSeconds;
-
-        // Check if lockupPeriodSeconds is less than refundPeriodSeconds
-        // lockupEndTime should be at least refundEndTime
-        if (saleInitParams.lockupPeriodSeconds <= saleInitParams.refundPeriodSeconds) {
-            // If yes, set lockupEndTime to be refundEndTime
-            saleConfig.lockupEndTime = saleConfig.refundEndTime;
-        } else {
-            // If no, calculate the lockupEndTime
-            saleConfig.lockupEndTime = saleConfig.endTime + saleInitParams.lockupPeriodSeconds;
-        }
-
-        // Set the vestingStartTime to begin when lockupEndTime is reached
-        vestingConfig.vestingStartTime = saleConfig.lockupEndTime;
     }
 
     /**
@@ -251,7 +236,9 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
         pure
     {
         // Check if the public key used for encryption is valid
-        if (!ECIES.isValid(sealedBidAuctionSaleInitParams.publicKey)) revert Errors.InvalidBidPublicKey();
+        if (!ECIES.isValid(sealedBidAuctionSaleInitParams.publicKey)) {
+            revert Errors.InvalidBidPublicKey();
+        }
     }
 
     /**
@@ -279,7 +266,9 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
      */
     function _verifyValidPrivateKey(uint256 _privateKey) private view {
         // Verify that the private key has not already been published
-        if (sealedBidAuctionSaleConfig.privateKey != 0) revert Errors.PrivateKeyAlreadyPublished();
+        if (sealedBidAuctionSaleConfig.privateKey != 0) {
+            revert Errors.PrivateKeyAlreadyPublished();
+        }
 
         // Verify that the private key is valid for the public key
         Point memory calcPubKey = ECIES.calcPubKey(Point(1, 2), _privateKey);
@@ -293,7 +282,9 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
      * @notice Verify that the private key has been published by Legion.
      */
     function _verifyPrivateKeyIsPublished() private view {
-        if (sealedBidAuctionSaleConfig.privateKey == 0) revert Errors.PrivateKeyNotPublished();
+        if (sealedBidAuctionSaleConfig.privateKey == 0) {
+            revert Errors.PrivateKeyNotPublished();
+        }
     }
 
     /**
@@ -309,13 +300,17 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
      * @notice Verify that canceling is not locked
      */
     function _verifyCancelNotLocked() private view {
-        if (sealedBidAuctionSaleConfig.cancelLocked) revert Errors.CancelLocked();
+        if (sealedBidAuctionSaleConfig.cancelLocked) {
+            revert Errors.CancelLocked();
+        }
     }
 
     /**
      * @notice Verify that canceling is locked
      */
     function _verifyCancelLocked() private view {
-        if (!sealedBidAuctionSaleConfig.cancelLocked) revert Errors.CancelNotLocked();
+        if (!sealedBidAuctionSaleConfig.cancelLocked) {
+            revert Errors.CancelNotLocked();
+        }
     }
 }

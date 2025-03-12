@@ -16,7 +16,7 @@ pragma solidity 0.8.28;
 // If you find a bug, please contact security[at]legion.cc
 // We will pay a fair bounty for any issue that puts users' funds at risk.
 
-interface ILegionLinearVesting {
+interface ILegionLinearEpochVesting {
     /**
      * @notice See {VestingWalletUpgradeable-start}.
      */
@@ -71,4 +71,9 @@ interface ILegionLinearVesting {
      * @notice See {VestingWalletUpgradeable-vestedAmount}.
      */
     function vestedAmount(address token, uint64 timestamp) external view returns (uint256);
+
+    /**
+     * @notice Returns the cliff end timestamp.
+     */
+    function cliffEnd() external view returns (uint256);
 }

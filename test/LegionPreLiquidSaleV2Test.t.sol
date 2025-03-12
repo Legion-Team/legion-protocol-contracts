@@ -10,6 +10,7 @@ import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { ILegionSale } from "../src/interfaces/ILegionSale.sol";
 import { ILegionPreLiquidSaleV2 } from "../src/interfaces/ILegionPreLiquidSaleV2.sol";
 import { ILegionPreLiquidSaleV2Factory } from "../src/interfaces/factories/ILegionPreLiquidSaleV2Factory.sol";
+import { ILegionVestingManager } from "../src/interfaces/vesting/ILegionVestingManager.sol";
 import { LegionAddressRegistry } from "../src/LegionAddressRegistry.sol";
 import { LegionBouncer } from "../src/LegionBouncer.sol";
 import { LegionPreLiquidSaleV2 } from "../src/LegionPreLiquidSaleV2.sol";
@@ -29,8 +30,9 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     struct SaleTestConfig {
         ILegionSale.LegionSaleInitializationParams saleInitParams;
-        ILegionSale.LegionVestingInitializationParams vestingInitParams;
     }
+
+    ILegionVestingManager.LegionInvestorVestingConfig investorVestingConfig;
 
     SaleTestConfig testConfig;
 
@@ -68,7 +70,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     uint256 legionSignerPK = 1234;
     uint256 nonLegionSignerPK = 12_345;
 
-    bytes32 claimTokensMerkleRoot = 0x15c61ba404fb3c87c5853c85e7d2b741d237461665ee138f71c1041ee193862b;
+    bytes32 claimTokensMerkleRoot = 0xf1497b122b0d3850e93c6e95a35163a5f7715ca75ec6a031abe96622b46a6ee2;
     bytes32 distributeMerkleRootMalicious = 0x3669cbc540102264b01a429a06da6cc5b37f56b4f4efa289f5f0543609e8f54d;
     bytes32 distributeMerkleRootMalicious2 = 0xb2962bf5c95bc63831e3a68d7cb04b33e9e450adbc6a9847f3697af2a87ea2dc;
     bytes32 acceptedCapitalMerkleRoot = 0x54c416133cce27821e67f6c475e59fcdafb30c065ea8feaac86970c532db0202;
@@ -85,21 +87,16 @@ contract LegionPreLiquidSaleV2Test is Test {
         bidToken = new MockToken("USD Coin", "USDC", 6);
         askToken = new MockToken("LFG Coin", "LFG", 18);
         prepareLegionAddressRegistry();
+        prepareInvestorVestingConfig();
     }
 
     /**
      * @notice Helper method: Set the pre-liquid sale configuration parameters
      */
-    function setSaleParams(
-        ILegionSale.LegionSaleInitializationParams memory _saleInitParams,
-        ILegionSale.LegionVestingInitializationParams memory _vestingInitParams
-    )
-        public
-    {
+    function setSaleParams(ILegionSale.LegionSaleInitializationParams memory _saleInitParams) public {
         testConfig.saleInitParams = ILegionSale.LegionSaleInitializationParams({
             salePeriodSeconds: _saleInitParams.salePeriodSeconds,
             refundPeriodSeconds: _saleInitParams.refundPeriodSeconds,
-            lockupPeriodSeconds: _saleInitParams.lockupPeriodSeconds,
             legionFeeOnCapitalRaisedBps: _saleInitParams.legionFeeOnCapitalRaisedBps,
             legionFeeOnTokensSoldBps: _saleInitParams.legionFeeOnTokensSoldBps,
             referrerFeeOnCapitalRaisedBps: _saleInitParams.referrerFeeOnCapitalRaisedBps,
@@ -111,12 +108,6 @@ contract LegionPreLiquidSaleV2Test is Test {
             addressRegistry: _saleInitParams.addressRegistry,
             referrerFeeReceiver: _saleInitParams.referrerFeeReceiver
         });
-
-        testConfig.vestingInitParams = ILegionSale.LegionVestingInitializationParams({
-            vestingDurationSeconds: _vestingInitParams.vestingDurationSeconds,
-            vestingCliffDurationSeconds: _vestingInitParams.vestingCliffDurationSeconds,
-            tokenAllocationOnTGERate: _vestingInitParams.tokenAllocationOnTGERate
-        });
     }
 
     /**
@@ -127,7 +118,6 @@ contract LegionPreLiquidSaleV2Test is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: Constants.ONE_HOUR,
                 refundPeriodSeconds: Constants.TWO_WEEKS,
-                lockupPeriodSeconds: Constants.FORTY_DAYS,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -138,17 +128,11 @@ contract LegionPreLiquidSaleV2Test is Test {
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: address(nonLegionAdmin)
-            }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 100_000_000_000_000_000
             })
         );
 
         vm.prank(legionBouncer);
-        legionSaleInstance =
-            legionSaleFactory.createPreLiquidSaleV2(testConfig.saleInitParams, testConfig.vestingInitParams);
+        legionSaleInstance = legionSaleFactory.createPreLiquidSaleV2(testConfig.saleInitParams);
     }
 
     /**
@@ -267,6 +251,15 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
+     * @notice Helper method: Prepare investor vesting configuration
+     */
+    function prepareInvestorVestingConfig() public {
+        investorVestingConfig = ILegionVestingManager.LegionInvestorVestingConfig(
+            ILegionVestingManager.VestingType.LEGION_LINEAR, 0, 31_536_000, 3600, 0, 0, 1e17
+        );
+    }
+
+    /**
      * @notice Helper method: Get sale start time
      */
     function startTime() public view returns (uint256) {
@@ -294,15 +287,6 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
-     * @notice Helper method: Get the lockup end time
-     */
-    function lockupEndTime() public view returns (uint256) {
-        ILegionSale.LegionSaleConfiguration memory _saleConfig =
-            LegionPreLiquidSaleV2(payable(legionSaleInstance)).saleConfiguration();
-        return _saleConfig.lockupEndTime;
-    }
-
-    /**
      * @notice Helper method: Get sale total capital raised
      */
     function capitalRaised() public view returns (uint256 saleTotalCapitalRaised) {
@@ -320,12 +304,11 @@ contract LegionPreLiquidSaleV2Test is Test {
         // Arrange & Act
         prepareCreateLegionPreLiquidSale();
 
-        ILegionSale.LegionVestingConfiguration memory _vestingConfig =
+        ILegionVestingManager.LegionVestingConfig memory _vestingConfig =
             LegionPreLiquidSaleV2(payable(legionSaleInstance)).vestingConfiguration();
 
         // Assert
-        assertEq(_vestingConfig.vestingDurationSeconds, Constants.ONE_YEAR);
-        assertEq(_vestingConfig.vestingCliffDurationSeconds, Constants.ONE_HOUR);
+        assertEq(_vestingConfig.vestingFactory, address(legionVestingFactory));
     }
 
     /**
@@ -339,9 +322,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         vm.expectRevert();
 
         // Act
-        LegionPreLiquidSaleV2(payable(legionSaleInstance)).initialize(
-            testConfig.saleInitParams, testConfig.vestingInitParams
-        );
+        LegionPreLiquidSaleV2(payable(legionSaleInstance)).initialize(testConfig.saleInitParams);
     }
 
     /**
@@ -355,9 +336,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         vm.expectRevert(abi.encodeWithSelector(Initializable.InvalidInitialization.selector));
 
         // Act
-        LegionPreLiquidSaleV2(payable(fixedPriceSaleImplementation)).initialize(
-            testConfig.saleInitParams, testConfig.vestingInitParams
-        );
+        LegionPreLiquidSaleV2(payable(fixedPriceSaleImplementation)).initialize(testConfig.saleInitParams);
     }
 
     /**
@@ -368,9 +347,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         vm.expectRevert(abi.encodeWithSelector(Initializable.InvalidInitialization.selector));
 
         // Act
-        LegionPreLiquidSaleV2(preLiquidSaleV2Template).initialize(
-            testConfig.saleInitParams, testConfig.vestingInitParams
-        );
+        LegionPreLiquidSaleV2(preLiquidSaleV2Template).initialize(testConfig.saleInitParams);
     }
 
     /**
@@ -382,7 +359,6 @@ contract LegionPreLiquidSaleV2Test is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: Constants.ONE_HOUR,
                 refundPeriodSeconds: Constants.TWO_WEEKS,
-                lockupPeriodSeconds: Constants.FORTY_DAYS,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -393,11 +369,6 @@ contract LegionPreLiquidSaleV2Test is Test {
                 projectAdmin: address(0),
                 addressRegistry: address(0),
                 referrerFeeReceiver: address(0)
-            }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
             })
         );
 
@@ -406,7 +377,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         // Act
         vm.prank(legionBouncer);
-        legionSaleFactory.createPreLiquidSaleV2(testConfig.saleInitParams, testConfig.vestingInitParams);
+        legionSaleFactory.createPreLiquidSaleV2(testConfig.saleInitParams);
     }
 
     /**
@@ -418,7 +389,6 @@ contract LegionPreLiquidSaleV2Test is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: 0,
                 refundPeriodSeconds: 0,
-                lockupPeriodSeconds: 0,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -429,11 +399,6 @@ contract LegionPreLiquidSaleV2Test is Test {
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: address(nonLegionAdmin)
-            }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
             })
         );
 
@@ -442,7 +407,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         // Act
         vm.prank(legionBouncer);
-        legionSaleFactory.createPreLiquidSaleV2(testConfig.saleInitParams, testConfig.vestingInitParams);
+        legionSaleFactory.createPreLiquidSaleV2(testConfig.saleInitParams);
     }
 
     /**
@@ -454,7 +419,6 @@ contract LegionPreLiquidSaleV2Test is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: Constants.THREE_MONTHS + 1,
                 refundPeriodSeconds: Constants.TWO_WEEKS + 1,
-                lockupPeriodSeconds: Constants.SIX_MONTHS + 1,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -465,11 +429,6 @@ contract LegionPreLiquidSaleV2Test is Test {
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: address(nonLegionAdmin)
-            }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
             })
         );
 
@@ -478,43 +437,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         // Act
         vm.prank(legionBouncer);
-        legionSaleFactory.createPreLiquidSaleV2(testConfig.saleInitParams, testConfig.vestingInitParams);
-    }
-
-    /**
-     * @dev Test case: Attempt to initialize vesting configuration with invalid values.
-     */
-    function test_createPreLiquidSale_revertsWithInvalidVestingConfig() public {
-        // Arrange
-        setSaleParams(
-            ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: Constants.ONE_HOUR,
-                refundPeriodSeconds: Constants.ONE_HOUR,
-                lockupPeriodSeconds: Constants.ONE_HOUR,
-                legionFeeOnCapitalRaisedBps: 250,
-                legionFeeOnTokensSoldBps: 250,
-                referrerFeeOnCapitalRaisedBps: 100,
-                referrerFeeOnTokensSoldBps: 100,
-                minimumInvestAmount: 1e6,
-                bidToken: address(bidToken),
-                askToken: address(askToken),
-                projectAdmin: address(projectAdmin),
-                addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: address(nonLegionAdmin)
-            }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.TEN_YEARS,
-                vestingCliffDurationSeconds: Constants.TEN_YEARS + 1,
-                tokenAllocationOnTGERate: 1e18 + 1
-            })
-        );
-
-        // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidVestingConfig.selector));
-
-        // Act
-        vm.prank(legionBouncer);
-        legionSaleFactory.createPreLiquidSaleV2(testConfig.saleInitParams, testConfig.vestingInitParams);
+        legionSaleFactory.createPreLiquidSaleV2(testConfig.saleInitParams);
     }
 
     /**
@@ -526,7 +449,6 @@ contract LegionPreLiquidSaleV2Test is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: Constants.ONE_HOUR - 1,
                 refundPeriodSeconds: Constants.ONE_HOUR - 1,
-                lockupPeriodSeconds: Constants.ONE_HOUR - 1,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -537,11 +459,6 @@ contract LegionPreLiquidSaleV2Test is Test {
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: address(nonLegionAdmin)
-            }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
             })
         );
 
@@ -550,7 +467,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         // Act
         vm.prank(legionBouncer);
-        legionSaleFactory.createPreLiquidSaleV2(testConfig.saleInitParams, testConfig.vestingInitParams);
+        legionSaleFactory.createPreLiquidSaleV2(testConfig.saleInitParams);
     }
 
     /* ========== PAUSE TESTS ========== */
@@ -793,48 +710,6 @@ contract LegionPreLiquidSaleV2Test is Test {
         // Act
         vm.prank(projectAdmin);
         ILegionPreLiquidSaleV2(legionSaleInstance).endSale();
-    }
-
-    /**
-     * @notice Test case: Successfully initialize the contract when lockup period is less than refund time
-     */
-    function test_endSale_successfullyEndSaleIfLockupPeriodLessThanRefundTime() public {
-        // Arrange & Act
-        setSaleParams(
-            ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: Constants.ONE_HOUR,
-                refundPeriodSeconds: Constants.TWO_WEEKS,
-                lockupPeriodSeconds: Constants.TWO_WEEKS - 1,
-                legionFeeOnCapitalRaisedBps: 250,
-                legionFeeOnTokensSoldBps: 250,
-                referrerFeeOnCapitalRaisedBps: 100,
-                referrerFeeOnTokensSoldBps: 100,
-                minimumInvestAmount: 1e6,
-                bidToken: address(bidToken),
-                askToken: address(askToken),
-                projectAdmin: address(projectAdmin),
-                addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: address(nonLegionAdmin)
-            }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
-            })
-        );
-
-        vm.prank(legionBouncer);
-        legionSaleInstance =
-            legionSaleFactory.createPreLiquidSaleV2(testConfig.saleInitParams, testConfig.vestingInitParams);
-
-        vm.prank(projectAdmin);
-        ILegionPreLiquidSaleV2(legionSaleInstance).endSale();
-
-        ILegionSale.LegionSaleConfiguration memory _saleConfig =
-            LegionPreLiquidSaleV2(payable(legionSaleInstance)).saleConfiguration();
-
-        // Assert
-        assertEq(_saleConfig.lockupEndTime, _saleConfig.refundEndTime);
     }
 
     /**
@@ -1290,7 +1165,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         vm.prank(legionBouncer);
         ILegionPreLiquidSaleV2(legionSaleInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, address(askToken), 0
+            claimTokensMerkleRoot, 4000 * 1e18, address(askToken)
         );
 
         vm.prank(projectAdmin);
@@ -1407,12 +1282,12 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         // Assert
         vm.expectEmit();
-        emit ILegionPreLiquidSaleV2.SaleResultsPublished(claimTokensMerkleRoot, 4000 * 1e18, address(askToken), 0);
+        emit ILegionPreLiquidSaleV2.SaleResultsPublished(claimTokensMerkleRoot, 4000 * 1e18, address(askToken));
 
         // Act
         vm.prank(legionBouncer);
         ILegionPreLiquidSaleV2(legionSaleInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, address(askToken), 0
+            claimTokensMerkleRoot, 4000 * 1e18, address(askToken)
         );
     }
 
@@ -1429,7 +1304,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         // Act
         vm.prank(nonLegionAdmin);
         ILegionPreLiquidSaleV2(legionSaleInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, address(askToken), 0
+            claimTokensMerkleRoot, 4000 * 1e18, address(askToken)
         );
     }
 
@@ -1447,7 +1322,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         vm.prank(legionBouncer);
         ILegionPreLiquidSaleV2(legionSaleInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, address(askToken), 0
+            claimTokensMerkleRoot, 4000 * 1e18, address(askToken)
         );
 
         // Assert
@@ -1456,7 +1331,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         // Act
         vm.prank(legionBouncer);
         ILegionPreLiquidSaleV2(legionSaleInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, address(askToken), 0
+            claimTokensMerkleRoot, 4000 * 1e18, address(askToken)
         );
     }
 
@@ -1478,7 +1353,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         // Act
         vm.prank(legionBouncer);
         ILegionPreLiquidSaleV2(legionSaleInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, address(askToken), 0
+            claimTokensMerkleRoot, 4000 * 1e18, address(askToken)
         );
     }
 
@@ -1498,7 +1373,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         // Act
         vm.prank(legionBouncer);
         ILegionPreLiquidSaleV2(legionSaleInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, address(askToken), 0
+            claimTokensMerkleRoot, 4000 * 1e18, address(askToken)
         );
     }
 
@@ -1574,7 +1449,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         vm.prank(legionBouncer);
         ILegionPreLiquidSaleV2(legionSaleInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, address(askToken), 0
+            claimTokensMerkleRoot, 4000 * 1e18, address(askToken)
         );
 
         // Assert
@@ -1601,7 +1476,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         vm.prank(legionBouncer);
         ILegionPreLiquidSaleV2(legionSaleInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, address(askToken), 0
+            claimTokensMerkleRoot, 4000 * 1e18, address(askToken)
         );
 
         // Assert
@@ -1613,6 +1488,32 @@ contract LegionPreLiquidSaleV2Test is Test {
     }
 
     /**
+     * @notice Test case: Attempt to supply tokens with incorrect referrer fee amount
+     */
+    function test_supplyTokens_revertsIfReferrerFeeIsIncorrect() public {
+        // Arrange
+        prepareCreateLegionPreLiquidSale();
+        prepareMintAndApproveProjectTokens();
+
+        vm.prank(legionBouncer);
+        ILegionPreLiquidSaleV2(legionSaleInstance).endSale();
+
+        vm.warp(refundEndTime() + 1);
+
+        vm.prank(legionBouncer);
+        ILegionPreLiquidSaleV2(legionSaleInstance).publishSaleResults(
+            claimTokensMerkleRoot, 4000 * 1e18, address(askToken)
+        );
+
+        // Assert
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidFeeAmount.selector));
+
+        // Act
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSaleV2(legionSaleInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 39 * 1e18);
+    }
+
+    /**
      * @notice Test case: Successfully supply tokens with Legion fee set to zero
      */
     function test_supplyTokens_successfullyEmitsIfLegionFeeIsZero() public {
@@ -1621,7 +1522,6 @@ contract LegionPreLiquidSaleV2Test is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: Constants.ONE_HOUR,
                 refundPeriodSeconds: Constants.TWO_WEEKS,
-                lockupPeriodSeconds: Constants.FORTY_DAYS,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 0,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -1632,17 +1532,11 @@ contract LegionPreLiquidSaleV2Test is Test {
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: address(nonLegionAdmin)
-            }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
             })
         );
 
         vm.prank(legionBouncer);
-        legionSaleInstance =
-            legionSaleFactory.createPreLiquidSaleV2(testConfig.saleInitParams, testConfig.vestingInitParams);
+        legionSaleInstance = legionSaleFactory.createPreLiquidSaleV2(testConfig.saleInitParams);
 
         prepareMintAndApproveProjectTokens();
 
@@ -1653,7 +1547,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         vm.prank(legionBouncer);
         ILegionPreLiquidSaleV2(legionSaleInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, address(askToken), 0
+            claimTokensMerkleRoot, 4000 * 1e18, address(askToken)
         );
 
         // Assert
@@ -1679,7 +1573,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         vm.prank(legionBouncer);
         ILegionPreLiquidSaleV2(legionSaleInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, address(askToken), 0
+            claimTokensMerkleRoot, 4000 * 1e18, address(askToken)
         );
 
         // Assert
@@ -1704,13 +1598,13 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         vm.prank(legionBouncer);
         ILegionPreLiquidSaleV2(legionSaleInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, address(askToken), 0
+            claimTokensMerkleRoot, 4000 * 1e18, address(askToken)
         );
 
-        vm.warp(lockupEndTime() + 1);
+        vm.warp(refundEndTime() + 1);
 
-        vm.prank(legionBouncer);
-        ILegionPreLiquidSaleV2(legionSaleInstance).cancelExpiredSale();
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSaleV2(legionSaleInstance).cancelSale();
 
         // Assert
         vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
@@ -1734,7 +1628,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         vm.prank(legionBouncer);
         ILegionPreLiquidSaleV2(legionSaleInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, address(askToken), 0
+            claimTokensMerkleRoot, 4000 * 1e18, address(askToken)
         );
 
         // Assert
@@ -1775,7 +1669,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         vm.prank(legionBouncer);
         ILegionPreLiquidSaleV2(legionSaleInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, address(askToken), 0
+            claimTokensMerkleRoot, 4000 * 1e18, address(askToken)
         );
 
         vm.prank(projectAdmin);
@@ -1798,7 +1692,6 @@ contract LegionPreLiquidSaleV2Test is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: Constants.ONE_HOUR,
                 refundPeriodSeconds: Constants.TWO_WEEKS,
-                lockupPeriodSeconds: Constants.FORTY_DAYS,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -1809,17 +1702,11 @@ contract LegionPreLiquidSaleV2Test is Test {
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: address(nonLegionAdmin)
-            }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
             })
         );
 
         vm.prank(legionBouncer);
-        legionSaleInstance =
-            legionSaleFactory.createPreLiquidSaleV2(testConfig.saleInitParams, testConfig.vestingInitParams);
+        legionSaleInstance = legionSaleFactory.createPreLiquidSaleV2(testConfig.saleInitParams);
 
         vm.prank(legionBouncer);
         ILegionPreLiquidSaleV2(legionSaleInstance).endSale();
@@ -1827,7 +1714,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         vm.warp(refundEndTime() + 1);
 
         vm.prank(legionBouncer);
-        ILegionPreLiquidSaleV2(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18, address(0), 0);
+        ILegionPreLiquidSaleV2(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18, address(0));
 
         // Assert
         vm.expectRevert(abi.encodeWithSelector(Errors.AskTokenUnavailable.selector));
@@ -1835,191 +1722,6 @@ contract LegionPreLiquidSaleV2Test is Test {
         // Act
         vm.prank(projectAdmin);
         ILegionPreLiquidSaleV2(legionSaleInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
-    }
-
-    /* ========== CANCEL EXPIRED SALE TESTS ========== */
-
-    /**
-     * @notice Test case: Successfully cancel the sale if the lockup period is over and no tokens have been supplied
-     */
-    function test_cancelExpiredSale_successfullyEmitsSaleCanceled() public {
-        // Arrange
-        prepareCreateLegionPreLiquidSale();
-
-        vm.warp(lockupEndTime() + 1);
-
-        // Assert
-        vm.expectEmit();
-        emit ILegionSale.SaleCanceled();
-
-        // Act
-        vm.prank(legionBouncer);
-        ILegionPreLiquidSaleV2(legionSaleInstance).cancelExpiredSale();
-    }
-
-    /**
-     * @notice Test case: Attempt to cancel when tokens have been supplied
-     */
-    function test_cancelExpiredSale_revertsIfTokensSupplied() public {
-        // Arrange
-        prepareCreateLegionPreLiquidSale();
-        prepareMintAndApproveProjectTokens();
-
-        vm.prank(legionBouncer);
-        ILegionPreLiquidSaleV2(legionSaleInstance).endSale();
-
-        uint256 refundEnd = refundEndTime();
-        vm.warp(refundEnd + 1);
-
-        vm.prank(legionBouncer);
-        ILegionPreLiquidSaleV2(legionSaleInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, address(askToken), 0
-        );
-
-        vm.prank(projectAdmin);
-        ILegionPreLiquidSaleV2(legionSaleInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
-
-        vm.warp(lockupEndTime() + 1);
-
-        // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.TokensAlreadySupplied.selector));
-
-        // Act
-        vm.prank(legionBouncer);
-        ILegionPreLiquidSaleV2(legionSaleInstance).cancelExpiredSale();
-    }
-
-    /**
-     * @notice Test case: Attempt to cancel when the sale has already been canceled
-     */
-    function test_cancelExpiredSale_revertsIfAlreadyCanceled() public {
-        // Arrange
-        prepareCreateLegionPreLiquidSale();
-
-        vm.warp(lockupEndTime() + 1);
-
-        vm.prank(legionBouncer);
-        ILegionPreLiquidSaleV2(legionSaleInstance).cancelExpiredSale();
-
-        // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
-
-        // Act
-        vm.prank(legionBouncer);
-        ILegionPreLiquidSaleV2(legionSaleInstance).cancelExpiredSale();
-    }
-
-    /**
-     * @notice Test case: Attempt to cancel when the lockup period is not over
-     */
-    function test_cancelExpiredSale_revertsIfLockupPeriodNotOver() public {
-        // Arrange
-        prepareCreateLegionPreLiquidSale();
-
-        vm.prank(projectAdmin);
-        ILegionPreLiquidSaleV2(legionSaleInstance).endSale();
-
-        vm.warp(lockupEndTime() - 1);
-
-        // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.LockupPeriodIsNotOver.selector));
-
-        // Act
-        vm.prank(legionBouncer);
-        ILegionPreLiquidSaleV2(legionSaleInstance).cancelExpiredSale();
-    }
-
-    /**
-     * @notice Test case: Attempt to cancel when askToken is unavailable and results are published
-     */
-    function test_cancelExpiredSale_revertsIfAskTokenUnavailableAndResultsPublished() public {
-        // Arrange
-        setSaleParams(
-            ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: Constants.ONE_HOUR,
-                refundPeriodSeconds: Constants.TWO_WEEKS,
-                lockupPeriodSeconds: Constants.FORTY_DAYS,
-                legionFeeOnCapitalRaisedBps: 250,
-                legionFeeOnTokensSoldBps: 250,
-                referrerFeeOnCapitalRaisedBps: 100,
-                referrerFeeOnTokensSoldBps: 100,
-                minimumInvestAmount: 1e6,
-                bidToken: address(bidToken),
-                askToken: address(0),
-                projectAdmin: address(projectAdmin),
-                addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: address(nonLegionAdmin)
-            }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
-            })
-        );
-
-        vm.prank(legionBouncer);
-        legionSaleInstance =
-            legionSaleFactory.createPreLiquidSaleV2(testConfig.saleInitParams, testConfig.vestingInitParams);
-
-        vm.prank(projectAdmin);
-        ILegionPreLiquidSaleV2(legionSaleInstance).endSale();
-
-        vm.warp(refundEndTime() + 1);
-
-        vm.prank(legionBouncer);
-        ILegionPreLiquidSaleV2(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18, address(0), 0);
-
-        vm.warp(lockupEndTime() + 1);
-
-        // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleResultsAlreadyPublished.selector));
-
-        // Act
-        vm.prank(legionBouncer);
-        ILegionPreLiquidSaleV2(legionSaleInstance).cancelExpiredSale();
-    }
-
-    /**
-     * @notice Test case: Cancel when askToken is unavailable and results are not published
-     */
-    function test_cancelExpiredSale_successfullyCancelIfAskTokenUnavailableAndResultsNotPublished() public {
-        // Arrange
-        setSaleParams(
-            ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: Constants.ONE_HOUR,
-                refundPeriodSeconds: Constants.TWO_WEEKS,
-                lockupPeriodSeconds: Constants.FORTY_DAYS,
-                legionFeeOnCapitalRaisedBps: 250,
-                legionFeeOnTokensSoldBps: 250,
-                referrerFeeOnCapitalRaisedBps: 100,
-                referrerFeeOnTokensSoldBps: 100,
-                minimumInvestAmount: 1e6,
-                bidToken: address(bidToken),
-                askToken: address(0),
-                projectAdmin: address(projectAdmin),
-                addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: address(nonLegionAdmin)
-            }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
-            })
-        );
-
-        vm.prank(legionBouncer);
-        legionSaleInstance =
-            legionSaleFactory.createPreLiquidSaleV2(testConfig.saleInitParams, testConfig.vestingInitParams);
-
-        vm.warp(lockupEndTime() + 1);
-
-        // Assert
-        vm.expectEmit();
-        emit ILegionSale.SaleCanceled();
-
-        // Act
-        vm.prank(legionBouncer);
-        ILegionPreLiquidSaleV2(legionSaleInstance).cancelExpiredSale();
     }
 
     /* ========== WITHDRAW RAISED CAPITAL TESTS ========== */
@@ -2069,7 +1771,6 @@ contract LegionPreLiquidSaleV2Test is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: Constants.ONE_HOUR,
                 refundPeriodSeconds: Constants.TWO_WEEKS,
-                lockupPeriodSeconds: Constants.FORTY_DAYS,
                 legionFeeOnCapitalRaisedBps: 0,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -2080,17 +1781,11 @@ contract LegionPreLiquidSaleV2Test is Test {
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: address(nonLegionAdmin)
-            }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
             })
         );
 
         vm.prank(legionBouncer);
-        legionSaleInstance =
-            legionSaleFactory.createPreLiquidSaleV2(testConfig.saleInitParams, testConfig.vestingInitParams);
+        legionSaleInstance = legionSaleFactory.createPreLiquidSaleV2(testConfig.saleInitParams);
 
         prepareMintAndApproveInvestorTokens();
         prepareMintAndApproveProjectTokens();
@@ -2188,29 +1883,6 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         vm.prank(projectAdmin);
         ILegionPreLiquidSaleV2(legionSaleInstance).cancelSale();
-
-        // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
-
-        // Act
-        vm.prank(projectAdmin);
-        ILegionPreLiquidSaleV2(legionSaleInstance).withdrawRaisedCapital();
-    }
-
-    /**
-     * @notice Test case: Attempt to withdraw when the sale has been canceled after expiration
-     */
-    function test_withdrawCapital_revertsIfExpiredSaleIsCanceled() public {
-        // Arrange
-        prepareCreateLegionPreLiquidSale();
-
-        vm.prank(projectAdmin);
-        ILegionPreLiquidSaleV2(legionSaleInstance).endSale();
-
-        vm.warp(lockupEndTime() + 1);
-
-        vm.prank(nonProjectAdmin);
-        ILegionPreLiquidSaleV2(legionSaleInstance).cancelExpiredSale();
 
         // Assert
         vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
@@ -2398,7 +2070,7 @@ contract LegionPreLiquidSaleV2Test is Test {
     /* ========== CLAIM TOKEN ALLOCATION TESTS ========== */
 
     /**
-     * @notice Test case: Successfully claim tokens after the sale, lockup period, and sale results have been published
+     * @notice Test case: Successfully claim tokens after the sale, refund period, and sale results have been published
      */
     function test_claimTokenAllocation_successfullyTransfersTokensToVestingContract() public {
         // Arrange
@@ -2410,8 +2082,8 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         bytes32[] memory claimProofInvestor2 = new bytes32[](2);
 
-        claimProofInvestor2[0] = bytes32(0xa840fc41b720079e7bce186d116e4412058ec6b29d3a5722a1f377be1e0d0992);
-        claimProofInvestor2[1] = bytes32(0x78158beefdfe129d958b15ef9bd1674f0aa97f179110ab76222f24f31db73155);
+        claimProofInvestor2[0] = bytes32(0x4287a77f3e3d040f42dcb9539e336d83d166ff810eb9d5d74bc440a2bdac5dae);
+        claimProofInvestor2[1] = bytes32(0xda52deea919ca150a57325de782da41cffff19ec1bdf5d9747c1d6aa28b7639c);
 
         vm.prank(projectAdmin);
         ILegionPreLiquidSaleV2(legionSaleInstance).endSale();
@@ -2421,30 +2093,41 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         vm.prank(legionBouncer);
         ILegionPreLiquidSaleV2(legionSaleInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, address(askToken), 0
+            claimTokensMerkleRoot, 4000 * 1e18, address(askToken)
         );
 
         vm.prank(projectAdmin);
         ILegionPreLiquidSaleV2(legionSaleInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
 
-        vm.warp(lockupEndTime() + 1);
-
         // Act
         vm.prank(investor2);
-        ILegionPreLiquidSaleV2(legionSaleInstance).claimTokenAllocation(1000 * 1e18, claimProofInvestor2);
+        ILegionPreLiquidSaleV2(legionSaleInstance).claimTokenAllocation(
+            1000 * 1e18, investorVestingConfig, claimProofInvestor2
+        );
 
         // Assert
         ILegionSale.InvestorPosition memory _investorPosition =
             LegionPreLiquidSaleV2(payable(legionSaleInstance)).investorPositionDetails(investor2);
 
+        ILegionVestingManager.LegionInvestorVestingStatus memory vestingStatus =
+            LegionPreLiquidSaleV2(payable(legionSaleInstance)).investorVestingStatus(investor2);
+
         assertEq(_investorPosition.hasSettled, true);
         assertEq(MockToken(askToken).balanceOf(_investorPosition.vestingAddress), 9000 * 1e17);
+
+        assertEq(vestingStatus.start, (0));
+        assertEq(vestingStatus.end, (31_536_000));
+        assertEq(vestingStatus.cliffEnd, (3600));
+        assertEq(vestingStatus.duration, (31_536_000));
+        assertEq(vestingStatus.released, 0);
+        assertEq(vestingStatus.releasable, 0);
+        assertEq(vestingStatus.vestedAmount, 34_520_605_022_831_050_228);
     }
 
     /**
-     * @notice Test case: Attempt to claim tokens before the lockup period is over
+     * @notice Test case: Attempt to claim tokens before the refund period is over
      */
-    function test_claimTokenAllocation_revertsIfLockupPeriodHasNotEnded() public {
+    function test_claimTokenAllocation_revertsIfRefundPeriodHasNotEnded() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
         prepareMintAndApproveInvestorTokens();
@@ -2453,8 +2136,8 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         bytes32[] memory claimProofInvestor2 = new bytes32[](2);
 
-        claimProofInvestor2[0] = bytes32(0xa840fc41b720079e7bce186d116e4412058ec6b29d3a5722a1f377be1e0d0992);
-        claimProofInvestor2[1] = bytes32(0x78158beefdfe129d958b15ef9bd1674f0aa97f179110ab76222f24f31db73155);
+        claimProofInvestor2[0] = bytes32(0x4287a77f3e3d040f42dcb9539e336d83d166ff810eb9d5d74bc440a2bdac5dae);
+        claimProofInvestor2[1] = bytes32(0xda52deea919ca150a57325de782da41cffff19ec1bdf5d9747c1d6aa28b7639c);
 
         vm.prank(legionBouncer);
         ILegionPreLiquidSaleV2(legionSaleInstance).endSale();
@@ -2463,17 +2146,19 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         vm.prank(legionBouncer);
         ILegionPreLiquidSaleV2(legionSaleInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, address(askToken), 0
+            claimTokensMerkleRoot, 4000 * 1e18, address(askToken)
         );
 
-        vm.warp(lockupEndTime() - 1);
+        vm.warp(refundEndTime() - 1);
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.LockupPeriodIsNotOver.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.RefundPeriodIsNotOver.selector));
 
         // Act
         vm.prank(investor2);
-        ILegionPreLiquidSaleV2(legionSaleInstance).claimTokenAllocation(1000 * 1e18, claimProofInvestor2);
+        ILegionPreLiquidSaleV2(legionSaleInstance).claimTokenAllocation(
+            1000 * 1e18, investorVestingConfig, claimProofInvestor2
+        );
     }
 
     /**
@@ -2485,8 +2170,8 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         bytes32[] memory claimProofInvestor2 = new bytes32[](2);
 
-        claimProofInvestor2[0] = bytes32(0x2054afa66e2c4ccd7ade9889c78d8cf4a46f716980dafb935d11ce1e564fa39c);
-        claimProofInvestor2[1] = bytes32(0xa2144e298b31c1e3aa896eab357fd937fb7a574cc7237959b432e96a9423492c);
+        claimProofInvestor2[0] = bytes32(0x4287a77f3e3d040f42dcb9539e336d83d166ff810eb9d5d74bc440a2bdac5dae);
+        claimProofInvestor2[1] = bytes32(0xda52deea919ca150a57325de782da41cffff19ec1bdf5d9747c1d6aa28b7639c);
 
         vm.prank(legionBouncer);
         ILegionPreLiquidSaleV2(legionSaleInstance).endSale();
@@ -2495,17 +2180,19 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         vm.prank(legionBouncer);
         ILegionPreLiquidSaleV2(legionSaleInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, address(askToken), 0
+            claimTokensMerkleRoot, 4000 * 1e18, address(askToken)
         );
 
-        vm.warp(lockupEndTime() + 1);
+        vm.warp(refundEndTime() + 1);
 
         // Assert
         vm.expectRevert(abi.encodeWithSelector(Errors.NotInClaimWhitelist.selector, investor2));
 
         // Act
         vm.prank(investor2);
-        ILegionPreLiquidSaleV2(legionSaleInstance).claimTokenAllocation(2000 * 1e18, claimProofInvestor2);
+        ILegionPreLiquidSaleV2(legionSaleInstance).claimTokenAllocation(
+            2000 * 1e18, investorVestingConfig, claimProofInvestor2
+        );
     }
 
     /**
@@ -2522,8 +2209,8 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         bytes32[] memory claimProofInvestor2 = new bytes32[](2);
 
-        claimProofInvestor2[0] = bytes32(0xa840fc41b720079e7bce186d116e4412058ec6b29d3a5722a1f377be1e0d0992);
-        claimProofInvestor2[1] = bytes32(0x78158beefdfe129d958b15ef9bd1674f0aa97f179110ab76222f24f31db73155);
+        claimProofInvestor2[0] = bytes32(0x4287a77f3e3d040f42dcb9539e336d83d166ff810eb9d5d74bc440a2bdac5dae);
+        claimProofInvestor2[1] = bytes32(0xda52deea919ca150a57325de782da41cffff19ec1bdf5d9747c1d6aa28b7639c);
 
         vm.prank(legionBouncer);
         ILegionPreLiquidSaleV2(legionSaleInstance).endSale();
@@ -2532,23 +2219,27 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         vm.prank(legionBouncer);
         ILegionPreLiquidSaleV2(legionSaleInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, address(askToken), 0
+            claimTokensMerkleRoot, 4000 * 1e18, address(askToken)
         );
 
         vm.prank(projectAdmin);
         ILegionPreLiquidSaleV2(legionSaleInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
 
-        vm.warp(lockupEndTime() + 1);
+        vm.warp(refundEndTime() + 1);
 
         vm.prank(investor2);
-        ILegionPreLiquidSaleV2(legionSaleInstance).claimTokenAllocation(1000 * 1e18, claimProofInvestor2);
+        ILegionPreLiquidSaleV2(legionSaleInstance).claimTokenAllocation(
+            1000 * 1e18, investorVestingConfig, claimProofInvestor2
+        );
 
         // Assert
         vm.expectRevert(abi.encodeWithSelector(Errors.AlreadySettled.selector, investor2));
 
         // Act
         vm.prank(investor2);
-        ILegionPreLiquidSaleV2(legionSaleInstance).claimTokenAllocation(1000 * 1e18, claimProofInvestor2);
+        ILegionPreLiquidSaleV2(legionSaleInstance).claimTokenAllocation(
+            1000 * 1e18, investorVestingConfig, claimProofInvestor2
+        );
     }
 
     /**
@@ -2563,8 +2254,8 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         bytes32[] memory claimProofInvestor2 = new bytes32[](2);
 
-        claimProofInvestor2[0] = bytes32(0xa840fc41b720079e7bce186d116e4412058ec6b29d3a5722a1f377be1e0d0992);
-        claimProofInvestor2[1] = bytes32(0x78158beefdfe129d958b15ef9bd1674f0aa97f179110ab76222f24f31db73155);
+        claimProofInvestor2[0] = bytes32(0x4287a77f3e3d040f42dcb9539e336d83d166ff810eb9d5d74bc440a2bdac5dae);
+        claimProofInvestor2[1] = bytes32(0xda52deea919ca150a57325de782da41cffff19ec1bdf5d9747c1d6aa28b7639c);
 
         vm.prank(legionBouncer);
         ILegionPreLiquidSaleV2(legionSaleInstance).endSale();
@@ -2573,20 +2264,22 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         vm.prank(legionBouncer);
         ILegionPreLiquidSaleV2(legionSaleInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, address(askToken), 0
+            claimTokensMerkleRoot, 4000 * 1e18, address(askToken)
         );
 
-        vm.warp(lockupEndTime() + 1);
+        vm.warp(refundEndTime() + 1);
 
-        vm.prank(nonProjectAdmin);
-        ILegionPreLiquidSaleV2(legionSaleInstance).cancelExpiredSale();
+        vm.prank(projectAdmin);
+        ILegionPreLiquidSaleV2(legionSaleInstance).cancelSale();
 
         // Assert
         vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
 
         // Act
         vm.prank(investor2);
-        ILegionPreLiquidSaleV2(legionSaleInstance).claimTokenAllocation(1000 * 1e18, claimProofInvestor2);
+        ILegionPreLiquidSaleV2(legionSaleInstance).claimTokenAllocation(
+            1000 * 1e18, investorVestingConfig, claimProofInvestor2
+        );
     }
 
     /**
@@ -2598,17 +2291,19 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         bytes32[] memory claimProofInvestor2 = new bytes32[](2);
 
-        claimProofInvestor2[0] = bytes32(0x2054afa66e2c4ccd7ade9889c78d8cf4a46f716980dafb935d11ce1e564fa39c);
-        claimProofInvestor2[1] = bytes32(0xa2144e298b31c1e3aa896eab357fd937fb7a574cc7237959b432e96a9423492c);
+        claimProofInvestor2[0] = bytes32(0x4287a77f3e3d040f42dcb9539e336d83d166ff810eb9d5d74bc440a2bdac5dae);
+        claimProofInvestor2[1] = bytes32(0xda52deea919ca150a57325de782da41cffff19ec1bdf5d9747c1d6aa28b7639c);
 
-        vm.warp(lockupEndTime() + 1);
+        vm.warp(refundEndTime() + 1);
 
         // Assert
         vm.expectRevert(abi.encodeWithSelector(Errors.SaleResultsNotPublished.selector));
 
         // Act
         vm.prank(investor2);
-        ILegionPreLiquidSaleV2(legionSaleInstance).claimTokenAllocation(1000 * 1e18, claimProofInvestor2);
+        ILegionPreLiquidSaleV2(legionSaleInstance).claimTokenAllocation(
+            1000 * 1e18, investorVestingConfig, claimProofInvestor2
+        );
     }
 
     /**
@@ -2620,7 +2315,6 @@ contract LegionPreLiquidSaleV2Test is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: Constants.ONE_HOUR,
                 refundPeriodSeconds: Constants.TWO_WEEKS,
-                lockupPeriodSeconds: Constants.FORTY_DAYS,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -2631,29 +2325,25 @@ contract LegionPreLiquidSaleV2Test is Test {
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: address(nonLegionAdmin)
-            }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
             })
         );
 
         vm.prank(legionBouncer);
-        legionSaleInstance =
-            legionSaleFactory.createPreLiquidSaleV2(testConfig.saleInitParams, testConfig.vestingInitParams);
+        legionSaleInstance = legionSaleFactory.createPreLiquidSaleV2(testConfig.saleInitParams);
 
         bytes32[] memory claimProofInvestor2 = new bytes32[](2);
 
-        claimProofInvestor2[0] = bytes32(0x2054afa66e2c4ccd7ade9889c78d8cf4a46f716980dafb935d11ce1e564fa39c);
-        claimProofInvestor2[1] = bytes32(0xa2144e298b31c1e3aa896eab357fd937fb7a574cc7237959b432e96a9423492c);
+        claimProofInvestor2[0] = bytes32(0x4287a77f3e3d040f42dcb9539e336d83d166ff810eb9d5d74bc440a2bdac5dae);
+        claimProofInvestor2[1] = bytes32(0xda52deea919ca150a57325de782da41cffff19ec1bdf5d9747c1d6aa28b7639c);
 
         // Assert
         vm.expectRevert(abi.encodeWithSelector(Errors.AskTokenUnavailable.selector));
 
         // Act
         vm.prank(investor2);
-        ILegionPreLiquidSaleV2(legionSaleInstance).claimTokenAllocation(1000 * 1e18, claimProofInvestor2);
+        ILegionPreLiquidSaleV2(legionSaleInstance).claimTokenAllocation(
+            1000 * 1e18, investorVestingConfig, claimProofInvestor2
+        );
     }
 
     /* ========== RELEASE VESTED TOKENS TESTS ========== */
@@ -2671,8 +2361,8 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         bytes32[] memory claimProofInvestor2 = new bytes32[](2);
 
-        claimProofInvestor2[0] = bytes32(0xa840fc41b720079e7bce186d116e4412058ec6b29d3a5722a1f377be1e0d0992);
-        claimProofInvestor2[1] = bytes32(0x78158beefdfe129d958b15ef9bd1674f0aa97f179110ab76222f24f31db73155);
+        claimProofInvestor2[0] = bytes32(0x4287a77f3e3d040f42dcb9539e336d83d166ff810eb9d5d74bc440a2bdac5dae);
+        claimProofInvestor2[1] = bytes32(0xda52deea919ca150a57325de782da41cffff19ec1bdf5d9747c1d6aa28b7639c);
 
         vm.prank(projectAdmin);
         ILegionPreLiquidSaleV2(legionSaleInstance).endSale();
@@ -2682,25 +2372,27 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         vm.prank(legionBouncer);
         ILegionPreLiquidSaleV2(legionSaleInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, address(askToken), 0
+            claimTokensMerkleRoot, 4000 * 1e18, address(askToken)
         );
 
         vm.prank(projectAdmin);
         ILegionPreLiquidSaleV2(legionSaleInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
 
-        vm.warp(lockupEndTime() + 1);
+        vm.warp(refundEndTime() + 1);
 
         vm.prank(investor2);
-        ILegionPreLiquidSaleV2(legionSaleInstance).claimTokenAllocation(1000 * 1e18, claimProofInvestor2);
+        ILegionPreLiquidSaleV2(legionSaleInstance).claimTokenAllocation(
+            1000 * 1e18, investorVestingConfig, claimProofInvestor2
+        );
 
-        vm.warp(lockupEndTime() + Constants.ONE_HOUR + 1);
+        vm.warp(refundEndTime() + Constants.ONE_HOUR + 1);
 
         // Act
         vm.prank(investor2);
         ILegionPreLiquidSaleV2(legionSaleInstance).releaseVestedTokens();
 
         // Assert
-        assertEq(MockToken(askToken).balanceOf(investor2), 198_732_933_789_954_337_899);
+        assertEq(MockToken(askToken).balanceOf(investor2), 134_623_344_748_858_447_488);
     }
 
     /**
@@ -2727,7 +2419,6 @@ contract LegionPreLiquidSaleV2Test is Test {
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: Constants.ONE_HOUR,
                 refundPeriodSeconds: Constants.TWO_WEEKS,
-                lockupPeriodSeconds: Constants.FORTY_DAYS,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -2738,17 +2429,11 @@ contract LegionPreLiquidSaleV2Test is Test {
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: address(nonLegionAdmin)
-            }),
-            ILegionSale.LegionVestingInitializationParams({
-                vestingDurationSeconds: Constants.ONE_YEAR,
-                vestingCliffDurationSeconds: Constants.ONE_HOUR,
-                tokenAllocationOnTGERate: 0
             })
         );
 
         vm.prank(legionBouncer);
-        legionSaleInstance =
-            legionSaleFactory.createPreLiquidSaleV2(testConfig.saleInitParams, testConfig.vestingInitParams);
+        legionSaleInstance = legionSaleFactory.createPreLiquidSaleV2(testConfig.saleInitParams);
 
         // Assert
         vm.expectRevert(abi.encodeWithSelector(Errors.AskTokenUnavailable.selector));

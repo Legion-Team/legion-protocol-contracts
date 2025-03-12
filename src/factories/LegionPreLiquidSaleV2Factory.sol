@@ -48,14 +48,10 @@ contract LegionPreLiquidSaleV2Factory is ILegionPreLiquidSaleV2Factory, Ownable 
      * @notice Deploy a LegionPreLiquidSaleV2 contract.
      *
      * @param saleInitParams The Legion sale initialization parameters.
-     * @param vestingInitParams The vesting initialization parameters.
      *
      * @return preLiquidSaleV2Instance The address of the preLiquidSaleV2Instance deployed.
      */
-    function createPreLiquidSaleV2(
-        ILegionSale.LegionSaleInitializationParams memory saleInitParams,
-        ILegionPreLiquidSaleV2.LegionVestingInitializationParams memory vestingInitParams
-    )
+    function createPreLiquidSaleV2(ILegionSale.LegionSaleInitializationParams memory saleInitParams)
         external
         onlyOwner
         returns (address payable preLiquidSaleV2Instance)
@@ -64,9 +60,9 @@ contract LegionPreLiquidSaleV2Factory is ILegionPreLiquidSaleV2Factory, Ownable 
         preLiquidSaleV2Instance = payable(preLiquidSaleV2Template.clone());
 
         // Emit NewPreLiquidSaleV2Created
-        emit NewPreLiquidSaleV2Created(preLiquidSaleV2Instance, saleInitParams, vestingInitParams);
+        emit NewPreLiquidSaleV2Created(preLiquidSaleV2Instance, saleInitParams);
 
         // Initialize the LegionPreLiquidSaleV2 with the provided configuration
-        LegionPreLiquidSaleV2(preLiquidSaleV2Instance).initialize(saleInitParams, vestingInitParams);
+        LegionPreLiquidSaleV2(preLiquidSaleV2Instance).initialize(saleInitParams);
     }
 }
