@@ -18,7 +18,7 @@ pragma solidity 0.8.28;
 
 import { Ownable } from "@solady/src/auth/Ownable.sol";
 
-import { ILegionAddressRegistry } from "./interfaces/ILegionAddressRegistry.sol";
+import { ILegionAddressRegistry } from "../interfaces/registries/ILegionAddressRegistry.sol";
 
 /**
  * @title Legion Address Registry

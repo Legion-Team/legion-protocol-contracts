@@ -1,5 +1,5 @@
 # LegionSealedBidAuctionSaleFactory
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/a0becaf0413338ea78e3b0a0ce4527f7e1695849/src/factories/LegionSealedBidAuctionSaleFactory.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/eacaebdc1fce4e197305af05084de59f36b83e3e/src/factories/LegionSealedBidAuctionSaleFactory.sol)
 
 **Inherits:**
 [ILegionSealedBidAuctionSaleFactory](/src/interfaces/factories/ILegionSealedBidAuctionSaleFactory.sol/interface.ILegionSealedBidAuctionSaleFactory.md), Ownable

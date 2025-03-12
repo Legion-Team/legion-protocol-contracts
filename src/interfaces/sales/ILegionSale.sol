@@ -16,7 +16,7 @@ pragma solidity 0.8.28;
 // If you find a bug, please contact security[at]legion.cc
 // We will pay a fair bounty for any issue that puts users' funds at risk.
 
-import { ILegionVestingManager } from "../interfaces/vesting/ILegionVestingManager.sol";
+import { ILegionVestingManager } from "../../interfaces/vesting/ILegionVestingManager.sol";
 
 interface ILegionSale {
     /// @notice A struct describing the Legion sale initialization params.
