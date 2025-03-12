@@ -20,8 +20,8 @@ import { LibClone } from "@solady/src/utils/LibClone.sol";
 import { Ownable } from "@solady/src/auth/Ownable.sol";
 
 import { ILegionPreLiquidSaleV1Factory } from "../interfaces/factories/ILegionPreLiquidSaleV1Factory.sol";
-import { ILegionPreLiquidSaleV1 } from "../interfaces/ILegionPreLiquidSaleV1.sol";
-import { LegionPreLiquidSaleV1 } from "../LegionPreLiquidSaleV1.sol";
+import { ILegionPreLiquidSaleV1 } from "../interfaces/sales/ILegionPreLiquidSaleV1.sol";
+import { LegionPreLiquidSaleV1 } from "../sales/LegionPreLiquidSaleV1.sol";
 
 /**
  * @title Legion Pre-Liquid Sale V1 Factory

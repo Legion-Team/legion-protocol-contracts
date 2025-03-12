@@ -8,12 +8,12 @@ import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { Test, console2, Vm } from "forge-std/Test.sol";
 
 import { Initializable } from "@solady/src/utils/Initializable.sol";
-import { ILegionPreLiquidSaleV1 } from "../src/interfaces/ILegionPreLiquidSaleV1.sol";
+import { ILegionPreLiquidSaleV1 } from "../src/interfaces/sales/ILegionPreLiquidSaleV1.sol";
 import { ILegionPreLiquidSaleV1Factory } from "../src/interfaces/factories/ILegionPreLiquidSaleV1Factory.sol";
 import { ILegionVestingManager } from "../src/interfaces/vesting/ILegionVestingManager.sol";
-import { LegionAddressRegistry } from "../src/LegionAddressRegistry.sol";
-import { LegionBouncer } from "../src/LegionBouncer.sol";
-import { LegionPreLiquidSaleV1 } from "../src/LegionPreLiquidSaleV1.sol";
+import { LegionAddressRegistry } from "../src/registries/LegionAddressRegistry.sol";
+import { LegionBouncer } from "../src/access/LegionBouncer.sol";
+import { LegionPreLiquidSaleV1 } from "../src/sales/LegionPreLiquidSaleV1.sol";
 import { LegionPreLiquidSaleV1Factory } from "../src/factories/LegionPreLiquidSaleV1Factory.sol";
 import { LegionVestingFactory } from "../src/factories/LegionVestingFactory.sol";
 import { MockToken } from "../src/mocks/MockToken.sol";

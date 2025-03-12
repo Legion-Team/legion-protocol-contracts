@@ -4,10 +4,10 @@ pragma solidity 0.8.28;
 import { Ownable } from "@solady/src/auth/Ownable.sol";
 import { Test, console2, Vm } from "forge-std/Test.sol";
 
-import { ILegionBouncer } from "../src/interfaces/ILegionBouncer.sol";
-import { ILegionAddressRegistry } from "../src/interfaces/ILegionAddressRegistry.sol";
-import { LegionBouncer } from "../src/LegionBouncer.sol";
-import { LegionAddressRegistry } from "../src/LegionAddressRegistry.sol";
+import { ILegionBouncer } from "../src/interfaces/access/ILegionBouncer.sol";
+import { ILegionAddressRegistry } from "../src/interfaces/registries/ILegionAddressRegistry.sol";
+import { LegionBouncer } from "../src/access/LegionBouncer.sol";
+import { LegionAddressRegistry } from "../src/registries/LegionAddressRegistry.sol";
 
 /**
  * @title Legion Bouncer Test
