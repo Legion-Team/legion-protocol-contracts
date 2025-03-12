@@ -16,6 +16,8 @@ pragma solidity 0.8.28;
 // If you find a bug, please contact security[at]legion.cc
 // We will pay a fair bounty for any issue that puts users' funds at risk.
 
+import { ILegionVestingManager } from "../interfaces/vesting/ILegionVestingManager.sol";
+
 interface ILegionPreLiquidSaleV1 {
     /**
      * @notice This event is emitted when capital is successfully invested.
@@ -24,12 +26,9 @@ interface ILegionPreLiquidSaleV1 {
      * @param investor The address of the investor.
      * @param tokenAllocationRate The token allocation the investor will receive as a percentage of totalSupply,
      * represented in 18 decimals precision.
-     * @param saftHash The hash of the Simple Agreement for Future Tokens (SAFT) signed by the investor.
      * @param investTimestamp The Unix timestamp (seconds) of the block when capital has been invested.
      */
-    event CapitalInvested(
-        uint256 amount, address investor, uint256 tokenAllocationRate, bytes32 saftHash, uint256 investTimestamp
-    );
+    event CapitalInvested(uint256 amount, address investor, uint256 tokenAllocationRate, uint256 investTimestamp);
 
     /**
      * @notice This event is emitted when excess capital is successfully withdrawn.
@@ -38,11 +37,10 @@ interface ILegionPreLiquidSaleV1 {
      * @param investor The address of the investor.
      * @param tokenAllocationRate The token allocation the investor will receive as a percentage of totalSupply,
      * represented in 18 decimals precision.
-     * @param saftHash The hash of the Simple Agreement for Future Tokens (SAFT) signed by the investor.
      * @param investTimestamp The Unix timestamp (seconds) of the block when capital has been invested.
      */
     event ExcessCapitalWithdrawn(
-        uint256 amount, address investor, uint256 tokenAllocationRate, bytes32 saftHash, uint256 investTimestamp
+        uint256 amount, address investor, uint256 tokenAllocationRate, uint256 investTimestamp
     );
 
     /**
@@ -107,12 +105,9 @@ interface ILegionPreLiquidSaleV1 {
      *
      * @param tokenAddress The address of the token distributed to investors.
      * @param totalSupply The total supply of the token distributed to investors.
-     * @param vestingStartTime The Unix timestamp (seconds) of the block when the vesting starts.
      * @param allocatedTokenAmount The allocated token amount for distribution to investors.
      */
-    event TgeDetailsPublished(
-        address tokenAddress, uint256 totalSupply, uint256 vestingStartTime, uint256 allocatedTokenAmount
-    );
+    event TgeDetailsPublished(address tokenAddress, uint256 totalSupply, uint256 allocatedTokenAmount);
 
     /**
      * @notice This event is emitted when tokens are successfully claimed by the investor.
@@ -133,25 +128,6 @@ interface ILegionPreLiquidSaleV1 {
     event TokensSuppliedForDistribution(uint256 amount, uint256 legionFee, uint256 referrerFee);
 
     /**
-     * @notice This event is emitted when vesting terms have been successfully updated by the project admin.
-     *
-     * @param _vestingDurationSeconds The vesting schedule duration for the token sold in seconds.
-     * @param _vestingCliffDurationSeconds The vesting cliff duration for the token sold in seconds.
-     * @param _tokenAllocationOnTGERate The token allocation amount released to investors after TGE in 18 decimals
-     * precision.
-     */
-    event VestingTermsUpdated(
-        uint256 _vestingDurationSeconds, uint256 _vestingCliffDurationSeconds, uint256 _tokenAllocationOnTGERate
-    );
-
-    /**
-     * @notice This event is emitted when excess capital is successfully refunded to the investor.
-     *
-     * @param amount The amount of excess capital refunded to the investor.
-     */
-    event ExcessCapitalRefunded(uint256 amount);
-
-    /**
      * @notice This event is emitted when the sale has ended.
      *
      * @param endTime The Unix timestamp (seconds) of the block when the sale has been ended.
@@ -162,12 +138,6 @@ interface ILegionPreLiquidSaleV1 {
     struct PreLiquidSaleInitializationParams {
         /// @dev The refund period duration in seconds.
         uint256 refundPeriodSeconds;
-        /// @dev The vesting schedule duration for the token sold in seconds.
-        uint256 vestingDurationSeconds;
-        /// @dev The vesting cliff duration for the token sold in seconds.
-        uint256 vestingCliffDurationSeconds;
-        /// @dev The token allocation amount released to investors after TGE in 18 decimals precision.
-        uint256 tokenAllocationOnTGERate;
         /// @dev Legion's fee on capital raised in basis-points (BPS).
         uint256 legionFeeOnCapitalRaisedBps;
         /// @dev Legion's fee on tokens sold in basis-points (BPS).
@@ -212,8 +182,6 @@ interface ILegionPreLiquidSaleV1 {
         address legionFeeReceiver;
         /// @dev The address of the referrer.
         address referrerFeeReceiver;
-        /// @dev The address of Legion's Vesting Factory contract.
-        address vestingFactory;
     }
 
     /// @notice A struct describing the pre-liquid sale status.
@@ -242,31 +210,15 @@ interface ILegionPreLiquidSaleV1 {
         bool hasEnded;
     }
 
-    /// @notice A struct describing the pre-liquid sale vesting configuration.
-    struct PreLiquidSaleVestingConfig {
-        /// @dev The Unix timestamp (seconds) of the block when the vesting starts.
-        uint256 vestingStartTime;
-        /// @dev The vesting schedule duration for the token sold in seconds.
-        uint256 vestingDurationSeconds;
-        /// @dev The vesting cliff duration for the token sold in seconds.
-        uint256 vestingCliffDurationSeconds;
-        /// @dev The token allocation amount released to investors after TGE in 18 decimals precision.
-        uint256 tokenAllocationOnTGERate;
-    }
-
     /// @notice A struct describing the investor position during the sale.
     struct InvestorPosition {
         /// @dev The total amount of capital invested by the investor.
         uint256 investedCapital;
-        /// @dev The Unix timestamp (seconds) of the block when the latest invest occurred.
-        uint256 cachedInvestTimestamp;
         /// @dev The amount of capital the investor is allowed to invest, according to the SAFT.
         uint256 cachedInvestAmount;
         /// @dev The token allocation rate the investor will receive as a percentage of totalSupply, represented in 18
         /// decimals precision.
         uint256 cachedTokenAllocationRate;
-        /// @dev The hash of the Simple Agreement for Future Tokens (SAFT) signed by the investor.
-        bytes32 cachedSAFTHash;
         /// @dev Flag indicating if the investor has refunded.
         bool hasRefunded;
         /// @dev Flag indicating if the investor has claimed their allocated tokens.
@@ -296,15 +248,13 @@ interface ILegionPreLiquidSaleV1 {
      * @param investAmount The amount of capital the investor is allowed to invest, according to the SAFT.
      * @param tokenAllocationRate The token allocation the investor will receive as a percentage of totalSupply,
      * represented in 18 decimals precision.
-     * @param saftHash The hash of the Simple Agreement for Future Tokens (SAFT) signed by the investor.
-     * @param signature The signature proving that the investor is allowed to participate.
+     * @param investSignature The signature proving that the investor is allowed to participate.
      */
     function invest(
         uint256 amount,
         uint256 investAmount,
         uint256 tokenAllocationRate,
-        bytes32 saftHash,
-        bytes memory signature
+        bytes memory investSignature
     )
         external;
 
@@ -320,13 +270,11 @@ interface ILegionPreLiquidSaleV1 {
      *
      * @param _askToken The address of the token distributed to investors.
      * @param _askTokenTotalSupply The total supply of the token distributed to investors.
-     * @param _vestingStartTime The Unix timestamp (seconds) of the block when the vesting starts.
      * @param _totalTokensAllocated The allocated token amount for distribution to investors.
      */
     function publishTgeDetails(
         address _askToken,
         uint256 _askTokenTotalSupply,
-        uint256 _vestingStartTime,
         uint256 _totalTokensAllocated
     )
         external;
@@ -340,24 +288,7 @@ interface ILegionPreLiquidSaleV1 {
      * @param legionFee The Legion fee token amount.
      * @param referrerFee The Referrer fee token amount.
      */
-    function supplyAskTokens(uint256 amount, uint256 legionFee, uint256 referrerFee) external;
-
-    /**
-     * @notice Updates the vesting terms.
-     *
-     * @dev Only callable by Legion, before the tokens have been supplied by the Project.
-     *
-     * @param vestingDurationSeconds The vesting schedule duration for the token sold in seconds.
-     * @param vestingCliffDurationSeconds The vesting cliff duration for the token sold in seconds.
-     * @param tokenAllocationOnTGERate The token allocation amount released to investors after TGE in 18 decimals
-     * precision.
-     */
-    function updateVestingTerms(
-        uint256 vestingDurationSeconds,
-        uint256 vestingCliffDurationSeconds,
-        uint256 tokenAllocationOnTGERate
-    )
-        external;
+    function supplyTokens(uint256 amount, uint256 legionFee, uint256 referrerFee) external;
 
     /**
      * @notice Withdraw tokens from the contract in case of emergency.
@@ -383,14 +314,16 @@ interface ILegionPreLiquidSaleV1 {
      * @param investAmount The amount of capital the investor is allowed to invest, according to the SAFT.
      * @param tokenAllocationRate The token allocation the investor will receive as a percentage of totalSupply,
      * represented in 18 decimals precision.
-     * @param saftHash The hash of the Simple Agreement for Future Tokens (SAFT) signed by the investor.
-     * @param signature The signature proving that the investor has signed a SAFT.
+     * @param investorVestingConfig The vesting configuration for the investor.
+     * @param investSignature The signature proving that the investor has signed a SAFT.
+     * @param vestingSignature The signature proving that investor vesting terms are valid.
      */
-    function claimAskTokenAllocation(
+    function claimTokenAllocation(
         uint256 investAmount,
         uint256 tokenAllocationRate,
-        bytes32 saftHash,
-        bytes memory signature
+        ILegionVestingManager.LegionInvestorVestingConfig calldata investorVestingConfig,
+        bytes memory investSignature,
+        bytes memory vestingSignature
     )
         external;
 
@@ -404,7 +337,7 @@ interface ILegionPreLiquidSaleV1 {
     /**
      * @notice Withdraw capital if the sale has been canceled.
      */
-    function withdrawCapitalIfSaleIsCanceled() external;
+    function withdrawInvestedCapitalIfCanceled() external;
 
     /**
      * @notice Withdraw back excess capital from investors.
@@ -413,22 +346,20 @@ interface ILegionPreLiquidSaleV1 {
      * @param investAmount The amount of capital the investor is allowed to invest, according to the SAFT.
      * @param tokenAllocationRate The token allocation the investor will receive as a percentage of totalSupply,
      * represented in 18 decimals precision.
-     * @param saftHash The hash of the Simple Agreement for Future Tokens (SAFT) signed by the investor.
-     * @param signature The signature proving that the investor is allowed to participate.
+     * @param investSignature The signature proving that the investor is allowed to participate.
      */
-    function withdrawExcessCapital(
+    function withdrawExcessInvestedCapital(
         uint256 amount,
         uint256 investAmount,
         uint256 tokenAllocationRate,
-        bytes32 saftHash,
-        bytes memory signature
+        bytes memory investSignature
     )
         external;
 
     /**
      * @notice Releases tokens from vesting to the investor address.
      */
-    function releaseTokens() external;
+    function releaseVestedTokens() external;
 
     /**
      * @notice Ends the sale.
@@ -468,12 +399,17 @@ interface ILegionPreLiquidSaleV1 {
     function saleStatusDetails() external view returns (PreLiquidSaleStatus memory);
 
     /**
-     * @notice Returns the sale vesting configuration.
-     */
-    function vestingConfiguration() external view returns (PreLiquidSaleVestingConfig memory);
-
-    /**
      * @notice Returns an investor position details.
      */
     function investorPositionDetails(address investorAddress) external view returns (InvestorPosition memory);
+
+    /**
+     * @notice Returns the investor vesting status.
+     *
+     * @param investor The address of the investor.
+     */
+    function investorVestingStatus(address investor)
+        external
+        view
+        returns (ILegionVestingManager.LegionInvestorVestingStatus memory);
 }

@@ -1,5 +1,5 @@
 # LegionPreLiquidSaleV2
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/1a165deeea33dfd2b1dca142bf23d06b547c39a3/src/LegionPreLiquidSaleV2.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/a0becaf0413338ea78e3b0a0ce4527f7e1695849/src/LegionPreLiquidSaleV2.sol)
 
 **Inherits:**
 [LegionSale](/src/LegionSale.sol/abstract.LegionSale.md), [ILegionPreLiquidSaleV2](/src/interfaces/ILegionPreLiquidSaleV2.sol/interface.ILegionPreLiquidSaleV2.md)
@@ -27,25 +27,18 @@ Initializes the contract with correct parameters.
 
 
 ```solidity
-function initialize(
-    LegionSaleInitializationParams calldata saleInitParams,
-    LegionVestingInitializationParams calldata vestingInitParams
-)
-    external
-    initializer;
+function initialize(LegionSaleInitializationParams calldata saleInitParams) external initializer;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
 |`saleInitParams`|`LegionSaleInitializationParams`|The Legion sale initialization parameters.|
-|`vestingInitParams`|`LegionVestingInitializationParams`|The vesting initialization parameters.|
 
 
 ### invest
 
 Set the refund period duration in seconds
-Set the lockup period duration in seconds
 
 Invest capital to the pre-liquid sale.
 
@@ -97,8 +90,7 @@ Publish sale results, once the sale has concluded.
 function publishSaleResults(
     bytes32 claimMerkleRoot,
     uint256 tokensAllocated,
-    address askToken,
-    uint256 vestingStartTime
+    address askToken
 )
     external
     onlyLegion
@@ -111,7 +103,6 @@ function publishSaleResults(
 |`claimMerkleRoot`|`bytes32`|The Merkle root to verify token claims.|
 |`tokensAllocated`|`uint256`|The total amount of tokens allocated for distribution among investors.|
 |`askToken`|`address`|The address of the token distributed to investors.|
-|`vestingStartTime`|`uint256`|The Unix timestamp (seconds) of the block when the vesting starts.|
 
 
 ### withdrawRaisedCapital

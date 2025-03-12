@@ -1,5 +1,5 @@
 # ILegionSealedBidAuctionSale
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/1a165deeea33dfd2b1dca142bf23d06b547c39a3/src/interfaces/ILegionSealedBidAuctionSale.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/a0becaf0413338ea78e3b0a0ce4527f7e1695849/src/interfaces/ILegionSealedBidAuctionSale.sol)
 
 **Inherits:**
 [ILegionSale](/src/interfaces/ILegionSale.sol/interface.ILegionSale.md)
@@ -14,8 +14,7 @@ Initializes the contract with correct parameters.
 ```solidity
 function initialize(
     LegionSaleInitializationParams calldata saleInitParams,
-    SealedBidAuctionSaleInitializationParams calldata sealedBidAuctionSaleInitParams,
-    LegionVestingInitializationParams calldata vestingInitParams
+    SealedBidAuctionSaleInitializationParams calldata sealedBidAuctionSaleInitParams
 )
     external;
 ```
@@ -25,7 +24,6 @@ function initialize(
 |----|----|-----------|
 |`saleInitParams`|`LegionSaleInitializationParams`|The Legion sale initialization parameters.|
 |`sealedBidAuctionSaleInitParams`|`SealedBidAuctionSaleInitializationParams`|The sealed bid auction sale specific initialization parameters.|
-|`vestingInitParams`|`LegionVestingInitializationParams`|The vesting initialization parameters.|
 
 
 ### invest

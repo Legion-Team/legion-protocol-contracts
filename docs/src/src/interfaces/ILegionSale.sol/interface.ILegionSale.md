@@ -1,5 +1,5 @@
 # ILegionSale
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/1a165deeea33dfd2b1dca142bf23d06b547c39a3/src/interfaces/ILegionSale.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/a0becaf0413338ea78e3b0a0ce4527f7e1695849/src/interfaces/ILegionSale.sol)
 
 
 ## Functions
@@ -29,13 +29,19 @@ Claims the investor token allocation.
 
 
 ```solidity
-function claimTokenAllocation(uint256 amount, bytes32[] calldata proof) external;
+function claimTokenAllocation(
+    uint256 amount,
+    ILegionVestingManager.LegionInvestorVestingConfig calldata investorVestingConfig,
+    bytes32[] calldata proof
+)
+    external;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
 |`amount`|`uint256`|The amount to be distributed.|
+|`investorVestingConfig`|`ILegionVestingManager.LegionInvestorVestingConfig`|The vesting configuration for the investor.|
 |`proof`|`bytes32[]`|The merkle proof verification for claiming.|
 
 
@@ -111,15 +117,6 @@ Cancels an ongoing sale.
 function cancelSale() external;
 ```
 
-### cancelExpiredSale
-
-Cancels a sale in case the project has not supplied tokens after the lockup period is over.
-
-
-```solidity
-function cancelExpiredSale() external;
-```
-
 ### withdrawInvestedCapitalIfCanceled
 
 Claims back capital in case the sale has been canceled.
@@ -190,7 +187,7 @@ Returns the vesting configuration.
 
 
 ```solidity
-function vestingConfiguration() external view returns (LegionVestingConfiguration memory);
+function vestingConfiguration() external view returns (ILegionVestingManager.LegionVestingConfig memory);
 ```
 
 ### saleStatusDetails
@@ -215,6 +212,24 @@ function investorPositionDetails(address investorAddress) external view returns 
 |Name|Type|Description|
 |----|----|-----------|
 |`investorAddress`|`address`|The address of the investor.|
+
+
+### investorVestingStatus
+
+Returns the investor vesting status.
+
+
+```solidity
+function investorVestingStatus(address investor)
+    external
+    view
+    returns (ILegionVestingManager.LegionInvestorVestingStatus memory);
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`investor`|`address`|The address of the investor.|
 
 
 ## Events
@@ -376,7 +391,6 @@ A struct describing the Legion sale initialization params.
 struct LegionSaleInitializationParams {
     uint256 salePeriodSeconds;
     uint256 refundPeriodSeconds;
-    uint256 lockupPeriodSeconds;
     uint256 legionFeeOnCapitalRaisedBps;
     uint256 legionFeeOnTokensSoldBps;
     uint256 referrerFeeOnCapitalRaisedBps;
@@ -390,18 +404,6 @@ struct LegionSaleInitializationParams {
 }
 ```
 
-### LegionVestingInitializationParams
-A struct describing the Legion vesting initialization params.
-
-
-```solidity
-struct LegionVestingInitializationParams {
-    uint256 vestingDurationSeconds;
-    uint256 vestingCliffDurationSeconds;
-    uint256 tokenAllocationOnTGERate;
-}
-```
-
 ### LegionSaleConfiguration
 A struct describing the sale configuration.
 
@@ -411,7 +413,6 @@ struct LegionSaleConfiguration {
     uint256 startTime;
     uint256 endTime;
     uint256 refundEndTime;
-    uint256 lockupEndTime;
     uint256 legionFeeOnCapitalRaisedBps;
     uint256 legionFeeOnTokensSoldBps;
     uint256 referrerFeeOnCapitalRaisedBps;
@@ -452,20 +453,6 @@ struct LegionSaleStatus {
     bool isCanceled;
     bool tokensSupplied;
     bool capitalWithdrawn;
-}
-```
-
-### LegionVestingConfiguration
-A struct describing the vesting configuration.
-
-
-```solidity
-struct LegionVestingConfiguration {
-    uint256 vestingDurationSeconds;
-    uint256 vestingCliffDurationSeconds;
-    uint256 tokenAllocationOnTGERate;
-    uint256 vestingStartTime;
-    address vestingFactory;
 }
 ```
 

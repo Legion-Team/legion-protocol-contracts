@@ -1,8 +1,8 @@
 # LegionSale
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/1a165deeea33dfd2b1dca142bf23d06b547c39a3/src/LegionSale.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/a0becaf0413338ea78e3b0a0ce4527f7e1695849/src/LegionSale.sol)
 
 **Inherits:**
-[ILegionSale](/src/interfaces/ILegionSale.sol/interface.ILegionSale.md), Initializable, Pausable
+[ILegionSale](/src/interfaces/ILegionSale.sol/interface.ILegionSale.md), [LegionVestingManager](/src/vesting/LegionVestingManager.sol/abstract.LegionVestingManager.md), Initializable, Pausable
 
 **Author:**
 Legion
@@ -26,15 +26,6 @@ LegionSaleConfiguration internal saleConfig;
 
 ```solidity
 LegionSaleAddressConfiguration internal addressConfig;
-```
-
-
-### vestingConfig
-*A struct describing the vesting configuration.*
-
-
-```solidity
-LegionVestingConfiguration internal vestingConfig;
 ```
 
 
@@ -130,6 +121,7 @@ Claims the investor token allocation.
 ```solidity
 function claimTokenAllocation(
     uint256 amount,
+    LegionVestingManager.LegionInvestorVestingConfig calldata investorVestingConfig,
     bytes32[] calldata proof
 )
     external
@@ -142,10 +134,13 @@ function claimTokenAllocation(
 |Name|Type|Description|
 |----|----|-----------|
 |`amount`|`uint256`|The amount to be distributed.|
+|`investorVestingConfig`|`LegionVestingManager.LegionInvestorVestingConfig`|The vesting configuration for the investor.|
 |`proof`|`bytes32[]`|The merkle proof verification for claiming.|
 
 
 ### withdrawExcessInvestedCapital
+
+Load the investor position
 
 Withdraw excess capital back to the investor.
 
@@ -226,15 +221,6 @@ Cancels an ongoing sale.
 function cancelSale() public virtual onlyProject whenNotPaused;
 ```
 
-### cancelExpiredSale
-
-Cancels a sale in case the project has not supplied tokens after the lockup period is over.
-
-
-```solidity
-function cancelExpiredSale() external virtual whenNotPaused;
-```
-
 ### withdrawInvestedCapitalIfCanceled
 
 Withdraws back capital in case the sale has been canceled.
@@ -305,7 +291,7 @@ Returns the vesting configuration.
 
 
 ```solidity
-function vestingConfiguration() external view virtual returns (LegionVestingConfiguration memory);
+function vestingConfiguration() external view virtual returns (LegionVestingConfig memory);
 ```
 
 ### saleStatusDetails
@@ -332,16 +318,33 @@ function investorPositionDetails(address investorAddress) external view virtual 
 |`investorAddress`|`address`|The address of the investor.|
 
 
+### investorVestingStatus
+
+Returns the investor vesting status.
+
+
+```solidity
+function investorVestingStatus(address investor)
+    external
+    view
+    returns (LegionInvestorVestingStatus memory vestingStatus);
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`investor`|`address`|The address of the investor.|
+
+
 ### _setLegionSaleConfig
+
+Get the investor position details
 
 Sets the sale and vesting params.
 
 
 ```solidity
-function _setLegionSaleConfig(
-    LegionSaleInitializationParams calldata saleInitParams,
-    LegionVestingInitializationParams calldata vestingInitParams
-)
+function _setLegionSaleConfig(LegionSaleInitializationParams calldata saleInitParams)
     internal
     virtual
     onlyInitializing;
@@ -349,46 +352,12 @@ function _setLegionSaleConfig(
 
 ### _syncLegionAddresses
 
-Verify that the vesting configuration is valid
-
 Sync the Legion addresses from `LegionAddressRegistry`.
 
 
 ```solidity
 function _syncLegionAddresses() internal virtual;
 ```
-
-### _createVesting
-
-Create a vesting schedule contract.
-
-
-```solidity
-function _createVesting(
-    address _beneficiary,
-    uint64 _startTimestamp,
-    uint64 _durationSeconds,
-    uint64 _cliffDurationSeconds
-)
-    internal
-    virtual
-    returns (address payable vestingInstance);
-```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`_beneficiary`|`address`|The beneficiary.|
-|`_startTimestamp`|`uint64`|The Unix timestamp when the vesting starts.|
-|`_durationSeconds`|`uint64`|The duration in seconds.|
-|`_cliffDurationSeconds`|`uint64`|The cliff duration in seconds.|
-
-**Returns**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`vestingInstance`|`address payable`|The address of the deployed vesting instance.|
-
 
 ### _verifyCanClaimTokenAllocation
 
@@ -399,6 +368,7 @@ Verify if an investor is eligible to claim tokens allocated from the sale.
 function _verifyCanClaimTokenAllocation(
     address _investor,
     uint256 _amount,
+    LegionVestingManager.LegionInvestorVestingConfig calldata investorVestingConfig,
     bytes32[] calldata _proof
 )
     internal
@@ -411,6 +381,7 @@ function _verifyCanClaimTokenAllocation(
 |----|----|-----------|
 |`_investor`|`address`|The address of the investor.|
 |`_amount`|`uint256`|The amount to claim.|
+|`investorVestingConfig`|`LegionVestingManager.LegionInvestorVestingConfig`|The vesting configuration for the investor.|
 |`_proof`|`bytes32[]`|The Merkle proof that the investor is part of the whitelist.|
 
 
@@ -478,15 +449,6 @@ Verify that the refund period is not over.
 
 ```solidity
 function _verifyRefundPeriodIsNotOver() internal view virtual;
-```
-
-### _verifyLockupPeriodIsOver
-
-Verify that the lockup period is over.
-
-
-```solidity
-function _verifyLockupPeriodIsOver() internal view virtual;
 ```
 
 ### _verifySaleResultsArePublished
@@ -616,14 +578,5 @@ Verify the common sale configuration is valid.
 
 ```solidity
 function _verifyValidInitParams(LegionSaleInitializationParams memory saleInitParams) internal view virtual;
-```
-
-### _verifyValidVestingConfig
-
-Verify that the vesting configuration is valid.
-
-
-```solidity
-function _verifyValidVestingConfig() internal view virtual;
 ```
 

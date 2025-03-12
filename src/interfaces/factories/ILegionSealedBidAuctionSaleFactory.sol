@@ -26,13 +26,11 @@ interface ILegionSealedBidAuctionSaleFactory {
      * @param saleInstance The address of the sale instance deployed.
      * @param saleInitParams The Legion sale initialization parameters.
      * @param sealedBidAuctionSaleInitParams The sealed bid auction sale specific initialization parameters.
-     * @param vestingInitParams The vesting initialization parameters.
      */
     event NewSealedBidAuctionCreated(
         address saleInstance,
         ILegionSale.LegionSaleInitializationParams saleInitParams,
-        ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams sealedBidAuctionSaleInitParams,
-        ILegionSale.LegionVestingInitializationParams vestingInitParams
+        ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams sealedBidAuctionSaleInitParams
     );
 
     /**
@@ -40,14 +38,12 @@ interface ILegionSealedBidAuctionSaleFactory {
      *
      * @param saleInitParams The Legion sale initialization parameters.
      * @param sealedBidAuctionSaleInitParams The sealed bid auction sale specific initialization parameters.
-     * @param vestingInitParams The vesting initialization parameters.
      *
      * @return sealedBidAuctionInstance The address of the SealedBidAuction instance deployed.
      */
     function createSealedBidAuction(
         ILegionSale.LegionSaleInitializationParams memory saleInitParams,
-        ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams memory sealedBidAuctionSaleInitParams,
-        ILegionSale.LegionVestingInitializationParams memory vestingInitParams
+        ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams memory sealedBidAuctionSaleInitParams
     )
         external
         returns (address payable sealedBidAuctionInstance);

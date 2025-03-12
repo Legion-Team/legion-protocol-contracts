@@ -167,11 +167,6 @@ library Errors {
     error InvalidBidPrivateKey();
 
     /**
-     * @notice Throws when the lockup period is not over.
-     */
-    error LockupPeriodIsNotOver();
-
-    /**
      * @notice Throws when the investor is not in the claim whitelist for tokens.
      *
      * @param investor The address of the investor.
@@ -204,11 +199,6 @@ library Errors {
      * @notice Throws when capital is pledged during the pre-fund allocation period.
      */
     error PrefundAllocationPeriodNotEnded();
-
-    /**
-     * @notice Throws when the Project has withdrawn capital.
-     */
-    error ProjectHasWithdrawnCapital();
 
     /**
      * @notice Throws when the private key has already been published by Legion.

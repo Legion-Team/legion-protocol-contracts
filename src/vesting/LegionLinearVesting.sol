@@ -18,7 +18,8 @@ pragma solidity 0.8.28;
 
 import { VestingWalletUpgradeable } from "@openzeppelin/contracts-upgradeable/finance/VestingWalletUpgradeable.sol";
 
-import { Errors } from "./utils/Errors.sol";
+import { Constants } from "../utils/Constants.sol";
+import { Errors } from "../utils/Errors.sol";
 
 /**
  * @title Legion Linear Vesting

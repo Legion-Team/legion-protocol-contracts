@@ -37,26 +37,16 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
      * @notice Initializes the contract with correct parameters.
      *
      * @param saleInitParams The Legion sale initialization parameters.
-     * @param vestingInitParams The vesting initialization parameters.
      */
-    function initialize(
-        LegionSaleInitializationParams calldata saleInitParams,
-        LegionVestingInitializationParams calldata vestingInitParams
-    )
-        external
-        initializer
-    {
+    function initialize(LegionSaleInitializationParams calldata saleInitParams) external initializer {
         // Init and set the sale common params
-        _setLegionSaleConfig(saleInitParams, vestingInitParams);
+        _setLegionSaleConfig(saleInitParams);
 
         // Set the sale start time
         saleConfig.startTime = block.timestamp;
 
         /// Set the refund period duration in seconds
         preLiquidSaleConfig.refundPeriodSeconds = saleInitParams.refundPeriodSeconds;
-
-        /// Set the lockup period duration in seconds
-        preLiquidSaleConfig.lockupPeriodSeconds = saleInitParams.lockupPeriodSeconds;
     }
 
     /**
@@ -116,16 +106,6 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
         // Set the `refundEndTime` of the sale
         saleConfig.refundEndTime = block.timestamp + preLiquidSaleConfig.refundPeriodSeconds;
 
-        // Check if lockupPeriodSeconds is less than refundPeriodSeconds
-        // lockupEndTime should be at least refundEndTime
-        if (preLiquidSaleConfig.lockupPeriodSeconds <= preLiquidSaleConfig.refundPeriodSeconds) {
-            // If yes, set lockupEndTime to be refundEndTime
-            saleConfig.lockupEndTime = saleConfig.refundEndTime;
-        } else {
-            // If no, calculate the lockupEndTime
-            saleConfig.lockupEndTime = saleConfig.endTime + preLiquidSaleConfig.lockupPeriodSeconds;
-        }
-
         // Emit SaleEnded successfully
         emit SaleEnded(block.timestamp);
     }
@@ -174,13 +154,11 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
      * @param claimMerkleRoot The Merkle root to verify token claims.
      * @param tokensAllocated The total amount of tokens allocated for distribution among investors.
      * @param askToken The address of the token distributed to investors.
-     * @param vestingStartTime The Unix timestamp (seconds) of the block when the vesting starts.
      */
     function publishSaleResults(
         bytes32 claimMerkleRoot,
         uint256 tokensAllocated,
-        address askToken,
-        uint256 vestingStartTime
+        address askToken
     )
         external
         onlyLegion
@@ -207,11 +185,8 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
         /// Set the address of the token distributed to investors
         addressConfig.askToken = askToken;
 
-        // Set the vesting start time block timestamp
-        vestingConfig.vestingStartTime = vestingStartTime;
-
         // Emit successfully SaleResultsPublished
-        emit SaleResultsPublished(claimMerkleRoot, tokensAllocated, askToken, vestingStartTime);
+        emit SaleResultsPublished(claimMerkleRoot, tokensAllocated, askToken);
     }
 
     /**

@@ -16,6 +16,8 @@ pragma solidity 0.8.28;
 // If you find a bug, please contact security[at]legion.cc
 // We will pay a fair bounty for any issue that puts users' funds at risk.
 
+import { ILegionVestingManager } from "../interfaces/vesting/ILegionVestingManager.sol";
+
 interface ILegionSale {
     /// @notice A struct describing the Legion sale initialization params.
     struct LegionSaleInitializationParams {
@@ -23,8 +25,6 @@ interface ILegionSale {
         uint256 salePeriodSeconds;
         /// @dev The refund period duration in seconds.
         uint256 refundPeriodSeconds;
-        /// @dev The lockup period duration in seconds.
-        uint256 lockupPeriodSeconds;
         /// @dev Legion's fee on capital raised in BPS (Basis Points).
         uint256 legionFeeOnCapitalRaisedBps;
         /// @dev Legion's fee on tokens sold in BPS (Basis Points).
@@ -47,16 +47,6 @@ interface ILegionSale {
         address referrerFeeReceiver;
     }
 
-    /// @notice A struct describing the Legion vesting initialization params.
-    struct LegionVestingInitializationParams {
-        /// @dev The vesting schedule duration for the token sold in seconds.
-        uint256 vestingDurationSeconds;
-        /// @dev The vesting cliff duration for the token sold in seconds.
-        uint256 vestingCliffDurationSeconds;
-        /// @dev The token allocation amount released to investors after TGE in BPS (Basis Points).
-        uint256 tokenAllocationOnTGERate;
-    }
-
     /// @notice A struct describing the sale configuration.
     struct LegionSaleConfiguration {
         /// @dev The Unix timestamp (seconds) of the block when the sale starts.
@@ -65,8 +55,6 @@ interface ILegionSale {
         uint256 endTime;
         /// @dev The Unix timestamp (seconds) of the block when the refund period ends.
         uint256 refundEndTime;
-        /// @dev The Unix timestamp (seconds) of the block when the lockup period ends.
-        uint256 lockupEndTime;
         /// @dev Legion's fee on capital raised in BPS (Basis Points).
         uint256 legionFeeOnCapitalRaisedBps;
         /// @dev Legion's fee on tokens sold in BPS (Basis Points).
@@ -119,20 +107,6 @@ interface ILegionSale {
         bool tokensSupplied;
         /// @dev Whether raised capital has been withdrawn from the sale by the project.
         bool capitalWithdrawn;
-    }
-
-    /// @notice A struct describing the vesting configuration.
-    struct LegionVestingConfiguration {
-        /// @dev The vesting schedule duration for the token sold in seconds.
-        uint256 vestingDurationSeconds;
-        /// @dev The vesting cliff duration for the token sold in seconds.
-        uint256 vestingCliffDurationSeconds;
-        /// @dev The token allocation amount released to investors after TGE in BPS (Basis Points).
-        uint256 tokenAllocationOnTGERate;
-        /// @dev The Unix timestamp (seconds) of the block when the vesting period starts.
-        uint256 vestingStartTime;
-        /// @dev The address of Legion's Vesting Factory contract.
-        address vestingFactory;
     }
 
     /// @notice A struct describing the investor position during the sale.
@@ -248,9 +222,15 @@ interface ILegionSale {
      * @notice Claims the investor token allocation.
      *
      * @param amount The amount to be distributed.
+     * @param investorVestingConfig The vesting configuration for the investor.
      * @param proof The merkle proof verification for claiming.
      */
-    function claimTokenAllocation(uint256 amount, bytes32[] calldata proof) external;
+    function claimTokenAllocation(
+        uint256 amount,
+        ILegionVestingManager.LegionInvestorVestingConfig calldata investorVestingConfig,
+        bytes32[] calldata proof
+    )
+        external;
 
     /**
      * @notice Withdraw excess capital back to the investor.
@@ -293,11 +273,6 @@ interface ILegionSale {
     function cancelSale() external;
 
     /**
-     * @notice Cancels a sale in case the project has not supplied tokens after the lockup period is over.
-     */
-    function cancelExpiredSale() external;
-
-    /**
      * @notice Claims back capital in case the sale has been canceled.
      */
     function withdrawInvestedCapitalIfCanceled() external;
@@ -336,7 +311,7 @@ interface ILegionSale {
     /**
      * @notice Returns the vesting configuration.
      */
-    function vestingConfiguration() external view returns (LegionVestingConfiguration memory);
+    function vestingConfiguration() external view returns (ILegionVestingManager.LegionVestingConfig memory);
 
     /**
      * @notice Returns the sale status details.
@@ -349,4 +324,14 @@ interface ILegionSale {
      * @param investorAddress The address of the investor.
      */
     function investorPositionDetails(address investorAddress) external view returns (InvestorPosition memory);
+
+    /**
+     * @notice Returns the investor vesting status.
+     *
+     * @param investor The address of the investor.
+     */
+    function investorVestingStatus(address investor)
+        external
+        view
+        returns (ILegionVestingManager.LegionInvestorVestingStatus memory);
 }

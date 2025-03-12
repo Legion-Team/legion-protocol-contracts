@@ -1,5 +1,5 @@
 # LegionFixedPriceSale
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/1a165deeea33dfd2b1dca142bf23d06b547c39a3/src/LegionFixedPriceSale.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/a0becaf0413338ea78e3b0a0ce4527f7e1695849/src/LegionFixedPriceSale.sol)
 
 **Inherits:**
 [LegionSale](/src/LegionSale.sol/abstract.LegionSale.md), [ILegionFixedPriceSale](/src/interfaces/ILegionFixedPriceSale.sol/interface.ILegionFixedPriceSale.md)
@@ -29,8 +29,7 @@ Initializes the contract with correct parameters.
 ```solidity
 function initialize(
     LegionSaleInitializationParams calldata saleInitParams,
-    FixedPriceSaleInitializationParams calldata fixedPriceSaleInitParams,
-    LegionVestingInitializationParams calldata vestingInitParams
+    FixedPriceSaleInitializationParams calldata fixedPriceSaleInitParams
 )
     external
     initializer;
@@ -41,7 +40,6 @@ function initialize(
 |----|----|-----------|
 |`saleInitParams`|`LegionSaleInitializationParams`|The Legion sale initialization parameters.|
 |`fixedPriceSaleInitParams`|`FixedPriceSaleInitializationParams`|The fixed price sale specific initialization parameters.|
-|`vestingInitParams`|`LegionVestingInitializationParams`|The vesting initialization parameters.|
 
 
 ### invest
