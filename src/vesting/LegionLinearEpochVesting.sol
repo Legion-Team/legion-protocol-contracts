@@ -134,18 +134,6 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
     }
 
     /**
-     * @notice Release the native token (ether) that have already vested.
-     *
-     * Emits a {EtherReleased} event.
-     */
-    function release() public override onlyCliffEnded {
-        super.release();
-
-        // Update the last claimed epoch
-        _updateLastClaimedEpoch();
-    }
-
-    /**
      * @notice Release the tokens that have already vested.
      *
      * @param token The vested token to release

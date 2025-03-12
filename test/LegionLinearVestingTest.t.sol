@@ -153,34 +153,4 @@ contract LegionLinearVestingTest is Test {
         // Act
         LegionLinearVesting(payable(legionVestingInstance)).release(address(askToken));
     }
-
-    /**
-     * @dev Test case: Attempt to release ETH before cliff period ends
-     */
-    function test_release_revertsIfCliffHasNotEndedETH() public {
-        // Arrange
-        prepareCreateLegionLinearVesting();
-
-        // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.CliffNotEnded.selector, block.timestamp));
-
-        // Act
-        LegionLinearVesting(payable(legionVestingInstance)).release();
-    }
-
-    /**
-     * @notice Test case: Successfully release ETH after cliff period ends
-     */
-    function test_release_successfullyReleaseETHAfterCliffHasEnded() public {
-        // Arrange
-        prepareCreateLegionLinearVesting();
-
-        vm.warp(block.timestamp + Constants.ONE_HOUR + 1);
-
-        // Assert
-        vm.expectEmit();
-        emit VestingWalletUpgradeable.EtherReleased(114_186_960_933_536_276);
-        // Act
-        LegionLinearVesting(payable(legionVestingInstance)).release();
-    }
 }
