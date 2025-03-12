@@ -26,24 +26,27 @@ import { LegionLinearEpochVesting } from "../vesting/LegionLinearEpochVesting.so
  * @title Legion Vesting Factory
  * @author Legion
  * @notice A factory contract for deploying proxy instances of Legion vesting contracts
+ * @dev Utilizes the clone pattern to create new instances of linear and epoch-based vesting contracts
  */
 contract LegionVestingFactory is ILegionVestingFactory {
     using LibClone for address;
 
-    /// @dev The LegionLinearVesting implementation contract
+    /// @notice Address of the LegionLinearVesting implementation contract used as template
+    /// @dev Immutable reference to the base linear vesting implementation deployed during construction
     address public immutable linearVestingTemplate = address(new LegionLinearVesting());
 
-    /// @dev The LegionLinearVesting implementation contract
+    /// @notice Address of the LegionLinearEpochVesting implementation contract used as template
+    /// @dev Immutable reference to the base epoch vesting implementation deployed during construction
     address public immutable linearEpochVestingTemplate = address(new LegionLinearEpochVesting());
 
     /**
      * @notice Creates a new linear vesting contract
-     *
-     * @param beneficiary The address that will receive the vested tokens
-     * @param startTimestamp The Unix timestamp when the vesting period starts
-     * @param durationSeconds The duration of the vesting period in seconds
-     * @param cliffDurationSeconds The duration of the cliff period in seconds
-     * @return linearVestingInstance The address of the deployed LegionLinearVesting instance
+     * @dev Clones the linear vesting template and initializes it with provided parameters
+     * @param beneficiary Address that will receive the vested tokens
+     * @param startTimestamp Unix timestamp when the vesting period begins
+     * @param durationSeconds Total duration of the vesting period in seconds
+     * @param cliffDurationSeconds Duration of the cliff period in seconds
+     * @return linearVestingInstance Address of the newly deployed and initialized LegionLinearVesting instance
      */
     function createLinearVesting(
         address beneficiary,
@@ -68,14 +71,15 @@ contract LegionVestingFactory is ILegionVestingFactory {
 
     /**
      * @notice Creates a new linear epoch vesting contract
-     *
-     * @param beneficiary The address that will receive the vested tokens
-     * @param startTimestamp The Unix timestamp when the vesting period starts
-     * @param durationSeconds The duration of the vesting period in seconds
-     * @param cliffDurationSeconds The duration of the cliff period in seconds
-     * @param epochDurationSeconds The duration of each epoch in seconds
-     * @param numberOfEpochs The number of epochs
-     * @return linearEpochVestingInstance The address of the deployed LegionLinearVesting instance
+     * @dev Clones the epoch vesting template and initializes it with provided parameters
+     * @param beneficiary Address that will receive the vested tokens
+     * @param startTimestamp Unix timestamp when the vesting period begins
+     * @param durationSeconds Total duration of the vesting period in seconds
+     * @param cliffDurationSeconds Duration of the cliff period in seconds
+     * @param epochDurationSeconds Duration of each epoch in seconds
+     * @param numberOfEpochs Total number of epochs in the vesting schedule
+     * @return linearEpochVestingInstance Address of the newly deployed and initialized LegionLinearEpochVesting
+     * instance
      */
     function createLinearEpochVesting(
         address beneficiary,
