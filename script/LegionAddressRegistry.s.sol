@@ -2,8 +2,8 @@
 pragma solidity 0.8.28;
 
 import { Script, console2 } from "forge-std/Script.sol";
-import { LegionAddressRegistry } from "../src/LegionAddressRegistry.sol";
-import { LegionBouncer } from "../src/LegionBouncer.sol";
+import { LegionAddressRegistry } from "../src/registries/LegionAddressRegistry.sol";
+import { LegionBouncer } from "../src/access/LegionBouncer.sol";
 
 contract LegionAddressRegistryScript is Script {
     function setUp() public { }

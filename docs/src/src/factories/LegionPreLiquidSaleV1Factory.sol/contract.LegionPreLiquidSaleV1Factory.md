@@ -1,5 +1,5 @@
 # LegionPreLiquidSaleV1Factory
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/a0becaf0413338ea78e3b0a0ce4527f7e1695849/src/factories/LegionPreLiquidSaleV1Factory.sol)
+[Git Source](https://github.com/Legion-Team/evm-contracts/blob/eacaebdc1fce4e197305af05084de59f36b83e3e/src/factories/LegionPreLiquidSaleV1Factory.sol)
 
 **Inherits:**
 [ILegionPreLiquidSaleV1Factory](/src/interfaces/factories/ILegionPreLiquidSaleV1Factory.sol/interface.ILegionPreLiquidSaleV1Factory.md), Ownable

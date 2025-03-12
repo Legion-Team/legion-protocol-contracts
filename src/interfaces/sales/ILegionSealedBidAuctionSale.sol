@@ -16,7 +16,7 @@ pragma solidity 0.8.28;
 // If you find a bug, please contact security[at]legion.cc
 // We will pay a fair bounty for any issue that puts users' funds at risk.
 
-import { ECIES, Point } from "../lib/ECIES.sol";
+import { ECIES, Point } from "../../lib/ECIES.sol";
 import { ILegionSale } from "./ILegionSale.sol";
 
 interface ILegionSealedBidAuctionSale is ILegionSale {

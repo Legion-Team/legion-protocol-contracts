@@ -4,8 +4,8 @@ pragma solidity 0.8.28;
 import { Ownable } from "@solady/src/auth/Ownable.sol";
 import { Test, console2, Vm } from "forge-std/Test.sol";
 
-import { ILegionAddressRegistry } from "../src/interfaces/ILegionAddressRegistry.sol";
-import { LegionAddressRegistry } from "../src/LegionAddressRegistry.sol";
+import { ILegionAddressRegistry } from "../src/interfaces/registries/ILegionAddressRegistry.sol";
+import { LegionAddressRegistry } from "../src/registries/LegionAddressRegistry.sol";
 
 /**
  * @title Legion Address Registry Test

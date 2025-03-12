@@ -19,10 +19,10 @@ pragma solidity 0.8.28;
 import { LibClone } from "@solady/src/utils/LibClone.sol";
 import { Ownable } from "@solady/src/auth/Ownable.sol";
 
-import { ILegionSale } from "../interfaces/ILegionSale.sol";
-import { ILegionFixedPriceSale } from "../interfaces/ILegionFixedPriceSale.sol";
+import { ILegionSale } from "../interfaces/sales/ILegionSale.sol";
+import { ILegionFixedPriceSale } from "../interfaces/sales/ILegionFixedPriceSale.sol";
 import { ILegionFixedPriceSaleFactory } from "../interfaces/factories/ILegionFixedPriceSaleFactory.sol";
-import { LegionFixedPriceSale } from "../LegionFixedPriceSale.sol";
+import { LegionFixedPriceSale } from "../sales/LegionFixedPriceSale.sol";
 
 /**
  * @title Legion Fixed Price Sale Factory

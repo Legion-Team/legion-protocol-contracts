@@ -19,10 +19,10 @@ pragma solidity 0.8.28;
 import { LibClone } from "@solady/src/utils/LibClone.sol";
 import { Ownable } from "@solady/src/auth/Ownable.sol";
 
-import { ILegionSale } from "../interfaces/ILegionSale.sol";
+import { ILegionSale } from "../interfaces/sales/ILegionSale.sol";
 import { ILegionSealedBidAuctionSaleFactory } from "../interfaces/factories/ILegionSealedBidAuctionSaleFactory.sol";
-import { ILegionSealedBidAuctionSale } from "../interfaces/ILegionSealedBidAuctionSale.sol";
-import { LegionSealedBidAuctionSale } from "../LegionSealedBidAuctionSale.sol";
+import { ILegionSealedBidAuctionSale } from "../interfaces/sales/ILegionSealedBidAuctionSale.sol";
+import { LegionSealedBidAuctionSale } from "../sales/LegionSealedBidAuctionSale.sol";
 
 /**
  * @title Legion Sealed Bid Auction Sale Factory
