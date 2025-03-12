@@ -7,13 +7,13 @@ import { Initializable } from "@solady/src/utils/Initializable.sol";
 import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
-import { ILegionSale } from "../src/interfaces/ILegionSale.sol";
-import { ILegionFixedPriceSale } from "../src/interfaces/ILegionFixedPriceSale.sol";
+import { ILegionSale } from "../src/interfaces/sales/ILegionSale.sol";
+import { ILegionFixedPriceSale } from "../src/interfaces/sales/ILegionFixedPriceSale.sol";
 import { ILegionFixedPriceSaleFactory } from "../src/interfaces/factories/ILegionFixedPriceSaleFactory.sol";
 import { ILegionVestingManager } from "../src/interfaces/vesting/ILegionVestingManager.sol";
-import { LegionAddressRegistry } from "../src/LegionAddressRegistry.sol";
-import { LegionBouncer } from "../src/LegionBouncer.sol";
-import { LegionFixedPriceSale } from "../src/LegionFixedPriceSale.sol";
+import { LegionAddressRegistry } from "../src/registries/LegionAddressRegistry.sol";
+import { LegionBouncer } from "../src/access/LegionBouncer.sol";
+import { LegionFixedPriceSale } from "../src/sales/LegionFixedPriceSale.sol";
 import { LegionFixedPriceSaleFactory } from "../src/factories/LegionFixedPriceSaleFactory.sol";
 import { LegionVestingFactory } from "../src/factories/LegionVestingFactory.sol";
 import { MockToken } from "../src/mocks/MockToken.sol";

@@ -19,7 +19,7 @@ pragma solidity 0.8.28;
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { OwnableRoles } from "@solady/src/auth/OwnableRoles.sol";
 
-import { ILegionBouncer } from "./interfaces/ILegionBouncer.sol";
+import { ILegionBouncer } from "../interfaces/access/ILegionBouncer.sol";
 
 /**
  * @title Legion Bouncer
