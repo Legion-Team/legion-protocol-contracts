@@ -32,6 +32,10 @@ import { LegionLinearVesting } from "../vesting/LegionLinearVesting.sol";
 contract LegionVestingFactory is ILegionVestingFactory {
     using LibClone for address;
 
+    /*//////////////////////////////////////////////////////////////////////////
+                                 STATE VARIABLES
+    //////////////////////////////////////////////////////////////////////////*/
+
     /// @notice Address of the LegionLinearVesting implementation contract used as template
     /// @dev Immutable reference to the base linear vesting implementation deployed during construction
     address public immutable linearVestingTemplate = address(new LegionLinearVesting());
@@ -39,6 +43,10 @@ contract LegionVestingFactory is ILegionVestingFactory {
     /// @notice Address of the LegionLinearEpochVesting implementation contract used as template
     /// @dev Immutable reference to the base epoch vesting implementation deployed during construction
     address public immutable linearEpochVestingTemplate = address(new LegionLinearEpochVesting());
+
+    /*//////////////////////////////////////////////////////////////////////////
+                              EXTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Creates a new linear vesting contract

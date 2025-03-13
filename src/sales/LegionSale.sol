@@ -27,8 +27,8 @@ import { Constants } from "../utils/Constants.sol";
 import { Errors } from "../utils/Errors.sol";
 
 import { ILegionAddressRegistry } from "../interfaces/registries/ILegionAddressRegistry.sol";
-import { ILegionLinearVesting } from "../interfaces/vesting/ILegionLinearVesting.sol";
 import { ILegionSale } from "../interfaces/sales/ILegionSale.sol";
+import { ILegionVesting } from "../interfaces/vesting/ILegionVesting.sol";
 import { ILegionVestingFactory } from "../interfaces/factories/ILegionVestingFactory.sol";
 
 import { LegionVestingManager } from "../vesting/LegionVestingManager.sol";
@@ -42,6 +42,10 @@ import { LegionVestingManager } from "../vesting/LegionVestingManager.sol";
 abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable, Pausable {
     using ECDSA for bytes32;
     using MessageHashUtils for bytes32;
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                 STATE VARIABLES
+    //////////////////////////////////////////////////////////////////////////*/
 
     /// @notice Struct containing the sale configuration
     /// @dev Stores general sale parameters internally
@@ -58,6 +62,10 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
     /// @notice Mapping of investor addresses to their positions
     /// @dev Tracks investor data internally
     mapping(address investorAddress => InvestorPosition investorPosition) internal investorPositions;
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                   MODIFIERS
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Restricts function access to the Legion address only
@@ -97,6 +105,10 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         _;
     }
 
+    /*//////////////////////////////////////////////////////////////////////////
+                                   CONSTRUCTOR
+    //////////////////////////////////////////////////////////////////////////*/
+
     /**
      * @notice Constructor for LegionSale
      * @dev Disables initializers to prevent uninitialized deployment
@@ -105,6 +117,10 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         // Disable initialization
         _disableInitializers();
     }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                              EXTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Requests a refund from the sale during the refund window
@@ -307,7 +323,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         if (position.vestingAddress == address(0)) revert Errors.ZeroAddressProvided();
 
         // Release tokens to the investor account
-        ILegionLinearVesting(position.vestingAddress).release(addressConfig.askToken);
+        ILegionVesting(position.vestingAddress).release(addressConfig.askToken);
     }
 
     /**
@@ -362,7 +378,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         // Transfer the Referrer fee to the referrer fee receiver address
         if (referrerFee != 0) {
             SafeTransferLib.safeTransferFrom(
-                addressConfig.askToken, msg.sender, addressConfig.referrerFeeReceiver, legionFee
+                addressConfig.askToken, msg.sender, addressConfig.referrerFeeReceiver, referrerFee
             );
         }
     }
@@ -384,24 +400,6 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
 
         // Emit AcceptedCapitalSet
         emit AcceptedCapitalSet(merkleRoot);
-    }
-
-    /**
-     * @notice Cancels the ongoing sale
-     * @dev Virtual function restricted to Project; allows cancellation before results
-     */
-    function cancelSale() public virtual onlyProject whenNotPaused {
-        // Allow the Project to cancel the sale at any time until results are published
-        _verifySaleResultsNotPublished();
-
-        // Verify sale has not already been canceled
-        _verifySaleNotCanceled();
-
-        // Mark sale as canceled
-        saleStatus.isCanceled = true;
-
-        // Emit SaleCanceled
-        emit SaleCanceled();
     }
 
     /**
@@ -483,15 +481,6 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
     }
 
     /**
-     * @notice Returns the current vesting configuration
-     * @dev Virtual function providing read-only access to vestingConfig
-     * @return LegionVestingConfig memory Struct containing vesting configuration
-     */
-    function vestingConfiguration() external view virtual returns (LegionVestingConfig memory) {
-        return vestingConfig;
-    }
-
-    /**
      * @notice Returns the current sale status
      * @dev Virtual function providing read-only access to saleStatus
      * @return LegionSaleStatus memory Struct containing sale status
@@ -519,6 +508,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
     function investorVestingStatus(address investor)
         external
         view
+        virtual
         returns (LegionInvestorVestingStatus memory vestingStatus)
     {
         /// Get the investor position details
@@ -527,16 +517,42 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         // Return the investor vesting status
         investorVestingAddress != address(0)
             ? vestingStatus = LegionInvestorVestingStatus(
-                ILegionLinearVesting(investorVestingAddress).start(),
-                ILegionLinearVesting(investorVestingAddress).end(),
-                ILegionLinearVesting(investorVestingAddress).cliffEndTimestamp(),
-                ILegionLinearVesting(investorVestingAddress).duration(),
-                ILegionLinearVesting(investorVestingAddress).released(),
-                ILegionLinearVesting(investorVestingAddress).releasable(),
-                ILegionLinearVesting(investorVestingAddress).vestedAmount(addressConfig.askToken, uint64(block.timestamp))
+                ILegionVesting(investorVestingAddress).start(),
+                ILegionVesting(investorVestingAddress).end(),
+                ILegionVesting(investorVestingAddress).cliffEndTimestamp(),
+                ILegionVesting(investorVestingAddress).duration(),
+                ILegionVesting(investorVestingAddress).released(addressConfig.askToken),
+                ILegionVesting(investorVestingAddress).releasable(addressConfig.askToken),
+                ILegionVesting(investorVestingAddress).vestedAmount(addressConfig.askToken, uint64(block.timestamp))
             )
             : vestingStatus;
     }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                               PUBLIC FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /**
+     * @notice Cancels the ongoing sale
+     * @dev Virtual function restricted to Project; allows cancellation before results
+     */
+    function cancelSale() public virtual onlyProject whenNotPaused {
+        // Allow the Project to cancel the sale at any time until results are published
+        _verifySaleResultsNotPublished();
+
+        // Verify sale has not already been canceled
+        _verifySaleNotCanceled();
+
+        // Mark sale as canceled
+        saleStatus.isCanceled = true;
+
+        // Emit SaleCanceled
+        emit SaleCanceled();
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                              INTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Sets the sale parameters during initialization
@@ -657,6 +673,42 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         // Verify the merkle proof
         if (!MerkleProofLib.verify(_proof, saleStatus.acceptedCapitalMerkleRoot, leaf)) {
             revert Errors.CannotWithdrawExcessInvestedCapital(_investor);
+        }
+    }
+
+    /**
+     * @notice Verifies the validity of sale initialization parameters
+     * @dev Virtual function checking configuration constraints
+     * @param saleInitParams Struct with initialization parameters
+     */
+    function _verifyValidInitParams(LegionSaleInitializationParams memory saleInitParams) internal view virtual {
+        // Check for zero addresses provided
+        if (
+            saleInitParams.bidToken == address(0) || saleInitParams.projectAdmin == address(0)
+                || saleInitParams.addressRegistry == address(0)
+        ) {
+            revert Errors.ZeroAddressProvided();
+        }
+
+        // Check for zero values provided
+        if (saleInitParams.salePeriodSeconds == 0 || saleInitParams.refundPeriodSeconds == 0) {
+            revert Errors.ZeroValueProvided();
+        }
+
+        // Check if sale and refund periods are longer than allowed
+        if (
+            saleInitParams.salePeriodSeconds > Constants.THREE_MONTHS
+                || saleInitParams.refundPeriodSeconds > Constants.TWO_WEEKS
+        ) {
+            revert Errors.InvalidPeriodConfig();
+        }
+
+        // Check if sale and refund periods are shorter than allowed
+        if (
+            saleInitParams.salePeriodSeconds < Constants.ONE_HOUR
+                || saleInitParams.refundPeriodSeconds < Constants.ONE_HOUR
+        ) {
+            revert Errors.InvalidPeriodConfig();
         }
     }
 
@@ -795,41 +847,5 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      */
     function _verifyHasNotClaimedExcess() internal view virtual {
         if (investorPositions[msg.sender].hasClaimedExcess) revert Errors.InvestorHasClaimedExcess(msg.sender);
-    }
-
-    /**
-     * @notice Verifies the validity of sale initialization parameters
-     * @dev Virtual function checking configuration constraints
-     * @param saleInitParams Struct with initialization parameters
-     */
-    function _verifyValidInitParams(LegionSaleInitializationParams memory saleInitParams) internal view virtual {
-        // Check for zero addresses provided
-        if (
-            saleInitParams.bidToken == address(0) || saleInitParams.projectAdmin == address(0)
-                || saleInitParams.addressRegistry == address(0)
-        ) {
-            revert Errors.ZeroAddressProvided();
-        }
-
-        // Check for zero values provided
-        if (saleInitParams.salePeriodSeconds == 0 || saleInitParams.refundPeriodSeconds == 0) {
-            revert Errors.ZeroValueProvided();
-        }
-
-        // Check if sale and refund periods are longer than allowed
-        if (
-            saleInitParams.salePeriodSeconds > Constants.THREE_MONTHS
-                || saleInitParams.refundPeriodSeconds > Constants.TWO_WEEKS
-        ) {
-            revert Errors.InvalidPeriodConfig();
-        }
-
-        // Check if sale and refund periods are shorter than allowed
-        if (
-            saleInitParams.salePeriodSeconds < Constants.ONE_HOUR
-                || saleInitParams.refundPeriodSeconds < Constants.ONE_HOUR
-        ) {
-            revert Errors.InvalidPeriodConfig();
-        }
     }
 }

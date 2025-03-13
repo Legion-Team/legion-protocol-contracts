@@ -18,7 +18,6 @@ pragma solidity 0.8.29;
 
 import { VestingWalletUpgradeable } from "@openzeppelin/contracts-upgradeable/finance/VestingWalletUpgradeable.sol";
 
-import { Constants } from "../utils/Constants.sol";
 import { Errors } from "../utils/Errors.sol";
 
 /**
@@ -28,9 +27,17 @@ import { Errors } from "../utils/Errors.sol";
  * @dev Extends OpenZeppelin's VestingWalletUpgradeable with cliff functionality
  */
 contract LegionLinearVesting is VestingWalletUpgradeable {
+    /*//////////////////////////////////////////////////////////////////////////
+                                 STATE VARIABLES
+    //////////////////////////////////////////////////////////////////////////*/
+
     /// @notice Unix timestamp (seconds) when the cliff period ends
     /// @dev Private variable preventing token release until this timestamp
     uint256 public cliffEndTimestamp;
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                   MODIFIERS
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Restricts token release until the cliff period has ended
@@ -41,6 +48,10 @@ contract LegionLinearVesting is VestingWalletUpgradeable {
         _;
     }
 
+    /*//////////////////////////////////////////////////////////////////////////
+                                   CONSTRUCTOR
+    //////////////////////////////////////////////////////////////////////////*/
+
     /**
      * @notice Constructor for LegionLinearVesting
      * @dev Disables initializers to prevent uninitialized deployment
@@ -49,6 +60,10 @@ contract LegionLinearVesting is VestingWalletUpgradeable {
         // Disable initialization
         _disableInitializers();
     }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                  INITIALIZER
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Initializes the vesting contract with specified parameters
@@ -73,6 +88,10 @@ contract LegionLinearVesting is VestingWalletUpgradeable {
         // Set the cliff end timestamp, based on the cliff duration
         cliffEndTimestamp = startTimestamp + cliffDurationSeconds;
     }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                               PUBLIC FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Releases vested tokens of a specific type to the beneficiary

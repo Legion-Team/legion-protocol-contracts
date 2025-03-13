@@ -30,9 +30,17 @@ import { ILegionBouncer } from "../interfaces/access/ILegionBouncer.sol";
 contract LegionBouncer is ILegionBouncer, OwnableRoles {
     using Address for address;
 
+    /*//////////////////////////////////////////////////////////////////////////
+                                 STATE VARIABLES
+    //////////////////////////////////////////////////////////////////////////*/
+
     /// @notice Constant representing the broadcaster role identifier
     /// @dev Used to check permissions for function calls, corresponds to _ROLE_0
     uint256 public constant BROADCASTER_ROLE = _ROLE_0;
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                   CONSTRUCTOR
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Initializes the Legion Bouncer contract with default roles
@@ -47,6 +55,10 @@ contract LegionBouncer is ILegionBouncer, OwnableRoles {
         // Grant the default broadcaster role
         _grantRoles(defaultBroadcaster, BROADCASTER_ROLE);
     }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                              EXTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Executes a function call on a target contract

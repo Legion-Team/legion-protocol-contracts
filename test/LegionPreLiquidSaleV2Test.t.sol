@@ -2120,7 +2120,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         assertEq(vestingStatus.cliffEnd, (3600));
         assertEq(vestingStatus.duration, (31_536_000));
         assertEq(vestingStatus.released, 0);
-        assertEq(vestingStatus.releasable, 0);
+        assertEq(vestingStatus.releasable, 34_520_605_022_831_050_228);
         assertEq(vestingStatus.vestedAmount, 34_520_605_022_831_050_228);
     }
 

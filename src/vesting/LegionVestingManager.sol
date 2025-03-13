@@ -29,9 +29,30 @@ import { ILegionVestingManager } from "../interfaces/vesting/ILegionVestingManag
  * @dev Abstract contract implementing ILegionVestingManager; handles vesting type logic
  */
 abstract contract LegionVestingManager is ILegionVestingManager {
+    /*//////////////////////////////////////////////////////////////////////////
+                                 STATE VARIABLES
+    //////////////////////////////////////////////////////////////////////////*/
+
     /// @notice Struct containing the vesting configuration for the sale
     /// @dev Publicly accessible; stores factory address and other vesting settings
     LegionVestingConfig public vestingConfig;
+
+    /*//////////////////////////////////////////////////////////////////////////
+                              EXTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /**
+     * @notice Returns the current vesting configuration
+     * @dev Virtual function providing read-only access to vestingConfig
+     * @return LegionVestingConfig memory Struct containing vesting configuration
+     */
+    function vestingConfiguration() external view virtual returns (LegionVestingConfig memory) {
+        return vestingConfig;
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                              INTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Creates a vesting schedule contract for an investor based on configuration

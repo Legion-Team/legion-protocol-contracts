@@ -27,9 +27,17 @@ import { ILegionAddressRegistry } from "../interfaces/registries/ILegionAddressR
  * @dev Manages a mapping of unique identifiers to addresses for the Legion ecosystem; restricted to owner
  */
 contract LegionAddressRegistry is ILegionAddressRegistry, Ownable {
+    /*//////////////////////////////////////////////////////////////////////////
+                                 STATE VARIABLES
+    //////////////////////////////////////////////////////////////////////////*/
+
     /// @notice Mapping of unique identifiers to their corresponding Legion addresses
     /// @dev Stores the registry state as a private mapping
     mapping(bytes32 => address) private _legionAddresses;
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                   CONSTRUCTOR
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Initializes the LegionAddressRegistry with an owner
@@ -39,6 +47,10 @@ contract LegionAddressRegistry is ILegionAddressRegistry, Ownable {
     constructor(address newOwner) {
         _initializeOwner(newOwner);
     }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                              EXTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Sets a Legion address for a given identifier
@@ -56,6 +68,10 @@ contract LegionAddressRegistry is ILegionAddressRegistry, Ownable {
         // Emit event for address update
         emit LegionAddressSet(id, previousAddress, updatedAddress);
     }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                               PUBLIC FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Retrieves the Legion address associated with a given identifier

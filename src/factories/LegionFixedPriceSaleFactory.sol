@@ -34,9 +34,17 @@ import { LegionFixedPriceSale } from "../sales/LegionFixedPriceSale.sol";
 contract LegionFixedPriceSaleFactory is ILegionFixedPriceSaleFactory, Ownable {
     using LibClone for address;
 
+    /*//////////////////////////////////////////////////////////////////////////
+                                 STATE VARIABLES
+    //////////////////////////////////////////////////////////////////////////*/
+
     /// @notice Address of the LegionFixedPriceSale implementation contract used as template
     /// @dev Immutable reference to the base implementation deployed during construction
     address public immutable fixedPriceSaleTemplate = address(new LegionFixedPriceSale());
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                   CONSTRUCTOR
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Initializes the LegionFixedPriceSaleFactory with an owner
@@ -46,6 +54,10 @@ contract LegionFixedPriceSaleFactory is ILegionFixedPriceSaleFactory, Ownable {
     constructor(address newOwner) {
         _initializeOwner(newOwner);
     }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                              EXTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Deploys a new LegionFixedPriceSale contract instance

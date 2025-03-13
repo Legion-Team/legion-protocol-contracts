@@ -33,9 +33,17 @@ import { LegionSale } from "./LegionSale.sol";
  * @dev Inherits from LegionSale and implements ILegionSealedBidAuctionSale with encryption features
  */
 contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
+    /*//////////////////////////////////////////////////////////////////////////
+                                 STATE VARIABLES
+    //////////////////////////////////////////////////////////////////////////*/
+
     /// @notice Struct containing the sealed bid auction sale configuration
     /// @dev Stores auction-specific parameters like encryption keys and cancel lock
     SealedBidAuctionSaleConfiguration private sealedBidAuctionSaleConfig;
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                  INITIALIZER
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Initializes the sealed bid auction sale contract with parameters
@@ -64,6 +72,10 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
         saleConfig.endTime = saleConfig.startTime + saleInitParams.salePeriodSeconds;
         saleConfig.refundEndTime = saleConfig.endTime + saleInitParams.refundPeriodSeconds;
     }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                              EXTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Allows an investor to invest in the sealed bid auction
@@ -194,6 +206,19 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
     }
 
     /**
+     * @notice Returns the current sealed bid auction sale configuration
+     * @dev Provides read-only access to sealedBidAuctionSaleConfig
+     * @return SealedBidAuctionSaleConfiguration memory Struct containing auction configuration
+     */
+    function sealedBidAuctionSaleConfiguration() external view returns (SealedBidAuctionSaleConfiguration memory) {
+        return sealedBidAuctionSaleConfig;
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                               PUBLIC FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /**
      * @notice Cancels the ongoing sealed bid auction sale
      * @dev Overrides LegionSale; restricted to Project admin with additional lock check
      */
@@ -222,14 +247,9 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
         );
     }
 
-    /**
-     * @notice Returns the current sealed bid auction sale configuration
-     * @dev Provides read-only access to sealedBidAuctionSaleConfig
-     * @return SealedBidAuctionSaleConfiguration memory Struct containing auction configuration
-     */
-    function sealedBidAuctionSaleConfiguration() external view returns (SealedBidAuctionSaleConfiguration memory) {
-        return sealedBidAuctionSaleConfig;
-    }
+    /*//////////////////////////////////////////////////////////////////////////
+                              PRIVATE FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Verifies the validity of sealed bid auction initialization parameters

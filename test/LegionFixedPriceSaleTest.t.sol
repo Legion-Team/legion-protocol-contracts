@@ -1962,7 +1962,7 @@ contract LegionFixedPriceSaleTest is Test {
         assertEq(vestingStatus.cliffEnd, (3600));
         assertEq(vestingStatus.duration, (31_536_000));
         assertEq(vestingStatus.released, 0);
-        assertEq(vestingStatus.releasable, 0);
+        assertEq(vestingStatus.releasable, 34_828_824_200_913_242_009);
         assertEq(vestingStatus.vestedAmount, 34_828_824_200_913_242_009);
     }
 

@@ -33,9 +33,17 @@ import { LegionPreLiquidSaleV1 } from "../sales/LegionPreLiquidSaleV1.sol";
 contract LegionPreLiquidSaleV1Factory is ILegionPreLiquidSaleV1Factory, Ownable {
     using LibClone for address;
 
+    /*//////////////////////////////////////////////////////////////////////////
+                                 STATE VARIABLES
+    //////////////////////////////////////////////////////////////////////////*/
+
     /// @notice Address of the LegionPreLiquidSaleV1 implementation contract used as template
     /// @dev Immutable reference to the base implementation deployed during construction
     address public immutable preLiquidSaleV1Template = address(new LegionPreLiquidSaleV1());
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                   CONSTRUCTOR
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Initializes the LegionPreLiquidSaleV1Factory with an owner
@@ -45,6 +53,10 @@ contract LegionPreLiquidSaleV1Factory is ILegionPreLiquidSaleV1Factory, Ownable 
     constructor(address newOwner) {
         _initializeOwner(newOwner);
     }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                              EXTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Deploys a new LegionPreLiquidSaleV1 contract instance

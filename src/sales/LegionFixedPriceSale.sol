@@ -32,9 +32,17 @@ import { LegionSale } from "./LegionSale.sol";
  * @dev Inherits from LegionSale and implements ILegionFixedPriceSale for fixed-price token sales
  */
 contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
+    /*//////////////////////////////////////////////////////////////////////////
+                                 STATE VARIABLES
+    //////////////////////////////////////////////////////////////////////////*/
+
     /// @notice Struct containing the fixed-price sale configuration
     /// @dev Stores sale-specific parameters like token price and timing details
     FixedPriceSaleConfiguration private fixedPriceSaleConfig;
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                  INITIALIZER
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Initializes the contract with sale parameters
@@ -69,6 +77,10 @@ contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
         saleConfig.endTime = saleConfig.startTime + saleInitParams.salePeriodSeconds;
         saleConfig.refundEndTime = saleConfig.endTime + saleInitParams.refundPeriodSeconds;
     }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                              EXTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Allows an investor to contribute capital to the fixed-price sale
@@ -165,24 +177,9 @@ contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
         return fixedPriceSaleConfig;
     }
 
-    /**
-     * @notice Checks if the current time is within the prefund period
-     * @dev Compares block timestamp with prefund end time
-     * @return bool True if within prefund period, false otherwise
-     */
-    function _isPrefund() private view returns (bool) {
-        return (block.timestamp < fixedPriceSaleConfig.prefundEndTime);
-    }
-
-    /**
-     * @notice Verifies that the current time is not within the prefund allocation period
-     * @dev Reverts if called between prefundEndTime and sale startTime
-     */
-    function _verifyNotPrefundAllocationPeriod() private view {
-        if (block.timestamp >= fixedPriceSaleConfig.prefundEndTime && block.timestamp < saleConfig.startTime) {
-            revert Errors.PrefundAllocationPeriodNotEnded();
-        }
-    }
+    /*//////////////////////////////////////////////////////////////////////////
+                              PRIVATE FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Validates the fixed-price sale initialization parameters
@@ -212,6 +209,25 @@ contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
                 || fixedPriceSaleInitParams.prefundAllocationPeriodSeconds < Constants.ONE_HOUR
         ) {
             revert Errors.InvalidPeriodConfig();
+        }
+    }
+
+    /**
+     * @notice Checks if the current time is within the prefund period
+     * @dev Compares block timestamp with prefund end time
+     * @return bool True if within prefund period, false otherwise
+     */
+    function _isPrefund() private view returns (bool) {
+        return (block.timestamp < fixedPriceSaleConfig.prefundEndTime);
+    }
+
+    /**
+     * @notice Verifies that the current time is not within the prefund allocation period
+     * @dev Reverts if called between prefundEndTime and sale startTime
+     */
+    function _verifyNotPrefundAllocationPeriod() private view {
+        if (block.timestamp >= fixedPriceSaleConfig.prefundEndTime && block.timestamp < saleConfig.startTime) {
+            revert Errors.PrefundAllocationPeriodNotEnded();
         }
     }
 }

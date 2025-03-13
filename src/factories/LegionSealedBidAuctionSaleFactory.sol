@@ -34,9 +34,17 @@ import { LegionSealedBidAuctionSale } from "../sales/LegionSealedBidAuctionSale.
 contract LegionSealedBidAuctionSaleFactory is ILegionSealedBidAuctionSaleFactory, Ownable {
     using LibClone for address;
 
+    /*//////////////////////////////////////////////////////////////////////////
+                                 STATE VARIABLES
+    //////////////////////////////////////////////////////////////////////////*/
+
     /// @notice Address of the LegionSealedBidAuctionSale implementation contract used as template
     /// @dev Immutable reference to the base implementation deployed during construction
     address public immutable sealedBidAuctionTemplate = address(new LegionSealedBidAuctionSale());
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                   CONSTRUCTOR
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Initializes the LegionSealedBidAuctionSaleFactory with an owner
@@ -46,6 +54,10 @@ contract LegionSealedBidAuctionSaleFactory is ILegionSealedBidAuctionSaleFactory
     constructor(address newOwner) {
         _initializeOwner(newOwner);
     }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                              EXTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Deploys a new LegionSealedBidAuctionSale contract instance

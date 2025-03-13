@@ -27,8 +27,8 @@ import { Constants } from "../utils/Constants.sol";
 import { Errors } from "../utils/Errors.sol";
 
 import { ILegionAddressRegistry } from "../interfaces/registries/ILegionAddressRegistry.sol";
-import { ILegionLinearVesting } from "../interfaces/vesting/ILegionLinearVesting.sol";
 import { ILegionPreLiquidSaleV1 } from "../interfaces/sales/ILegionPreLiquidSaleV1.sol";
+import { ILegionVesting } from "../interfaces/vesting/ILegionVesting.sol";
 import { ILegionVestingFactory } from "../interfaces/factories/ILegionVestingFactory.sol";
 
 import { LegionVestingManager } from "../vesting/LegionVestingManager.sol";
@@ -43,6 +43,10 @@ import { LegionVestingManager } from "../vesting/LegionVestingManager.sol";
 contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, LegionVestingManager, Initializable, Pausable {
     using ECDSA for bytes32;
     using MessageHashUtils for bytes32;
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                 STATE VARIABLES
+    //////////////////////////////////////////////////////////////////////////*/
 
     /// @notice Struct containing the pre-liquid sale configuration
     /// @dev Stores internal sale parameters and settings
@@ -59,6 +63,10 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, LegionVestingManager, 
     /// @notice Mapping to track used signatures per investor to prevent replay attacks
     /// @dev Nested mapping for signature usage status
     mapping(address investorAddress => mapping(bytes signature => bool used) usedSignature) usedSignatures;
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                   MODIFIERS
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Restricts function access to the Legion address only
@@ -98,6 +106,10 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, LegionVestingManager, 
         _;
     }
 
+    /*//////////////////////////////////////////////////////////////////////////
+                                   CONSTRUCTOR
+    //////////////////////////////////////////////////////////////////////////*/
+
     /**
      * @notice Constructor for LegionPreLiquidSaleV1
      * @dev Disables initializers to prevent uninitialized deployment
@@ -107,6 +119,10 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, LegionVestingManager, 
         _disableInitializers();
     }
 
+    /*//////////////////////////////////////////////////////////////////////////
+                                  INITIALIZER
+    //////////////////////////////////////////////////////////////////////////*/
+
     /**
      * @notice Initializes the pre-liquid sale contract with parameters
      * @dev Sets up sale configuration; callable only once during initialization
@@ -115,6 +131,10 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, LegionVestingManager, 
     function initialize(PreLiquidSaleInitializationParams calldata preLiquidSaleInitParams) external initializer {
         _setLegionSaleConfig(preLiquidSaleInitParams);
     }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                              EXTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Allows an investor to contribute capital to the pre-liquid sale
@@ -552,7 +572,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, LegionVestingManager, 
         if (position.vestingAddress == address(0)) revert Errors.ZeroAddressProvided();
 
         /// Release tokens to the investor account
-        ILegionLinearVesting(position.vestingAddress).release(saleStatus.askToken);
+        ILegionVesting(position.vestingAddress).release(saleStatus.askToken);
     }
 
     /**
@@ -651,15 +671,6 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, LegionVestingManager, 
     }
 
     /**
-     * @notice Returns the vesting configuration
-     * @dev Provides read-only access to vestingConfig
-     * @return LegionVestingManager.LegionVestingConfig memory Struct containing vesting configuration
-     */
-    function vestingConfiguration() external view virtual returns (LegionVestingManager.LegionVestingConfig memory) {
-        return vestingConfig;
-    }
-
-    /**
      * @notice Returns an investor's position details
      * @dev Provides read-only access to investor position
      * @param investorAddress Address of the investor
@@ -686,16 +697,20 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, LegionVestingManager, 
         // Return the investor vesting status
         investorVestingAddress != address(0)
             ? vestingStatus = LegionInvestorVestingStatus(
-                ILegionLinearVesting(investorVestingAddress).start(),
-                ILegionLinearVesting(investorVestingAddress).end(),
-                ILegionLinearVesting(investorVestingAddress).cliffEndTimestamp(),
-                ILegionLinearVesting(investorVestingAddress).duration(),
-                ILegionLinearVesting(investorVestingAddress).released(),
-                ILegionLinearVesting(investorVestingAddress).releasable(),
-                ILegionLinearVesting(investorVestingAddress).vestedAmount(saleStatus.askToken, uint64(block.timestamp))
+                ILegionVesting(investorVestingAddress).start(),
+                ILegionVesting(investorVestingAddress).end(),
+                ILegionVesting(investorVestingAddress).cliffEndTimestamp(),
+                ILegionVesting(investorVestingAddress).duration(),
+                ILegionVesting(investorVestingAddress).released(saleStatus.askToken),
+                ILegionVesting(investorVestingAddress).releasable(saleStatus.askToken),
+                ILegionVesting(investorVestingAddress).vestedAmount(saleStatus.askToken, uint64(block.timestamp))
             )
             : vestingStatus;
     }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                              PRIVATE FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Sets the sale parameters during initialization
@@ -703,8 +718,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, LegionVestingManager, 
      * @param preLiquidSaleInitParams Calldata struct with initialization parameters
      */
     function _setLegionSaleConfig(PreLiquidSaleInitializationParams calldata preLiquidSaleInitParams)
-        internal
-        virtual
+        private
         onlyInitializing
     {
         /// Verify if the sale configuration is valid
@@ -729,7 +743,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, LegionVestingManager, 
      * @notice Syncs Legion addresses from the registry
      * @dev Updates configuration with latest addresses; virtual for overrides
      */
-    function _syncLegionAddresses() internal virtual {
+    function _syncLegionAddresses() private {
         // Cache Legion addresses from `LegionAddressRegistry`
         saleConfig.legionBouncer =
             ILegionAddressRegistry(saleConfig.addressRegistry).getLegionAddress(Constants.LEGION_BOUNCER_ID);
@@ -755,7 +769,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, LegionVestingManager, 
      * @param investAmount Maximum capital allowed per SAFT
      * @param tokenAllocationRate Token allocation percentage (18 decimals)
      */
-    function _updateInvestorPosition(uint256 investAmount, uint256 tokenAllocationRate) internal virtual {
+    function _updateInvestorPosition(uint256 investAmount, uint256 tokenAllocationRate) private {
         /// Load the investor position
         InvestorPosition storage position = investorPositions[msg.sender];
 
@@ -768,6 +782,27 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, LegionVestingManager, 
         if (position.cachedTokenAllocationRate != tokenAllocationRate) {
             position.cachedTokenAllocationRate = tokenAllocationRate;
         }
+    }
+
+    /**
+     * @notice Validates an investor's vesting position
+     * @dev Verifies vesting signature and configuration
+     * @param vestingSignature Signature proving vesting terms
+     * @param investorVestingConfig Vesting configuration to verify
+     */
+    function _verifyValidVestingPosition(
+        bytes memory vestingSignature,
+        LegionVestingManager.LegionInvestorVestingConfig calldata investorVestingConfig
+    )
+        private
+        view
+    {
+        /// Construct the signed data
+        bytes32 _data = keccak256(abi.encode(msg.sender, address(this), block.chainid, investorVestingConfig))
+            .toEthSignedMessageHash();
+
+        /// Verify the signature
+        if (_data.recover(vestingSignature) != saleConfig.legionSigner) revert Errors.InvalidSignature();
     }
 
     /**
@@ -946,26 +981,5 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, LegionVestingManager, 
 
         /// Verify the signature
         if (_data.recover(signature) != saleConfig.legionSigner) revert Errors.InvalidSignature();
-    }
-
-    /**
-     * @notice Validates an investor's vesting position
-     * @dev Verifies vesting signature and configuration
-     * @param vestingSignature Signature proving vesting terms
-     * @param investorVestingConfig Vesting configuration to verify
-     */
-    function _verifyValidVestingPosition(
-        bytes memory vestingSignature,
-        LegionVestingManager.LegionInvestorVestingConfig calldata investorVestingConfig
-    )
-        internal
-        view
-    {
-        /// Construct the signed data
-        bytes32 _data = keccak256(abi.encode(msg.sender, address(this), block.chainid, investorVestingConfig))
-            .toEthSignedMessageHash();
-
-        /// Verify the signature
-        if (_data.recover(vestingSignature) != saleConfig.legionSigner) revert Errors.InvalidSignature();
     }
 }

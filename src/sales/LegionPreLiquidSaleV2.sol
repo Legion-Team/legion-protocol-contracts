@@ -33,9 +33,17 @@ import { LegionSale } from "./LegionSale.sol";
  * @dev Inherits from LegionSale and implements ILegionPreLiquidSaleV2 for pre-liquid sale management
  */
 contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
+    /*//////////////////////////////////////////////////////////////////////////
+                                 STATE VARIABLES
+    //////////////////////////////////////////////////////////////////////////*/
+
     /// @notice Struct containing the pre-liquid sale configuration
     /// @dev Stores specific sale parameters like refund period and end status
     PreLiquidSaleConfiguration private preLiquidSaleConfig;
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                  INITIALIZER
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Initializes the pre-liquid sale contract with parameters
@@ -52,6 +60,10 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
         /// Set the refund period duration in seconds
         preLiquidSaleConfig.refundPeriodSeconds = saleInitParams.refundPeriodSeconds;
     }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                              EXTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Allows an investor to contribute capital to the pre-liquid sale
@@ -244,6 +256,19 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
     }
 
     /**
+     * @notice Returns the current pre-liquid sale configuration
+     * @dev Provides read-only access to preLiquidSaleConfig
+     * @return PreLiquidSaleConfiguration memory Struct containing the sale configuration
+     */
+    function preLiquidSaleConfiguration() external view returns (PreLiquidSaleConfiguration memory) {
+        return preLiquidSaleConfig;
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                               PUBLIC FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /**
      * @notice Cancels the ongoing pre-liquid sale
      * @dev Restricted to Project; handles cancellation and capital return
      */
@@ -272,14 +297,9 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
         }
     }
 
-    /**
-     * @notice Returns the current pre-liquid sale configuration
-     * @dev Provides read-only access to preLiquidSaleConfig
-     * @return PreLiquidSaleConfiguration memory Struct containing the sale configuration
-     */
-    function preLiquidSaleConfiguration() external view returns (PreLiquidSaleConfiguration memory) {
-        return preLiquidSaleConfig;
-    }
+    /*//////////////////////////////////////////////////////////////////////////
+                              INTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Verifies that the sale has not ended
@@ -287,31 +307,6 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
      */
     function _verifySaleHasNotEnded() internal view override {
         if (preLiquidSaleConfig.hasEnded) revert Errors.SaleHasEnded();
-    }
-
-    /**
-     * @notice Verifies that the sale has ended
-     * @dev Reverts if sale has not ended based on preLiquidSaleConfig
-     */
-    function _verifySaleHasEnded() internal view {
-        if (!preLiquidSaleConfig.hasEnded) revert Errors.SaleHasNotEnded();
-    }
-
-    /**
-     * @notice Verifies conditions for publishing capital raised
-     * @dev Reverts if capital raised is already published
-     */
-    function _verifyCanPublishCapitalRaised() internal view {
-        if (saleStatus.totalCapitalRaised != 0) revert Errors.CapitalRaisedAlreadyPublished();
-    }
-
-    /**
-     * @notice Verifies conditions for withdrawing capital
-     * @dev Overrides parent to check withdrawal status and capital raised
-     */
-    function _verifyCanWithdrawCapital() internal view override {
-        if (saleStatus.capitalWithdrawn) revert Errors.CapitalAlreadyWithdrawn();
-        if (saleStatus.totalCapitalRaised == 0) revert Errors.CapitalRaisedNotPublished();
     }
 
     /**
@@ -332,5 +327,34 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
         if (saleConfig.refundEndTime > 0 && block.timestamp >= saleConfig.refundEndTime) {
             revert Errors.RefundPeriodIsOver();
         }
+    }
+
+    /**
+     * @notice Verifies conditions for withdrawing capital
+     * @dev Overrides parent to check withdrawal status and capital raised
+     */
+    function _verifyCanWithdrawCapital() internal view override {
+        if (saleStatus.capitalWithdrawn) revert Errors.CapitalAlreadyWithdrawn();
+        if (saleStatus.totalCapitalRaised == 0) revert Errors.CapitalRaisedNotPublished();
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                              PRIVATE FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /**
+     * @notice Verifies that the sale has ended
+     * @dev Reverts if sale has not ended based on preLiquidSaleConfig
+     */
+    function _verifySaleHasEnded() private view {
+        if (!preLiquidSaleConfig.hasEnded) revert Errors.SaleHasNotEnded();
+    }
+
+    /**
+     * @notice Verifies conditions for publishing capital raised
+     * @dev Reverts if capital raised is already published
+     */
+    function _verifyCanPublishCapitalRaised() private view {
+        if (saleStatus.totalCapitalRaised != 0) revert Errors.CapitalRaisedAlreadyPublished();
     }
 }

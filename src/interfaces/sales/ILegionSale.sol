@@ -357,13 +357,6 @@ interface ILegionSale {
     function saleConfiguration() external view returns (LegionSaleConfiguration memory);
 
     /**
-     * @notice Retrieves the current vesting configuration
-     * @dev Must return the LegionVestingConfig struct
-     * @return ILegionVestingManager.LegionVestingConfig memory Struct containing vesting configuration
-     */
-    function vestingConfiguration() external view returns (ILegionVestingManager.LegionVestingConfig memory);
-
-    /**
      * @notice Retrieves the current sale status
      * @dev Must return the LegionSaleStatus struct
      * @return LegionSaleStatus memory Struct containing sale status

@@ -99,4 +99,11 @@ interface ILegionVestingManager {
         /// @dev Percentage of tokens (in wei) released immediately after TGE
         uint256 tokenAllocationOnTGERate;
     }
+
+    /**
+     * @notice Retrieves the current vesting configuration
+     * @dev Must return the LegionVestingConfig struct
+     * @return ILegionVestingManager.LegionVestingConfig memory Struct containing vesting configuration
+     */
+    function vestingConfiguration() external view returns (ILegionVestingManager.LegionVestingConfig memory);
 }

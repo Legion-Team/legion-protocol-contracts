@@ -2307,7 +2307,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         assertEq(vestingStatus.cliffEnd, (3600));
         assertEq(vestingStatus.duration, (31_536_000));
         assertEq(vestingStatus.released, 0);
-        assertEq(vestingStatus.releasable, 0);
+        assertEq(vestingStatus.releasable, 34_623_344_748_858_447_488);
         assertEq(vestingStatus.vestedAmount, 34_623_344_748_858_447_488);
     }
 
