@@ -23,20 +23,21 @@ import { ILegionVestingManager } from "../interfaces/vesting/ILegionVestingManag
 import { ILegionVestingFactory } from "../interfaces/factories/ILegionVestingFactory.sol";
 
 /**
- * @title Legion Vesting
+ * @title Legion Vesting Manager
  * @author Legion
  * @notice A contract for managing vesting creation and deployment in the Legion Protocol
+ * @dev Abstract contract implementing ILegionVestingManager; handles vesting type logic
  */
 abstract contract LegionVestingManager is ILegionVestingManager {
-    /// @dev A struct describing the sale vesting configuration.
+    /// @notice Struct containing the vesting configuration for the sale
+    /// @dev Publicly accessible; stores factory address and other vesting settings
     LegionVestingConfig public vestingConfig;
 
     /**
-     * @notice Create a vesting schedule contract for an investor.
-     *
-     * @param investorVestingConfig The configuration of the vesting schedule.
-     *
-     * @return vestingInstance The address of the deployed vesting instance.
+     * @notice Creates a vesting schedule contract for an investor based on configuration
+     * @dev Internal virtual function deploying either linear or epoch-based vesting
+     * @param investorVestingConfig Calldata struct with vesting schedule configuration
+     * @return vestingInstance Address of the deployed vesting contract instance (payable)
      */
     function _createVesting(LegionInvestorVestingConfig calldata investorVestingConfig)
         internal
@@ -69,15 +70,14 @@ abstract contract LegionVestingManager is ILegionVestingManager {
     }
 
     /**
-     * @notice Create a linear vesting schedule contract.
-     *
-     * @param beneficiary The beneficiary.
-     * @param vestingFactory The address of the vesting factory.
-     * @param startTimestamp The Unix timestamp when the vesting starts.
-     * @param durationSeconds The duration in seconds.
-     * @param cliffDurationSeconds The cliff duration in seconds.
-     *
-     * @return vestingInstance The address of the deployed vesting instance.
+     * @notice Creates a linear vesting schedule contract
+     * @dev Internal virtual function deploying a linear vesting instance via factory
+     * @param beneficiary Address to receive the vested tokens
+     * @param vestingFactory Address of the vesting factory contract
+     * @param startTimestamp Unix timestamp (seconds) when vesting starts
+     * @param durationSeconds Duration of the vesting period in seconds
+     * @param cliffDurationSeconds Duration of the cliff period in seconds
+     * @return vestingInstance Address of the deployed linear vesting contract (payable)
      */
     function _createLinearVesting(
         address beneficiary,
@@ -97,17 +97,16 @@ abstract contract LegionVestingManager is ILegionVestingManager {
     }
 
     /**
-     * @notice Create a linear vesting schedule contract.
-     *
-     * @param beneficiary The address that will receive the vested tokens
-     * @param vestingFactory The address of the vesting factory.
-     * @param startTimestamp The Unix timestamp when the vesting period starts
-     * @param durationSeconds The duration of the vesting period in seconds
-     * @param cliffDurationSeconds The duration of the cliff period in seconds
-     * @param epochDurationSeconds The duration of each epoch in seconds
-     * @param numberOfEpochs The number of epochs
-     *
-     * @return vestingInstance The address of the deployed vesting instance.
+     * @notice Creates a linear epoch-based vesting schedule contract
+     * @dev Internal virtual function deploying an epoch vesting instance via factory
+     * @param beneficiary Address to receive the vested tokens
+     * @param vestingFactory Address of the vesting factory contract
+     * @param startTimestamp Unix timestamp (seconds) when vesting starts
+     * @param durationSeconds Duration of the vesting period in seconds
+     * @param cliffDurationSeconds Duration of the cliff period in seconds
+     * @param epochDurationSeconds Duration of each epoch in seconds
+     * @param numberOfEpochs Total number of epochs in the vesting schedule
+     * @return vestingInstance Address of the deployed epoch vesting contract (payable)
      */
     function _createLinearEpochVesting(
         address beneficiary,
@@ -129,9 +128,9 @@ abstract contract LegionVestingManager is ILegionVestingManager {
     }
 
     /**
-     * @notice Verify that the  vesting configuration is valid.
-     *
-     * @param investorVestingConfig The configuration of the vesting schedule.
+     * @notice Verifies the validity of a vesting configuration
+     * @dev Internal virtual function checking vesting parameters for correctness
+     * @param investorVestingConfig Calldata struct with vesting schedule configuration
      */
     function _verifyValidLinearVestingConfig(LegionInvestorVestingConfig calldata investorVestingConfig)
         internal
