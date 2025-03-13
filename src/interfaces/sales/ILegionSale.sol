@@ -18,212 +18,260 @@ pragma solidity 0.8.29;
 
 import { ILegionVestingManager } from "../../interfaces/vesting/ILegionVestingManager.sol";
 
+/**
+ * @title ILegionSale
+ * @author Legion
+ * @notice Interface for managing token sales within the Legion Protocol
+ * @dev Defines core sale functionality, events, and structs for sale contracts
+ */
 interface ILegionSale {
-    /// @notice A struct describing the Legion sale initialization params.
+    /// @notice Struct defining initialization parameters for a Legion sale
     struct LegionSaleInitializationParams {
-        /// @dev The sale period duration in seconds.
+        /// @notice Duration of the sale period in seconds
+        /// @dev Time window during which investments are accepted
         uint256 salePeriodSeconds;
-        /// @dev The refund period duration in seconds.
+        /// @notice Duration of the refund period in seconds
+        /// @dev Time window for refund requests post-sale
         uint256 refundPeriodSeconds;
-        /// @dev Legion's fee on capital raised in BPS (Basis Points).
+        /// @notice Legion's fee on capital raised in basis points (BPS)
+        /// @dev Fee percentage applied to raised capital (1 BPS = 0.01%)
         uint256 legionFeeOnCapitalRaisedBps;
-        /// @dev Legion's fee on tokens sold in BPS (Basis Points).
+        /// @notice Legion's fee on tokens sold in basis points (BPS)
+        /// @dev Fee percentage applied to sold tokens
         uint256 legionFeeOnTokensSoldBps;
-        /// @dev Referrer's fee on capital raised in BPS (Basis Points).
+        /// @notice Referrer's fee on capital raised in basis points (BPS)
+        /// @dev Fee percentage for referrer on raised capital
         uint256 referrerFeeOnCapitalRaisedBps;
-        /// @dev Referrer's fee on tokens sold in BPS (Basis Points).
+        /// @notice Referrer's fee on tokens sold in basis points (BPS)
+        /// @dev Fee percentage for referrer on sold tokens
         uint256 referrerFeeOnTokensSoldBps;
-        /// @dev The minimum invest amount denominated in the `bidToken`.
+        /// @notice Minimum investment amount in bid token
+        /// @dev Threshold for individual investments
         uint256 minimumInvestAmount;
-        /// @dev The address of the token used for raising capital.
+        /// @notice Address of the token used for raising capital
+        /// @dev Bid token address
         address bidToken;
-        /// @dev The address of the token being sold to investors.
+        /// @notice Address of the token being sold to investors
+        /// @dev Ask token address, can be zero if set later
         address askToken;
-        /// @dev The admin address of the project raising capital.
+        /// @notice Admin address of the project raising capital
+        /// @dev Project admin address
         address projectAdmin;
-        /// @dev The address of Legion's Address Registry contract.
+        /// @notice Address of Legion's Address Registry contract
+        /// @dev Source of Legion-related addresses
         address addressRegistry;
-        /// @dev The address of the referrer.
+        /// @notice Address of the referrer fee receiver
+        /// @dev Destination for referrer fees
         address referrerFeeReceiver;
     }
 
-    /// @notice A struct describing the sale configuration.
+    /// @notice Struct containing the runtime configuration of the sale
     struct LegionSaleConfiguration {
-        /// @dev The Unix timestamp (seconds) of the block when the sale starts.
+        /// @notice Unix timestamp (seconds) when the sale starts
+        /// @dev Set at initialization
         uint256 startTime;
-        /// @dev The Unix timestamp (seconds) of the block when the sale ends.
+        /// @notice Unix timestamp (seconds) when the sale ends
+        /// @dev Set when sale concludes
         uint256 endTime;
-        /// @dev The Unix timestamp (seconds) of the block when the refund period ends.
+        /// @notice Unix timestamp (seconds) when the refund period ends
+        /// @dev Calculated as endTime + refundPeriodSeconds
         uint256 refundEndTime;
-        /// @dev Legion's fee on capital raised in BPS (Basis Points).
+        /// @notice Legion's fee on capital raised in basis points (BPS)
+        /// @dev Fee percentage on capital
         uint256 legionFeeOnCapitalRaisedBps;
-        /// @dev Legion's fee on tokens sold in BPS (Basis Points).
+        /// @notice Legion's fee on tokens sold in basis points (BPS)
+        /// @dev Fee percentage on tokens
         uint256 legionFeeOnTokensSoldBps;
-        /// @dev Referrer's fee on capital raised in BPS (Basis Points).
+        /// @notice Referrer's fee on capital raised in basis points (BPS)
+        /// @dev Referrer fee on capital
         uint256 referrerFeeOnCapitalRaisedBps;
-        /// @dev Referrer's fee on tokens sold in BPS (Basis Points).
+        /// @notice Referrer's fee on tokens sold in basis points (BPS)
+        /// @dev Referrer fee on tokens
         uint256 referrerFeeOnTokensSoldBps;
-        /// @dev The minimum invest amount denominated in the `bidToken`.
+        /// @notice Minimum investment amount in bid token
+        /// @dev Minimum threshold for investments
         uint256 minimumInvestAmount;
     }
 
-    /// @notice A struct describing the sale address configuration.
+    /// @notice Struct containing the address configuration for the sale
     struct LegionSaleAddressConfiguration {
-        /// @dev The address of the token used for raising capital.
+        /// @notice Address of the token used for raising capital
+        /// @dev Bid token address
         address bidToken;
-        /// @dev The address of the token being sold to investors.
+        /// @notice Address of the token being sold to investors
+        /// @dev Ask token address
         address askToken;
-        /// @dev The admin address of the project raising capital.
+        /// @notice Admin address of the project raising capital
+        /// @dev Project admin address
         address projectAdmin;
-        /// @dev The address of Legion's Address Registry contract.
+        /// @notice Address of Legion's Address Registry contract
+        /// @dev Registry address
         address addressRegistry;
-        /// @dev The address of Legion's Bouncer contract.
+        /// @notice Address of Legion's Bouncer contract
+        /// @dev Access control address
         address legionBouncer;
-        /// @dev The address of Legion's Signer contract.
+        /// @notice Address of Legion's Signer contract
+        /// @dev Address for signature verification
         address legionSigner;
-        /// @dev The address of Legion's Fee Receiver contract.
+        /// @notice Address of Legion's Fee Receiver contract
+        /// @dev Destination for Legion fees
         address legionFeeReceiver;
-        /// @dev The address of the referrer.
+        /// @notice Address of the referrer fee receiver
+        /// @dev Destination for referrer fees
         address referrerFeeReceiver;
     }
 
-    /// @notice A struct describing the sale status.
+    /// @notice Struct tracking the current status of the sale
     struct LegionSaleStatus {
-        /// @dev The total capital invested.
+        /// @notice Total capital invested by investors
+        /// @dev Aggregate investment amount
         uint256 totalCapitalInvested;
-        /// @dev The total amount of tokens allocated to investors.
+        /// @notice Total amount of tokens allocated to investors
+        /// @dev Allocation for distribution
         uint256 totalTokensAllocated;
-        /// @dev The total capital raised from the sale.
+        /// @notice Total capital raised from the sale
+        /// @dev Final raised amount
         uint256 totalCapitalRaised;
-        /// @dev The total capital withdrawn by the Project, from the sale.
+        /// @notice Total capital withdrawn by the Project
+        /// @dev Amount withdrawn by project
         uint256 totalCapitalWithdrawn;
-        /// @dev The merkle root for verification of token distribution amounts.
+        /// @notice Merkle root for verifying token distribution amounts
+        /// @dev Used for claim verification
         bytes32 claimTokensMerkleRoot;
-        /// @dev The merkle root for verification of accepted capital distribution amounts.
+        /// @notice Merkle root for verifying accepted capital amounts
+        /// @dev Used for excess capital verification
         bytes32 acceptedCapitalMerkleRoot;
-        /// @dev Whether the sale has been canceled.
+        /// @notice Indicates if the sale has been canceled
+        /// @dev Cancellation status
         bool isCanceled;
-        /// @dev Whether tokens have been supplied by the project.
+        /// @notice Indicates if tokens have been supplied by the project
+        /// @dev Supply status
         bool tokensSupplied;
-        /// @dev Whether raised capital has been withdrawn from the sale by the project.
+        /// @notice Indicates if capital has been withdrawn by the project
+        /// @dev Withdrawal status
         bool capitalWithdrawn;
     }
 
-    /// @notice A struct describing the investor position during the sale.
+    /// @notice Struct representing an investor's position in the sale
     struct InvestorPosition {
-        /// @dev The total amount of capital invested by the investor.
+        /// @notice Total capital invested by the investor
+        /// @dev Invested amount in bid tokens
         uint256 investedCapital;
-        /// @dev Flag indicating if the investor has settled.
+        /// @notice Flag indicating if investor has settled tokens
+        /// @dev Settlement status
         bool hasSettled;
-        /// @dev Flag indicating if the investor has claimed excess capital.
+        /// @notice Flag indicating if investor has claimed excess capital
+        /// @dev Excess claim status
         bool hasClaimedExcess;
-        /// @dev Flag indicating if the investor has refunded.
+        /// @notice Flag indicating if investor has refunded
+        /// @dev Refund status
         bool hasRefunded;
-        /// @dev The address of the investor's vesting contract.
+        /// @notice Address of the investor's vesting contract
+        /// @dev Vesting contract address
         address vestingAddress;
     }
 
     /**
-     * @notice This event is emitted when capital is successfully withdrawn by the project owner.
-     *
-     * @param amountToWithdraw The amount of capital withdrawn.
-     * @param projectOwner The address of the project owner.
+     * @notice Emitted when capital is withdrawn by the project owner
+     * @dev Logs withdrawal details for project capital
+     * @param amountToWithdraw Amount of capital withdrawn
+     * @param projectOwner Address of the project owner
      */
     event CapitalWithdrawn(uint256 amountToWithdraw, address projectOwner);
 
     /**
-     * @notice This event is emitted when capital is successfully refunded to the investor.
-     *
-     * @param amount The amount of capital refunded to the investor.
-     * @param investor The address of the investor who requested the refund.
+     * @notice Emitted when capital is refunded to an investor
+     * @dev Logs refund details during refund period
+     * @param amount Amount of capital refunded
+     * @param investor Address of the investor receiving refund
      */
     event CapitalRefunded(uint256 amount, address investor);
 
     /**
-     * @notice This event is emitted when capital is successfully refunded to the investor after a sale has been
-     * canceled.
-     *
-     * @param amount The amount of capital refunded to the investor.
-     * @param investor The address of the investor who requested the refund.
+     * @notice Emitted when capital is refunded after sale cancellation
+     * @dev Logs refund details post-cancellation
+     * @param amount Amount of capital refunded
+     * @param investor Address of the investor receiving refund
      */
     event CapitalRefundedAfterCancel(uint256 amount, address investor);
 
     /**
-     * @notice This event is emitted when excess capital is successfully claimed by the investor after a sale has ended.
-     *
-     * @param amount The amount of capital refunded to the investor.
-     * @param investor The address of the investor who requested the refund.
+     * @notice Emitted when excess capital is claimed by an investor post-sale
+     * @dev Logs excess capital withdrawal details
+     * @param amount Amount of excess capital withdrawn
+     * @param investor Address of the investor claiming excess
      */
     event ExcessCapitalWithdrawn(uint256 amount, address investor);
 
     /**
-     * @notice This event is emitted when accepted capital has been successfully published by the Legion admin.
-     *
-     * @param merkleRoot The accepted capital merkle root published.
+     * @notice Emitted when accepted capital Merkle root is published by Legion
+     * @dev Logs verification data for accepted capital
+     * @param merkleRoot Merkle root for accepted capital verification
      */
     event AcceptedCapitalSet(bytes32 merkleRoot);
 
     /**
-     * @notice This event is emitted when an emergency withdrawal of funds is performed by Legion.
-     *
-     * @param receiver The address of the receiver.
-     * @param token The address of the token to be withdrawn.
-     * @param amount The amount to be withdrawn.
+     * @notice Emitted during an emergency withdrawal by Legion
+     * @dev Logs details of emergency token withdrawal
+     * @param receiver Address receiving withdrawn tokens
+     * @param token Address of the token withdrawn
+     * @param amount Amount of tokens withdrawn
      */
     event EmergencyWithdraw(address receiver, address token, uint256 amount);
 
     /**
-     * @notice This event is emitted when Legion addresses are successfully synced.
-     *
-     * @param legionBouncer The updated Legion bouncer address.
-     * @param legionSigner The updated Legion signer address.
-     * @param legionFeeReceiver The updated fee receiver address of Legion.
-     * @param vestingFactory The updated vesting factory address.
+     * @notice Emitted when Legion addresses are synced from the registry
+     * @dev Logs updated addresses for configuration
+     * @param legionBouncer Updated Legion bouncer address
+     * @param legionSigner Updated Legion signer address
+     * @param legionFeeReceiver Updated Legion fee receiver address
+     * @param vestingFactory Updated vesting factory address
      */
     event LegionAddressesSynced(
         address legionBouncer, address legionSigner, address legionFeeReceiver, address vestingFactory
     );
 
     /**
-     * @notice This event is emitted when a sale is successfully canceled.
+     * @notice Emitted when a sale is canceled
+     * @dev Indicates the sale has been terminated
      */
     event SaleCanceled();
 
     /**
-     * @notice This event is emitted when tokens are successfully supplied for distribution by the project admin.
-     *
-     * @param amount The amount of tokens supplied for distribution.
-     * @param legionFee The fee amount collected by Legion.
-     * @param referrerFee The fee amount collected by the referrer.
+     * @notice Emitted when tokens are supplied for distribution by the project
+     * @dev Logs token supply and fee details
+     * @param amount Amount of tokens supplied
+     * @param legionFee Fee amount collected by Legion
+     * @param referrerFee Fee amount collected by referrer
      */
     event TokensSuppliedForDistribution(uint256 amount, uint256 legionFee, uint256 referrerFee);
 
     /**
-     * @notice This event is emitted when tokens are successfully claimed by the investor.
-     *
-     * @param amount The amount of tokens distributed to the vesting contract.
-     * @param investor The address of the investor owning the vesting contract.
+     * @notice Emitted when tokens are claimed by an investor
+     * @dev Logs total token amount claimed (vested + immediate)
+     * @param amount Total amount of tokens distributed
+     * @param investor Address of the claiming investor
      */
     event TokenAllocationClaimed(uint256 amount, address investor);
 
     /**
-     * @notice Request a refund from the sale during the applicable time window.
+     * @notice Requests a refund from the sale during the refund period
+     * @dev Must return invested capital if within refund window
      */
     function refund() external;
 
     /**
-     * @notice Withdraw raised capital from the sale contract.
-     *
-     * @dev Can be called only by the Project admin address.
+     * @notice Withdraws raised capital from the sale contract
+     * @dev Must be restricted to Project admin; handles capital withdrawal
      */
     function withdrawRaisedCapital() external;
 
     /**
-     * @notice Claims the investor token allocation.
-     *
-     * @param amount The amount to be distributed.
-     * @param investorVestingConfig The vesting configuration for the investor.
-     * @param proof The merkle proof verification for claiming.
+     * @notice Claims investor token allocation
+     * @dev Must handle vesting and immediate distribution; requires Merkle proof
+     * @param amount Total amount of tokens to claim
+     * @param investorVestingConfig Vesting configuration for the investor
+     * @param proof Merkle proof for claim verification
      */
     function claimTokenAllocation(
         uint256 amount,
@@ -233,102 +281,108 @@ interface ILegionSale {
         external;
 
     /**
-     * @notice Withdraw excess capital back to the investor.
-     *
-     * @param amount The amount to be returned.
-     * @param proof The merkle proof verification for the return.
+     * @notice Withdraws excess invested capital back to the investor
+     * @dev Must verify eligibility with Merkle proof and update state
+     * @param amount Amount of excess capital to withdraw
+     * @param proof Merkle proof for excess capital verification
      */
     function withdrawExcessInvestedCapital(uint256 amount, bytes32[] calldata proof) external;
 
     /**
-     * @notice Releases tokens to the investor address.
+     * @notice Releases vested tokens to the investor
+     * @dev Must interact with vesting contract to release tokens
      */
     function releaseVestedTokens() external;
 
     /**
-     * @notice Supply tokens once the sale results have been published.
-     *
-     * @dev Can be called only by the Project admin address.
-     *
-     * @param amount The token amount supplied by the project.
-     * @param legionFee The legion fee token amount supplied by the project.
-     * @param referrerFee The referrer fee token amount supplied by the project.
+     * @notice Supplies tokens for distribution post-sale
+     * @dev Must be restricted to Project admin; handles token and fee transfers
+     * @param amount Amount of tokens to supply
+     * @param legionFee Fee amount for Legion
+     * @param referrerFee Fee amount for referrer
      */
     function supplyTokens(uint256 amount, uint256 legionFee, uint256 referrerFee) external;
 
     /**
-     * @notice Publish merkle root for accepted capital.
-     *
-     * @dev Can be called only by the Legion admin address.
-     *
-     * @param merkleRoot The merkle root to verify against.
+     * @notice Publishes Merkle root for accepted capital
+     * @dev Must be restricted to Legion admin; sets verification data
+     * @param merkleRoot Merkle root for accepted capital verification
      */
     function setAcceptedCapital(bytes32 merkleRoot) external;
 
     /**
-     * @notice Cancels an ongoing sale.
-     *
-     * @dev Can be called only by the Project admin address.
+     * @notice Cancels an ongoing sale
+     * @dev Must be restricted to Project admin; terminates sale
      */
     function cancelSale() external;
 
     /**
-     * @notice Claims back capital in case the sale has been canceled.
+     * @notice Withdraws invested capital if the sale is canceled
+     * @dev Must return capital to investors post-cancellation
      */
     function withdrawInvestedCapitalIfCanceled() external;
 
     /**
-     * @notice Withdraw tokens from the contract in case of emergency.
-     *
-     * @dev Can be called only by the Legion admin address.
-     *
-     * @param receiver The address of the receiver.
-     * @param token The address of the token to be withdrawn.
-     * @param amount The amount to be withdrawn.
+     * @notice Performs an emergency withdrawal of tokens
+     * @dev Must be restricted to Legion admin; used for safety measures
+     * @param receiver Address to receive withdrawn tokens
+     * @param token Address of the token to withdraw
+     * @param amount Amount of tokens to withdraw
      */
     function emergencyWithdraw(address receiver, address token, uint256 amount) external;
 
     /**
-     * @notice Syncs active Legion addresses from `LegionAddressRegistry.sol`.
+     * @notice Syncs active Legion addresses from the registry
+     * @dev Must update configuration with latest addresses
      */
     function syncLegionAddresses() external;
 
     /**
-     * @notice Pauses the sale.
+     * @notice Pauses the sale
+     * @dev Must halt sale operations; restricted to Legion
      */
     function pauseSale() external;
 
     /**
-     * @notice Unpauses the sale.
+     * @notice Unpauses the sale
+     * @dev Must resume sale operations; restricted to Legion
      */
     function unpauseSale() external;
 
     /**
-     * @notice Returns the sale configuration.
+     * @notice Retrieves the current sale configuration
+     * @dev Must return the LegionSaleConfiguration struct
+     * @return LegionSaleConfiguration memory Struct containing sale configuration
      */
     function saleConfiguration() external view returns (LegionSaleConfiguration memory);
 
     /**
-     * @notice Returns the vesting configuration.
+     * @notice Retrieves the current vesting configuration
+     * @dev Must return the LegionVestingConfig struct
+     * @return ILegionVestingManager.LegionVestingConfig memory Struct containing vesting configuration
      */
     function vestingConfiguration() external view returns (ILegionVestingManager.LegionVestingConfig memory);
 
     /**
-     * @notice Returns the sale status details.
+     * @notice Retrieves the current sale status
+     * @dev Must return the LegionSaleStatus struct
+     * @return LegionSaleStatus memory Struct containing sale status
      */
     function saleStatusDetails() external view returns (LegionSaleStatus memory);
 
     /**
-     * @notice Returns an investor position.
-     *
-     * @param investorAddress The address of the investor.
+     * @notice Retrieves an investor's position details
+     * @dev Must return the InvestorPosition struct for the specified address
+     * @param investorAddress Address of the investor
+     * @return InvestorPosition memory Struct containing investor position details
      */
     function investorPositionDetails(address investorAddress) external view returns (InvestorPosition memory);
 
     /**
-     * @notice Returns the investor vesting status.
-     *
-     * @param investor The address of the investor.
+     * @notice Retrieves an investor's vesting status
+     * @dev Must return vesting details if applicable
+     * @param investor Address of the investor
+     * @return ILegionVestingManager.LegionInvestorVestingStatus memory Struct containing vesting status
      */
     function investorVestingStatus(address investor)
         external
