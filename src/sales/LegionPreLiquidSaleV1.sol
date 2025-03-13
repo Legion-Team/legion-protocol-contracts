@@ -17,19 +17,21 @@ pragma solidity 0.8.29;
 // We will pay a fair bounty for any issue that puts users' funds at risk.
 
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import { Initializable } from "@solady/src/utils/Initializable.sol";
-import { MerkleProofLib } from "@solady/src/utils/MerkleProofLib.sol";
 import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
+import { Initializable } from "@solady/src/utils/Initializable.sol";
+import { MerkleProofLib } from "@solady/src/utils/MerkleProofLib.sol";
 import { SafeTransferLib } from "@solady/src/utils/SafeTransferLib.sol";
 
 import { Constants } from "../utils/Constants.sol";
 import { Errors } from "../utils/Errors.sol";
-import { LegionVestingManager } from "../vesting/LegionVestingManager.sol";
+
 import { ILegionAddressRegistry } from "../interfaces/registries/ILegionAddressRegistry.sol";
-import { ILegionPreLiquidSaleV1 } from "../interfaces/sales/ILegionPreLiquidSaleV1.sol";
 import { ILegionLinearVesting } from "../interfaces/vesting/ILegionLinearVesting.sol";
+import { ILegionPreLiquidSaleV1 } from "../interfaces/sales/ILegionPreLiquidSaleV1.sol";
 import { ILegionVestingFactory } from "../interfaces/factories/ILegionVestingFactory.sol";
+
+import { LegionVestingManager } from "../vesting/LegionVestingManager.sol";
 
 /**
  * @title Legion Pre-Liquid Sale V1

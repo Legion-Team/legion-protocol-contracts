@@ -20,7 +20,9 @@ import { SafeTransferLib } from "@solady/src/utils/SafeTransferLib.sol";
 
 import { Constants } from "../utils/Constants.sol";
 import { Errors } from "../utils/Errors.sol";
+
 import { ILegionFixedPriceSale } from "../interfaces/sales/ILegionFixedPriceSale.sol";
+
 import { LegionSale } from "./LegionSale.sol";
 
 /**

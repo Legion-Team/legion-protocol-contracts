@@ -19,8 +19,9 @@ pragma solidity 0.8.29;
 import { LibClone } from "@solady/src/utils/LibClone.sol";
 
 import { ILegionVestingFactory } from "../interfaces/factories/ILegionVestingFactory.sol";
-import { LegionLinearVesting } from "../vesting/LegionLinearVesting.sol";
+
 import { LegionLinearEpochVesting } from "../vesting/LegionLinearEpochVesting.sol";
+import { LegionLinearVesting } from "../vesting/LegionLinearVesting.sol";
 
 /**
  * @title Legion Vesting Factory

@@ -19,8 +19,9 @@ pragma solidity 0.8.29;
 import { LibClone } from "@solady/src/utils/LibClone.sol";
 import { Ownable } from "@solady/src/auth/Ownable.sol";
 
-import { ILegionPreLiquidSaleV1Factory } from "../interfaces/factories/ILegionPreLiquidSaleV1Factory.sol";
 import { ILegionPreLiquidSaleV1 } from "../interfaces/sales/ILegionPreLiquidSaleV1.sol";
+import { ILegionPreLiquidSaleV1Factory } from "../interfaces/factories/ILegionPreLiquidSaleV1Factory.sol";
+
 import { LegionPreLiquidSaleV1 } from "../sales/LegionPreLiquidSaleV1.sol";
 
 /**

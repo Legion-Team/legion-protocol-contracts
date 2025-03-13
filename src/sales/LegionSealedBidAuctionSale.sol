@@ -20,8 +20,10 @@ import { SafeTransferLib } from "@solady/src/utils/SafeTransferLib.sol";
 
 import { ECIES, Point } from "../lib/ECIES.sol";
 import { Errors } from "../utils/Errors.sol";
+
 import { ILegionSale } from "../interfaces/sales/ILegionSale.sol";
 import { ILegionSealedBidAuctionSale } from "../interfaces/sales/ILegionSealedBidAuctionSale.sol";
+
 import { LegionSale } from "./LegionSale.sol";
 
 /**

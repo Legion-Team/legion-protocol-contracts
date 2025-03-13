@@ -16,8 +16,8 @@ pragma solidity 0.8.29;
 // If you find a bug, please contact security[at]legion.cc
 // We will pay a fair bounty for any issue that puts users' funds at risk.
 
-import { ILegionSale } from "../sales/ILegionSale.sol";
 import { ILegionPreLiquidSaleV2 } from "../sales/ILegionPreLiquidSaleV2.sol";
+import { ILegionSale } from "../sales/ILegionSale.sol";
 
 /**
  * @title ILegionPreLiquidSaleV2Factory

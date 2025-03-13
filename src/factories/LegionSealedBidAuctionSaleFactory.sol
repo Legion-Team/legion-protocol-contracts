@@ -20,8 +20,9 @@ import { LibClone } from "@solady/src/utils/LibClone.sol";
 import { Ownable } from "@solady/src/auth/Ownable.sol";
 
 import { ILegionSale } from "../interfaces/sales/ILegionSale.sol";
-import { ILegionSealedBidAuctionSaleFactory } from "../interfaces/factories/ILegionSealedBidAuctionSaleFactory.sol";
 import { ILegionSealedBidAuctionSale } from "../interfaces/sales/ILegionSealedBidAuctionSale.sol";
+import { ILegionSealedBidAuctionSaleFactory } from "../interfaces/factories/ILegionSealedBidAuctionSaleFactory.sol";
+
 import { LegionSealedBidAuctionSale } from "../sales/LegionSealedBidAuctionSale.sol";
 
 /**

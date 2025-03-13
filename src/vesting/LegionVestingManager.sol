@@ -19,8 +19,8 @@ pragma solidity 0.8.29;
 import { Constants } from "../utils/Constants.sol";
 import { Errors } from "../utils/Errors.sol";
 
-import { ILegionVestingManager } from "../interfaces/vesting/ILegionVestingManager.sol";
 import { ILegionVestingFactory } from "../interfaces/factories/ILegionVestingFactory.sol";
+import { ILegionVestingManager } from "../interfaces/vesting/ILegionVestingManager.sol";
 
 /**
  * @title Legion Vesting Manager
