@@ -217,7 +217,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         // Verify that the vesting configuration is valid
         _verifyValidLinearVestingConfig(investorVestingConfig);
 
-        // Verify that the lockup period is over
+        // Verify that the refund period is over
         _verifyRefundPeriodIsOver();
 
         // Verify that sales results have been published
@@ -814,7 +814,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
             revert Errors.ZeroValueProvided();
         }
 
-        // Check if sale, refund and lockup periods are longer than allowed
+        // Check if sale and refund periods are longer than allowed
         if (
             saleInitParams.salePeriodSeconds > Constants.THREE_MONTHS
                 || saleInitParams.refundPeriodSeconds > Constants.TWO_WEEKS
@@ -822,7 +822,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
             revert Errors.InvalidPeriodConfig();
         }
 
-        // Check if sale, refund and lockup periods are shorter than allowed
+        // Check if sale and refund periods are shorter than allowed
         if (
             saleInitParams.salePeriodSeconds < Constants.ONE_HOUR
                 || saleInitParams.refundPeriodSeconds < Constants.ONE_HOUR

@@ -383,41 +383,6 @@ contract LegionSealedBidAuctionSaleTest is Test {
     }
 
     /**
-     * @dev Test Case: Successfully initialize the contract when lockup period is less than refund time.
-     */
-    function test_createSealedBidAuction_successfullyDeployIfLockupPeriodLessThanRefundTime() public {
-        // Arrange & Act
-        setSaleParams(
-            ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: Constants.ONE_HOUR,
-                refundPeriodSeconds: Constants.TWO_WEEKS,
-                legionFeeOnCapitalRaisedBps: 250,
-                legionFeeOnTokensSoldBps: 250,
-                referrerFeeOnCapitalRaisedBps: 100,
-                referrerFeeOnTokensSoldBps: 100,
-                minimumInvestAmount: 1e6,
-                bidToken: address(bidToken),
-                askToken: address(askToken),
-                projectAdmin: address(projectAdmin),
-                addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: address(nonLegionAdmin)
-            }),
-            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
-        );
-
-        vm.prank(legionBouncer);
-        legionSealedBidAuctionInstance = legionSaleFactory.createSealedBidAuction(
-            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams
-        );
-
-        ILegionSale.LegionSaleConfiguration memory _saleConfig =
-            LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).saleConfiguration();
-
-        // Assert
-        assertEq(_saleConfig.refundEndTime, _saleConfig.refundEndTime);
-    }
-
-    /**
      * @dev Test Case: Attempt to re-initialize the contract
      */
     function test_initialize_revertsIfAlreadyInitialized() public {
@@ -2292,7 +2257,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
     /* ========== CLAIM TOKEN ALLOCATION TESTS ========== */
 
     /**
-     * @dev Test Case: Successfully distribute tokens after the sale, lockup period, and sale results have been
+     * @dev Test Case: Successfully distribute tokens after the sale results have been
      * published.
      */
     function test_claimTokenAllocation_successfullyTransfersTokensToVestingContract() public {
