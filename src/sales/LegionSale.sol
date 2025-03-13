@@ -253,7 +253,8 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         position.hasSettled = true;
 
         // Calculate the amount to be distributed on claim
-        uint256 amountToDistributeOnClaim = amount * investorVestingConfig.tokenAllocationOnTGERate / 1 ether;
+        uint256 amountToDistributeOnClaim =
+            amount * investorVestingConfig.tokenAllocationOnTGERate / Constants.TOKEN_ALLOCATION_RATE_DENOMINATOR;
 
         // Calculate the remaining amount to be vested
         uint256 amountToBeVested = amount - amountToDistributeOnClaim;

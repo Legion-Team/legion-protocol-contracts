@@ -23,6 +23,10 @@ pragma solidity 0.8.29;
  * @dev Provides immutable values for time periods and unique IDs used in contracts
  */
 library Constants {
+    /// @notice Constant representing the denominator for precise calculations
+    /// @dev Equals 1e18, used for high-precision fee or rate computations with 18 decimals
+    uint256 internal constant TOKEN_ALLOCATION_RATE_DENOMINATOR = 1_000_000_000_000_000_000;
+
     /// @notice Constant representing the denominator for basis points calculations
     /// @dev Equals 10,000, used to express percentages in basis points (1% = 100 bps)
     uint256 internal constant BASIS_POINTS_DENOMINATOR = 10_000;

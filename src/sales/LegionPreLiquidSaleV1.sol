@@ -433,10 +433,12 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, LegionVestingManager, 
         position.hasSettled = true;
 
         /// Calculate the total token amount to be claimed
-        uint256 totalAmount = saleStatus.askTokenTotalSupply * position.cachedTokenAllocationRate / 1 ether;
+        uint256 totalAmount = saleStatus.askTokenTotalSupply * position.cachedTokenAllocationRate
+            / Constants.TOKEN_ALLOCATION_RATE_DENOMINATOR;
 
         /// Calculate the amount to be distributed on claim
-        uint256 amountToDistributeOnClaim = totalAmount * investorVestingConfig.tokenAllocationOnTGERate / 1 ether;
+        uint256 amountToDistributeOnClaim =
+            totalAmount * investorVestingConfig.tokenAllocationOnTGERate / Constants.TOKEN_ALLOCATION_RATE_DENOMINATOR;
 
         /// Calculate the remaining amount to be vested
         uint256 amountToBeVested = totalAmount - amountToDistributeOnClaim;

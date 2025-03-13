@@ -16,6 +16,7 @@ pragma solidity 0.8.29;
 // If you find a bug, please contact security[at]legion.cc
 // We will pay a fair bounty for any issue that puts users' funds at risk.
 
+import { Constants } from "../utils/Constants.sol";
 import { Errors } from "../utils/Errors.sol";
 
 import { ILegionVestingFactory } from "../interfaces/factories/ILegionVestingFactory.sol";
@@ -162,7 +163,7 @@ abstract contract LegionVestingManager is ILegionVestingManager {
         if (
             investorVestingConfig.vestingDurationSeconds > 520 weeks
                 || investorVestingConfig.vestingCliffDurationSeconds > investorVestingConfig.vestingDurationSeconds
-                || investorVestingConfig.tokenAllocationOnTGERate > 1 ether
+                || investorVestingConfig.tokenAllocationOnTGERate > Constants.TOKEN_ALLOCATION_RATE_DENOMINATOR
         ) revert Errors.InvalidVestingConfig();
 
         /// Check if vesting type is LEGION_LINEAR_EPOCH
