@@ -90,7 +90,7 @@ interface ILegionLinearEpochVesting {
     /**
      * @notice Calculates the amount of ETH vested up to a given timestamp
      * @dev See {VestingWalletUpgradeable-vestedAmount} for inherited behavior
-     * @param timestamp Unix timestamp (seconds) to calculate vesting up to
+     * @param timestamp Unix timestamp (seconds) to calculate vesting up to the given time
      * @return uint256 Amount of ETH vested by the given timestamp
      */
     function vestedAmount(uint64 timestamp) external view returns (uint256);
@@ -99,7 +99,7 @@ interface ILegionLinearEpochVesting {
      * @notice Calculates the amount of a specific token vested up to a given timestamp
      * @dev See {VestingWalletUpgradeable-vestedAmount} for inherited behavior
      * @param token Address of the token to query
-     * @param timestamp Unix timestamp (seconds) to calculate vesting up to
+     * @param timestamp Unix timestamp (seconds) to calculate vesting up to the given time
      * @return uint256 Amount of the specified token vested by the given timestamp
      */
     function vestedAmount(address token, uint64 timestamp) external view returns (uint256);

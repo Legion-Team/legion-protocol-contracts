@@ -24,15 +24,17 @@ import { Errors } from "../utils/Errors.sol";
 /**
  * @title Legion Linear Vesting
  * @author Legion
- * @notice A contract used to release vested tokens to users
- * @dev The contract fully utilizes OpenZeppelin's VestingWallet.sol implementation
+ * @notice A contract for releasing vested tokens to users with a linear schedule
+ * @dev Extends OpenZeppelin's VestingWalletUpgradeable with cliff functionality
  */
 contract LegionLinearVesting is VestingWalletUpgradeable {
-    /// @dev The Unix timestamp (seconds) of the block when the cliff ends
+    /// @notice Unix timestamp (seconds) when the cliff period ends
+    /// @dev Private variable preventing token release until this timestamp
     uint256 private cliffEndTimestamp;
 
     /**
-     * @notice Throws if a user tries to release tokens before the cliff period has ended
+     * @notice Restricts token release until the cliff period has ended
+     * @dev Reverts with CliffNotEnded if block.timestamp is before cliffEndTimestamp
      */
     modifier onlyCliffEnded() {
         if (block.timestamp < cliffEndTimestamp) revert Errors.CliffNotEnded(block.timestamp);
@@ -40,7 +42,8 @@ contract LegionLinearVesting is VestingWalletUpgradeable {
     }
 
     /**
-     * @dev LegionLinearVesting constructor.
+     * @notice Constructor for LegionLinearVesting
+     * @dev Disables initializers to prevent uninitialized deployment
      */
     constructor() {
         // Disable initialization
@@ -48,12 +51,12 @@ contract LegionLinearVesting is VestingWalletUpgradeable {
     }
 
     /**
-     * @notice Initializes the contract with the correct parameters
-     *
-     * @param beneficiary The beneficiary to receive tokens
-     * @param startTimestamp The Unix timestamp when the vesting schedule starts
-     * @param durationSeconds The duration of the vesting period in seconds
-     * @param cliffDurationSeconds The duration of the cliff period in seconds
+     * @notice Initializes the vesting contract with specified parameters
+     * @dev Sets up the linear vesting schedule and cliff; callable only once
+     * @param beneficiary Address to receive the vested tokens
+     * @param startTimestamp Unix timestamp (seconds) when vesting starts
+     * @param durationSeconds Total duration of the vesting period in seconds
+     * @param cliffDurationSeconds Duration of the cliff period in seconds
      */
     function initialize(
         address beneficiary,
@@ -72,18 +75,18 @@ contract LegionLinearVesting is VestingWalletUpgradeable {
     }
 
     /**
-     * @notice Release the tokens that have already vested.
-     *
-     * @param token The vested token to release
-     *
-     * Emits a {ERC20Released} event.
+     * @notice Releases vested tokens of a specific type to the beneficiary
+     * @dev Overrides VestingWalletUpgradeable; requires cliff to have ended
+     * @param token Address of the token to release
      */
     function release(address token) public override onlyCliffEnded {
         super.release(token);
     }
 
     /**
-     * @notice Returns the cliff end timestamp.
+     * @notice Returns the timestamp when the cliff period ends
+     * @dev Provides read-only access to cliffEndTimestamp
+     * @return uint256 Unix timestamp (seconds) of the cliff end
      */
     function cliffEnd() public view returns (uint256) {
         return cliffEndTimestamp;
