@@ -41,7 +41,7 @@ contract LegionLinearVestingTest is Test {
      */
     function prepareCreateLegionLinearVesting() public {
         legionVestingInstance = legionVestingFactory.createLinearVesting(
-            vestingOwner, uint64(block.timestamp), uint64(Constants.ONE_YEAR), uint64(Constants.ONE_HOUR)
+            vestingOwner, uint64(block.timestamp), uint64(52 weeks), uint64(1 hours)
         );
 
         vm.deal(legionVestingInstance, 1000 ether);
@@ -58,11 +58,8 @@ contract LegionLinearVestingTest is Test {
         // Assert
         assertEq(LegionLinearVesting(payable(legionVestingInstance)).owner(), vestingOwner);
         assertEq(LegionLinearVesting(payable(legionVestingInstance)).start(), block.timestamp);
-        assertEq(LegionLinearVesting(payable(legionVestingInstance)).duration(), Constants.ONE_YEAR);
-        assertEq(
-            LegionLinearVesting(payable(legionVestingInstance)).cliffEndTimestamp(),
-            block.timestamp + Constants.ONE_HOUR
-        );
+        assertEq(LegionLinearVesting(payable(legionVestingInstance)).duration(), 52 weeks);
+        assertEq(LegionLinearVesting(payable(legionVestingInstance)).cliffEndTimestamp(), block.timestamp + 1 hours);
     }
 
     /**
@@ -78,7 +75,7 @@ contract LegionLinearVestingTest is Test {
         // Act
         vm.prank(nonOwner);
         LegionLinearVesting(payable(legionVestingInstance)).initialize(
-            vestingOwner, uint64(block.timestamp), uint64(Constants.ONE_YEAR), uint64(Constants.ONE_HOUR)
+            vestingOwner, uint64(block.timestamp), uint64(52 weeks), uint64(1 hours)
         );
     }
 
@@ -94,7 +91,7 @@ contract LegionLinearVestingTest is Test {
 
         // Act
         LegionLinearVesting(payable(linearVestingImplementation)).initialize(
-            vestingOwner, uint64(block.timestamp), uint64(Constants.ONE_YEAR), uint64(Constants.ONE_HOUR)
+            vestingOwner, uint64(block.timestamp), uint64(52 weeks), uint64(1 hours)
         );
     }
 
@@ -107,7 +104,7 @@ contract LegionLinearVestingTest is Test {
 
         // Act
         LegionLinearVesting(payable(linearVestingTemplate)).initialize(
-            vestingOwner, uint64(block.timestamp), uint64(Constants.ONE_YEAR), uint64(Constants.ONE_HOUR)
+            vestingOwner, uint64(block.timestamp), uint64(52 weeks), uint64(1 hours)
         );
     }
 
@@ -132,27 +129,11 @@ contract LegionLinearVestingTest is Test {
         // Arrange
         prepareCreateLegionLinearVesting();
 
-        vm.warp(block.timestamp + Constants.ONE_HOUR + 1);
+        vm.warp(block.timestamp + 1 hours + 1);
 
         // Assert
         vm.expectEmit();
-        emit VestingWalletUpgradeable.ERC20Released(address(askToken), 114_186_960_933_536_276);
-        // Act
-        LegionLinearVesting(payable(legionVestingInstance)).release(address(askToken));
-    }
-
-    /**
-     * @notice Test case: Successfully release tokens after cliff period ends
-     */
-    function test_release_successfullyReleaseTokensAfterEpochsHaveElpased() public {
-        // Arrange
-        prepareCreateLegionLinearVesting();
-
-        vm.warp(block.timestamp + Constants.ONE_HOUR + 1);
-
-        // Assert
-        vm.expectEmit();
-        emit VestingWalletUpgradeable.ERC20Released(address(askToken), 114_186_960_933_536_276);
+        emit VestingWalletUpgradeable.ERC20Released(address(askToken), 114_500_661_375_661_375);
         // Act
         LegionLinearVesting(payable(legionVestingInstance)).release(address(askToken));
     }

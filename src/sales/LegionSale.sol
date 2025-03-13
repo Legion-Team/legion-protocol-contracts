@@ -188,10 +188,12 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         uint256 _totalCapitalRaised = saleStatus.totalCapitalRaised;
 
         // Calculate Legion Fee
-        uint256 _legionFee = (saleConfig.legionFeeOnCapitalRaisedBps * _totalCapitalRaised) / 10_000;
+        uint256 _legionFee =
+            (saleConfig.legionFeeOnCapitalRaisedBps * _totalCapitalRaised) / Constants.BASIS_POINTS_DENOMINATOR;
 
         // Calculate Referrer Fee
-        uint256 _referrerFee = (saleConfig.referrerFeeOnCapitalRaisedBps * _totalCapitalRaised) / 10_000;
+        uint256 _referrerFee =
+            (saleConfig.referrerFeeOnCapitalRaisedBps * _totalCapitalRaised) / Constants.BASIS_POINTS_DENOMINATOR;
 
         // Emit CapitalWithdrawn
         emit CapitalWithdrawn(_totalCapitalRaised, msg.sender);
@@ -251,7 +253,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         position.hasSettled = true;
 
         // Calculate the amount to be distributed on claim
-        uint256 amountToDistributeOnClaim = amount * investorVestingConfig.tokenAllocationOnTGERate / 1e18;
+        uint256 amountToDistributeOnClaim = amount * investorVestingConfig.tokenAllocationOnTGERate / 1 ether;
 
         // Calculate the remaining amount to be vested
         uint256 amountToBeVested = amount - amountToDistributeOnClaim;
@@ -357,10 +359,14 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         saleStatus.tokensSupplied = true;
 
         // Calculate and verify Legion Fee
-        if (legionFee != (saleConfig.legionFeeOnTokensSoldBps * amount) / 10_000) revert Errors.InvalidFeeAmount();
+        if (legionFee != (saleConfig.legionFeeOnTokensSoldBps * amount) / Constants.BASIS_POINTS_DENOMINATOR) {
+            revert Errors.InvalidFeeAmount();
+        }
 
         // Calculate and verify Referrer Fee
-        if (referrerFee != (saleConfig.referrerFeeOnTokensSoldBps * amount) / 10_000) revert Errors.InvalidFeeAmount();
+        if (referrerFee != (saleConfig.referrerFeeOnTokensSoldBps * amount) / Constants.BASIS_POINTS_DENOMINATOR) {
+            revert Errors.InvalidFeeAmount();
+        }
 
         // Emit TokensSuppliedForDistribution
         emit TokensSuppliedForDistribution(amount, legionFee, referrerFee);
@@ -696,18 +702,12 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         }
 
         // Check if sale and refund periods are longer than allowed
-        if (
-            saleInitParams.salePeriodSeconds > Constants.THREE_MONTHS
-                || saleInitParams.refundPeriodSeconds > Constants.TWO_WEEKS
-        ) {
+        if (saleInitParams.salePeriodSeconds > 12 weeks || saleInitParams.refundPeriodSeconds > 2 weeks) {
             revert Errors.InvalidPeriodConfig();
         }
 
         // Check if sale and refund periods are shorter than allowed
-        if (
-            saleInitParams.salePeriodSeconds < Constants.ONE_HOUR
-                || saleInitParams.refundPeriodSeconds < Constants.ONE_HOUR
-        ) {
+        if (saleInitParams.salePeriodSeconds < 1 hours || saleInitParams.refundPeriodSeconds < 1 hours) {
             revert Errors.InvalidPeriodConfig();
         }
     }

@@ -77,7 +77,7 @@ contract LegionPreLiquidSaleV1FactoryTest is Test {
     function prepareCreateLegionPreLiquidSale() public {
         setPreLiquidSaleParams(
             ILegionPreLiquidSaleV1.PreLiquidSaleInitializationParams({
-                refundPeriodSeconds: Constants.TWO_WEEKS,
+                refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -194,7 +194,7 @@ contract LegionPreLiquidSaleV1FactoryTest is Test {
             LegionPreLiquidSaleV1(payable(legionPreLiquidSaleInstance)).saleStatusDetails();
 
         // Assert
-        assertEq(_preLiquidSaleConfig.refundPeriodSeconds, Constants.TWO_WEEKS);
+        assertEq(_preLiquidSaleConfig.refundPeriodSeconds, 2 weeks);
         assertEq(_preLiquidSaleStatus.hasEnded, false);
     }
 }

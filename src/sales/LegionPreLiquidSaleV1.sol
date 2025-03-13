@@ -291,10 +291,14 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, LegionVestingManager, 
         _verifyCanSupplyTokens(amount);
 
         /// Calculate and verify Legion Fee
-        if (legionFee != (saleConfig.legionFeeOnTokensSoldBps * amount) / 10_000) revert Errors.InvalidFeeAmount();
+        if (legionFee != (saleConfig.legionFeeOnTokensSoldBps * amount) / Constants.BASIS_POINTS_DENOMINATOR) {
+            revert Errors.InvalidFeeAmount();
+        }
 
         /// Calculate and verify Referrer Fee
-        if (referrerFee != (saleConfig.referrerFeeOnTokensSoldBps * amount) / 10_000) revert Errors.InvalidFeeAmount();
+        if (referrerFee != (saleConfig.referrerFeeOnTokensSoldBps * amount) / Constants.BASIS_POINTS_DENOMINATOR) {
+            revert Errors.InvalidFeeAmount();
+        }
 
         /// Flag that ask tokens have been supplied
         saleStatus.askTokensSupplied = true;
@@ -354,10 +358,12 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, LegionVestingManager, 
         saleStatus.totalCapitalWithdrawn = saleStatus.totalCapitalRaised;
 
         /// Calculate Legion Fee
-        uint256 legionFee = (saleConfig.legionFeeOnCapitalRaisedBps * saleStatus.totalCapitalWithdrawn) / 10_000;
+        uint256 legionFee = (saleConfig.legionFeeOnCapitalRaisedBps * saleStatus.totalCapitalWithdrawn)
+            / Constants.BASIS_POINTS_DENOMINATOR;
 
         /// Calculate Referrer Fee
-        uint256 referrerFee = (saleConfig.referrerFeeOnCapitalRaisedBps * saleStatus.totalCapitalWithdrawn) / 10_000;
+        uint256 referrerFee = (saleConfig.referrerFeeOnCapitalRaisedBps * saleStatus.totalCapitalWithdrawn)
+            / Constants.BASIS_POINTS_DENOMINATOR;
 
         /// Emit successfully CapitalWithdrawn
         emit CapitalWithdrawn(saleStatus.totalCapitalWithdrawn);
@@ -427,10 +433,10 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, LegionVestingManager, 
         position.hasSettled = true;
 
         /// Calculate the total token amount to be claimed
-        uint256 totalAmount = saleStatus.askTokenTotalSupply * position.cachedTokenAllocationRate / 1e18;
+        uint256 totalAmount = saleStatus.askTokenTotalSupply * position.cachedTokenAllocationRate / 1 ether;
 
         /// Calculate the amount to be distributed on claim
-        uint256 amountToDistributeOnClaim = totalAmount * investorVestingConfig.tokenAllocationOnTGERate / 1e18;
+        uint256 amountToDistributeOnClaim = totalAmount * investorVestingConfig.tokenAllocationOnTGERate / 1 ether;
 
         /// Calculate the remaining amount to be vested
         uint256 amountToBeVested = totalAmount - amountToDistributeOnClaim;
@@ -823,7 +829,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, LegionVestingManager, 
         }
 
         /// Check if the refund period is within range
-        if (_preLiquidSaleInitParams.refundPeriodSeconds > Constants.TWO_WEEKS) revert Errors.InvalidPeriodConfig();
+        if (_preLiquidSaleInitParams.refundPeriodSeconds > 2 weeks) revert Errors.InvalidPeriodConfig();
     }
 
     /**

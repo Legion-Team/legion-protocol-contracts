@@ -139,8 +139,8 @@ contract LegionSealedBidAuctionSaleTest is Test {
     function prepareCreateLegionSealedBidAuction() public {
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: Constants.ONE_HOUR,
-                refundPeriodSeconds: Constants.TWO_WEEKS,
+                salePeriodSeconds: 1 hours,
+                refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -434,8 +434,8 @@ contract LegionSealedBidAuctionSaleTest is Test {
         // Arrange
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: Constants.ONE_HOUR,
-                refundPeriodSeconds: Constants.TWO_WEEKS,
+                salePeriodSeconds: 1 hours,
+                refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -496,8 +496,8 @@ contract LegionSealedBidAuctionSaleTest is Test {
         // Arrange
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: Constants.THREE_MONTHS + 1,
-                refundPeriodSeconds: Constants.TWO_WEEKS + 1,
+                salePeriodSeconds: 12 weeks + 1,
+                refundPeriodSeconds: 2 weeks + 1,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -527,8 +527,8 @@ contract LegionSealedBidAuctionSaleTest is Test {
         // Arrange
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: Constants.ONE_HOUR - 1,
-                refundPeriodSeconds: Constants.ONE_HOUR - 1,
+                salePeriodSeconds: 1 hours - 1,
+                refundPeriodSeconds: 1 hours - 1,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -558,8 +558,8 @@ contract LegionSealedBidAuctionSaleTest is Test {
         // Arrange
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: Constants.ONE_HOUR,
-                refundPeriodSeconds: Constants.TWO_WEEKS,
+                salePeriodSeconds: 1 hours,
+                refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -1603,8 +1603,8 @@ contract LegionSealedBidAuctionSaleTest is Test {
         prepareSealedBidData();
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: Constants.ONE_HOUR,
-                refundPeriodSeconds: Constants.TWO_WEEKS,
+                salePeriodSeconds: 1 hours,
+                refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 0,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -1758,8 +1758,8 @@ contract LegionSealedBidAuctionSaleTest is Test {
         // Arrange
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: Constants.ONE_HOUR,
-                refundPeriodSeconds: Constants.TWO_WEEKS,
+                salePeriodSeconds: 1 hours,
+                refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -1851,8 +1851,8 @@ contract LegionSealedBidAuctionSaleTest is Test {
         prepareSealedBidData();
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: Constants.ONE_HOUR,
-                refundPeriodSeconds: Constants.TWO_WEEKS,
+                salePeriodSeconds: 1 hours,
+                refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 0,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -2495,8 +2495,8 @@ contract LegionSealedBidAuctionSaleTest is Test {
         // Arrange
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: Constants.ONE_HOUR,
-                refundPeriodSeconds: Constants.TWO_WEEKS,
+                salePeriodSeconds: 1 hours,
+                refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -2570,7 +2570,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
             1000 * 1e18, investorVestingConfig, claimProofInvestor2
         );
 
-        vm.warp(refundEndTime() + Constants.ONE_HOUR + 1);
+        vm.warp(refundEndTime() + 1 hours + 1);
 
         // Act
         vm.prank(investor2);
@@ -2602,8 +2602,8 @@ contract LegionSealedBidAuctionSaleTest is Test {
         // Arrange
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: Constants.ONE_HOUR,
-                refundPeriodSeconds: Constants.TWO_WEEKS,
+                salePeriodSeconds: 1 hours,
+                refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,

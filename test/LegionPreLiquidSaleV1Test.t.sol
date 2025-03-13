@@ -2201,13 +2201,7 @@ contract LegionPreLiquidSaleV1Test is Test {
             uint256(10_000 * 1e6),
             uint256(5_000_000_000_000_000),
             ILegionVestingManager.LegionInvestorVestingConfig(
-                ILegionVestingManager.VestingType.LEGION_LINEAR,
-                0,
-                Constants.TEN_YEARS + 1,
-                Constants.TEN_YEARS + 2,
-                0,
-                0,
-                1e18 + 1
+                ILegionVestingManager.VestingType.LEGION_LINEAR, 0, 520 weeks + 1, 520 weeks + 2, 0, 0, 1e18 + 1
             ),
             signatureInv1Claim,
             vestingSignatureInv1
@@ -2254,9 +2248,9 @@ contract LegionPreLiquidSaleV1Test is Test {
             ILegionVestingManager.LegionInvestorVestingConfig(
                 ILegionVestingManager.VestingType.LEGION_LINEAR_EPOCH,
                 0,
-                Constants.TEN_YEARS - 1,
-                Constants.TEN_YEARS - 2,
-                Constants.TEN_YEARS + 1,
+                520 weeks - 1,
+                520 weeks - 2,
+                520 weeks + 1,
                 100,
                 1e17
             ),

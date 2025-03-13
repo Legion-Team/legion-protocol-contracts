@@ -23,25 +23,9 @@ pragma solidity 0.8.29;
  * @dev Provides immutable values for time periods and unique IDs used in contracts
  */
 library Constants {
-    /// @notice Constant representing one hour in seconds
-    /// @dev Equals 3600 seconds (60 minutes * 60 seconds)
-    uint256 internal constant ONE_HOUR = 3600;
-
-    /// @notice Constant representing two weeks in seconds
-    /// @dev Equals 1,209,600 seconds (14 days * 24 hours * 3600 seconds)
-    uint256 internal constant TWO_WEEKS = 1_209_600;
-
-    /// @notice Constant representing three months in seconds
-    /// @dev Equals 7,776,000 seconds (90 days * 24 hours * 3600 seconds)
-    uint256 internal constant THREE_MONTHS = 7_776_000;
-
-    /// @notice Constant representing one year in seconds
-    /// @dev Equals 31,536,000 seconds (365 days * 24 hours * 3600 seconds)
-    uint256 internal constant ONE_YEAR = 31_536_000;
-
-    /// @notice Constant representing ten years in seconds
-    /// @dev Equals 315,360,000 seconds (10 * ONE_YEAR)
-    uint256 internal constant TEN_YEARS = 315_360_000;
+    /// @notice Constant representing the denominator for basis points calculations
+    /// @dev Equals 10,000, used to express percentages in basis points (1% = 100 bps)
+    uint256 internal constant BASIS_POINTS_DENOMINATOR = 10_000;
 
     /// @notice Constant representing the unique ID for Legion Bouncer
     /// @dev Used to identify the Legion Bouncer in the Address Registry

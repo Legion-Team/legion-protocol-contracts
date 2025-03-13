@@ -131,8 +131,8 @@ contract LegionFixedPriceSaleTest is Test {
     function prepareCreateLegionFixedPriceSale() public {
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: Constants.ONE_HOUR,
-                refundPeriodSeconds: Constants.TWO_WEEKS,
+                salePeriodSeconds: 1 hours,
+                refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -145,8 +145,8 @@ contract LegionFixedPriceSaleTest is Test {
                 referrerFeeReceiver: address(nonLegionAdmin)
             }),
             ILegionFixedPriceSale.FixedPriceSaleInitializationParams({
-                prefundPeriodSeconds: Constants.ONE_HOUR,
-                prefundAllocationPeriodSeconds: Constants.ONE_HOUR,
+                prefundPeriodSeconds: 1 hours,
+                prefundAllocationPeriodSeconds: 1 hours,
                 tokenPrice: 1e6
             })
         );
@@ -387,8 +387,8 @@ contract LegionFixedPriceSaleTest is Test {
         // Arrange
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: Constants.ONE_HOUR,
-                refundPeriodSeconds: Constants.TWO_WEEKS,
+                salePeriodSeconds: 1 hours,
+                refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -401,8 +401,8 @@ contract LegionFixedPriceSaleTest is Test {
                 referrerFeeReceiver: address(0)
             }),
             ILegionFixedPriceSale.FixedPriceSaleInitializationParams({
-                prefundPeriodSeconds: Constants.ONE_HOUR,
-                prefundAllocationPeriodSeconds: Constants.ONE_HOUR,
+                prefundPeriodSeconds: 1 hours,
+                prefundAllocationPeriodSeconds: 1 hours,
                 tokenPrice: 1e6
             })
         );
@@ -434,8 +434,8 @@ contract LegionFixedPriceSaleTest is Test {
         // Arrange
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: Constants.THREE_MONTHS + 1,
-                refundPeriodSeconds: Constants.TWO_WEEKS + 1,
+                salePeriodSeconds: 12 weeks + 1,
+                refundPeriodSeconds: 2 weeks + 1,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -448,8 +448,8 @@ contract LegionFixedPriceSaleTest is Test {
                 referrerFeeReceiver: address(nonLegionAdmin)
             }),
             ILegionFixedPriceSale.FixedPriceSaleInitializationParams({
-                prefundPeriodSeconds: Constants.THREE_MONTHS + 1,
-                prefundAllocationPeriodSeconds: Constants.TWO_WEEKS + 1,
+                prefundPeriodSeconds: 12 weeks + 1,
+                prefundAllocationPeriodSeconds: 2 weeks + 1,
                 tokenPrice: 1e6
             })
         );
@@ -469,8 +469,8 @@ contract LegionFixedPriceSaleTest is Test {
         // Arrange
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: Constants.ONE_HOUR - 1,
-                refundPeriodSeconds: Constants.ONE_HOUR - 1,
+                salePeriodSeconds: 1 hours - 1,
+                refundPeriodSeconds: 1 hours - 1,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -483,8 +483,8 @@ contract LegionFixedPriceSaleTest is Test {
                 referrerFeeReceiver: address(nonLegionAdmin)
             }),
             ILegionFixedPriceSale.FixedPriceSaleInitializationParams({
-                prefundPeriodSeconds: Constants.ONE_HOUR - 1,
-                prefundAllocationPeriodSeconds: Constants.ONE_HOUR - 1,
+                prefundPeriodSeconds: 1 hours - 1,
+                prefundAllocationPeriodSeconds: 1 hours - 1,
                 tokenPrice: 1e6
             })
         );
@@ -1313,8 +1313,8 @@ contract LegionFixedPriceSaleTest is Test {
         // Arrange
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: Constants.ONE_HOUR,
-                refundPeriodSeconds: Constants.TWO_WEEKS,
+                salePeriodSeconds: 1 hours,
+                refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 0,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -1327,8 +1327,8 @@ contract LegionFixedPriceSaleTest is Test {
                 referrerFeeReceiver: address(nonLegionAdmin)
             }),
             ILegionFixedPriceSale.FixedPriceSaleInitializationParams({
-                prefundPeriodSeconds: Constants.ONE_HOUR,
-                prefundAllocationPeriodSeconds: Constants.ONE_HOUR,
+                prefundPeriodSeconds: 1 hours,
+                prefundAllocationPeriodSeconds: 1 hours,
                 tokenPrice: 1e6
             })
         );
@@ -1465,8 +1465,8 @@ contract LegionFixedPriceSaleTest is Test {
         // Arrange
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: Constants.ONE_HOUR,
-                refundPeriodSeconds: Constants.TWO_WEEKS,
+                salePeriodSeconds: 1 hours,
+                refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -1479,8 +1479,8 @@ contract LegionFixedPriceSaleTest is Test {
                 referrerFeeReceiver: address(nonLegionAdmin)
             }),
             ILegionFixedPriceSale.FixedPriceSaleInitializationParams({
-                prefundPeriodSeconds: Constants.ONE_HOUR,
-                prefundAllocationPeriodSeconds: Constants.ONE_HOUR,
+                prefundPeriodSeconds: 1 hours,
+                prefundAllocationPeriodSeconds: 1 hours,
                 tokenPrice: 1e6
             })
         );
@@ -1554,8 +1554,8 @@ contract LegionFixedPriceSaleTest is Test {
         // Arrange
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: Constants.ONE_HOUR,
-                refundPeriodSeconds: Constants.TWO_WEEKS,
+                salePeriodSeconds: 1 hours,
+                refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 0,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -1568,8 +1568,8 @@ contract LegionFixedPriceSaleTest is Test {
                 referrerFeeReceiver: address(nonLegionAdmin)
             }),
             ILegionFixedPriceSale.FixedPriceSaleInitializationParams({
-                prefundPeriodSeconds: Constants.ONE_HOUR,
-                prefundAllocationPeriodSeconds: Constants.ONE_HOUR,
+                prefundPeriodSeconds: 1 hours,
+                prefundAllocationPeriodSeconds: 1 hours,
                 tokenPrice: 1e6
             })
         );
@@ -2134,8 +2134,8 @@ contract LegionFixedPriceSaleTest is Test {
         // Arrange
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: Constants.ONE_HOUR,
-                refundPeriodSeconds: Constants.TWO_WEEKS,
+                salePeriodSeconds: 1 hours,
+                refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -2148,8 +2148,8 @@ contract LegionFixedPriceSaleTest is Test {
                 referrerFeeReceiver: address(nonLegionAdmin)
             }),
             ILegionFixedPriceSale.FixedPriceSaleInitializationParams({
-                prefundPeriodSeconds: Constants.ONE_HOUR,
-                prefundAllocationPeriodSeconds: Constants.ONE_HOUR,
+                prefundPeriodSeconds: 1 hours,
+                prefundAllocationPeriodSeconds: 1 hours,
                 tokenPrice: 1e6
             })
         );
@@ -2208,7 +2208,7 @@ contract LegionFixedPriceSaleTest is Test {
             1000 * 1e18, investorVestingConfig, claimProofInvestor2
         );
 
-        vm.warp(refundEndTime() + Constants.ONE_HOUR + 1);
+        vm.warp(refundEndTime() + 1 hours + 1);
 
         // Act
         vm.prank(investor2);
@@ -2240,8 +2240,8 @@ contract LegionFixedPriceSaleTest is Test {
         // Arrange
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: Constants.ONE_HOUR,
-                refundPeriodSeconds: Constants.TWO_WEEKS,
+                salePeriodSeconds: 1 hours,
+                refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -2254,8 +2254,8 @@ contract LegionFixedPriceSaleTest is Test {
                 referrerFeeReceiver: address(nonLegionAdmin)
             }),
             ILegionFixedPriceSale.FixedPriceSaleInitializationParams({
-                prefundPeriodSeconds: Constants.ONE_HOUR,
-                prefundAllocationPeriodSeconds: Constants.ONE_HOUR,
+                prefundPeriodSeconds: 1 hours,
+                prefundAllocationPeriodSeconds: 1 hours,
                 tokenPrice: 1e6
             })
         );

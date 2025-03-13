@@ -74,8 +74,8 @@ contract LegionFixedPriceSaleFactoryTest is Test {
     function prepareCreateLegionFixedPriceSale() public {
         setFixedPriceSaleParams(
             ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: Constants.ONE_HOUR,
-                refundPeriodSeconds: Constants.TWO_WEEKS,
+                salePeriodSeconds: 1 hours,
+                refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -88,8 +88,8 @@ contract LegionFixedPriceSaleFactoryTest is Test {
                 referrerFeeReceiver: address(nonOwner)
             }),
             ILegionFixedPriceSale.FixedPriceSaleInitializationParams({
-                prefundPeriodSeconds: Constants.ONE_HOUR,
-                prefundAllocationPeriodSeconds: Constants.ONE_HOUR,
+                prefundPeriodSeconds: 1 hours,
+                prefundAllocationPeriodSeconds: 1 hours,
                 tokenPrice: 1e18
             })
         );
@@ -158,8 +158,8 @@ contract LegionFixedPriceSaleFactoryTest is Test {
         // Arrange
         setFixedPriceSaleParams(
             ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: Constants.ONE_HOUR,
-                refundPeriodSeconds: Constants.TWO_WEEKS,
+                salePeriodSeconds: 1 hours,
+                refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -172,8 +172,8 @@ contract LegionFixedPriceSaleFactoryTest is Test {
                 referrerFeeReceiver: address(0)
             }),
             ILegionFixedPriceSale.FixedPriceSaleInitializationParams({
-                prefundPeriodSeconds: Constants.ONE_HOUR,
-                prefundAllocationPeriodSeconds: Constants.ONE_HOUR,
+                prefundPeriodSeconds: 1 hours,
+                prefundAllocationPeriodSeconds: 1 hours,
                 tokenPrice: 1e18
             })
         );

@@ -30,7 +30,7 @@ contract LegionVestingFactoryTest is Test {
      */
     function prepareCreateLegionLinearVesting() public {
         legionVestingInstance = legionVestingFactory.createLinearVesting(
-            vestingOwner, uint64(block.timestamp), uint64(Constants.ONE_YEAR), uint64(Constants.ONE_HOUR)
+            vestingOwner, uint64(block.timestamp), uint64(52 weeks), uint64(1 hours)
         );
     }
 
@@ -47,10 +47,7 @@ contract LegionVestingFactoryTest is Test {
 
         assertEq(LegionLinearVesting(payable(legionVestingInstance)).owner(), vestingOwner);
         assertEq(LegionLinearVesting(payable(legionVestingInstance)).start(), block.timestamp);
-        assertEq(LegionLinearVesting(payable(legionVestingInstance)).duration(), Constants.ONE_YEAR);
-        assertEq(
-            LegionLinearVesting(payable(legionVestingInstance)).cliffEndTimestamp(),
-            block.timestamp + Constants.ONE_HOUR
-        );
+        assertEq(LegionLinearVesting(payable(legionVestingInstance)).duration(), 52 weeks);
+        assertEq(LegionLinearVesting(payable(legionVestingInstance)).cliffEndTimestamp(), block.timestamp + 1 hours);
     }
 }

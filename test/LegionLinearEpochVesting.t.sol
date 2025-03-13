@@ -41,7 +41,7 @@ contract LegionLinearEpochVestingTest is Test {
      */
     function prepareCreateLegionLinearEpochVesting() public {
         legionVestingInstance = legionVestingFactory.createLinearEpochVesting(
-            vestingOwner, uint64(block.timestamp), 2_678_400 * 12, uint64(Constants.ONE_HOUR), 2_678_400, 12
+            vestingOwner, uint64(block.timestamp), 2_678_400 * 12, uint64(1 hours), 2_678_400, 12
         );
         //console2.log(block.timestamp);
         vm.deal(legionVestingInstance, 1200 ether);
@@ -59,7 +59,7 @@ contract LegionLinearEpochVestingTest is Test {
         assertEq(LegionLinearEpochVesting(payable(legionVestingInstance)).owner(), vestingOwner);
         assertEq(LegionLinearEpochVesting(payable(legionVestingInstance)).start(), block.timestamp);
         assertEq(LegionLinearEpochVesting(payable(legionVestingInstance)).duration(), 2_678_400 * 12);
-        assertEq(LegionLinearEpochVesting(payable(legionVestingInstance)).cliffEndTimestamp(), Constants.ONE_HOUR + 1);
+        assertEq(LegionLinearEpochVesting(payable(legionVestingInstance)).cliffEndTimestamp(), 1 hours + 1);
         assertEq(LegionLinearEpochVesting(payable(legionVestingInstance)).getCurrentEpoch(), 1);
         assertEq(
             LegionLinearEpochVesting(payable(legionVestingInstance)).getCurrentEpochAtTimestamp(block.timestamp), 1
@@ -79,7 +79,7 @@ contract LegionLinearEpochVestingTest is Test {
         // Act
         vm.prank(nonOwner);
         LegionLinearEpochVesting(payable(legionVestingInstance)).initialize(
-            vestingOwner, uint64(block.timestamp), 2_678_400 * 12, uint64(Constants.ONE_HOUR), 2_678_400, 12
+            vestingOwner, uint64(block.timestamp), 2_678_400 * 12, uint64(1 hours), 2_678_400, 12
         );
     }
 
@@ -95,7 +95,7 @@ contract LegionLinearEpochVestingTest is Test {
 
         // Act
         LegionLinearEpochVesting(payable(linearVestingImplementation)).initialize(
-            vestingOwner, uint64(block.timestamp), 2_678_400 * 12, uint64(Constants.ONE_HOUR), 2_678_400, 12
+            vestingOwner, uint64(block.timestamp), 2_678_400 * 12, uint64(1 hours), 2_678_400, 12
         );
     }
 
@@ -108,7 +108,7 @@ contract LegionLinearEpochVestingTest is Test {
 
         // Act
         LegionLinearEpochVesting(payable(linearVestingTemplate)).initialize(
-            vestingOwner, uint64(block.timestamp), 2_678_400 * 12, uint64(Constants.ONE_HOUR), 2_678_400, 12
+            vestingOwner, uint64(block.timestamp), 2_678_400 * 12, uint64(1 hours), 2_678_400, 12
         );
     }
 

@@ -18,7 +18,6 @@ pragma solidity 0.8.29;
 
 import { SafeTransferLib } from "@solady/src/utils/SafeTransferLib.sol";
 
-import { Constants } from "../utils/Constants.sol";
 import { Errors } from "../utils/Errors.sol";
 
 import { ILegionFixedPriceSale } from "../interfaces/sales/ILegionFixedPriceSale.sol";
@@ -197,16 +196,16 @@ contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
 
         // Check whether prefund and allocation periods are longer than allowed
         if (
-            fixedPriceSaleInitParams.prefundPeriodSeconds > Constants.THREE_MONTHS
-                || fixedPriceSaleInitParams.prefundAllocationPeriodSeconds > Constants.TWO_WEEKS
+            fixedPriceSaleInitParams.prefundPeriodSeconds > 12 weeks
+                || fixedPriceSaleInitParams.prefundAllocationPeriodSeconds > 2 weeks
         ) {
             revert Errors.InvalidPeriodConfig();
         }
 
         // Check whether prefund and allocation periods are shorter than allowed
         if (
-            fixedPriceSaleInitParams.prefundPeriodSeconds < Constants.ONE_HOUR
-                || fixedPriceSaleInitParams.prefundAllocationPeriodSeconds < Constants.ONE_HOUR
+            fixedPriceSaleInitParams.prefundPeriodSeconds < 1 hours
+                || fixedPriceSaleInitParams.prefundAllocationPeriodSeconds < 1 hours
         ) {
             revert Errors.InvalidPeriodConfig();
         }

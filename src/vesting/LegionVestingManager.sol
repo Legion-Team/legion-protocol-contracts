@@ -16,7 +16,6 @@ pragma solidity 0.8.29;
 // If you find a bug, please contact security[at]legion.cc
 // We will pay a fair bounty for any issue that puts users' funds at risk.
 
-import { Constants } from "../utils/Constants.sol";
 import { Errors } from "../utils/Errors.sol";
 
 import { ILegionVestingFactory } from "../interfaces/factories/ILegionVestingFactory.sol";
@@ -161,9 +160,9 @@ abstract contract LegionVestingManager is ILegionVestingManager {
         /// Check if vesting duration is no more than 10 years, if vesting cliff duration is not more than vesting
         /// duration or the token allocation on TGE rate is no more than 100%
         if (
-            investorVestingConfig.vestingDurationSeconds > Constants.TEN_YEARS
+            investorVestingConfig.vestingDurationSeconds > 520 weeks
                 || investorVestingConfig.vestingCliffDurationSeconds > investorVestingConfig.vestingDurationSeconds
-                || investorVestingConfig.tokenAllocationOnTGERate > 1e18
+                || investorVestingConfig.tokenAllocationOnTGERate > 1 ether
         ) revert Errors.InvalidVestingConfig();
 
         /// Check if vesting type is LEGION_LINEAR_EPOCH
@@ -171,11 +170,10 @@ abstract contract LegionVestingManager is ILegionVestingManager {
             /// Check if the number of epochs multiplied by the epoch duration is not more than 10 years
             /// Check if the number of epochs multiplied by the epoch duration is equal to the vesting duration
             if (
-                (investorVestingConfig.numberOfEpochs * investorVestingConfig.epochDurationSeconds)
-                    > Constants.TEN_YEARS
+                (investorVestingConfig.numberOfEpochs * investorVestingConfig.epochDurationSeconds) > 520 weeks
                     || (investorVestingConfig.numberOfEpochs * investorVestingConfig.epochDurationSeconds)
                         != investorVestingConfig.vestingDurationSeconds
-                    || investorVestingConfig.epochDurationSeconds > Constants.ONE_YEAR
+                    || investorVestingConfig.epochDurationSeconds > 52 weeks
             ) revert Errors.InvalidVestingConfig();
         }
     }
