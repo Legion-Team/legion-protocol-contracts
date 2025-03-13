@@ -686,7 +686,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, LegionVestingManager, 
             ? vestingStatus = LegionInvestorVestingStatus(
                 ILegionLinearVesting(investorVestingAddress).start(),
                 ILegionLinearVesting(investorVestingAddress).end(),
-                ILegionLinearVesting(investorVestingAddress).cliffEnd(),
+                ILegionLinearVesting(investorVestingAddress).cliffEndTimestamp(),
                 ILegionLinearVesting(investorVestingAddress).duration(),
                 ILegionLinearVesting(investorVestingAddress).released(),
                 ILegionLinearVesting(investorVestingAddress).releasable(),

@@ -59,7 +59,10 @@ contract LegionLinearVestingTest is Test {
         assertEq(LegionLinearVesting(payable(legionVestingInstance)).owner(), vestingOwner);
         assertEq(LegionLinearVesting(payable(legionVestingInstance)).start(), block.timestamp);
         assertEq(LegionLinearVesting(payable(legionVestingInstance)).duration(), Constants.ONE_YEAR);
-        assertEq(LegionLinearVesting(payable(legionVestingInstance)).cliffEnd(), block.timestamp + Constants.ONE_HOUR);
+        assertEq(
+            LegionLinearVesting(payable(legionVestingInstance)).cliffEndTimestamp(),
+            block.timestamp + Constants.ONE_HOUR
+        );
     }
 
     /**

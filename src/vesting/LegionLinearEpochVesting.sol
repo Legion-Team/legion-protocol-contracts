@@ -29,7 +29,7 @@ import { Errors } from "../utils/Errors.sol";
 contract LegionLinearEpochVesting is VestingWalletUpgradeable {
     /// @notice Unix timestamp (seconds) when the cliff period ends
     /// @dev Prevents token release until this timestamp is reached
-    uint256 private cliffEndTimestamp;
+    uint256 public cliffEndTimestamp;
 
     /// @notice Duration of each epoch in seconds
     /// @dev Publicly accessible; defines the vesting interval
@@ -174,14 +174,5 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
     function getCurrentEpochAtTimestamp(uint256 timestamp) public view returns (uint256) {
         if (timestamp < start()) return 0;
         else return (timestamp - start()) / epochDurationSeconds + 1;
-    }
-
-    /**
-     * @notice Returns the timestamp when the cliff period ends
-     * @dev Provides read-only access to cliffEndTimestamp
-     * @return uint256 Unix timestamp (seconds) of the cliff end
-     */
-    function cliffEnd() public view returns (uint256) {
-        return cliffEndTimestamp;
     }
 }

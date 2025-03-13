@@ -527,7 +527,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
             ? vestingStatus = LegionInvestorVestingStatus(
                 ILegionLinearVesting(investorVestingAddress).start(),
                 ILegionLinearVesting(investorVestingAddress).end(),
-                ILegionLinearVesting(investorVestingAddress).cliffEnd(),
+                ILegionLinearVesting(investorVestingAddress).cliffEndTimestamp(),
                 ILegionLinearVesting(investorVestingAddress).duration(),
                 ILegionLinearVesting(investorVestingAddress).released(),
                 ILegionLinearVesting(investorVestingAddress).releasable(),

@@ -30,7 +30,7 @@ import { Errors } from "../utils/Errors.sol";
 contract LegionLinearVesting is VestingWalletUpgradeable {
     /// @notice Unix timestamp (seconds) when the cliff period ends
     /// @dev Private variable preventing token release until this timestamp
-    uint256 private cliffEndTimestamp;
+    uint256 public cliffEndTimestamp;
 
     /**
      * @notice Restricts token release until the cliff period has ended
@@ -81,14 +81,5 @@ contract LegionLinearVesting is VestingWalletUpgradeable {
      */
     function release(address token) public override onlyCliffEnded {
         super.release(token);
-    }
-
-    /**
-     * @notice Returns the timestamp when the cliff period ends
-     * @dev Provides read-only access to cliffEndTimestamp
-     * @return uint256 Unix timestamp (seconds) of the cliff end
-     */
-    function cliffEnd() public view returns (uint256) {
-        return cliffEndTimestamp;
     }
 }

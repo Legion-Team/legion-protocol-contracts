@@ -59,7 +59,7 @@ contract LegionLinearEpochVestingTest is Test {
         assertEq(LegionLinearEpochVesting(payable(legionVestingInstance)).owner(), vestingOwner);
         assertEq(LegionLinearEpochVesting(payable(legionVestingInstance)).start(), block.timestamp);
         assertEq(LegionLinearEpochVesting(payable(legionVestingInstance)).duration(), 2_678_400 * 12);
-        assertEq(LegionLinearEpochVesting(payable(legionVestingInstance)).cliffEnd(), Constants.ONE_HOUR + 1);
+        assertEq(LegionLinearEpochVesting(payable(legionVestingInstance)).cliffEndTimestamp(), Constants.ONE_HOUR + 1);
         assertEq(LegionLinearEpochVesting(payable(legionVestingInstance)).getCurrentEpoch(), 1);
         assertEq(
             LegionLinearEpochVesting(payable(legionVestingInstance)).getCurrentEpochAtTimestamp(block.timestamp), 1

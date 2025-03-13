@@ -109,5 +109,5 @@ interface ILegionLinearVesting {
      * @dev Specific to this interface; indicates when tokens become releasable
      * @return uint256 Unix timestamp (seconds) of the cliff end
      */
-    function cliffEnd() external view returns (uint256);
+    function cliffEndTimestamp() external view returns (uint256);
 }
