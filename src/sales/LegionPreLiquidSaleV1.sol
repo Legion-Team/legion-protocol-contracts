@@ -810,7 +810,9 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, LegionVestingManager, 
             .toEthSignedMessageHash();
 
         /// Verify the signature
-        if (_data.recover(vestingSignature) != saleConfig.legionSigner) revert Errors.InvalidSignature();
+        if (_data.recover(vestingSignature) != saleConfig.legionSigner) {
+            revert Errors.InvalidSignature(vestingSignature);
+        }
     }
 
     /**
@@ -988,6 +990,6 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, LegionVestingManager, 
         ).toEthSignedMessageHash();
 
         /// Verify the signature
-        if (_data.recover(signature) != saleConfig.legionSigner) revert Errors.InvalidSignature();
+        if (_data.recover(signature) != saleConfig.legionSigner) revert Errors.InvalidSignature(signature);
     }
 }

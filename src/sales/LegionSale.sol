@@ -822,7 +822,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      */
     function _verifyLegionSignature(bytes memory _signature) internal view virtual {
         bytes32 _data = keccak256(abi.encodePacked(msg.sender, address(this), block.chainid)).toEthSignedMessageHash();
-        if (_data.recover(_signature) != addressConfig.legionSigner) revert Errors.InvalidSignature();
+        if (_data.recover(_signature) != addressConfig.legionSigner) revert Errors.InvalidSignature(_signature);
     }
 
     /**

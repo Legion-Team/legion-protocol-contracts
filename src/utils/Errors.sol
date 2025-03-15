@@ -140,8 +140,9 @@ library Errors {
     /**
      * @notice Thrown when an invalid signature is provided for investment
      * @dev Indicates the signature does not match the Legion signer
+     * @param signature Signature provided by the investor
      */
-    error InvalidSignature();
+    error InvalidSignature(bytes signature);
 
     /**
      * @notice Thrown when invested capital does not match the SAFT amount

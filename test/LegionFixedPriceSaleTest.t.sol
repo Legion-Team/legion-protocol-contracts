@@ -714,7 +714,7 @@ contract LegionFixedPriceSaleTest is Test {
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidSignature.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidSignature.selector, invalidSignature));
 
         vm.prank(investor1);
         ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, invalidSignature);

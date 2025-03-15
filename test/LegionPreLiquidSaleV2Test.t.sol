@@ -839,7 +839,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         prepareInvestorSignatures();
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidSignature.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidSignature.selector, invalidSignature));
 
         // Act
         vm.prank(investor1);

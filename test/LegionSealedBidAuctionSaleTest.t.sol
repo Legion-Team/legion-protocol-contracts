@@ -1010,7 +1010,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         prepareInvestorSignatures();
 
         // Assert: Expect revert due to invalid signature
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidSignature.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidSignature.selector, invalidSignature));
 
         // Act: Attempt to invest with invalid signature
         vm.prank(investor1);
