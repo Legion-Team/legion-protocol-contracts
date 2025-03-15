@@ -249,8 +249,9 @@ library Errors {
     /**
      * @notice Thrown when the sale has ended
      * @dev Indicates an action is attempted after the sale period
+     * @param timestamp The current timestamp when the action is attempted
      */
-    error SaleHasEnded();
+    error SaleHasEnded(uint256 timestamp);
 
     /**
      * @notice Thrown when the sale has not ended

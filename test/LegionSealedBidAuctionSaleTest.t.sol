@@ -876,7 +876,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.warp(endTime() + 1); // After sale period
 
         // Assert: Expect revert due to sale ending
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasEnded.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasEnded.selector, (endTime() + 1)));
 
         // Act: Attempt to invest after sale end
         vm.prank(investor1);
@@ -1723,7 +1723,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.warp(refundEndTime() + 1); // After refund period (2 weeks + 1 second)
 
         // Assert: Expect revert due to sale having ended
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasEnded.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasEnded.selector, (refundEndTime() + 1)));
 
         // Act: Attempt to set accepted capital as legionBouncer
         vm.prank(legionBouncer);

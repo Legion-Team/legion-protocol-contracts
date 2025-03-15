@@ -873,7 +873,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, LegionVestingManager, 
      * @dev Reverts if sale is marked as ended
      */
     function _verifySaleHasNotEnded() internal view {
-        if (saleStatus.hasEnded) revert Errors.SaleHasEnded();
+        if (saleStatus.hasEnded) revert Errors.SaleHasEnded(block.timestamp);
     }
 
     /**

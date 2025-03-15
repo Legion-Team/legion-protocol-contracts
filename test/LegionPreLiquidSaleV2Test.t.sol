@@ -782,7 +782,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         vm.warp(endTime() + 1);
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasEnded.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasEnded.selector, (endTime() + 1)));
 
         // Act
         vm.prank(investor1);
@@ -990,7 +990,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).endSale();
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasEnded.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasEnded.selector, block.timestamp));
 
         // Act
         vm.prank(legionBouncer);

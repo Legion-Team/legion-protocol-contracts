@@ -666,7 +666,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(endTime() + 1);
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasEnded.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasEnded.selector, (endTime() + 1)));
 
         vm.prank(investor1);
         ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
@@ -1255,7 +1255,7 @@ contract LegionFixedPriceSaleTest is Test {
         vm.warp(refundEndTime() + 1);
 
         // Expect revert with SaleHasEnded error
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasEnded.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasEnded.selector, (refundEndTime() + 1)));
 
         // Act
         vm.prank(legionBouncer);

@@ -813,7 +813,7 @@ contract LegionPreLiquidSaleV1Test is Test {
         ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
 
         // Expect revert with SaleHasEnded error
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasEnded.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasEnded.selector, 1));
 
         // Act
         vm.prank(investor1);

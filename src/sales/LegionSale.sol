@@ -727,7 +727,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @dev Virtual function checking sale end time
      */
     function _verifySaleHasNotEnded() internal view virtual {
-        if (block.timestamp >= saleConfig.endTime) revert Errors.SaleHasEnded();
+        if (block.timestamp >= saleConfig.endTime) revert Errors.SaleHasEnded(block.timestamp);
     }
 
     /**

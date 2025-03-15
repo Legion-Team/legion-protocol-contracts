@@ -308,7 +308,7 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
      * @dev Overrides parent to use preLiquidSaleConfig; reverts if ended
      */
     function _verifySaleHasNotEnded() internal view override {
-        if (preLiquidSaleConfig.hasEnded) revert Errors.SaleHasEnded();
+        if (preLiquidSaleConfig.hasEnded) revert Errors.SaleHasEnded(block.timestamp);
     }
 
     /**
