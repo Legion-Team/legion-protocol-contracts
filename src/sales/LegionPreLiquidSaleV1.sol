@@ -505,7 +505,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, LegionVestingManager, 
         uint256 amountToClaim = investorPositions[msg.sender].investedCapital;
 
         /// Revert in case there's nothing to claim
-        if (amountToClaim == 0) revert Errors.InvalidClaimAmount();
+        if (amountToClaim == 0) revert Errors.NothingToClaim();
 
         /// Set the total pledged capital for the investor to 0
         investorPositions[msg.sender].investedCapital = 0;

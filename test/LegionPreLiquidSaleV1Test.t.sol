@@ -2003,7 +2003,7 @@ contract LegionPreLiquidSaleV1Test is Test {
 
     /**
      * @notice Tests that withdrawing capital with no investment reverts
-     * @dev Expects InvalidClaimAmount revert when investor2, who didn't invest, tries to withdraw
+     * @dev Expects NothingToClaim revert when investor2, who didn't invest, tries to withdraw
      */
     function test_withdrawInvestedCapitalIfCanceled_revertsIfNoCapitalInvested() public {
         // Arrange: Deploy sale, have investor1 invest, cancel sale, but test with investor2
@@ -2027,7 +2027,7 @@ contract LegionPreLiquidSaleV1Test is Test {
         ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).cancelSale();
 
         // Assert: Expect revert due to investor2 having no invested capital
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidClaimAmount.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.NothingToClaim.selector));
 
         // Act: Attempt withdrawal as investor2 (who did not invest)
         vm.prank(investor2);

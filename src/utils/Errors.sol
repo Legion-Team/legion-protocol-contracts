@@ -88,12 +88,6 @@ library Errors {
     error CannotWithdrawExcessInvestedCapital(address investor);
 
     /**
-     * @notice Thrown when the token claim amount is invalid
-     * @dev Indicates the requested claim amount does not match expected values
-     */
-    error InvalidClaimAmount();
-
-    /**
      * @notice Thrown when an invalid amount of tokens is supplied by the project
      * @dev Indicates the supplied token amount does not match allocation
      * @param amount Amount of tokens supplied
@@ -214,6 +208,12 @@ library Errors {
      * @dev Indicates unauthorized access by a non-authorized caller
      */
     error NotCalledByLegionOrProject();
+
+    /**
+     * @notice Thrown when the token claim amount is invalid
+     * @dev Indicates the requested claim amount does not match expected values
+     */
+    error NothingToClaim();
 
     /**
      * @notice Thrown when capital is pledged during the pre-fund allocation period
