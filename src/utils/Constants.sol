@@ -19,33 +19,31 @@ pragma solidity 0.8.29;
 /**
  * @title Legion Constants Library
  * @author Legion
- * @notice A library used for storing constants shared across the Legion protocol.
+ * @notice A library storing constants shared across the Legion Protocol
+ * @dev Provides immutable values for time periods and unique IDs used in contracts
  */
 library Constants {
-    /// @dev Constant representing one hour in seconds
-    uint256 internal constant ONE_HOUR = 3600;
+    /// @notice Constant representing the denominator for precise calculations
+    /// @dev Equals 1e18, used for high-precision fee or rate computations with 18 decimals
+    uint256 internal constant TOKEN_ALLOCATION_RATE_DENOMINATOR = 1_000_000_000_000_000_000;
 
-    /// @dev Constant representing two weeks in seconds
-    uint256 internal constant TWO_WEEKS = 1_209_600;
+    /// @notice Constant representing the denominator for basis points calculations
+    /// @dev Equals 10,000, used to express percentages in basis points (1% = 100 bps)
+    uint256 internal constant BASIS_POINTS_DENOMINATOR = 10_000;
 
-    /// @dev Constant representing 3 months in seconds.
-    uint256 internal constant THREE_MONTHS = 7_776_000;
-
-    /// @dev Constant representing 1 year in seconds.
-    uint256 internal constant ONE_YEAR = 31_536_000;
-
-    /// @dev Constant representing 10 years in seconds.
-    uint256 internal constant TEN_YEARS = 315_360_000;
-
-    /// @dev Constant representing the LEGION_BOUNCER unique ID
+    /// @notice Constant representing the unique ID for Legion Bouncer
+    /// @dev Used to identify the Legion Bouncer in the Address Registry
     bytes32 internal constant LEGION_BOUNCER_ID = bytes32("LEGION_BOUNCER");
 
-    /// @dev Constant representing the LEGION_FEE_RECEIVER unique ID
+    /// @notice Constant representing the unique ID for Legion Fee Receiver
+    /// @dev Used to identify the Fee Receiver in the Address Registry
     bytes32 internal constant LEGION_FEE_RECEIVER_ID = bytes32("LEGION_FEE_RECEIVER");
 
-    /// @dev Constant representing the LEGION_SIGNER unique ID
+    /// @notice Constant representing the unique ID for Legion Signer
+    /// @dev Used to identify the Signer in the Address Registry
     bytes32 internal constant LEGION_SIGNER_ID = bytes32("LEGION_SIGNER");
 
-    /// @dev Constant representing the LEGION_VESTING_FACTORY unique ID
+    /// @notice Constant representing the unique ID for Legion Vesting Factory
+    /// @dev Used to identify the Vesting Factory in the Address Registry
     bytes32 internal constant LEGION_VESTING_FACTORY_ID = bytes32("LEGION_VESTING_FACTORY");
 }

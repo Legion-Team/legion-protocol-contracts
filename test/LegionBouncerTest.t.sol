@@ -4,40 +4,68 @@ pragma solidity 0.8.29;
 import { Ownable } from "@solady/src/auth/Ownable.sol";
 import { Test, console2, Vm } from "forge-std/Test.sol";
 
-import { ILegionBouncer } from "../src/interfaces/access/ILegionBouncer.sol";
 import { ILegionAddressRegistry } from "../src/interfaces/registries/ILegionAddressRegistry.sol";
-import { LegionBouncer } from "../src/access/LegionBouncer.sol";
+import { ILegionBouncer } from "../src/interfaces/access/ILegionBouncer.sol";
+
 import { LegionAddressRegistry } from "../src/registries/LegionAddressRegistry.sol";
+import { LegionBouncer } from "../src/access/LegionBouncer.sol";
 
 /**
  * @title Legion Bouncer Test
+ * @author Legion
  * @notice Test suite for the Legion Bouncer contract
+ * @dev Inherits from Forge's Test contract to access testing utilities
  */
 contract LegionBouncerTest is Test {
+    /*//////////////////////////////////////////////////////////////////////////
+                                 STATE VARIABLES
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @notice Instance of the LegionAddressRegistry contract for testing interactions
     LegionAddressRegistry public addressRegistry;
+
+    /// @notice Instance of the LegionBouncer contract under test
     LegionBouncer public legionAdmin;
 
+    /// @notice Address representing the Legion EOA (External Owned Account)
     address legionEOA = address(0x01);
+
+    /// @notice Address representing the AWS broadcaster with BROADCASTER_ROLE
     address awsBroadcaster = address(0x10);
+
+    /// @notice Address representing a non-AWS broadcaster without BROADCASTER_ROLE
     address nonAwsBroadcaster = address(0x02);
 
+    /// @notice Bytes32 identifier for the Legion admin address in the registry
     bytes32 legionAdminId = bytes32("LEGION_ADMIN");
 
+    /*//////////////////////////////////////////////////////////////////////////
+                                  SETUP FUNCTION
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /**
+     * @notice Sets up the test environment by deploying LegionBouncer and LegionAddressRegistry
+     * @dev Initializes LegionBouncer with legionEOA and awsBroadcaster, and sets up the registry
+     */
     function setUp() public {
         legionAdmin = new LegionBouncer(legionEOA, awsBroadcaster);
         addressRegistry = new LegionAddressRegistry(address(legionAdmin));
     }
 
+    /*//////////////////////////////////////////////////////////////////////////
+                                   TEST FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
     /**
-     * @notice Test Case: Successfully execute function call with BROADCASTER_ROLE
-     * @dev Test Case: Successfully executes function call with `BROADCASTER_ROLE`
+     * @notice Tests that functionCall executes successfully with BROADCASTER_ROLE
+     * @dev Verifies that an address with BROADCASTER_ROLE can call setLegionAddress via functionCall
      */
     function test_functionCall_successfullyExecuteOnlyBroadcasterRole() public {
         // Arrange
         bytes memory data =
             abi.encodeWithSignature("setLegionAddress(bytes32,address)", legionAdminId, address(legionAdmin));
 
-        // Assert
+        // Expect
         vm.expectEmit();
         emit ILegionAddressRegistry.LegionAddressSet(legionAdminId, address(0), address(legionAdmin));
 
@@ -47,15 +75,15 @@ contract LegionBouncerTest is Test {
     }
 
     /**
-     * @dev Test Case: Attempt to execute function call without BROADCASTER_ROLE
-     * @notice Tests that addresses without BROADCASTER_ROLE cannot execute function calls
+     * @notice Tests that functionCall reverts when called without BROADCASTER_ROLE
+     * @dev Expects an Unauthorized revert when a non-broadcaster attempts to call setLegionAddress
      */
     function test_functionCall_revertsIfCalledByNonBroadcasterRole() public {
         // Arrange
         bytes memory data =
             abi.encodeWithSignature("setLegionAddress(bytes32,address)", legionAdminId, address(legionAdmin));
 
-        // Assert
+        // Expect revert with Ownable.Unauthorized selector
         vm.expectRevert(abi.encodeWithSelector(Ownable.Unauthorized.selector));
 
         // Act

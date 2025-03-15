@@ -18,25 +18,36 @@ pragma solidity 0.8.29;
 
 import { SafeTransferLib } from "@solady/src/utils/SafeTransferLib.sol";
 
-import { Constants } from "../utils/Constants.sol";
 import { Errors } from "../utils/Errors.sol";
+
 import { ILegionFixedPriceSale } from "../interfaces/sales/ILegionFixedPriceSale.sol";
+
 import { LegionSale } from "./LegionSale.sol";
 
 /**
  * @title Legion Fixed Price Sale
  * @author Legion
  * @notice A contract used to execute fixed-price sales of ERC20 tokens after TGE
+ * @dev Inherits from LegionSale and implements ILegionFixedPriceSale for fixed-price token sales
  */
 contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
-    /// @dev A struct describing the fixed-price sale configuration
+    /*//////////////////////////////////////////////////////////////////////////
+                                 STATE VARIABLES
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @notice Struct containing the fixed-price sale configuration
+    /// @dev Stores sale-specific parameters like token price and timing details
     FixedPriceSaleConfiguration private fixedPriceSaleConfig;
 
+    /*//////////////////////////////////////////////////////////////////////////
+                                  INITIALIZER
+    //////////////////////////////////////////////////////////////////////////*/
+
     /**
-     * @notice Initializes the contract with correct parameters.
-     *
-     * @param saleInitParams The Legion sale initialization parameters.
-     * @param fixedPriceSaleInitParams The fixed price sale specific initialization parameters.
+     * @notice Initializes the contract with sale parameters
+     * @dev Sets up both common sale and fixed-price specific configurations; callable only once
+     * @param saleInitParams Calldata struct with common Legion sale initialization parameters
+     * @param fixedPriceSaleInitParams Calldata struct with fixed-price sale specific initialization parameters
      */
     function initialize(
         LegionSaleInitializationParams calldata saleInitParams,
@@ -54,22 +65,27 @@ contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
         // Set the fixed price sale specific configuration
         fixedPriceSaleConfig.tokenPrice = fixedPriceSaleInitParams.tokenPrice;
 
-        // Calculate and set prefundStartTime, prefundEndTime, startTime, endTime and refundEndTime
+        // Calculate and set prefundStartTime and prefundEndTime
         fixedPriceSaleConfig.prefundStartTime = block.timestamp;
         fixedPriceSaleConfig.prefundEndTime =
             fixedPriceSaleConfig.prefundStartTime + fixedPriceSaleInitParams.prefundPeriodSeconds;
 
+        // Calculate and set startTime, endTime and refundEndTime
         saleConfig.startTime =
             fixedPriceSaleConfig.prefundEndTime + fixedPriceSaleInitParams.prefundAllocationPeriodSeconds;
         saleConfig.endTime = saleConfig.startTime + saleInitParams.salePeriodSeconds;
         saleConfig.refundEndTime = saleConfig.endTime + saleInitParams.refundPeriodSeconds;
     }
 
+    /*//////////////////////////////////////////////////////////////////////////
+                              EXTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
     /**
-     * @notice Invest capital to the fixed price sale.
-     *
-     * @param amount The amount of capital invested.
-     * @param signature The Legion signature for verification.
+     * @notice Allows an investor to contribute capital to the fixed-price sale
+     * @dev Verifies multiple conditions before accepting investment; uses SafeTransferLib for token transfer
+     * @param amount Amount of capital (in bid tokens) to invest
+     * @param signature Legion signature for investor verification
      */
     function invest(uint256 amount, bytes memory signature) external whenNotPaused {
         // Verify that the investor is allowed to invest capital
@@ -110,14 +126,12 @@ contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
     }
 
     /**
-     * @notice Publish sale results, once the sale has concluded.
-     *
-     * @dev Can be called only by the Legion admin address.
-     *
-     * @param claimMerkleRoot The merkle root to verify token claims.
-     * @param acceptedMerkleRoot The merkle root to verify accepted capital.
-     * @param tokensAllocated The total amount of tokens allocated for distribution among investors.
-     * @param askTokenDecimals The decimals number of the ask token.
+     * @notice Publishes the sale results after completion
+     * @dev Sets merkle roots and token allocation; restricted to Legion admin
+     * @param claimMerkleRoot Merkle root for verifying token claims
+     * @param acceptedMerkleRoot Merkle root for verifying accepted capital
+     * @param tokensAllocated Total tokens allocated for distribution
+     * @param askTokenDecimals Decimals of the ask token for raised capital calculation
      */
     function publishSaleResults(
         bytes32 claimMerkleRoot,
@@ -154,30 +168,22 @@ contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
     }
 
     /**
-     * @notice Returns the fixed price sale configuration.
+     * @notice Returns the current fixed-price sale configuration
+     * @dev Provides read-only access to the fixedPriceSaleConfig struct
+     * @return FixedPriceSaleConfiguration memory Struct containing the sale configuration
      */
     function fixedPriceSaleConfiguration() external view returns (FixedPriceSaleConfiguration memory) {
         return fixedPriceSaleConfig;
     }
 
-    /**
-     * @notice Verify whether the prefund period is active (before sale startTime)
-     */
-    function _isPrefund() private view returns (bool) {
-        return (block.timestamp < fixedPriceSaleConfig.prefundEndTime);
-    }
+    /*//////////////////////////////////////////////////////////////////////////
+                              PRIVATE FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
-     * @notice Verify whether the prefund allocation period is active (after prefundEndTime and before sale startTime)
-     */
-    function _verifyNotPrefundAllocationPeriod() private view {
-        if (block.timestamp >= fixedPriceSaleConfig.prefundEndTime && block.timestamp < saleConfig.startTime) {
-            revert Errors.PrefundAllocationPeriodNotEnded();
-        }
-    }
-
-    /**
-     * @notice Verify whether the sale initialization parameters are valid
+     * @notice Validates the fixed-price sale initialization parameters
+     * @dev Checks for zero values and ensures periods are within allowed ranges
+     * @param fixedPriceSaleInitParams Calldata struct with fixed-price sale initialization parameters
      */
     function _verifyValidParams(FixedPriceSaleInitializationParams calldata fixedPriceSaleInitParams) private pure {
         // Check for zero values provided
@@ -190,18 +196,37 @@ contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
 
         // Check whether prefund and allocation periods are longer than allowed
         if (
-            fixedPriceSaleInitParams.prefundPeriodSeconds > Constants.THREE_MONTHS
-                || fixedPriceSaleInitParams.prefundAllocationPeriodSeconds > Constants.TWO_WEEKS
+            fixedPriceSaleInitParams.prefundPeriodSeconds > 12 weeks
+                || fixedPriceSaleInitParams.prefundAllocationPeriodSeconds > 2 weeks
         ) {
             revert Errors.InvalidPeriodConfig();
         }
 
         // Check whether prefund and allocation periods are shorter than allowed
         if (
-            fixedPriceSaleInitParams.prefundPeriodSeconds < Constants.ONE_HOUR
-                || fixedPriceSaleInitParams.prefundAllocationPeriodSeconds < Constants.ONE_HOUR
+            fixedPriceSaleInitParams.prefundPeriodSeconds < 1 hours
+                || fixedPriceSaleInitParams.prefundAllocationPeriodSeconds < 1 hours
         ) {
             revert Errors.InvalidPeriodConfig();
+        }
+    }
+
+    /**
+     * @notice Checks if the current time is within the prefund period
+     * @dev Compares block timestamp with prefund end time
+     * @return bool True if within prefund period, false otherwise
+     */
+    function _isPrefund() private view returns (bool) {
+        return (block.timestamp < fixedPriceSaleConfig.prefundEndTime);
+    }
+
+    /**
+     * @notice Verifies that the current time is not within the prefund allocation period
+     * @dev Reverts if called between prefundEndTime and sale startTime
+     */
+    function _verifyNotPrefundAllocationPeriod() private view {
+        if (block.timestamp >= fixedPriceSaleConfig.prefundEndTime && block.timestamp < saleConfig.startTime) {
+            revert Errors.PrefundAllocationPeriodNotEnded();
         }
     }
 }

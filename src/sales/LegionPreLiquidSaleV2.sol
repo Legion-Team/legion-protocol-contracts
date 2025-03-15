@@ -20,23 +20,35 @@ import { SafeTransferLib } from "@solady/src/utils/SafeTransferLib.sol";
 
 import { Constants } from "../utils/Constants.sol";
 import { Errors } from "../utils/Errors.sol";
+
 import { ILegionPreLiquidSaleV2 } from "../interfaces/sales/ILegionPreLiquidSaleV2.sol";
 import { ILegionSale } from "../interfaces/sales/ILegionSale.sol";
+
 import { LegionSale } from "./LegionSale.sol";
 
 /**
  * @title Legion Pre-Liquid Sale V2
  * @author Legion
  * @notice A contract used to execute pre-liquid sales of ERC20 tokens before TGE
+ * @dev Inherits from LegionSale and implements ILegionPreLiquidSaleV2 for pre-liquid sale management
  */
 contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
-    /// @dev A struct describing the pre-liquid sale configuration
+    /*//////////////////////////////////////////////////////////////////////////
+                                 STATE VARIABLES
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @notice Struct containing the pre-liquid sale configuration
+    /// @dev Stores specific sale parameters like refund period and end status
     PreLiquidSaleConfiguration private preLiquidSaleConfig;
 
+    /*//////////////////////////////////////////////////////////////////////////
+                                  INITIALIZER
+    //////////////////////////////////////////////////////////////////////////*/
+
     /**
-     * @notice Initializes the contract with correct parameters.
-     *
-     * @param saleInitParams The Legion sale initialization parameters.
+     * @notice Initializes the pre-liquid sale contract with parameters
+     * @dev Sets up common and specific sale configurations; callable only once
+     * @param saleInitParams Calldata struct with Legion sale initialization parameters
      */
     function initialize(LegionSaleInitializationParams calldata saleInitParams) external initializer {
         // Init and set the sale common params
@@ -49,11 +61,15 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
         preLiquidSaleConfig.refundPeriodSeconds = saleInitParams.refundPeriodSeconds;
     }
 
+    /*//////////////////////////////////////////////////////////////////////////
+                              EXTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
     /**
-     * @notice Invest capital to the pre-liquid sale.
-     *
-     * @param amount The amount of capital invested.
-     * @param signature The Legion signature for verification.
+     * @notice Allows an investor to contribute capital to the pre-liquid sale
+     * @dev Verifies conditions and updates state; uses SafeTransferLib for token transfer
+     * @param amount Amount of capital (in bid tokens) to invest
+     * @param signature Legion signature for investor verification
      */
     function invest(uint256 amount, bytes memory signature) external whenNotPaused {
         // Verify that the investor is allowed to pledge capital
@@ -88,7 +104,8 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
     }
 
     /**
-     * @notice End sale by Legion or the Project and set the refund end time.
+     * @notice Ends the sale and sets refund period
+     * @dev Restricted to Legion or Project; updates sale status and times
      */
     function endSale() external onlyLegionOrProject whenNotPaused {
         // Verify that the sale is not canceled
@@ -111,10 +128,10 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
     }
 
     /**
-     * @notice Publish the total capital raised by the project.
-     *
-     * @param capitalRaised The total capital raised by the project.
-     * @param acceptedMerkleRoot The Merkle root to verify accepted capital.
+     * @notice Publishes the total capital raised and accepted capital Merkle root
+     * @dev Restricted to Legion; sets capital raised after sale conclusion
+     * @param capitalRaised Total capital raised by the project
+     * @param acceptedMerkleRoot Merkle root for verifying accepted capital
      */
     function publishCapitalRaised(
         uint256 capitalRaised,
@@ -147,13 +164,11 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
     }
 
     /**
-     * @notice Publish sale results, once the sale has concluded.
-     *
-     * @dev Can be called only by the Legion admin address.
-     *
-     * @param claimMerkleRoot The Merkle root to verify token claims.
-     * @param tokensAllocated The total amount of tokens allocated for distribution among investors.
-     * @param askToken The address of the token distributed to investors.
+     * @notice Publishes sale results including token allocation details
+     * @dev Restricted to Legion; sets token distribution data post-sale
+     * @param claimMerkleRoot Merkle root for verifying token claims
+     * @param tokensAllocated Total tokens allocated for investors
+     * @param askToken Address of the token to be distributed
      */
     function publishSaleResults(
         bytes32 claimMerkleRoot,
@@ -190,9 +205,8 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
     }
 
     /**
-     * @notice Withdraw raised capital from the sale contract.
-     *
-     * @dev Can be called only by the Project admin address.
+     * @notice Withdraws raised capital to the Project
+     * @dev Restricted to Project; transfers capital and fees post-sale
      */
     function withdrawRaisedCapital() external override(ILegionSale, LegionSale) onlyProject whenNotPaused {
         // verify that the sale has ended
@@ -217,10 +231,12 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
         uint256 _totalCapitalRaised = saleStatus.totalCapitalRaised;
 
         // Calculate Legion Fee
-        uint256 _legionFee = (saleConfig.legionFeeOnCapitalRaisedBps * _totalCapitalRaised) / 10_000;
+        uint256 _legionFee =
+            (saleConfig.legionFeeOnCapitalRaisedBps * _totalCapitalRaised) / Constants.BASIS_POINTS_DENOMINATOR;
 
         // Calculate Referrer Fee
-        uint256 _referrerFee = (saleConfig.referrerFeeOnCapitalRaisedBps * _totalCapitalRaised) / 10_000;
+        uint256 _referrerFee =
+            (saleConfig.referrerFeeOnCapitalRaisedBps * _totalCapitalRaised) / Constants.BASIS_POINTS_DENOMINATOR;
 
         // Emit successfully CapitalWithdrawn
         emit CapitalWithdrawn(_totalCapitalRaised, msg.sender);
@@ -235,16 +251,28 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
             SafeTransferLib.safeTransfer(addressConfig.bidToken, addressConfig.legionFeeReceiver, _legionFee);
         }
 
-        // Transfer the Referrer fee to the Legion fee receiver address
+        // Transfer the Referrer fee to the Referrer fee receiver address
         if (_referrerFee != 0) {
             SafeTransferLib.safeTransfer(addressConfig.bidToken, addressConfig.referrerFeeReceiver, _referrerFee);
         }
     }
 
     /**
-     * @notice Cancels an ongoing sale.
-     *
-     * @dev Can be called only by the Project admin address.
+     * @notice Returns the current pre-liquid sale configuration
+     * @dev Provides read-only access to preLiquidSaleConfig
+     * @return PreLiquidSaleConfiguration memory Struct containing the sale configuration
+     */
+    function preLiquidSaleConfiguration() external view returns (PreLiquidSaleConfiguration memory) {
+        return preLiquidSaleConfig;
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                               PUBLIC FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /**
+     * @notice Cancels the ongoing pre-liquid sale
+     * @dev Restricted to Project; handles cancellation and capital return
      */
     function cancelSale() public override(ILegionSale, LegionSale) onlyProject whenNotPaused {
         // Verify sale has not already been canceled
@@ -271,44 +299,21 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
         }
     }
 
-    /**
-     * @notice Returns the pre-liquid sale configuration.
-     */
-    function preLiquidSaleConfiguration() external view returns (PreLiquidSaleConfiguration memory) {
-        return preLiquidSaleConfig;
-    }
+    /*//////////////////////////////////////////////////////////////////////////
+                              INTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
-     * @notice Verify that the sale has not ended.
+     * @notice Verifies that the sale has not ended
+     * @dev Overrides parent to use preLiquidSaleConfig; reverts if ended
      */
     function _verifySaleHasNotEnded() internal view override {
         if (preLiquidSaleConfig.hasEnded) revert Errors.SaleHasEnded();
     }
 
     /**
-     * @notice Verify that the sale has ended.
-     */
-    function _verifySaleHasEnded() internal view {
-        if (!preLiquidSaleConfig.hasEnded) revert Errors.SaleHasNotEnded();
-    }
-
-    /**
-     * @notice Verify that capital raised can be published.
-     */
-    function _verifyCanPublishCapitalRaised() internal view {
-        if (saleStatus.totalCapitalRaised != 0) revert Errors.CapitalRaisedAlreadyPublished();
-    }
-
-    /**
-     * @notice Verify that the project can withdraw capital.
-     */
-    function _verifyCanWithdrawCapital() internal view override {
-        if (saleStatus.capitalWithdrawn) revert Errors.CapitalAlreadyWithdrawn();
-        if (saleStatus.totalCapitalRaised == 0) revert Errors.CapitalRaisedNotPublished();
-    }
-
-    /**
-     * @notice Verify that the refund period is over.
+     * @notice Verifies that the refund period is over
+     * @dev Overrides parent to check refundEndTime; reverts if not over
      */
     function _verifyRefundPeriodIsOver() internal view override {
         if (saleConfig.refundEndTime > 0 && block.timestamp < saleConfig.refundEndTime) {
@@ -317,11 +322,41 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
     }
 
     /**
-     * @notice Verify that the refund period is not over.
+     * @notice Verifies that the refund period is not over
+     * @dev Overrides parent to check refundEndTime; reverts if over
      */
     function _verifyRefundPeriodIsNotOver() internal view override {
         if (saleConfig.refundEndTime > 0 && block.timestamp >= saleConfig.refundEndTime) {
             revert Errors.RefundPeriodIsOver();
         }
+    }
+
+    /**
+     * @notice Verifies conditions for withdrawing capital
+     * @dev Overrides parent to check withdrawal status and capital raised
+     */
+    function _verifyCanWithdrawCapital() internal view override {
+        if (saleStatus.capitalWithdrawn) revert Errors.CapitalAlreadyWithdrawn();
+        if (saleStatus.totalCapitalRaised == 0) revert Errors.CapitalRaisedNotPublished();
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                              PRIVATE FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /**
+     * @notice Verifies that the sale has ended
+     * @dev Reverts if sale has not ended based on preLiquidSaleConfig
+     */
+    function _verifySaleHasEnded() private view {
+        if (!preLiquidSaleConfig.hasEnded) revert Errors.SaleHasNotEnded();
+    }
+
+    /**
+     * @notice Verifies conditions for publishing capital raised
+     * @dev Reverts if capital raised is already published
+     */
+    function _verifyCanPublishCapitalRaised() private view {
+        if (saleStatus.totalCapitalRaised != 0) revert Errors.CapitalRaisedAlreadyPublished();
     }
 }

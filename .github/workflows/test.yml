@@ -10,6 +10,24 @@ env:
   FOUNDRY_PROFILE: ci
 
 jobs:
+  analyze:
+    name: Run Slither Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Run Slither
+      uses: crytic/slither-action@v0.4.0
+      id: slither
+      with:
+        node-version: 16
+        fail-on: high
+        slither-args: --skip-assembly
+
   forge-test:
     name: Run Forge Tests and Checks
     runs-on: ubuntu-latest
@@ -72,3 +90,4 @@ jobs:
       - name: Prune coverage
         run: |
           lcov --remove ./lcov.info -o ./lcov-filtered.info
+          

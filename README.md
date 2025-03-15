@@ -57,7 +57,7 @@ Every fixed price sale consists of 5 stages, explained below:
 2. **Prefund Allocation Period**: Projects decide allocations for the investors who participated in the prefund, based on their reputation or other factors. This process is facilitated by Legion's backend and, depending on the outcome, the prefund can be fully subscribed.
 3. **Active Sale Period**: The actual sale stage where investors pledge capital.
 4. **Refund Period**: This stage is required by the MiCA regulation, where users can receive a refund if they decide. After the refund period is over, Legion publishes the results from the sale. Projects provide the allocated tokens and withdraw the raised capital from the sale.
-5. **Lockup Period**: This stage complies with Regulation S. The lockup period starts immediately after a sale ends. Once it is over, investors are allowed to withdraw their allocations into a vesting schedule contract.
+5. **Claim Period**: The claim period starts after the refund period ends and tokens are supplied to the contract. I dnvestors are allowed to withdraw their allocations into a vesting schedule contract.
 
 #### Key Functions:
 
@@ -88,7 +88,7 @@ Every sealed bid auction consists of three stages, explained below:
 
 1. **Active Sale Period**: The actual sale stage where investors pledge capital.
 2. **Refund Period**: This stage is required by the MiCA regulation, where users can receive a refund if they decide. After the refund period is over, Legion publishes the results from the sale. Projects provide the allocated tokens and withdraw the raised capital from the sale.
-3. **Lockup Period**: This stage complies with Regulation S. The lockup period starts immediately after a sale ends. Once it is over, investors are allowed to withdraw their allocations into a vesting schedule contract.
+5. **Claim Period**: The claim period starts after the refund period ends and tokens are supplied to the contract. I dnvestors are allowed to withdraw their allocations into a vesting schedule contract.
 
 #### Key Functions:
 
@@ -120,7 +120,7 @@ In comparison to other sale contracts, the `LegionPreLiquidSaleV1` is more async
 1. **Active Investment Period**: The stage where whitelisted users invest capital and investments are accepted.
 2. **Refund Period**: This stage is required by the MiCA regulation, where users can receive a refund if they decide. In the case of a pre-liquid sale, the refund period is counted individually for each investor.
 3. **Capital Withdrawal**: Once a refund period for an investor is over, projects are allowed to withdraw the raised capital from this investor.
-4. **Token Claims**: After the TGE details are published by Legion and tokens are supplied by the project, investors are allowed to claim their tokens into the vesting contract deployed for them.
+4. **Claim Period**: After the TGE details are published by Legion and tokens are supplied by the project, investors are allowed to claim their tokens into the vesting contract deployed for them.
 
 #### Key Functions:
 
@@ -154,7 +154,7 @@ In comparison to other sale contracts, the `LegionPreLiquidSaleV2` is more async
 2. **Acceptance Period**: The stage where Projects accept investor's allocations. If investors have deposited more than the accepted amount, they are allowed to withdraw the excess amount immediately after being approved/rejected. Alternatively, they can wait until the end of the refund period for the opportunity to receive higher allocation.
 3. **Refund Period**: This stage is required by the MiCA regulation, where users can receive a refund if they decide. In the case of a pre-liquid sale, the refund period is counted individually for each investor.
 4. **Capital Withdrawal**: Once a refund period for an investor is over, projects are allowed to withdraw the raised capital from this investor.
-5. **Token Claims**: After the TGE details are published by Legion and tokens are supplied by the project, investors are allowed to claim their tokens into the vesting contract deployed for them.
+5. **Claim Period**: The claim period starts after the refund period ends and tokens are supplied to the contract. I dnvestors are allowed to withdraw their allocations into a vesting schedule contract.
 
 #### Key Functions:
 
