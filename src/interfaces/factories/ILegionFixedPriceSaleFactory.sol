@@ -16,16 +16,22 @@ pragma solidity 0.8.29;
 // If you find a bug, please contact security[at]legion.cc
 // We will pay a fair bounty for any issue that puts users' funds at risk.
 
-import { ILegionSale } from "../sales/ILegionSale.sol";
 import { ILegionFixedPriceSale } from "../sales/ILegionFixedPriceSale.sol";
+import { ILegionSale } from "../sales/ILegionSale.sol";
 
+/**
+ * @title ILegionFixedPriceSaleFactory
+ * @author Legion
+ * @notice Interface for deploying and managing Legion fixed price sale contract instances
+ * @dev Defines events and functions for creating new fixed price sale contracts
+ */
 interface ILegionFixedPriceSaleFactory {
     /**
-     * @notice This event is emitted when a new fixed price sale is deployed and initialized.
-     *
-     * @param saleInstance The address of the sale instance deployed.
-     * @param saleInitParams The Legion sale initialization parameters.
-     * @param fixedPriceSaleInitParams The fixed price sale specific initialization parameters.
+     * @notice Emitted when a new fixed price sale contract is deployed and initialized
+     * @dev Provides details about the new sale instance and its configuration
+     * @param saleInstance Address of the newly deployed sale contract
+     * @param saleInitParams Struct containing Legion sale initialization parameters
+     * @param fixedPriceSaleInitParams Struct containing fixed price sale specific initialization parameters
      */
     event NewFixedPriceSaleCreated(
         address saleInstance,
@@ -34,12 +40,11 @@ interface ILegionFixedPriceSaleFactory {
     );
 
     /**
-     * @notice Deploy a LegionFixedPriceSale contract.
-     *
-     * @param saleInitParams The Legion sale initialization parameters.
-     * @param fixedPriceSaleInitParams The fixed price sale specific initialization parameters.
-     *
-     * @return fixedPriceSaleInstance The address of the FixedPriceSale instance deployed.
+     * @notice Deploys a new LegionFixedPriceSale contract instance
+     * @dev Must be implemented to create and initialize a new sale contract
+     * @param saleInitParams Struct containing Legion sale initialization parameters
+     * @param fixedPriceSaleInitParams Struct containing fixed price sale specific initialization parameters
+     * @return fixedPriceSaleInstance Address of the newly deployed FixedPriceSale instance
      */
     function createFixedPriceSale(
         ILegionSale.LegionSaleInitializationParams memory saleInitParams,

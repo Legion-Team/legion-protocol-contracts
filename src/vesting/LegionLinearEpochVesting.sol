@@ -23,47 +23,69 @@ import { Errors } from "../utils/Errors.sol";
 /**
  * @title Legion Linear Epoch Vesting
  * @author Legion
- * @notice A contract used to release vested tokens to users
- * @dev The contract fully utilizes OpenZeppelin's VestingWallet.sol implementation
+ * @notice A contract for releasing vested tokens to users on an epoch-based schedule
+ * @dev Extends OpenZeppelin's VestingWalletUpgradeable with linear epoch vesting and cliff
  */
 contract LegionLinearEpochVesting is VestingWalletUpgradeable {
-    /// @dev The Unix timestamp (seconds) of the block when the cliff ends
-    uint256 private cliffEndTimestamp;
+    /*//////////////////////////////////////////////////////////////////////////
+                                 STATE VARIABLES
+    //////////////////////////////////////////////////////////////////////////*/
 
-    /// @dev The duration of each epoch in seconds
+    /// @notice Unix timestamp (seconds) when the cliff period ends
+    /// @dev Prevents token release until this timestamp is reached
+    uint256 public cliffEndTimestamp;
+
+    /// @notice Duration of each epoch in seconds
+    /// @dev Publicly accessible; defines the vesting interval
     uint256 public epochDurationSeconds;
 
-    /// @dev The number of epochs
+    /// @notice Total number of epochs in the vesting schedule
+    /// @dev Publicly accessible; determines the vesting granularity
     uint256 public numberOfEpochs;
 
-    /// @dev The last claimed epoch
+    /// @notice The last epoch for which tokens were claimed
+    /// @dev Publicly accessible; tracks vesting progress
     uint256 public lastClaimedEpoch;
 
+    /*//////////////////////////////////////////////////////////////////////////
+                                   MODIFIERS
+    //////////////////////////////////////////////////////////////////////////*/
+
     /**
-     * @notice Throws if a user tries to release tokens before the cliff period has ended
+     * @notice Restricts token release until the cliff period has ended
+     * @dev Reverts with CliffNotEnded if block.timestamp is before cliffEndTimestamp
      */
     modifier onlyCliffEnded() {
         if (block.timestamp < cliffEndTimestamp) revert Errors.CliffNotEnded(block.timestamp);
         _;
     }
 
+    /*//////////////////////////////////////////////////////////////////////////
+                                   CONSTRUCTOR
+    //////////////////////////////////////////////////////////////////////////*/
+
     /**
-     * @dev LegionLinearVesting constructor.
+     * @notice Constructor for LegionLinearEpochVesting
+     * @dev Disables initializers to prevent uninitialized deployment
      */
     constructor() {
         // Disable initialization
         _disableInitializers();
     }
 
+    /*//////////////////////////////////////////////////////////////////////////
+                                  INITIALIZER
+    //////////////////////////////////////////////////////////////////////////*/
+
     /**
-     * @notice Initializes the contract with the correct parameters
-     *
-     * @param _beneficiary The beneficiary to receive tokens
-     * @param _startTimestamp The Unix timestamp when the vesting schedule starts
-     * @param _durationSeconds The duration of the vesting period in seconds
-     * @param _cliffDurationSeconds The duration of the cliff period in seconds
-     * @param _epochDurationSeconds The duration of each epoch in seconds
-     * @param _numberOfEpochs The number of epochs
+     * @notice Initializes the vesting contract with specified parameters
+     * @dev Sets up the vesting schedule, cliff, and epoch details; callable only once
+     * @param _beneficiary Address to receive the vested tokens
+     * @param _startTimestamp Unix timestamp (seconds) when vesting starts
+     * @param _durationSeconds Total duration of the vesting period in seconds
+     * @param _cliffDurationSeconds Duration of the cliff period in seconds
+     * @param _epochDurationSeconds Duration of each epoch in seconds
+     * @param _numberOfEpochs Number of epochs in the vesting schedule
      */
     function initialize(
         address _beneficiary,
@@ -89,9 +111,71 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
         numberOfEpochs = _numberOfEpochs;
     }
 
+    /*//////////////////////////////////////////////////////////////////////////
+                               PUBLIC FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
     /**
-     * @dev Overriden implementation of the vesting formula. This returns the amount vested, as a function of time, for
-     * an asset given its total historical allocation.
+     * @notice Releases vested tokens of a specific type to the beneficiary
+     * @dev Overrides VestingWalletUpgradeable; requires cliff to have ended
+     * @param token Address of the token to release
+     */
+    function release(address token) public override onlyCliffEnded {
+        super.release(token);
+
+        // Update the last claimed epoch
+        _updateLastClaimedEpoch();
+    }
+
+    /**
+     * @notice Returns the current epoch based on the current block timestamp
+     * @dev Calculates the epoch number starting from 0 before vesting begins
+     * @return uint256 Current epoch number (0 if before start, 1+ otherwise)
+     */
+    function getCurrentEpoch() public view returns (uint256) {
+        if (block.timestamp < start()) return 0;
+        else return (block.timestamp - start()) / epochDurationSeconds + 1;
+    }
+
+    /**
+     * @notice Returns the epoch at a specific timestamp
+     * @dev Calculates the epoch number for a given timestamp
+     * @param timestamp Unix timestamp (seconds) to evaluate
+     * @return uint256 Epoch number at the given timestamp (0 if before start)
+     */
+    function getCurrentEpochAtTimestamp(uint256 timestamp) public view returns (uint256) {
+        if (timestamp < start()) return 0;
+        else return (timestamp - start()) / epochDurationSeconds + 1;
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                              INTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /**
+     * @notice Updates the last claimed epoch after a release
+     * @dev Internal function to track vesting progress; adjusts lastClaimedEpoch
+     */
+    function _updateLastClaimedEpoch() internal {
+        // Get the current epoch
+        uint256 currentEpoch = getCurrentEpoch();
+
+        // If all the epochs have elapsed, set the last claimed epoch to the total number of epochs
+        if (currentEpoch >= numberOfEpochs + 1) {
+            lastClaimedEpoch = numberOfEpochs;
+            return;
+        }
+
+        // If current epoch is greater than the last claimed epoch, set the last claimed epoch to the current epoch - 1
+        lastClaimedEpoch = currentEpoch - 1;
+    }
+
+    /**
+     * @notice Calculates the vested amount based on an epoch-based schedule
+     * @dev Overrides VestingWalletUpgradeable to implement linear epoch vesting
+     * @param totalAllocation Total amount of tokens allocated for vesting
+     * @param timestamp Unix timestamp (seconds) to calculate vesting up to the given time
+     * @return amountVested Amount of tokens vested by the given timestamp
      */
     function _vestingSchedule(
         uint256 totalAllocation,
@@ -105,7 +189,7 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
         // Get the current epoch
         uint256 currentEpoch = getCurrentEpochAtTimestamp(timestamp);
 
-        // If all the epochs have elpased, return the total allocation
+        // If all the epochs have elapsed, return the total allocation
         if (currentEpoch >= numberOfEpochs + 1) {
             amountVested = totalAllocation;
         }
@@ -114,71 +198,5 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
         if (currentEpoch > lastClaimedEpoch) {
             amountVested = ((currentEpoch - 1 - lastClaimedEpoch) * totalAllocation) / numberOfEpochs;
         }
-    }
-
-    /**
-     * @dev Updates the last claimed epoch
-     */
-    function _updateLastClaimedEpoch() internal {
-        // Get the current epoch
-        uint256 currentEpoch = getCurrentEpoch();
-
-        // If all the epochs have elpased, set the last claimed epoch to the total number of epochs
-        if (currentEpoch >= numberOfEpochs + 1) {
-            lastClaimedEpoch = numberOfEpochs;
-            return;
-        }
-
-        // If current epoch is greater than the last claimed epoch, set the last claimed epoch to the current epoch - 1
-        lastClaimedEpoch = currentEpoch - 1;
-    }
-
-    /**
-     * @notice Release the native token (ether) that have already vested.
-     *
-     * Emits a {EtherReleased} event.
-     */
-    function release() public override onlyCliffEnded {
-        super.release();
-
-        // Update the last claimed epoch
-        _updateLastClaimedEpoch();
-    }
-
-    /**
-     * @notice Release the tokens that have already vested.
-     *
-     * @param token The vested token to release
-     *
-     * Emits a {ERC20Released} event.
-     */
-    function release(address token) public override onlyCliffEnded {
-        super.release(token);
-
-        // Update the last claimed epoch
-        _updateLastClaimedEpoch();
-    }
-
-    /**
-     * @notice Returns the current epoch.
-     */
-    function getCurrentEpoch() public view returns (uint256) {
-        if (block.timestamp < start()) return 0;
-        else return (block.timestamp - start()) / epochDurationSeconds + 1;
-    }
-
-    /**
-     * @notice Returns the current epoch for a specific timestamp.
-     */
-    function getCurrentEpochAtTimestamp(uint256 timestamp) public view returns (uint256) {
-        if (timestamp < start()) return 0;
-        else return (timestamp - start()) / epochDurationSeconds + 1;
-    }
-
-    /**
-     * @notice Returns the cliff end timestamp.
-     */
-    function cliffEnd() public view returns (uint256) {
-        return cliffEndTimestamp;
     }
 }

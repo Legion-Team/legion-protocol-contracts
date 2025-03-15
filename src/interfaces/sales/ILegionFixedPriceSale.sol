@@ -18,51 +18,63 @@ pragma solidity 0.8.29;
 
 import { ILegionSale } from "./ILegionSale.sol";
 
+/**
+ * @title ILegionFixedPriceSale
+ * @author Legion
+ * @notice Interface for managing fixed-price sales of ERC20 tokens in the Legion Protocol
+ * @dev Extends ILegionSale with fixed-price sale specific functionality and events
+ */
 interface ILegionFixedPriceSale is ILegionSale {
-    /// @notice A struct describing the fixed price sale initialization params.
+    /// @notice Struct defining the initialization parameters for a fixed-price sale
     struct FixedPriceSaleInitializationParams {
-        /// @dev The prefund period duration in seconds.
+        /// @notice Duration of the prefund period in seconds
+        /// @dev Specifies how long the prefund phase lasts before allocation
         uint256 prefundPeriodSeconds;
-        /// @dev The prefund allocation period duration in seconds.
+        /// @notice Duration of the prefund allocation period in seconds
+        /// @dev Specifies the time between prefund end and sale start
         uint256 prefundAllocationPeriodSeconds;
-        /// @dev The price of the token being sold denominated in the token used to raise capital.
+        /// @notice Price of the token being sold in terms of the bid token
+        /// @dev Denominated in the token used to raise capital
         uint256 tokenPrice;
     }
 
-    /// @notice A struct describing the fixed price sale configuration.
+    /// @notice Struct containing the runtime configuration of the fixed-price sale
     struct FixedPriceSaleConfiguration {
-        /// @dev The price of the token being sold denominated in the token used to raise capital.
+        /// @notice Price of the token being sold in terms of the bid token
+        /// @dev Denominated in the token used to raise capital
         uint256 tokenPrice;
-        /// @dev The unix timestamp (seconds) of the block when the prefund starts.
+        /// @notice Unix timestamp (in seconds) when the prefund period begins
+        /// @dev Set at contract initialization
         uint256 prefundStartTime;
-        /// @dev The unix timestamp (seconds) of the block when the prefund ends.
+        /// @notice Unix timestamp (in seconds) when the prefund period ends
+        /// @dev Calculated as prefundStartTime + prefundPeriodSeconds
         uint256 prefundEndTime;
     }
 
     /**
-     * @notice This event is emitted when capital is successfully invested.
-     *
-     * @param amount The amount of capital invested.
-     * @param investor The address of the investor.
-     * @param isPrefund Whether capital is invested before sale start.
-     * @param investTimestamp The unix timestamp (seconds) of the block when capital has been invested.
+     * @notice Emitted when capital is successfully invested in the sale
+     * @dev Logs investment details including whether it occurred during prefund
+     * @param amount Amount of capital invested (in bid tokens)
+     * @param investor Address of the investor
+     * @param isPrefund Indicates if investment occurred before sale start
+     * @param investTimestamp Unix timestamp (in seconds) of the investment
      */
     event CapitalInvested(uint256 amount, address investor, bool isPrefund, uint256 investTimestamp);
 
     /**
-     * @notice This event is emitted when sale results are successfully published by the Legion admin.
-     *
-     * @param claimMerkleRoot The merkle root to verify token claims.
-     * @param acceptedMerkleRoot The merkle root to verify accepted capital.
-     * @param tokensAllocated The amount of tokens allocated from the sale.
+     * @notice Emitted when sale results are published by the Legion admin
+     * @dev Logs merkle roots and token allocation for post-sale verification
+     * @param claimMerkleRoot Merkle root for verifying token claims
+     * @param acceptedMerkleRoot Merkle root for verifying accepted capital
+     * @param tokensAllocated Total amount of tokens allocated from the sale
      */
     event SaleResultsPublished(bytes32 claimMerkleRoot, bytes32 acceptedMerkleRoot, uint256 tokensAllocated);
 
     /**
-     * @notice Initializes the contract with correct parameters.
-     *
-     * @param saleInitParams The Legion sale initialization parameters.
-     * @param fixedPriceSaleInitParams The fixed price sale specific initialization parameters.
+     * @notice Initializes the fixed-price sale contract with parameters
+     * @dev Must be implemented to set up sale configuration; callable only once
+     * @param saleInitParams Calldata struct with common Legion sale initialization parameters
+     * @param fixedPriceSaleInitParams Calldata struct with fixed-price sale specific initialization parameters
      */
     function initialize(
         LegionSaleInitializationParams calldata saleInitParams,
@@ -71,22 +83,20 @@ interface ILegionFixedPriceSale is ILegionSale {
         external;
 
     /**
-     * @notice Invest capital to the fixed price sale.
-     *
-     * @param amount The amount of capital invested.
-     * @param signature The Legion signature for verification.
+     * @notice Allows investment of capital into the fixed-price sale
+     * @dev Must verify investor eligibility and sale conditions
+     * @param amount Amount of capital (in bid tokens) to invest
+     * @param signature Legion signature for investor verification
      */
     function invest(uint256 amount, bytes memory signature) external;
 
     /**
-     * @notice Publish sale results, once the sale has concluded.
-     *
-     * @dev Can be called only by the Legion admin address.
-     *
-     * @param claimMerkleRoot The merkle root to verify token claims.
-     * @param acceptedMerkleRoot The merkle root to verify accepted capital.
-     * @param tokensAllocated The total amount of tokens allocated for distribution among investors.
-     * @param askTokenDecimals The decimals number of the ask token.
+     * @notice Publishes the results of the fixed-price sale
+     * @dev Must be restricted to Legion admin and callable only after sale conclusion
+     * @param claimMerkleRoot Merkle root for verifying token claims
+     * @param acceptedMerkleRoot Merkle root for verifying accepted capital
+     * @param tokensAllocated Total tokens allocated for distribution
+     * @param askTokenDecimals Decimals of the ask token for price calculation
      */
     function publishSaleResults(
         bytes32 claimMerkleRoot,
@@ -97,7 +107,9 @@ interface ILegionFixedPriceSale is ILegionSale {
         external;
 
     /**
-     * @notice Returns the fixed price sale configuration.
+     * @notice Retrieves the current fixed-price sale configuration
+     * @dev Must return the FixedPriceSaleConfiguration struct
+     * @return FixedPriceSaleConfiguration memory Struct containing the sale configuration
      */
     function fixedPriceSaleConfiguration() external view returns (FixedPriceSaleConfiguration memory);
 }

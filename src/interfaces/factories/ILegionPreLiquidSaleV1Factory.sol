@@ -18,23 +18,28 @@ pragma solidity 0.8.29;
 
 import { ILegionPreLiquidSaleV1 } from "../sales/ILegionPreLiquidSaleV1.sol";
 
+/**
+ * @title ILegionPreLiquidSaleV1Factory
+ * @author Legion
+ * @notice Interface for deploying and managing Legion pre-liquid V1 sale contract instances
+ * @dev Defines events and functions for creating new pre-liquid V1 sale contracts
+ */
 interface ILegionPreLiquidSaleV1Factory {
     /**
-     * @notice This event is emitted when a new pre-liquid V1 sale is deployed and initialized.
-     *
-     * @param saleInstance The address of the sale instance deployed.
-     * @param preLiquidSaleInitParams The configuration for the pre-liquid sale.
+     * @notice Emitted when a new pre-liquid V1 sale contract is deployed and initialized
+     * @dev Provides details about the new sale instance and its configuration
+     * @param saleInstance Address of the newly deployed pre-liquid V1 sale contract
+     * @param preLiquidSaleInitParams Struct containing pre-liquid sale initialization parameters
      */
     event NewPreLiquidSaleV1Created(
         address saleInstance, ILegionPreLiquidSaleV1.PreLiquidSaleInitializationParams preLiquidSaleInitParams
     );
 
     /**
-     * @notice Deploy a LegionPreLiquidSaleV1 contract.
-     *
-     * @param preLiquidSaleInitParams The Pre-Liquid sale initialization parameters.
-     *
-     * @return preLiquidSaleV1Instance The address of the PreLiquidSale V1 instance deployed.
+     * @notice Deploys a new LegionPreLiquidSaleV1 contract instance
+     * @dev Must be implemented to create and initialize a new pre-liquid V1 sale contract
+     * @param preLiquidSaleInitParams Calldata struct containing pre-liquid sale initialization parameters
+     * @return preLiquidSaleV1Instance Address of the newly deployed PreLiquidSaleV1 instance
      */
     function createPreLiquidSaleV1(
         ILegionPreLiquidSaleV1.PreLiquidSaleInitializationParams calldata preLiquidSaleInitParams

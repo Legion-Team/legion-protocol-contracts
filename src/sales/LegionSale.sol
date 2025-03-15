@@ -17,43 +17,59 @@ pragma solidity 0.8.29;
 // We will pay a fair bounty for any issue that puts users' funds at risk.
 
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import { Initializable } from "@solady/src/utils/Initializable.sol";
-import { MerkleProofLib } from "@solady/src/utils/MerkleProofLib.sol";
 import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
+import { Initializable } from "@solady/src/utils/Initializable.sol";
+import { MerkleProofLib } from "@solady/src/utils/MerkleProofLib.sol";
 import { SafeTransferLib } from "@solady/src/utils/SafeTransferLib.sol";
 
 import { Constants } from "../utils/Constants.sol";
 import { Errors } from "../utils/Errors.sol";
-import { LegionVestingManager } from "../vesting/LegionVestingManager.sol";
+
 import { ILegionAddressRegistry } from "../interfaces/registries/ILegionAddressRegistry.sol";
 import { ILegionSale } from "../interfaces/sales/ILegionSale.sol";
-import { ILegionLinearVesting } from "../interfaces/vesting/ILegionLinearVesting.sol";
+import { ILegionVesting } from "../interfaces/vesting/ILegionVesting.sol";
 import { ILegionVestingFactory } from "../interfaces/factories/ILegionVestingFactory.sol";
+
+import { LegionVestingManager } from "../vesting/LegionVestingManager.sol";
 
 /**
  * @title Legion Sale
  * @author Legion
  * @notice A contract used for managing token sales in the Legion Protocol
+ * @dev Abstract base contract implementing ILegionSale with vesting, pausing, and core sale functionality
  */
 abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable, Pausable {
     using ECDSA for bytes32;
     using MessageHashUtils for bytes32;
 
-    /// @dev A struct describing the sale configuration.
+    /*//////////////////////////////////////////////////////////////////////////
+                                 STATE VARIABLES
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @notice Struct containing the sale configuration
+    /// @dev Stores general sale parameters internally
     LegionSaleConfiguration internal saleConfig;
 
-    /// @dev A struct describing the sale addresses configuration.
+    /// @notice Struct containing the sale addresses configuration
+    /// @dev Stores address-related settings internally
     LegionSaleAddressConfiguration internal addressConfig;
 
-    /// @dev A struct describing the sale status.
+    /// @notice Struct tracking the current sale status
+    /// @dev Maintains runtime state of the sale internally
     LegionSaleStatus internal saleStatus;
 
-    /// @dev Mapping of investor address to investor position.
+    /// @notice Mapping of investor addresses to their positions
+    /// @dev Tracks investor data internally
     mapping(address investorAddress => InvestorPosition investorPosition) internal investorPositions;
 
+    /*//////////////////////////////////////////////////////////////////////////
+                                   MODIFIERS
+    //////////////////////////////////////////////////////////////////////////*/
+
     /**
-     * @notice Throws if called by any account other than Legion.
+     * @notice Restricts function access to the Legion address only
+     * @dev Reverts if caller is not the configured Legion bouncer
      */
     modifier onlyLegion() {
         if (msg.sender != addressConfig.legionBouncer) revert Errors.NotCalledByLegion();
@@ -61,7 +77,8 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
     }
 
     /**
-     * @notice Throws if called by any account other than the Project.
+     * @notice Restricts function access to the Project admin only
+     * @dev Reverts if caller is not the configured project admin
      */
     modifier onlyProject() {
         if (msg.sender != addressConfig.projectAdmin) revert Errors.NotCalledByProject();
@@ -69,7 +86,8 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
     }
 
     /**
-     * @notice Throws if called by any account other than Legion or the Project.
+     * @notice Restricts function access to either Legion or Project admin
+     * @dev Reverts if caller is neither project admin nor Legion bouncer
      */
     modifier onlyLegionOrProject() {
         if (msg.sender != addressConfig.projectAdmin && msg.sender != addressConfig.legionBouncer) {
@@ -79,23 +97,34 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
     }
 
     /**
-     * @notice Throws when method is called and the `askToken` is unavailable.
+     * @notice Ensures the ask token is available before execution
+     * @dev Reverts if askToken address is not set
      */
     modifier askTokenAvailable() {
         if (addressConfig.askToken == address(0)) revert Errors.AskTokenUnavailable();
         _;
     }
 
+    /*//////////////////////////////////////////////////////////////////////////
+                                   CONSTRUCTOR
+    //////////////////////////////////////////////////////////////////////////*/
+
     /**
-     * @notice LegionSale constructor.
+     * @notice Constructor for LegionSale
+     * @dev Disables initializers to prevent uninitialized deployment
      */
     constructor() {
         // Disable initialization
         _disableInitializers();
     }
 
+    /*//////////////////////////////////////////////////////////////////////////
+                              EXTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
     /**
-     * @notice Request a refund from the sale during the applicable time window.
+     * @notice Requests a refund from the sale during the refund window
+     * @dev Virtual function to process refunds; transfers capital back to investor
      */
     function refund() external virtual whenNotPaused {
         // Verify that the refund period is not over
@@ -130,9 +159,8 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
     }
 
     /**
-     * @notice Withdraw raised capital from the sale contract.
-     *
-     * @dev Can be called only by the Project admin address.
+     * @notice Withdraws raised capital to the Project admin
+     * @dev Virtual function restricted to Project; handles capital and fees
      */
     function withdrawRaisedCapital() external virtual onlyProject whenNotPaused {
         // Verify that the refund period is over
@@ -160,10 +188,12 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         uint256 _totalCapitalRaised = saleStatus.totalCapitalRaised;
 
         // Calculate Legion Fee
-        uint256 _legionFee = (saleConfig.legionFeeOnCapitalRaisedBps * _totalCapitalRaised) / 10_000;
+        uint256 _legionFee =
+            (saleConfig.legionFeeOnCapitalRaisedBps * _totalCapitalRaised) / Constants.BASIS_POINTS_DENOMINATOR;
 
         // Calculate Referrer Fee
-        uint256 _referrerFee = (saleConfig.referrerFeeOnCapitalRaisedBps * _totalCapitalRaised) / 10_000;
+        uint256 _referrerFee =
+            (saleConfig.referrerFeeOnCapitalRaisedBps * _totalCapitalRaised) / Constants.BASIS_POINTS_DENOMINATOR;
 
         // Emit CapitalWithdrawn
         emit CapitalWithdrawn(_totalCapitalRaised, msg.sender);
@@ -185,11 +215,11 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
     }
 
     /**
-     * @notice Claims the investor token allocation.
-     *
-     * @param amount The amount to be distributed.
-     * @param investorVestingConfig The vesting configuration for the investor.
-     * @param proof The merkle proof verification for claiming.
+     * @notice Claims token allocation for an investor
+     * @dev Virtual function handling vesting and immediate distribution
+     * @param amount Total amount of tokens to claim
+     * @param investorVestingConfig Vesting configuration for the investor
+     * @param proof Merkle proof for claim verification
      */
     function claimTokenAllocation(
         uint256 amount,
@@ -207,7 +237,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         // Verify that the vesting configuration is valid
         _verifyValidLinearVestingConfig(investorVestingConfig);
 
-        // Verify that the lockup period is over
+        // Verify that the refund period is over
         _verifyRefundPeriodIsOver();
 
         // Verify that sales results have been published
@@ -223,7 +253,8 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         position.hasSettled = true;
 
         // Calculate the amount to be distributed on claim
-        uint256 amountToDistributeOnClaim = amount * investorVestingConfig.tokenAllocationOnTGERate / 1e18;
+        uint256 amountToDistributeOnClaim =
+            amount * investorVestingConfig.tokenAllocationOnTGERate / Constants.TOKEN_ALLOCATION_RATE_DENOMINATOR;
 
         // Calculate the remaining amount to be vested
         uint256 amountToBeVested = amount - amountToDistributeOnClaim;
@@ -250,10 +281,10 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
     }
 
     /**
-     * @notice Withdraw excess capital back to the investor.
-     *
-     * @param amount The amount to be returned.
-     * @param proof The merkle proof verification for the return.
+     * @notice Withdraws excess invested capital back to the investor
+     * @dev Virtual function using Merkle proof for verification
+     * @param amount Amount of excess capital to withdraw
+     * @param proof Merkle proof for excess capital verification
      */
     function withdrawExcessInvestedCapital(uint256 amount, bytes32[] calldata proof) external virtual whenNotPaused {
         // Verify that the sale is not canceled
@@ -284,7 +315,8 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
     }
 
     /**
-     * @notice Releases tokens to the investor address.
+     * @notice Releases vested tokens to the investor
+     * @dev Virtual function interacting with vesting contract
      */
     function releaseVestedTokens() external virtual askTokenAvailable whenNotPaused {
         // Get the investor position details
@@ -294,17 +326,15 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         if (position.vestingAddress == address(0)) revert Errors.ZeroAddressProvided();
 
         // Release tokens to the investor account
-        ILegionLinearVesting(position.vestingAddress).release(addressConfig.askToken);
+        ILegionVesting(position.vestingAddress).release(addressConfig.askToken);
     }
 
     /**
-     * @notice Supply tokens once the sale results have been published.
-     *
-     * @dev Can be called only by the Project admin address.
-     *
-     * @param amount The token amount supplied by the project.
-     * @param legionFee The legion fee token amount supplied by the project.
-     * @param referrerFee The referrer fee token amount supplied by the project.
+     * @notice Supplies tokens for distribution post-sale
+     * @dev Virtual function restricted to Project; handles token and fee transfers
+     * @param amount Amount of tokens to supply
+     * @param legionFee Fee amount for Legion
+     * @param referrerFee Fee amount for referrer
      */
     function supplyTokens(
         uint256 amount,
@@ -330,10 +360,14 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         saleStatus.tokensSupplied = true;
 
         // Calculate and verify Legion Fee
-        if (legionFee != (saleConfig.legionFeeOnTokensSoldBps * amount) / 10_000) revert Errors.InvalidFeeAmount();
+        if (legionFee != (saleConfig.legionFeeOnTokensSoldBps * amount) / Constants.BASIS_POINTS_DENOMINATOR) {
+            revert Errors.InvalidFeeAmount();
+        }
 
-        // Calculate and verify Legion Fee
-        if (referrerFee != (saleConfig.referrerFeeOnTokensSoldBps * amount) / 10_000) revert Errors.InvalidFeeAmount();
+        // Calculate and verify Referrer Fee
+        if (referrerFee != (saleConfig.referrerFeeOnTokensSoldBps * amount) / Constants.BASIS_POINTS_DENOMINATOR) {
+            revert Errors.InvalidFeeAmount();
+        }
 
         // Emit TokensSuppliedForDistribution
         emit TokensSuppliedForDistribution(amount, legionFee, referrerFee);
@@ -351,17 +385,15 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         // Transfer the Referrer fee to the referrer fee receiver address
         if (referrerFee != 0) {
             SafeTransferLib.safeTransferFrom(
-                addressConfig.askToken, msg.sender, addressConfig.referrerFeeReceiver, legionFee
+                addressConfig.askToken, msg.sender, addressConfig.referrerFeeReceiver, referrerFee
             );
         }
     }
 
     /**
-     * @notice Publish merkle root for accepted capital.
-     *
-     * @dev Can be called only by the Legion admin address.
-     *
-     * @param merkleRoot The merkle root to verify against.
+     * @notice Sets the Merkle root for accepted capital
+     * @dev Virtual function restricted to Legion; updates verification data
+     * @param merkleRoot Merkle root for accepted capital verification
      */
     function setAcceptedCapital(bytes32 merkleRoot) external virtual onlyLegion {
         // Verify that the sale is not canceled
@@ -378,26 +410,8 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
     }
 
     /**
-     * @notice Cancels an ongoing sale.
-     *
-     * @dev Can be called only by the Project admin address.
-     */
-    function cancelSale() public virtual onlyProject whenNotPaused {
-        // Allow the Project to cancel the sale at any time until results are published
-        _verifySaleResultsNotPublished();
-
-        // Verify sale has not already been canceled
-        _verifySaleNotCanceled();
-
-        // Mark sale as canceled
-        saleStatus.isCanceled = true;
-
-        // Emit SaleCanceled
-        emit SaleCanceled();
-    }
-
-    /**
-     * @notice Withdraws back capital in case the sale has been canceled.
+     * @notice Withdraws invested capital if the sale is canceled
+     * @dev Virtual function to return capital post-cancellation
      */
     function withdrawInvestedCapitalIfCanceled() external virtual whenNotPaused {
         // Verify that the sale has been actually canceled
@@ -423,13 +437,11 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
     }
 
     /**
-     * @notice Withdraw tokens from the contract in case of emergency.
-     *
-     * @dev Can be called only by the Legion admin address.
-     *
-     * @param receiver The address of the receiver.
-     * @param token The address of the token to be withdrawn.
-     * @param amount The amount to be withdrawn.
+     * @notice Performs an emergency withdrawal of tokens
+     * @dev Virtual function restricted to Legion; used for safety measures
+     * @param receiver Address to receive tokens
+     * @param token Address of the token to withdraw
+     * @param amount Amount of tokens to withdraw
      */
     function emergencyWithdraw(address receiver, address token, uint256 amount) external virtual onlyLegion {
         // Emit EmergencyWithdraw
@@ -440,7 +452,8 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
     }
 
     /**
-     * @notice Syncs active Legion addresses from `LegionAddressRegistry.sol`.
+     * @notice Syncs Legion addresses from the address registry
+     * @dev Virtual function restricted to Legion; updates address configuration
      */
     function syncLegionAddresses() external virtual onlyLegion {
         // Sync the Legion addresses
@@ -448,7 +461,8 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
     }
 
     /**
-     * @notice Pauses the sale.
+     * @notice Pauses the sale
+     * @dev Virtual function restricted to Legion; halts operations
      */
     function pauseSale() external virtual onlyLegion {
         // Pause the sale
@@ -456,7 +470,8 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
     }
 
     /**
-     * @notice Unpauses the sale.
+     * @notice Unpauses the sale
+     * @dev Virtual function restricted to Legion; resumes operations
      */
     function unpauseSale() external virtual onlyLegion {
         // Unpause the sale
@@ -464,43 +479,43 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
     }
 
     /**
-     * @notice Returns the sale configuration.
+     * @notice Returns the current sale configuration
+     * @dev Virtual function providing read-only access to saleConfig
+     * @return LegionSaleConfiguration memory Struct containing sale configuration
      */
     function saleConfiguration() external view virtual returns (LegionSaleConfiguration memory) {
         return saleConfig;
     }
 
     /**
-     * @notice Returns the vesting configuration.
-     */
-    function vestingConfiguration() external view virtual returns (LegionVestingConfig memory) {
-        return vestingConfig;
-    }
-
-    /**
-     * @notice Returns the sale status details.
+     * @notice Returns the current sale status
+     * @dev Virtual function providing read-only access to saleStatus
+     * @return LegionSaleStatus memory Struct containing sale status
      */
     function saleStatusDetails() external view virtual returns (LegionSaleStatus memory) {
         return saleStatus;
     }
 
     /**
-     * @notice Returns an investor position.
-     *
-     * @param investorAddress The address of the investor.
+     * @notice Returns an investor's position details
+     * @dev Virtual function providing read-only access to investor position
+     * @param investorAddress Address of the investor
+     * @return InvestorPosition memory Struct containing investor position details
      */
     function investorPositionDetails(address investorAddress) external view virtual returns (InvestorPosition memory) {
         return investorPositions[investorAddress];
     }
 
     /**
-     * @notice Returns the investor vesting status.
-     *
-     * @param investor The address of the investor.
+     * @notice Returns an investor's vesting status
+     * @dev Queries vesting contract if applicable; returns status
+     * @param investor Address of the investor
+     * @return vestingStatus LegionInvestorVestingStatus memory Struct containing vesting status details
      */
     function investorVestingStatus(address investor)
         external
         view
+        virtual
         returns (LegionInvestorVestingStatus memory vestingStatus)
     {
         /// Get the investor position details
@@ -509,19 +524,47 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         // Return the investor vesting status
         investorVestingAddress != address(0)
             ? vestingStatus = LegionInvestorVestingStatus(
-                ILegionLinearVesting(investorVestingAddress).start(),
-                ILegionLinearVesting(investorVestingAddress).end(),
-                ILegionLinearVesting(investorVestingAddress).cliffEnd(),
-                ILegionLinearVesting(investorVestingAddress).duration(),
-                ILegionLinearVesting(investorVestingAddress).released(),
-                ILegionLinearVesting(investorVestingAddress).releasable(),
-                ILegionLinearVesting(investorVestingAddress).vestedAmount(addressConfig.askToken, uint64(block.timestamp))
+                ILegionVesting(investorVestingAddress).start(),
+                ILegionVesting(investorVestingAddress).end(),
+                ILegionVesting(investorVestingAddress).cliffEndTimestamp(),
+                ILegionVesting(investorVestingAddress).duration(),
+                ILegionVesting(investorVestingAddress).released(addressConfig.askToken),
+                ILegionVesting(investorVestingAddress).releasable(addressConfig.askToken),
+                ILegionVesting(investorVestingAddress).vestedAmount(addressConfig.askToken, uint64(block.timestamp))
             )
             : vestingStatus;
     }
 
+    /*//////////////////////////////////////////////////////////////////////////
+                               PUBLIC FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
     /**
-     * @notice Sets the sale and vesting params.
+     * @notice Cancels the ongoing sale
+     * @dev Virtual function restricted to Project; allows cancellation before results
+     */
+    function cancelSale() public virtual onlyProject whenNotPaused {
+        // Allow the Project to cancel the sale at any time until results are published
+        _verifySaleResultsNotPublished();
+
+        // Verify sale has not already been canceled
+        _verifySaleNotCanceled();
+
+        // Mark sale as canceled
+        saleStatus.isCanceled = true;
+
+        // Emit SaleCanceled
+        emit SaleCanceled();
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                              INTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /**
+     * @notice Sets the sale parameters during initialization
+     * @dev Virtual function to configure sale; restricted to initialization
+     * @param saleInitParams Calldata struct with initialization parameters
      */
     function _setLegionSaleConfig(LegionSaleInitializationParams calldata saleInitParams)
         internal
@@ -550,7 +593,8 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
     }
 
     /**
-     * @notice Sync the Legion addresses from `LegionAddressRegistry`.
+     * @notice Syncs Legion addresses from the address registry
+     * @dev Virtual function updating address configuration internally
      */
     function _syncLegionAddresses() internal virtual {
         // Cache Legion addresses from `LegionAddressRegistry`
@@ -573,12 +617,12 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
     }
 
     /**
-     * @notice Verify if an investor is eligible to claim tokens allocated from the sale.
-     *
-     * @param _investor The address of the investor.
-     * @param _amount The amount to claim.
-     * @param investorVestingConfig The vesting configuration for the investor.
-     * @param _proof The Merkle proof that the investor is part of the whitelist.
+     * @notice Verifies investor eligibility to claim token allocation
+     * @dev Virtual function using Merkle proof for verification
+     * @param _investor Address of the investor
+     * @param _amount Amount of tokens to claim
+     * @param investorVestingConfig Vesting configuration for the investor
+     * @param _proof Merkle proof for claim verification
      */
     function _verifyCanClaimTokenAllocation(
         address _investor,
@@ -606,11 +650,11 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
     }
 
     /**
-     * @notice Verify if an investor is eligible to get excess capital back.
-     *
-     * @param _investor The address of the investor trying to participate.
-     * @param _amount The amount to claim.
-     * @param _proof The Merkle proof that the investor is part of the whitelist.
+     * @notice Verifies investor eligibility to claim excess capital
+     * @dev Virtual function using Merkle proof for verification
+     * @param _investor Address of the investor
+     * @param _amount Amount of excess capital to claim
+     * @param _proof Merkle proof for excess capital verification
      */
     function _verifyCanClaimExcessCapital(
         address _investor,
@@ -640,131 +684,9 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
     }
 
     /**
-     * @notice Verify that the amount invested is more than the minimum required.
-     *
-     * @param _amount The amount being invested.
-     */
-    function _verifyMinimumInvestAmount(uint256 _amount) internal view virtual {
-        if (_amount < saleConfig.minimumInvestAmount) revert Errors.InvalidInvestAmount(_amount);
-    }
-
-    /**
-     * @notice Verify that the sale has not ended.
-     */
-    function _verifySaleHasNotEnded() internal view virtual {
-        if (block.timestamp >= saleConfig.endTime) revert Errors.SaleHasEnded();
-    }
-
-    /**
-     * @notice Verify that the refund period is over.
-     */
-    function _verifyRefundPeriodIsOver() internal view virtual {
-        if (block.timestamp < saleConfig.refundEndTime) revert Errors.RefundPeriodIsNotOver();
-    }
-
-    /**
-     * @notice Verify that the refund period is not over.
-     */
-    function _verifyRefundPeriodIsNotOver() internal view virtual {
-        if (block.timestamp >= saleConfig.refundEndTime) revert Errors.RefundPeriodIsOver();
-    }
-
-    /**
-     * @notice Verify if sale results are published.
-     */
-    function _verifySaleResultsArePublished() internal view virtual {
-        if (saleStatus.totalTokensAllocated == 0) revert Errors.SaleResultsNotPublished();
-    }
-
-    /**
-     * @notice Verify if sale results are not published.
-     */
-    function _verifySaleResultsNotPublished() internal view virtual {
-        if (saleStatus.totalTokensAllocated != 0) revert Errors.SaleResultsAlreadyPublished();
-    }
-
-    /**
-     * @notice Verify if the project can supply tokens for distribution.
-     *
-     * @param _amount The amount to supply.
-     */
-    function _verifyCanSupplyTokens(uint256 _amount) internal view virtual {
-        // Revert if Legion has not set the total amount of tokens allocated for distribution
-        if (saleStatus.totalTokensAllocated == 0) revert Errors.TokensNotAllocated();
-
-        // Revert if the amount of tokens supplied is different than the amount set by Legion
-        if (_amount != saleStatus.totalTokensAllocated) revert Errors.InvalidTokenAmountSupplied(_amount);
-    }
-
-    /**
-     * @notice Verify if Legion can publish sale results.
-     */
-    function _verifyCanPublishSaleResults() internal view virtual {
-        if (saleStatus.totalTokensAllocated != 0) revert Errors.TokensAlreadyAllocated();
-    }
-
-    /**
-     * @notice Verify that the sale is not canceled.
-     */
-    function _verifySaleNotCanceled() internal view virtual {
-        if (saleStatus.isCanceled) revert Errors.SaleIsCanceled();
-    }
-
-    /**
-     * @notice Verify that the sale is canceled.
-     */
-    function _verifySaleIsCanceled() internal view virtual {
-        if (!saleStatus.isCanceled) revert Errors.SaleIsNotCanceled();
-    }
-
-    /**
-     * @notice Verify that the project has not supplied tokens to the sale.
-     */
-    function _verifyTokensNotSupplied() internal view virtual {
-        if (saleStatus.tokensSupplied) revert Errors.TokensAlreadySupplied();
-    }
-
-    /**
-     * @notice Verify that the project has supplied tokens to the sale.
-     */
-    function _verifyTokensSupplied() internal view virtual {
-        if (!saleStatus.tokensSupplied) revert Errors.TokensNotSupplied();
-    }
-
-    /**
-     * @notice Verify that the signature provided is signed by Legion.
-     *
-     * @param _signature The signature to verify.
-     */
-    function _verifyLegionSignature(bytes memory _signature) internal view virtual {
-        bytes32 _data = keccak256(abi.encodePacked(msg.sender, address(this), block.chainid)).toEthSignedMessageHash();
-        if (_data.recover(_signature) != addressConfig.legionSigner) revert Errors.InvalidSignature();
-    }
-
-    /**
-     * @notice Verify that the project can withdraw capital.
-     */
-    function _verifyCanWithdrawCapital() internal view virtual {
-        if (saleStatus.capitalWithdrawn) revert Errors.CapitalAlreadyWithdrawn();
-        if (saleStatus.totalCapitalRaised == 0) revert Errors.CapitalNotRaised();
-    }
-
-    /**
-     * @notice Verify that the investor has not received a refund.
-     */
-    function _verifyHasNotRefunded() internal view virtual {
-        if (investorPositions[msg.sender].hasRefunded) revert Errors.InvestorHasRefunded(msg.sender);
-    }
-
-    /**
-     * @notice Verify that the investor has not claimed excess capital.
-     */
-    function _verifyHasNotClaimedExcess() internal view virtual {
-        if (investorPositions[msg.sender].hasClaimedExcess) revert Errors.InvestorHasClaimedExcess(msg.sender);
-    }
-
-    /**
-     * @notice Verify the common sale configuration is valid.
+     * @notice Verifies the validity of sale initialization parameters
+     * @dev Virtual function checking configuration constraints
+     * @param saleInitParams Struct with initialization parameters
      */
     function _verifyValidInitParams(LegionSaleInitializationParams memory saleInitParams) internal view virtual {
         // Check for zero addresses provided
@@ -780,20 +702,151 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
             revert Errors.ZeroValueProvided();
         }
 
-        // Check if sale, refund and lockup periods are longer than allowed
-        if (
-            saleInitParams.salePeriodSeconds > Constants.THREE_MONTHS
-                || saleInitParams.refundPeriodSeconds > Constants.TWO_WEEKS
-        ) {
+        // Check if sale and refund periods are longer than allowed
+        if (saleInitParams.salePeriodSeconds > 12 weeks || saleInitParams.refundPeriodSeconds > 2 weeks) {
             revert Errors.InvalidPeriodConfig();
         }
 
-        // Check if sale, refund and lockup periods are shorter than allowed
-        if (
-            saleInitParams.salePeriodSeconds < Constants.ONE_HOUR
-                || saleInitParams.refundPeriodSeconds < Constants.ONE_HOUR
-        ) {
+        // Check if sale and refund periods are shorter than allowed
+        if (saleInitParams.salePeriodSeconds < 1 hours || saleInitParams.refundPeriodSeconds < 1 hours) {
             revert Errors.InvalidPeriodConfig();
         }
+    }
+
+    /**
+     * @notice Verifies that the invested amount meets the minimum requirement
+     * @dev Virtual function checking investment threshold
+     * @param _amount Amount being invested
+     */
+    function _verifyMinimumInvestAmount(uint256 _amount) internal view virtual {
+        if (_amount < saleConfig.minimumInvestAmount) revert Errors.InvalidInvestAmount(_amount);
+    }
+
+    /**
+     * @notice Verifies that the sale has not ended
+     * @dev Virtual function checking sale end time
+     */
+    function _verifySaleHasNotEnded() internal view virtual {
+        if (block.timestamp >= saleConfig.endTime) revert Errors.SaleHasEnded();
+    }
+
+    /**
+     * @notice Verifies that the refund period is over
+     * @dev Virtual function checking refund window
+     */
+    function _verifyRefundPeriodIsOver() internal view virtual {
+        if (block.timestamp < saleConfig.refundEndTime) revert Errors.RefundPeriodIsNotOver();
+    }
+
+    /**
+     * @notice Verifies that the refund period is not over
+     * @dev Virtual function checking refund window
+     */
+    function _verifyRefundPeriodIsNotOver() internal view virtual {
+        if (block.timestamp >= saleConfig.refundEndTime) revert Errors.RefundPeriodIsOver();
+    }
+
+    /**
+     * @notice Verifies that sale results are published
+     * @dev Virtual function checking token allocation status
+     */
+    function _verifySaleResultsArePublished() internal view virtual {
+        if (saleStatus.totalTokensAllocated == 0) revert Errors.SaleResultsNotPublished();
+    }
+
+    /**
+     * @notice Verifies that sale results are not published
+     * @dev Virtual function checking token allocation status
+     */
+    function _verifySaleResultsNotPublished() internal view virtual {
+        if (saleStatus.totalTokensAllocated != 0) revert Errors.SaleResultsAlreadyPublished();
+    }
+
+    /**
+     * @notice Verifies conditions for supplying tokens
+     * @dev Virtual function ensuring token supply validity
+     * @param _amount Amount of tokens to supply
+     */
+    function _verifyCanSupplyTokens(uint256 _amount) internal view virtual {
+        // Revert if Legion has not set the total amount of tokens allocated for distribution
+        if (saleStatus.totalTokensAllocated == 0) revert Errors.TokensNotAllocated();
+
+        // Revert if the amount of tokens supplied is different than the amount set by Legion
+        if (_amount != saleStatus.totalTokensAllocated) revert Errors.InvalidTokenAmountSupplied(_amount);
+    }
+
+    /**
+     * @notice Verifies conditions for publishing sale results
+     * @dev Virtual function ensuring results can be set
+     */
+    function _verifyCanPublishSaleResults() internal view virtual {
+        if (saleStatus.totalTokensAllocated != 0) revert Errors.TokensAlreadyAllocated();
+    }
+
+    /**
+     * @notice Verifies that the sale is not canceled
+     * @dev Virtual function checking cancellation status
+     */
+    function _verifySaleNotCanceled() internal view virtual {
+        if (saleStatus.isCanceled) revert Errors.SaleIsCanceled();
+    }
+
+    /**
+     * @notice Verifies that the sale is canceled
+     * @dev Virtual function checking cancellation status
+     */
+    function _verifySaleIsCanceled() internal view virtual {
+        if (!saleStatus.isCanceled) revert Errors.SaleIsNotCanceled();
+    }
+
+    /**
+     * @notice Verifies that tokens have not been supplied
+     * @dev Virtual function checking token supply status
+     */
+    function _verifyTokensNotSupplied() internal view virtual {
+        if (saleStatus.tokensSupplied) revert Errors.TokensAlreadySupplied();
+    }
+
+    /**
+     * @notice Verifies that tokens have been supplied
+     * @dev Virtual function checking token supply status
+     */
+    function _verifyTokensSupplied() internal view virtual {
+        if (!saleStatus.tokensSupplied) revert Errors.TokensNotSupplied();
+    }
+
+    /**
+     * @notice Verifies that a signature is from Legion
+     * @dev Virtual function validating signature authenticity
+     * @param _signature Signature to verify
+     */
+    function _verifyLegionSignature(bytes memory _signature) internal view virtual {
+        bytes32 _data = keccak256(abi.encodePacked(msg.sender, address(this), block.chainid)).toEthSignedMessageHash();
+        if (_data.recover(_signature) != addressConfig.legionSigner) revert Errors.InvalidSignature();
+    }
+
+    /**
+     * @notice Verifies conditions for withdrawing capital
+     * @dev Virtual function ensuring withdrawal eligibility
+     */
+    function _verifyCanWithdrawCapital() internal view virtual {
+        if (saleStatus.capitalWithdrawn) revert Errors.CapitalAlreadyWithdrawn();
+        if (saleStatus.totalCapitalRaised == 0) revert Errors.CapitalNotRaised();
+    }
+
+    /**
+     * @notice Verifies that the investor has not refunded
+     * @dev Virtual function checking refund status
+     */
+    function _verifyHasNotRefunded() internal view virtual {
+        if (investorPositions[msg.sender].hasRefunded) revert Errors.InvestorHasRefunded(msg.sender);
+    }
+
+    /**
+     * @notice Verifies that the investor has not claimed excess capital
+     * @dev Virtual function checking excess claim status
+     */
+    function _verifyHasNotClaimedExcess() internal view virtual {
+        if (investorPositions[msg.sender].hasClaimedExcess) revert Errors.InvestorHasClaimedExcess(msg.sender);
     }
 }
