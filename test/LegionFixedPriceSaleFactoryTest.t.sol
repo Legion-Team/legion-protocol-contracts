@@ -4,48 +4,89 @@ pragma solidity 0.8.29;
 import { Ownable } from "@solady/src/auth/Ownable.sol";
 import { Test, console2, Vm } from "forge-std/Test.sol";
 
-import { ECIES, Point } from "../src/lib/ECIES.sol";
-import { Errors } from "../src/utils/Errors.sol";
 import { Constants } from "../src/utils/Constants.sol";
-import { ILegionSale } from "../src/interfaces/sales/ILegionSale.sol";
+import { Errors } from "../src/utils/Errors.sol";
+
 import { ILegionFixedPriceSale } from "../src/interfaces/sales/ILegionFixedPriceSale.sol";
+import { ILegionSale } from "../src/interfaces/sales/ILegionSale.sol";
 import { ILegionVestingManager } from "../src/interfaces/vesting/ILegionVestingManager.sol";
+
 import { LegionAddressRegistry } from "../src/registries/LegionAddressRegistry.sol";
 import { LegionFixedPriceSale } from "../src/sales/LegionFixedPriceSale.sol";
 import { LegionFixedPriceSaleFactory } from "../src/factories/LegionFixedPriceSaleFactory.sol";
 import { LegionVestingFactory } from "../src/factories/LegionVestingFactory.sol";
 import { MockToken } from "../src/mocks/MockToken.sol";
 
+/**
+ * @title Legion Fixed Price Sale Factory Test
+ * @author Legion
+ * @notice Test suite for the LegionFixedPriceSaleFactory contract
+ * @dev Inherits from Forge's Test contract to access testing utilities
+ */
 contract LegionFixedPriceSaleFactoryTest is Test {
+    /*//////////////////////////////////////////////////////////////////////////
+                                   STRUCTS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @notice Struct to hold overall sale test configuration
     struct SaleTestConfig {
         FixedPriceSaleTestConfig fixedPriceSaleTestConfig;
     }
 
+    /// @notice Struct to hold fixed price sale-specific test configuration
     struct FixedPriceSaleTestConfig {
         ILegionSale.LegionSaleInitializationParams saleInitParams;
         ILegionFixedPriceSale.FixedPriceSaleInitializationParams fixedPriceSaleInitParams;
     }
 
+    /*//////////////////////////////////////////////////////////////////////////
+                                 STATE VARIABLES
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @notice Configuration for the sale test
     SaleTestConfig testConfig;
 
-    LegionAddressRegistry legionAddressRegistry;
-    LegionFixedPriceSaleFactory legionSaleFactory;
-    LegionVestingFactory legionVestingFactory;
+    /// @notice Instance of the LegionAddressRegistry contract for address management
+    LegionAddressRegistry public legionAddressRegistry;
 
-    MockToken bidToken;
-    MockToken askToken;
+    /// @notice Instance of the LegionFixedPriceSaleFactory contract under test
+    LegionFixedPriceSaleFactory public legionSaleFactory;
 
+    /// @notice Instance of the LegionVestingFactory contract for vesting management
+    LegionVestingFactory public legionVestingFactory;
+
+    /// @notice Mock token used as the bid token (e.g., USDC)
+    MockToken public bidToken;
+
+    /// @notice Mock token used as the ask token (e.g., LFG)
+    MockToken public askToken;
+
+    /// @notice Address of the deployed LegionFixedPriceSale instance
     address legionFixedPriceSaleInstance;
 
+    /// @notice Address representing the Legion bouncer (factory owner)
     address legionBouncer = address(0x01);
+
+    /// @notice Address representing the project admin
     address projectAdmin = address(0x02);
+
+    /// @notice Address representing a non-owner account
     address nonOwner = address(0x03);
+
+    /// @notice Address representing the Legion fee receiver
     address legionFeeReceiver = address(0x04);
 
+    /// @notice Private key for generating the Legion signer address
     uint256 legionSignerPK = 1234;
 
-    Point PUBLIC_KEY = ECIES.calcPubKey(Point(1, 2), 69);
+    /*//////////////////////////////////////////////////////////////////////////
+                                  SETUP FUNCTION
+    //////////////////////////////////////////////////////////////////////////*/
 
+    /**
+     * @notice Sets up the test environment by deploying necessary contracts
+     * @dev Deploys factory, vesting factory, registry, and mock tokens; configures registry
+     */
     function setUp() public {
         legionSaleFactory = new LegionFixedPriceSaleFactory(legionBouncer);
         legionVestingFactory = new LegionVestingFactory();
@@ -55,8 +96,15 @@ contract LegionFixedPriceSaleFactoryTest is Test {
         prepareLegionAddressRegistry();
     }
 
+    /*//////////////////////////////////////////////////////////////////////////
+                               HELPER FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
     /**
-     * @notice Helper method: Set the fixed price sale configuration
+     * @notice Configures the fixed price sale parameters for testing
+     * @dev Sets the sale initialization parameters in the testConfig struct
+     * @param _saleInitParams General sale initialization parameters
+     * @param _fixedPriceSaleInitParams Fixed price sale-specific initialization parameters
      */
     function setFixedPriceSaleParams(
         ILegionSale.LegionSaleInitializationParams memory _saleInitParams,
@@ -69,7 +117,8 @@ contract LegionFixedPriceSaleFactoryTest is Test {
     }
 
     /**
-     * @notice Helper method: Create a fixed price sale
+     * @notice Prepares and creates a LegionFixedPriceSale instance for testing
+     * @dev Sets default parameters and deploys a sale instance as the legionBouncer
      */
     function prepareCreateLegionFixedPriceSale() public {
         setFixedPriceSaleParams(
@@ -83,9 +132,9 @@ contract LegionFixedPriceSaleFactoryTest is Test {
                 minimumInvestAmount: 1e18,
                 bidToken: address(bidToken),
                 askToken: address(askToken),
-                projectAdmin: address(projectAdmin),
+                projectAdmin: projectAdmin,
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: address(nonOwner)
+                referrerFeeReceiver: nonOwner
             }),
             ILegionFixedPriceSale.FixedPriceSaleInitializationParams({
                 prefundPeriodSeconds: 1 hours,
@@ -102,7 +151,8 @@ contract LegionFixedPriceSaleFactoryTest is Test {
     }
 
     /**
-     * @notice Helper method: Prepare LegionAddressRegistry
+     * @notice Configures the LegionAddressRegistry with necessary addresses
+     * @dev Sets bouncer, signer, fee receiver, and vesting factory addresses as legionBouncer
      */
     function prepareLegionAddressRegistry() public {
         vm.startPrank(legionBouncer);
@@ -115,32 +165,37 @@ contract LegionFixedPriceSaleFactoryTest is Test {
         vm.stopPrank();
     }
 
-    /* ========== INITIALIZATION TESTS ========== */
+    /*//////////////////////////////////////////////////////////////////////////
+                                INITIALIZATION TESTS
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
-     * @notice Test case: Verify that the factory contract initializes with the correct owner
+     * @notice Tests that the factory initializes with the correct owner
+     * @dev Verifies that the owner of the factory is set to legionBouncer
      */
     function test_transferOwnership_successfullySetsTheCorrectOwner() public view {
-        // Assert
+        // Expect
         assertEq(legionSaleFactory.owner(), legionBouncer);
     }
 
     /**
-     * @notice Test case: Successfully create a new LegionFixedPriceSale instance by the owner
+     * @notice Tests that a new LegionFixedPriceSale instance is successfully created by the owner
+     * @dev Deploys a sale instance and checks that the address is non-zero
      */
-    function test_createFixedPriceSale_successullyCreatesFixedPriceSale() public {
-        // Arrange & Act
+    function test_createFixedPriceSale_successfullyCreatesFixedPriceSale() public {
+        // Arrange
         prepareCreateLegionFixedPriceSale();
 
-        // Assert
+        // Expect
         assertNotEq(legionFixedPriceSaleInstance, address(0));
     }
 
     /**
-     * @notice Test case: Attempt to create a new LegionFixedPriceSale instance by a non-owner account
+     * @notice Tests that createFixedPriceSale reverts when called by a non-owner
+     * @dev Expects an Unauthorized revert from the Ownable contract
      */
     function test_createFixedPriceSale_revertsIfNotCalledByOwner() public {
-        // Assert
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Ownable.Unauthorized.selector));
 
         // Act
@@ -152,7 +207,8 @@ contract LegionFixedPriceSaleFactoryTest is Test {
     }
 
     /**
-     * @notice Test case: Attempt to initialize with zero address configurations
+     * @notice Tests that createFixedPriceSale reverts with zero address configurations
+     * @dev Sets zero addresses and expects a ZeroAddressProvided revert
      */
     function test_createFixedPriceSale_revertsWithZeroAddressProvided() public {
         // Arrange
@@ -178,7 +234,7 @@ contract LegionFixedPriceSaleFactoryTest is Test {
             })
         );
 
-        // Assert
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.ZeroAddressProvided.selector));
 
         // Act
@@ -190,10 +246,11 @@ contract LegionFixedPriceSaleFactoryTest is Test {
     }
 
     /**
-     * @notice Test case: Attempt to initialize with zero value configurations
+     * @notice Tests that createFixedPriceSale reverts with uninitialized (zero) configurations
+     * @dev Uses uninitialized testConfig and expects a ZeroValueProvided revert
      */
     function test_createFixedPriceSale_revertsWithZeroValueProvided() public {
-        // Assert
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.ZeroValueProvided.selector));
 
         // Act
@@ -205,18 +262,20 @@ contract LegionFixedPriceSaleFactoryTest is Test {
     }
 
     /**
-     * @notice Test case: Verify LegionFixedPriceSale instance initializes with correct configuration
+     * @notice Tests that a LegionFixedPriceSale instance is created with correct configuration
+     * @dev Verifies token price and vesting factory address after deployment
      */
     function test_createFixedPriceSale_successfullyCreatedWithCorrectConfiguration() public {
-        // Arrange & Act
+        // Arrange
         prepareCreateLegionFixedPriceSale();
 
+        // Act
         ILegionVestingManager.LegionVestingConfig memory _vestingConfig =
             LegionFixedPriceSale(payable(legionFixedPriceSaleInstance)).vestingConfiguration();
         ILegionFixedPriceSale.FixedPriceSaleConfiguration memory _fixedPriceSaleConfig =
             LegionFixedPriceSale(payable(legionFixedPriceSaleInstance)).fixedPriceSaleConfiguration();
 
-        // Assert
+        // Expect
         assertEq(_fixedPriceSaleConfig.tokenPrice, 1e18);
         assertEq(_vestingConfig.vestingFactory, address(legionVestingFactory));
     }

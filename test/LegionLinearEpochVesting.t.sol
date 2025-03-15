@@ -1,55 +1,86 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { VestingWalletUpgradeable } from "@openzeppelin/contracts-upgradeable/finance/VestingWalletUpgradeable.sol";
-import { Test, console2, Vm } from "forge-std/Test.sol";
+import { Test, Vm, console2 } from "forge-std/Test.sol";
 
-import { Errors } from "../src/utils/Errors.sol";
 import { Constants } from "../src/utils/Constants.sol";
+import { Errors } from "../src/utils/Errors.sol";
+
 import { ILegionVestingFactory } from "../src/interfaces/factories/ILegionVestingFactory.sol";
+
 import { LegionLinearEpochVesting } from "../src/vesting/LegionLinearEpochVesting.sol";
 import { LegionVestingFactory } from "../src/factories/LegionVestingFactory.sol";
 import { MockToken } from "../src/mocks/MockToken.sol";
 
 /**
  * @title Legion Linear Epoch Vesting Test
- * @notice Test suite for the Legion Linear Vesting contract
+ * @author Legion
+ * @notice Test suite for the LegionLinearEpochVesting contract
+ * @dev Inherits from Forge's Test contract to access testing utilities
  */
 contract LegionLinearEpochVestingTest is Test {
+    /*//////////////////////////////////////////////////////////////////////////
+                                 STATE VARIABLES
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @notice Template instance of the LegionLinearEpochVesting contract for cloning
     LegionLinearEpochVesting public linearVestingTemplate;
+
+    /// @notice Factory contract for creating vesting instances
     LegionVestingFactory public legionVestingFactory;
 
+    /// @notice Mock ERC20 token used for vesting tests
     MockToken public askToken;
 
+    /// @notice Address of the deployed vesting contract instance
     address public legionVestingInstance;
 
-    address legionAdmin = address(0x01);
-    address allowedDeployer = address(0x02);
-    address nonOwner = address(0x03);
-    address vestingOwner = address(0x04);
+    /// @notice Address representing a non-owner account, set to 0x03
+    address nonOwner = address(0x02);
 
+    /// @notice Address representing the vesting contract owner, set to 0x04
+    address vestingOwner = address(0x03);
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                  SETUP FUNCTION
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /**
+     * @notice Sets up the test environment by deploying necessary contracts
+     * @dev Initializes the vesting template, factory, and mock token for testing
+     */
     function setUp() public {
         linearVestingTemplate = new LegionLinearEpochVesting();
         legionVestingFactory = new LegionVestingFactory();
         askToken = new MockToken("LFG Coin", "LFG", 18);
     }
 
+    /*//////////////////////////////////////////////////////////////////////////
+                                HELPER FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
     /**
-     * @notice Helper method: Create and initialize a Legion linear vesting schedule instance
+     * @notice Creates and initializes a LegionLinearEpochVesting instance
+     * @dev Sets up a vesting schedule with predefined parameters and funds it
      */
     function prepareCreateLegionLinearEpochVesting() public {
         legionVestingInstance = legionVestingFactory.createLinearEpochVesting(
             vestingOwner, uint64(block.timestamp), 2_678_400 * 12, uint64(1 hours), 2_678_400, 12
         );
-        //console2.log(block.timestamp);
         vm.deal(legionVestingInstance, 1200 ether);
-        MockToken(askToken).mint(legionVestingInstance, 1200 * 1e18);
+        askToken.mint(legionVestingInstance, 1200 * 1e18);
     }
 
+    /*//////////////////////////////////////////////////////////////////////////
+                            INITIALIZATION TESTS
+    //////////////////////////////////////////////////////////////////////////*/
+
     /**
-     * @notice Test case: Successfully initialize contract with valid parameters
+     * @notice Tests successful deployment and initialization with valid parameters
+     * @dev Verifies ownership and vesting parameters post-initialization
      */
     function test_createLinearVesting_successfullyDeployWithValidParameters() public {
         // Arrange & Act
@@ -67,14 +98,15 @@ contract LegionLinearEpochVestingTest is Test {
     }
 
     /**
-     * @dev Test case: Attempt to re-initialize an already initialized contract
+     * @notice Tests that re-initializing an already initialized contract reverts
+     * @dev Expects InvalidInitialization revert from Initializable due to proxy initialization lock
      */
     function test_initialize_revertsIfAlreadyInitialized() public {
         // Arrange
         prepareCreateLegionLinearEpochVesting();
 
-        // Assert
-        vm.expectRevert();
+        // Expect revert (generic revert due to Initializable's check)
+        vm.expectRevert(abi.encodeWithSelector(Initializable.InvalidInitialization.selector));
 
         // Act
         vm.prank(nonOwner);
@@ -84,13 +116,14 @@ contract LegionLinearEpochVestingTest is Test {
     }
 
     /**
-     * @dev Test case: Attempt to initialize the implementation contract
+     * @notice Tests that initializing the implementation contract reverts
+     * @dev Expects InvalidInitialization revert from Initializable
      */
     function test_initialize_revertInitializeImplementation() public {
         // Arrange
         address linearVestingImplementation = legionVestingFactory.linearEpochVestingTemplate();
 
-        // Assert
+        // Expect revert with InvalidInitialization error
         vm.expectRevert(abi.encodeWithSelector(Initializable.InvalidInitialization.selector));
 
         // Act
@@ -100,10 +133,11 @@ contract LegionLinearEpochVestingTest is Test {
     }
 
     /**
-     * @dev Test case: Attempt to initialize the template contract
+     * @notice Tests that initializing the template contract reverts
+     * @dev Expects InvalidInitialization revert from Initializable
      */
     function test_initialize_revertInitializeTemplate() public {
-        // Assert
+        // Expect revert with InvalidInitialization error
         vm.expectRevert(abi.encodeWithSelector(Initializable.InvalidInitialization.selector));
 
         // Act
@@ -112,14 +146,19 @@ contract LegionLinearEpochVestingTest is Test {
         );
     }
 
+    /*//////////////////////////////////////////////////////////////////////////
+                        TOKEN RELEASE TESTS
+    //////////////////////////////////////////////////////////////////////////*/
+
     /**
-     * @dev Test case: Attempt to release tokens before cliff period ends
+     * @notice Tests that releasing tokens before cliff period ends reverts
+     * @dev Expects CliffNotEnded revert with current timestamp
      */
-    function test_release_revertsIfCliffHasNotEndedToken() public {
+    function test_release_revertsIfCliffHasNotEnded() public {
         // Arrange
         prepareCreateLegionLinearEpochVesting();
 
-        // Assert
+        // Expect revert with CliffNotEnded error
         vm.expectRevert(abi.encodeWithSelector(Errors.CliffNotEnded.selector, block.timestamp));
 
         // Act
@@ -127,7 +166,8 @@ contract LegionLinearEpochVestingTest is Test {
     }
 
     /**
-     * @notice Test case: Successfully release tokens after cliff period ends
+     * @notice Tests successful token release after cliff period ends
+     * @dev Expects ERC20Released event after advancing to epoch 2
      */
     function test_release_successfullyReleaseTokensAfterCliffHasEnded() public {
         // Arrange
@@ -136,15 +176,17 @@ contract LegionLinearEpochVestingTest is Test {
         // Move to EPOCH 2
         vm.warp(block.timestamp + 2_678_400 + 1);
 
-        // Assert
+        // Expect event emission
         vm.expectEmit();
         emit VestingWalletUpgradeable.ERC20Released(address(askToken), 100 * 1e18);
+
         // Act
         LegionLinearEpochVesting(payable(legionVestingInstance)).release(address(askToken));
     }
 
     /**
-     * @notice Test case: Successfully release tokens after all epochs have elapsed
+     * @notice Tests successful token release after all epochs have elapsed
+     * @dev Expects ERC20Released event with full amount after epoch 13
      */
     function test_release_successfullyReleaseTokensAfterAllEpochsElapsed() public {
         // Arrange
@@ -153,9 +195,10 @@ contract LegionLinearEpochVestingTest is Test {
         // Move to EPOCH 13
         vm.warp(block.timestamp + 2_678_400 * 12 + 1);
 
-        // Assert
+        // Expect event emission
         vm.expectEmit();
         emit VestingWalletUpgradeable.ERC20Released(address(askToken), 1200 * 1e18);
+
         // Act
         LegionLinearEpochVesting(payable(legionVestingInstance)).release(address(askToken));
     }
