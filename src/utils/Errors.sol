@@ -99,8 +99,23 @@ library Errors {
     /**
      * @notice Thrown when the vesting configuration is invalid
      * @dev Indicates vesting parameters (e.g., duration, rate) are incorrect
+     * @param vestingType Type of vesting schedule (linear or epoch-based)
+     * @param vestingStartTimestamp Unix timestamp when vesting starts
+     * @param vestingDurationSeconds Duration of the vesting schedule in seconds
+     * @param vestingCliffDurationSeconds Duration of the cliff period in seconds
+     * @param epochDurationSeconds Duration of each epoch in seconds
+     * @param numberOfEpochs Total number of epochs in the vesting schedule
+     * @param tokenAllocationOnTGERate Token allocation released at TGE (18 decimals precision)
      */
-    error InvalidVestingConfig();
+    error InvalidVestingConfig(
+        uint8 vestingType,
+        uint256 vestingStartTimestamp,
+        uint256 vestingDurationSeconds,
+        uint256 vestingCliffDurationSeconds,
+        uint256 epochDurationSeconds,
+        uint256 numberOfEpochs,
+        uint256 tokenAllocationOnTGERate
+    );
 
     /**
      * @notice Thrown when an invalid amount of tokens is requested for withdrawal

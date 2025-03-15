@@ -161,21 +161,43 @@ abstract contract LegionVestingManager is ILegionVestingManager {
         /// Check if vesting duration is no more than 10 years, if vesting cliff duration is not more than vesting
         /// duration or the token allocation on TGE rate is no more than 100%
         if (
-            investorVestingConfig.vestingDurationSeconds > 520 weeks
+            investorVestingConfig.vestingStartTime > (Constants.MAX_VESTING_LOCKUP_SECONDS + block.timestamp)
+                || investorVestingConfig.vestingDurationSeconds > Constants.MAX_VESTING_DURATION_SECONDS
                 || investorVestingConfig.vestingCliffDurationSeconds > investorVestingConfig.vestingDurationSeconds
                 || investorVestingConfig.tokenAllocationOnTGERate > Constants.TOKEN_ALLOCATION_RATE_DENOMINATOR
-        ) revert Errors.InvalidVestingConfig();
+        ) {
+            revert Errors.InvalidVestingConfig(
+                uint8(investorVestingConfig.vestingType),
+                investorVestingConfig.vestingStartTime,
+                investorVestingConfig.vestingDurationSeconds,
+                investorVestingConfig.vestingCliffDurationSeconds,
+                investorVestingConfig.epochDurationSeconds,
+                investorVestingConfig.numberOfEpochs,
+                investorVestingConfig.tokenAllocationOnTGERate
+            );
+        }
 
         /// Check if vesting type is LEGION_LINEAR_EPOCH
         if (investorVestingConfig.vestingType == VestingType.LEGION_LINEAR_EPOCH) {
             /// Check if the number of epochs multiplied by the epoch duration is not more than 10 years
             /// Check if the number of epochs multiplied by the epoch duration is equal to the vesting duration
             if (
-                (investorVestingConfig.numberOfEpochs * investorVestingConfig.epochDurationSeconds) > 520 weeks
+                (investorVestingConfig.numberOfEpochs * investorVestingConfig.epochDurationSeconds)
+                    > Constants.MAX_VESTING_DURATION_SECONDS
                     || (investorVestingConfig.numberOfEpochs * investorVestingConfig.epochDurationSeconds)
                         != investorVestingConfig.vestingDurationSeconds
-                    || investorVestingConfig.epochDurationSeconds > 52 weeks
-            ) revert Errors.InvalidVestingConfig();
+                    || investorVestingConfig.epochDurationSeconds > Constants.MAX_EPOCH_DURATION_SECONDS
+            ) {
+                revert Errors.InvalidVestingConfig(
+                    uint8(investorVestingConfig.vestingType),
+                    investorVestingConfig.vestingStartTime,
+                    investorVestingConfig.vestingDurationSeconds,
+                    investorVestingConfig.vestingCliffDurationSeconds,
+                    investorVestingConfig.epochDurationSeconds,
+                    investorVestingConfig.numberOfEpochs,
+                    investorVestingConfig.tokenAllocationOnTGERate
+                );
+            }
         }
     }
 }

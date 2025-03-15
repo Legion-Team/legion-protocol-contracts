@@ -2349,7 +2349,18 @@ contract LegionPreLiquidSaleV1Test is Test {
         ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).supplyTokens(20_000 * 1e18, 500 * 1e18, 200 * 1e18);
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidVestingConfig.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Errors.InvalidVestingConfig.selector,
+                uint8(ILegionVestingManager.VestingType.LEGION_LINEAR),
+                Constants.MAX_VESTING_LOCKUP_SECONDS + block.timestamp + 1,
+                520 weeks + 1,
+                520 weeks + 2,
+                0,
+                0,
+                1e18 + 1
+            )
+        );
 
         // Act
         vm.prank(investor1);
@@ -2357,7 +2368,13 @@ contract LegionPreLiquidSaleV1Test is Test {
             uint256(10_000 * 1e6),
             uint256(5_000_000_000_000_000),
             ILegionVestingManager.LegionInvestorVestingConfig(
-                ILegionVestingManager.VestingType.LEGION_LINEAR, 0, 520 weeks + 1, 520 weeks + 2, 0, 0, 1e18 + 1
+                ILegionVestingManager.VestingType.LEGION_LINEAR,
+                Constants.MAX_VESTING_LOCKUP_SECONDS + block.timestamp + 1,
+                520 weeks + 1,
+                520 weeks + 2,
+                0,
+                0,
+                1e18 + 1
             ),
             signatureInv1Claim,
             vestingSignatureInv1
@@ -2395,7 +2412,18 @@ contract LegionPreLiquidSaleV1Test is Test {
         ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).supplyTokens(20_000 * 1e18, 500 * 1e18, 200 * 1e18);
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidVestingConfig.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Errors.InvalidVestingConfig.selector,
+                uint8(ILegionVestingManager.VestingType.LEGION_LINEAR_EPOCH),
+                0,
+                520 weeks - 1,
+                520 weeks - 2,
+                520 weeks + 1,
+                100,
+                1e17
+            )
+        );
 
         // Act
         vm.prank(investor2);
