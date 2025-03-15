@@ -218,8 +218,9 @@ library Errors {
     /**
      * @notice Thrown when capital is pledged during the pre-fund allocation period
      * @dev Indicates investment is attempted before the allowed period
+     * @param timestamp The current timestamp when the investment is attempted
      */
-    error PrefundAllocationPeriodNotEnded();
+    error PrefundAllocationPeriodNotEnded(uint256 timestamp);
 
     /**
      * @notice Thrown when the private key has already been published

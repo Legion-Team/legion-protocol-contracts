@@ -226,7 +226,7 @@ contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
      */
     function _verifyNotPrefundAllocationPeriod() private view {
         if (block.timestamp >= fixedPriceSaleConfig.prefundEndTime && block.timestamp < saleConfig.startTime) {
-            revert Errors.PrefundAllocationPeriodNotEnded();
+            revert Errors.PrefundAllocationPeriodNotEnded(block.timestamp);
         }
     }
 }

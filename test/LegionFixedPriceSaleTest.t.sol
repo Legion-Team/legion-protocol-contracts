@@ -633,7 +633,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(startTime() - 1);
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.PrefundAllocationPeriodNotEnded.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PrefundAllocationPeriodNotEnded.selector, (startTime() - 1)));
 
         vm.prank(investor1);
         ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);

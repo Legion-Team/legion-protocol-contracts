@@ -36,7 +36,7 @@ LegionFixedPriceSaleTest:test_invest_revertsIfAmountLessThanMinimum() (gas: 1664
 LegionFixedPriceSaleTest:test_invest_revertsIfInvalidSignature() (gas: 1662466)
 LegionFixedPriceSaleTest:test_invest_revertsIfInvestorHasClaimedExcessCapital() (gas: 1806161)
 LegionFixedPriceSaleTest:test_invest_revertsIfInvestorHasRefunded() (gas: 1705586)
-LegionFixedPriceSaleTest:test_invest_revertsIfPrefundAllocationPeriodNotEnded() (gas: 1666647)
+LegionFixedPriceSaleTest:test_invest_revertsIfPrefundAllocationPeriodNotEnded() (gas: 1671989)
 LegionFixedPriceSaleTest:test_invest_revertsIfSaleHasEnded() (gas: 1666844)
 LegionFixedPriceSaleTest:test_invest_revertsIfSaleIsCanceled() (gas: 1688526)
 LegionFixedPriceSaleTest:test_invest_successfullyEmitsCapitalInvestedNotPrefund() (gas: 1712557)
