@@ -92,8 +92,9 @@ library Errors {
      * @notice Thrown when an invalid amount of tokens is supplied by the project
      * @dev Indicates the supplied token amount does not match allocation
      * @param amount Amount of tokens supplied
+     * @param expectedAmount Expected token amount to be supplied
      */
-    error InvalidTokenAmountSupplied(uint256 amount);
+    error InvalidTokenAmountSupplied(uint256 amount, uint256 expectedAmount);
 
     /**
      * @notice Thrown when the vesting configuration is invalid

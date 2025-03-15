@@ -1406,7 +1406,9 @@ contract LegionPreLiquidSaleV1Test is Test {
         );
 
         // Expect revert with InvalidTokenAmountSupplied error
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidTokenAmountSupplied.selector, 19_000 * 1e18));
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.InvalidTokenAmountSupplied.selector, 19_000 * 1e18, 20_000 * 1e18)
+        );
 
         // Act
         vm.prank(projectAdmin);

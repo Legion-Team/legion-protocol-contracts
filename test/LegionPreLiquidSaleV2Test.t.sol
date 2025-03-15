@@ -1928,7 +1928,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         );
 
         // Assert: Expect revert due to incorrect token amount (9990 LFG instead of 4000 LFG)
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidTokenAmountSupplied.selector, 9990 * 1e18));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidTokenAmountSupplied.selector, 9990 * 1e18, 4000 * 1e18));
 
         // Act: Attempt to supply incorrect token amount
         vm.prank(projectAdmin);

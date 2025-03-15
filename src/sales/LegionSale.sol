@@ -772,7 +772,9 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         if (saleStatus.totalTokensAllocated == 0) revert Errors.TokensNotAllocated();
 
         // Revert if the amount of tokens supplied is different than the amount set by Legion
-        if (_amount != saleStatus.totalTokensAllocated) revert Errors.InvalidTokenAmountSupplied(_amount);
+        if (_amount != saleStatus.totalTokensAllocated) {
+            revert Errors.InvalidTokenAmountSupplied(_amount, saleStatus.totalTokensAllocated);
+        }
     }
 
     /**

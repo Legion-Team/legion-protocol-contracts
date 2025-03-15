@@ -1460,7 +1460,7 @@ contract LegionFixedPriceSaleTest is Test {
         );
 
         // Expect revert with InvalidTokenAmountSupplied error
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidTokenAmountSupplied.selector, 9990 * 1e18));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidTokenAmountSupplied.selector, 9990 * 1e18, 4000 * 1e18));
 
         // Act
         vm.prank(projectAdmin);
