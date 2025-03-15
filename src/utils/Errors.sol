@@ -19,281 +19,319 @@ pragma solidity 0.8.29;
 /**
  * @title Legion Errors Library
  * @author Legion
- * @notice A library used for storing errors shared across the Legion protocol
+ * @notice A library defining custom errors shared across the Legion Protocol
+ * @dev Provides reusable error types for consistent exception handling in contracts
  */
 library Errors {
     /**
-     * @notice Throws when tokens already settled by investor.
-     *
-     * @param investor The address of the investor trying to claim.
+     * @notice Thrown when an investor attempts to settle tokens already settled
+     * @dev Indicates the investor has already claimed their token allocation
+     * @param investor Address of the investor attempting to claim
      */
     error AlreadySettled(address investor);
 
     /**
-     * @notice Throws when excess capital has already been claimed by investor.
-     *
-     * @param investor The address of the investor trying to get excess capital back.
+     * @notice Thrown when an investor tries to claim excess capital already claimed
+     * @dev Indicates the investor has already withdrawn excess capital
+     * @param investor Address of the investor attempting to claim excess
      */
     error AlreadyClaimedExcess(address investor);
 
     /**
-     * @notice Throws when the `askToken` is unavailable.
+     * @notice Thrown when the ask token is not available
+     * @dev Indicates the ask token address is not set or invalid
      */
     error AskTokenUnavailable();
 
     /**
-     * @notice Throws when the ask tokens have not been supplied by the project.
+     * @notice Thrown when ask tokens have not been supplied by the project
+     * @dev Indicates the project has not provided tokens for distribution
      */
     error AskTokensNotSupplied();
 
     /**
-     * @notice Throws when canceling is locked.
+     * @notice Thrown when cancellation is locked
+     * @dev Indicates cancellation is prevented, typically during result publication
      */
     error CancelLocked();
 
     /**
-     * @notice Throws when canceling is not locked.
+     * @notice Thrown when cancellation is not locked
+     * @dev Indicates cancellation lock is required but not set
      */
     error CancelNotLocked();
 
     /**
-     * @notice Throws when an user tries to release tokens before the cliff period has ended.
-     *
-     * @param currentTimestamp The current block timestamp.
+     * @notice Thrown when attempting to release tokens before the cliff period ends
+     * @dev Indicates the vesting cliff has not yet been reached
+     * @param currentTimestamp Current block timestamp when the attempt was made
      */
     error CliffNotEnded(uint256 currentTimestamp);
 
     /**
-     * @notice Throws when capital has already been withdrawn by the Project.
+     * @notice Thrown when capital has already been withdrawn by the project
+     * @dev Indicates the project has already taken the raised capital
      */
     error CapitalAlreadyWithdrawn();
 
     /**
-     * @notice Throws when no capital has been raised.
+     * @notice Thrown when no capital has been raised
+     * @dev Indicates no capital is available for withdrawal
      */
     error CapitalNotRaised();
 
     /**
-     * @notice Throws when the investor is not flagged to have excess capital returned.
-     *
-     * @param investor The address of the investor.
+     * @notice Thrown when an investor is not eligible to withdraw excess capital
+     * @dev Indicates the investor is not flagged for excess capital return
+     * @param investor Address of the investor attempting to withdraw
      */
     error CannotWithdrawExcessInvestedCapital(address investor);
 
     /**
-     * @notice Throws when the claim amount is invalid.
+     * @notice Thrown when the token claim amount is invalid
+     * @dev Indicates the requested claim amount does not match expected values
      */
     error InvalidClaimAmount();
 
     /**
-     * @notice Throws when an invalid amount of tokens has been supplied by the project.
-     *
-     * @param amount The amount of tokens supplied.
+     * @notice Thrown when an invalid amount of tokens is supplied by the project
+     * @dev Indicates the supplied token amount does not match allocation
+     * @param amount Amount of tokens supplied
      */
     error InvalidTokenAmountSupplied(uint256 amount);
 
     /**
-     * @notice Throws when the vesting configuration is invalid.
+     * @notice Thrown when the vesting configuration is invalid
+     * @dev Indicates vesting parameters (e.g., duration, rate) are incorrect
      */
     error InvalidVestingConfig();
 
     /**
-     * @notice Throws when an invalid amount of tokens has been claimed.
+     * @notice Thrown when an invalid amount of tokens is requested for withdrawal
+     * @dev Indicates the withdrawal amount is zero or otherwise invalid
      */
     error InvalidWithdrawAmount();
 
     /**
-     * @notice Throws when an invalid amount has been requested for refund.
+     * @notice Thrown when an invalid amount is requested for refund
+     * @dev Indicates the refund amount is zero or exceeds invested capital
      */
     error InvalidRefundAmount();
 
     /**
-     * @notice Throws when an invalid amount has been requested for fee.
+     * @notice Thrown when an invalid fee amount is provided
+     * @dev Indicates the fee does not match calculated expectations
      */
     error InvalidFeeAmount();
 
     /**
-     * @notice Throws when an invalid time config has been provided.
+     * @notice Thrown when an invalid time period configuration is provided
+     * @dev Indicates periods (e.g., sale, refund) are outside allowed ranges
      */
     error InvalidPeriodConfig();
 
     /**
-     * @notice Throws when an invalid pledge amount has been sent.
-     *
-     * @param amount The amount being pledged.
+     * @notice Thrown when an invalid investment amount is pledged
+     * @dev Indicates the amount is below minimum or otherwise incorrect
+     * @param amount Amount being pledged
      */
     error InvalidInvestAmount(uint256 amount);
 
     /**
-     * @notice Throws when an invalid signature has been provided when pledging capital.
-     *
+     * @notice Thrown when an invalid signature is provided for investment
+     * @dev Indicates the signature does not match the Legion signer
      */
     error InvalidSignature();
 
     /**
-     * @notice Throws when the invested capital amount is not equal to the SAFT amount.
-     *
-     * @param investor The address of the investor.
+     * @notice Thrown when invested capital does not match the SAFT amount
+     * @dev Indicates a discrepancy between invested and agreed amounts
+     * @param investor Address of the investor with the mismatch
      */
     error InvalidPositionAmount(address investor);
 
     /**
-     * @notice Throws when the investor has refunded.
-     *
-     * @param investor The address of the investor.
+     * @notice Thrown when an investor who has refunded attempts an action
+     * @dev Indicates the investor has already received a refund
+     * @param investor Address of the refunded investor
      */
     error InvestorHasRefunded(address investor);
 
     /**
-     * @notice Throws when the investor has claimed excess capital invested.
-     *
-     * @param investor The address of the investor.
+     * @notice Thrown when an investor who has claimed excess capital attempts an action
+     * @dev Indicates the investor has already withdrawn excess
+     * @param investor Address of the investor who claimed excess
      */
     error InvestorHasClaimedExcess(address investor);
 
     /**
-     * @notice Throws when the salt used to encrypt the bid is invalid.
+     * @notice Thrown when an invalid salt is used to encrypt a bid
+     * @dev Indicates the salt does not match the expected value (e.g., investor address)
      */
     error InvalidSalt();
 
     /**
-     * @notice Throws when an invalid bid public key is used to encrypt a bid.
+     * @notice Thrown when an invalid public key is used to encrypt a bid
+     * @dev Indicates the public key is not valid or does not match the auction key
      */
     error InvalidBidPublicKey();
 
     /**
-     * @notice Throws when an invalid bid private key is provided to decrypt a bid.
+     * @notice Thrown when an invalid private key is provided to decrypt a bid
+     * @dev Indicates the private key does not correspond to the public key
      */
     error InvalidBidPrivateKey();
 
     /**
-     * @notice Throws when the investor is not in the claim whitelist for tokens.
-     *
-     * @param investor The address of the investor.
+     * @notice Thrown when an investor is not in the token claim whitelist
+     * @dev Indicates the investor is not eligible to claim tokens
+     * @param investor Address of the non-whitelisted investor
      */
     error NotInClaimWhitelist(address investor);
 
     /**
-     * @notice Throws when no capital has been pledged by an investor.
-     *
-     * @param investor The address of the investor.
+     * @notice Thrown when an investor has not invested any capital
+     * @dev Indicates no capital is available for refund or withdrawal
+     * @param investor Address of the investor with no investment
      */
     error NoCapitalInvested(address investor);
 
     /**
-     * @notice Throws when not called by Legion.
+     * @notice Thrown when a function is not called by the Legion address
+     * @dev Indicates unauthorized access by a non-Legion caller
      */
     error NotCalledByLegion();
 
     /**
-     * @notice Throws when not called by the Project.
+     * @notice Thrown when a function is not called by the Project address
+     * @dev Indicates unauthorized access by a non-Project caller
      */
     error NotCalledByProject();
 
     /**
-     * @notice Throws when not called by Legion or the Project.
+     * @notice Thrown when a function is not called by Legion or Project
+     * @dev Indicates unauthorized access by a non-authorized caller
      */
     error NotCalledByLegionOrProject();
 
     /**
-     * @notice Throws when capital is pledged during the pre-fund allocation period.
+     * @notice Thrown when capital is pledged during the pre-fund allocation period
+     * @dev Indicates investment is attempted before the allowed period
      */
     error PrefundAllocationPeriodNotEnded();
 
     /**
-     * @notice Throws when the private key has already been published by Legion.
+     * @notice Thrown when the private key has already been published
+     * @dev Indicates an attempt to set an already published private key
      */
     error PrivateKeyAlreadyPublished();
 
     /**
-     * @notice Throws when the private key has not been published by Legion.
+     * @notice Thrown when the private key has not been published
+     * @dev Indicates decryption is attempted before key publication
      */
     error PrivateKeyNotPublished();
 
     /**
-     * @notice Throws when the refund period is not over.
+     * @notice Thrown when the refund period is not over
+     * @dev Indicates an action is attempted before refunds are complete
      */
     error RefundPeriodIsNotOver();
 
     /**
-     * @notice Throws when the refund period is over.
+     * @notice Thrown when the refund period is over
+     * @dev Indicates an action (e.g., refund) is attempted after the period ends
      */
     error RefundPeriodIsOver();
 
     /**
-     * @notice Throws when the sale has ended.
+     * @notice Thrown when the sale has ended
+     * @dev Indicates an action is attempted after the sale period
      */
     error SaleHasEnded();
 
     /**
-     * @notice Throws when the sale has not ended.
+     * @notice Thrown when the sale has not ended
+     * @dev Indicates an action requires the sale to be completed first
      */
     error SaleHasNotEnded();
 
     /**
-     * @notice Throws when the sale is canceled.
+     * @notice Thrown when the sale is canceled
+     * @dev Indicates an action is attempted on a canceled sale
      */
     error SaleIsCanceled();
 
     /**
-     * @notice Throws when the sale is not canceled.
+     * @notice Thrown when the sale is not canceled
+     * @dev Indicates an action requires the sale to be canceled first
      */
     error SaleIsNotCanceled();
 
     /**
-     * @notice Throws when the sale results are not published.
+     * @notice Thrown when sale results are not published
+     * @dev Indicates an action requires published sale results
      */
     error SaleResultsNotPublished();
 
     /**
-     * @notice Throws when the signature has already been used.
-     *
-     * @param signature The signature that has been used.
+     * @notice Thrown when a signature has already been used
+     * @dev Indicates a signature is reused, violating uniqueness
+     * @param signature The signature that was previously used
      */
     error SignatureAlreadyUsed(bytes signature);
 
     /**
-     * @notice Throws when the raised capital has not published.
+     * @notice Thrown when raised capital has not been published
+     * @dev Indicates an action requires published capital data
      */
     error CapitalRaisedNotPublished();
 
     /**
-     * @notice Throws when the sale results have been already published.
+     * @notice Thrown when sale results have already been published
+     * @dev Indicates an attempt to republish sale results
      */
     error SaleResultsAlreadyPublished();
 
     /**
-     * @notice Throws when the raised capital have been already published.
+     * @notice Thrown when raised capital has already been published
+     * @dev Indicates an attempt to republish capital raised data
      */
     error CapitalRaisedAlreadyPublished();
 
     /**
-     * @notice Throws when the tokens have already been allocated.
+     * @notice Thrown when tokens have already been allocated
+     * @dev Indicates an attempt to reallocate tokens
      */
     error TokensAlreadyAllocated();
 
     /**
-     * @notice Throws when tokens have not been allocated.
+     * @notice Thrown when tokens have not been allocated
+     * @dev Indicates an action requires token allocation first
      */
     error TokensNotAllocated();
 
     /**
-     * @notice Throws when tokens have already been supplied.
+     * @notice Thrown when tokens have already been supplied
+     * @dev Indicates an attempt to resupply tokens
      */
     error TokensAlreadySupplied();
 
     /**
-     * @notice Throws when tokens have not been supplied.
+     * @notice Thrown when tokens have not been supplied
+     * @dev Indicates an action requires supplied tokens first
      */
     error TokensNotSupplied();
 
     /**
-     * @notice Throws when zero address has been provided.
+     * @notice Thrown when a zero address is provided
+     * @dev Indicates an invalid address parameter (e.g., 0x0)
      */
     error ZeroAddressProvided();
 
     /**
-     * @notice Throws when zero value has been provided.
+     * @notice Thrown when a zero value is provided
+     * @dev Indicates an invalid numeric parameter (e.g., 0)
      */
     error ZeroValueProvided();
 }

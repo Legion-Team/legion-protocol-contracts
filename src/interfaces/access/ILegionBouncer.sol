@@ -17,16 +17,17 @@ pragma solidity 0.8.29;
 // We will pay a fair bounty for any issue that puts users' funds at risk.
 
 /**
- * @title Legion Bouncer Interface
+ * @title ILegionBouncer
  * @author Legion
- * @notice An interface for managing function call permissions in the Legion Protocol
+ * @notice Interface for the Legion Bouncer contract managing access control in the Legion Protocol
+ * @dev Defines the external functions for role-based function execution
  */
 interface ILegionBouncer {
     /**
      * @notice Executes a function call on a target contract
-     *
-     * @param target The address of the target contract
-     * @param data The encoded function data to execute
+     * @dev Must be implemented to allow only authorized broadcasters to perform calls
+     * @param target Address of the contract to call
+     * @param data Encoded function data to execute on the target contract
      */
     function functionCall(address target, bytes memory data) external;
 }

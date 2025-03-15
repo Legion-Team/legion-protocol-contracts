@@ -20,24 +20,36 @@ import { SafeTransferLib } from "@solady/src/utils/SafeTransferLib.sol";
 
 import { ECIES, Point } from "../lib/ECIES.sol";
 import { Errors } from "../utils/Errors.sol";
+
 import { ILegionSale } from "../interfaces/sales/ILegionSale.sol";
 import { ILegionSealedBidAuctionSale } from "../interfaces/sales/ILegionSealedBidAuctionSale.sol";
+
 import { LegionSale } from "./LegionSale.sol";
 
 /**
  * @title Legion Sealed Bid Auction
  * @author Legion
  * @notice A contract used to execute sealed bid auctions of ERC20 tokens after TGE
+ * @dev Inherits from LegionSale and implements ILegionSealedBidAuctionSale with encryption features
  */
 contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
-    /// @dev A struct describing the sealed bid auction sale configuration.
+    /*//////////////////////////////////////////////////////////////////////////
+                                 STATE VARIABLES
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /// @notice Struct containing the sealed bid auction sale configuration
+    /// @dev Stores auction-specific parameters like encryption keys and cancel lock
     SealedBidAuctionSaleConfiguration private sealedBidAuctionSaleConfig;
 
+    /*//////////////////////////////////////////////////////////////////////////
+                                  INITIALIZER
+    //////////////////////////////////////////////////////////////////////////*/
+
     /**
-     * @notice Initializes the contract with correct parameters.
-     *
-     * @param saleInitParams The Legion sale initialization parameters.
-     * @param sealedBidAuctionSaleInitParams The sealed bid auction sale specific initialization parameters.
+     * @notice Initializes the sealed bid auction sale contract with parameters
+     * @dev Sets up common and auction-specific configurations; callable only once
+     * @param saleInitParams Calldata struct with Legion sale initialization parameters
+     * @param sealedBidAuctionSaleInitParams Calldata struct with sealed bid auction-specific parameters
      */
     function initialize(
         LegionSaleInitializationParams calldata saleInitParams,
@@ -61,12 +73,16 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
         saleConfig.refundEndTime = saleConfig.endTime + saleInitParams.refundPeriodSeconds;
     }
 
+    /*//////////////////////////////////////////////////////////////////////////
+                              EXTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
     /**
-     * @notice Invest capital to the sealed bid auction.
-     *
-     * @param amount The amount of capital invested.
-     * @param sealedBid The encoded sealed bid data.
-     * @param signature The Legion signature for verification.
+     * @notice Allows an investor to invest in the sealed bid auction
+     * @dev Verifies conditions, handles encrypted bids, and transfers capital
+     * @param amount Amount of capital (in bid tokens) to invest
+     * @param sealedBid Encoded sealed bid data (encrypted amount out, salt, public key)
+     * @param signature Legion signature for investor verification
      */
     function invest(uint256 amount, bytes calldata sealedBid, bytes memory signature) external whenNotPaused {
         // Verify that the investor is allowed to pledge capital
@@ -111,7 +127,8 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
     }
 
     /**
-     * @notice Initializes the process of publishing of sale results, by locking sale cancelation.
+     * @notice Locks sale cancellation to initialize publishing of results
+     * @dev Restricted to Legion; prevents cancellation during result publication
      */
     function initializePublishSaleResults() external onlyLegion {
         // Verify that the sale is not canceled
@@ -134,15 +151,13 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
     }
 
     /**
-     * @notice Publish sale results, once the sale has concluded.
-     *
-     * @dev Can be called only by the Legion admin address.
-     *
-     * @param claimMerkleRoot The merkle root to verify token claims.
-     * @param acceptedMerkleRoot The merkle root to verify accepted capital.
-     * @param tokensAllocated The total amount of tokens allocated for distribution among investors.
-     * @param capitalRaised The total capital raised from the auction.
-     * @param sealedBidPrivateKey the private key used to decrypt sealed bids.
+     * @notice Publishes auction results including token allocation and capital raised
+     * @dev Restricted to Legion; sets final sale data and decryption key
+     * @param claimMerkleRoot Merkle root for verifying token claims
+     * @param acceptedMerkleRoot Merkle root for verifying accepted capital
+     * @param tokensAllocated Total tokens allocated for investors
+     * @param capitalRaised Total capital raised from the auction
+     * @param sealedBidPrivateKey Private key to decrypt sealed bids
      */
     function publishSaleResults(
         bytes32 claimMerkleRoot,
@@ -191,9 +206,21 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
     }
 
     /**
-     * @notice Cancels an ongoing sale.
-     *
-     * @dev Can be called only by the Project admin address.
+     * @notice Returns the current sealed bid auction sale configuration
+     * @dev Provides read-only access to sealedBidAuctionSaleConfig
+     * @return SealedBidAuctionSaleConfiguration memory Struct containing auction configuration
+     */
+    function sealedBidAuctionSaleConfiguration() external view returns (SealedBidAuctionSaleConfiguration memory) {
+        return sealedBidAuctionSaleConfig;
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                               PUBLIC FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /**
+     * @notice Cancels the ongoing sealed bid auction sale
+     * @dev Overrides LegionSale; restricted to Project admin with additional lock check
      */
     function cancelSale() public override(ILegionSale, LegionSale) onlyProject whenNotPaused {
         // Call parent method
@@ -204,12 +231,11 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
     }
 
     /**
-     * @notice Decrypts the sealed bid, once the private key has been published by Legion.
-     *
-     * @dev Can be called only if the private key has been published.
-     *
-     * @param encryptedAmountOut The encrypted bid amount
-     * @param salt The salt used in the encryption process
+     * @notice Decrypts a sealed bid using the published private key
+     * @dev View function requiring published private key; returns decrypted bid amount
+     * @param encryptedAmountOut Encrypted bid amount from the investor
+     * @param salt Salt used in the encryption process
+     * @return uint256 Decrypted bid amount
      */
     function decryptSealedBid(uint256 encryptedAmountOut, uint256 salt) public view returns (uint256) {
         // Verify that the private key has been published by Legion
@@ -221,15 +247,14 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
         );
     }
 
-    /**
-     * @notice Returns the sealed bid auction sale configuration.
-     */
-    function sealedBidAuctionSaleConfiguration() external view returns (SealedBidAuctionSaleConfiguration memory) {
-        return sealedBidAuctionSaleConfig;
-    }
+    /*//////////////////////////////////////////////////////////////////////////
+                              PRIVATE FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
 
     /**
-     * @notice Verify if the sale initialization parameters are valid.
+     * @notice Verifies the validity of sealed bid auction initialization parameters
+     * @dev Private pure function checking public key validity
+     * @param sealedBidAuctionSaleInitParams Calldata struct with auction-specific parameters
      */
     function _verifyValidParams(SealedBidAuctionSaleInitializationParams calldata sealedBidAuctionSaleInitParams)
         private
@@ -242,9 +267,9 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
     }
 
     /**
-     * @notice Verify if the public key used to encrypt the bid is valid
-     *
-     * @param _publicKey The public key used to encrypt bids
+     * @notice Verifies the validity of the public key used in a sealed bid
+     * @dev Ensures the public key matches the auction's configured key
+     * @param _publicKey Public key provided in the sealed bid
      */
     function _verifyValidPublicKey(Point memory _publicKey) private view {
         // Verify that the _publicKey is a valid point for the encryption library
@@ -260,9 +285,9 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
     }
 
     /**
-     * @notice Verify if the provided private key is valid.
-     *
-     * @param _privateKey The private key used to decrypt bids.
+     * @notice Verifies the validity of the private key for decrypting bids
+     * @dev Ensures key is unpublished and matches the public key
+     * @param _privateKey Private key provided for decryption
      */
     function _verifyValidPrivateKey(uint256 _privateKey) private view {
         // Verify that the private key has not already been published
@@ -279,7 +304,8 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
     }
 
     /**
-     * @notice Verify that the private key has been published by Legion.
+     * @notice Verifies that the private key has been published
+     * @dev Reverts if private key is not set for decryption
      */
     function _verifyPrivateKeyIsPublished() private view {
         if (sealedBidAuctionSaleConfig.privateKey == 0) {
@@ -288,16 +314,17 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
     }
 
     /**
-     * @notice Verify that the salt used to encrypt the bid is valid
-     *
-     * @param _salt The salt used for bid encryption
+     * @notice Verifies the validity of the salt used in bid encryption
+     * @dev Ensures salt matches investor address for security
+     * @param _salt Salt value provided in the sealed bid
      */
     function _verifyValidSalt(uint256 _salt) private view {
         if (uint256(uint160(msg.sender)) != _salt) revert Errors.InvalidSalt();
     }
 
     /**
-     * @notice Verify that canceling is not locked
+     * @notice Verifies that cancellation is not locked
+     * @dev Reverts if cancellation is locked during result publication
      */
     function _verifyCancelNotLocked() private view {
         if (sealedBidAuctionSaleConfig.cancelLocked) {
@@ -306,7 +333,8 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
     }
 
     /**
-     * @notice Verify that canceling is locked
+     * @notice Verifies that cancellation is locked
+     * @dev Reverts if cancellation is not locked during result publication
      */
     function _verifyCancelLocked() private view {
         if (!sealedBidAuctionSaleConfig.cancelLocked) {

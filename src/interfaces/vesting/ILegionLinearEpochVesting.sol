@@ -16,64 +16,33 @@ pragma solidity 0.8.29;
 // If you find a bug, please contact security[at]legion.cc
 // We will pay a fair bounty for any issue that puts users' funds at risk.
 
-interface ILegionLinearEpochVesting {
+import { ILegionVesting } from "./ILegionVesting.sol";
+
+/**
+ * @title ILegionLinearEpochVesting
+ * @author Legion
+ * @notice Interface for a linear epoch-based vesting contract in the Legion Protocol
+ * @dev Extends vesting functionality with epoch-based release and cliff mechanics
+ */
+interface ILegionLinearEpochVesting is ILegionVesting {
     /**
-     * @notice See {VestingWalletUpgradeable-start}.
+     * @notice Returns the duration of each epoch in seconds
+     * @dev Specific to this interface; defines the vesting interval for epoch-based releases
+     * @return uint256 Duration of each epoch in seconds
      */
-    function start() external view returns (uint256);
+    function epochDurationSeconds() external view returns (uint256);
 
     /**
-     * @notice See {VestingWalletUpgradeable-duration}.
+     * @notice Returns the total number of epochs in the vesting schedule
+     * @dev Specific to this interface; determines the granularity of token releases
+     * @return uint256 Total number of epochs in the vesting schedule
      */
-    function duration() external view returns (uint256);
+    function numberOfEpochs() external view returns (uint256);
 
     /**
-     * @notice See {VestingWalletUpgradeable-end}.
+     * @notice Returns the last epoch for which tokens were claimed
+     * @dev Specific to this interface; tracks the progress of vesting claims
+     * @return uint256 Last epoch number for which tokens were claimed
      */
-    function end() external view returns (uint256);
-
-    /**
-     * @notice See {VestingWalletUpgradeable-released}.
-     */
-    function released() external view returns (uint256);
-
-    /**
-     * @notice See {VestingWalletUpgradeable-released}.
-     */
-    function released(address token) external view returns (uint256);
-
-    /**
-     * @notice See {VestingWalletUpgradeable-releasable}.
-     */
-    function releasable() external view returns (uint256);
-
-    /**
-     * @notice See {VestingWalletUpgradeable-releasable}.
-     */
-    function releasable(address token) external view returns (uint256);
-
-    /**
-     * @notice See {VestingWalletUpgradeable-release}.
-     */
-    function release() external;
-
-    /**
-     * @notice See {VestingWalletUpgradeable-release}.
-     */
-    function release(address token) external;
-
-    /**
-     * @notice See {VestingWalletUpgradeable-vestedAmount}.
-     */
-    function vestedAmount(uint64 timestamp) external view returns (uint256);
-
-    /**
-     * @notice See {VestingWalletUpgradeable-vestedAmount}.
-     */
-    function vestedAmount(address token, uint64 timestamp) external view returns (uint256);
-
-    /**
-     * @notice Returns the cliff end timestamp.
-     */
-    function cliffEnd() external view returns (uint256);
+    function lastClaimedEpoch() external view returns (uint256);
 }
