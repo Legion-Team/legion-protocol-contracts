@@ -1910,7 +1910,9 @@ contract LegionFixedPriceSaleTest is Test {
         ILegionFixedPriceSale(legionSaleInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
 
         // Expect revert with CannotWithdrawExcessInvestedCapital error
-        vm.expectRevert(abi.encodeWithSelector(Errors.CannotWithdrawExcessInvestedCapital.selector, investor2));
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.CannotWithdrawExcessInvestedCapital.selector, investor2, 1000 * 1e6)
+        );
 
         // Act
         vm.prank(investor2);

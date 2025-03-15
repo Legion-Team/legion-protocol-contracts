@@ -84,8 +84,9 @@ library Errors {
      * @notice Thrown when an investor is not eligible to withdraw excess capital
      * @dev Indicates the investor is not flagged for excess capital return
      * @param investor Address of the investor attempting to withdraw
+     * @param amount The amount of excess capital the investor is trying to withdraw
      */
-    error CannotWithdrawExcessInvestedCapital(address investor);
+    error CannotWithdrawExcessInvestedCapital(address investor, uint256 amount);
 
     /**
      * @notice Thrown when an invalid amount of tokens is supplied by the project

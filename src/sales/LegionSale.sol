@@ -679,7 +679,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
 
         // Verify the merkle proof
         if (!MerkleProofLib.verify(_proof, saleStatus.acceptedCapitalMerkleRoot, leaf)) {
-            revert Errors.CannotWithdrawExcessInvestedCapital(_investor);
+            revert Errors.CannotWithdrawExcessInvestedCapital(_investor, _amount);
         }
     }
 

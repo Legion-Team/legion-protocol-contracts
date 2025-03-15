@@ -2359,7 +2359,9 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
 
         // Assert: Expect revert due to invalid Merkle proof
-        vm.expectRevert(abi.encodeWithSelector(Errors.CannotWithdrawExcessInvestedCapital.selector, investor2));
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.CannotWithdrawExcessInvestedCapital.selector, investor2, 1000 * 1e6)
+        );
 
         // Act: Attempt withdrawal with incorrect proof
         vm.prank(investor2);
