@@ -44,12 +44,6 @@ library Errors {
     error AskTokenUnavailable();
 
     /**
-     * @notice Thrown when ask tokens have not been supplied by the project
-     * @dev Indicates the project has not provided tokens for distribution
-     */
-    error AskTokensNotSupplied();
-
-    /**
      * @notice Thrown when cancellation is locked
      * @dev Indicates cancellation is prevented, typically during result publication
      */
@@ -120,20 +114,24 @@ library Errors {
     /**
      * @notice Thrown when an invalid amount of tokens is requested for withdrawal
      * @dev Indicates the withdrawal amount is zero or otherwise invalid
+     * @param amount Amount of tokens requested for withdrawal
      */
-    error InvalidWithdrawAmount();
+    error InvalidWithdrawAmount(uint256 amount);
 
     /**
      * @notice Thrown when an invalid amount is requested for refund
      * @dev Indicates the refund amount is zero or exceeds invested capital
+     * @param amount Amount of tokens requested for withdrawal
      */
-    error InvalidRefundAmount();
+    error InvalidRefundAmount(uint256 amount);
 
     /**
      * @notice Thrown when an invalid fee amount is provided
      * @dev Indicates the fee does not match calculated expectations
+     * @param amount Fee amount provided
+     * @param expectedAmount Expected fee amount
      */
-    error InvalidFeeAmount();
+    error InvalidFeeAmount(uint256 amount, uint256 expectedAmount);
 
     /**
      * @notice Thrown when an invalid time period configuration is provided
@@ -227,12 +225,6 @@ library Errors {
     error NotCalledByLegionOrProject();
 
     /**
-     * @notice Thrown when the token claim amount is invalid
-     * @dev Indicates the requested claim amount does not match expected values
-     */
-    error NothingToClaim();
-
-    /**
      * @notice Thrown when capital is pledged during the pre-fund allocation period
      * @dev Indicates investment is attempted before the allowed period
      * @param timestamp The current timestamp when the investment is attempted
@@ -254,14 +246,18 @@ library Errors {
     /**
      * @notice Thrown when the refund period is not over
      * @dev Indicates an action is attempted before refunds are complete
+     * @param currentTimestamp The current timestamp when the action is attempted
+     * @param refundEndTimestamp The timestamp when the refund period ends
      */
-    error RefundPeriodIsNotOver();
+    error RefundPeriodIsNotOver(uint256 currentTimestamp, uint256 refundEndTimestamp);
 
     /**
      * @notice Thrown when the refund period is over
      * @dev Indicates an action (e.g., refund) is attempted after the period ends
+     * @param currentTimestamp The current timestamp when the action is attempted
+     * @param refundEndTimestamp The timestamp when the refund period ends
      */
-    error RefundPeriodIsOver();
+    error RefundPeriodIsOver(uint256 currentTimestamp, uint256 refundEndTimestamp);
 
     /**
      * @notice Thrown when the sale has ended
@@ -273,8 +269,9 @@ library Errors {
     /**
      * @notice Thrown when the sale has not ended
      * @dev Indicates an action requires the sale to be completed first
+     * @param timestamp The current timestamp when the action is attempted
      */
-    error SaleHasNotEnded();
+    error SaleHasNotEnded(uint256 timestamp);
 
     /**
      * @notice Thrown when the sale is canceled

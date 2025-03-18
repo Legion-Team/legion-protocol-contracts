@@ -19,7 +19,7 @@
 [doc]
   ignore = ["**/*.t.sol"]
   out = "docs"
-  repository = "https://github.com/Legion-Team/evm-contracts"
+  repository = "https://github.com/Legion-Team/legion-protocol-contracts"
 
 [rpc_endpoints]
   mainnet = "${MAINNET_RPC_URL}"

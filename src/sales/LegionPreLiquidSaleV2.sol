@@ -317,7 +317,7 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
      */
     function _verifyRefundPeriodIsOver() internal view override {
         if (saleConfig.refundEndTime > 0 && block.timestamp < saleConfig.refundEndTime) {
-            revert Errors.RefundPeriodIsNotOver();
+            revert Errors.RefundPeriodIsNotOver(block.timestamp, saleConfig.refundEndTime);
         }
     }
 
@@ -327,7 +327,7 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
      */
     function _verifyRefundPeriodIsNotOver() internal view override {
         if (saleConfig.refundEndTime > 0 && block.timestamp >= saleConfig.refundEndTime) {
-            revert Errors.RefundPeriodIsOver();
+            revert Errors.RefundPeriodIsOver(block.timestamp, saleConfig.refundEndTime);
         }
     }
 
@@ -349,7 +349,7 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
      * @dev Reverts if sale has not ended based on preLiquidSaleConfig
      */
     function _verifySaleHasEnded() private view {
-        if (!preLiquidSaleConfig.hasEnded) revert Errors.SaleHasNotEnded();
+        if (!preLiquidSaleConfig.hasEnded) revert Errors.SaleHasNotEnded(block.timestamp);
     }
 
     /**
