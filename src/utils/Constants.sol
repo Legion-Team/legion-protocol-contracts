@@ -23,6 +23,18 @@ pragma solidity 0.8.29;
  * @dev Provides immutable values for time periods and unique IDs used in contracts
  */
 library Constants {
+    /// @notice Maximum duration allowed for token vesting, set to 520 weeks (10 years)
+    /// @dev Represents the upper limit for vesting periods in seconds.
+    uint256 internal constant MAX_VESTING_DURATION_SECONDS = 520 weeks;
+
+    /// @notice Maximum duration allowed for an epoch, set to 52 weeks (1 year)
+    /// @dev Defines the maximum length of an epoch in seconds.
+    uint256 internal constant MAX_EPOCH_DURATION_SECONDS = 52 weeks;
+
+    /// @notice Maximum duration allowed for lockup, set to 520 weeks (10 years)
+    /// @dev Represents the upper limit for lockup periods in seconds.
+    uint256 internal constant MAX_VESTING_LOCKUP_SECONDS = 520 weeks;
+
     /// @notice Constant representing the denominator for precise calculations
     /// @dev Equals 1e18, used for high-precision fee or rate computations with 18 decimals
     uint256 internal constant TOKEN_ALLOCATION_RATE_DENOMINATOR = 1_000_000_000_000_000_000;

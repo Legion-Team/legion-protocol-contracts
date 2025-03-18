@@ -407,6 +407,17 @@ contract LegionPreLiquidSaleV1Test is Test {
         vm.stopPrank();
     }
 
+    /**
+     * @notice Retrieves the refund period end time
+     * @dev Fetches the refund end time from the sale configuration
+     * @return uint256 The refund period end time in seconds
+     */
+    function refundEndTime() public view returns (uint256) {
+        ILegionPreLiquidSaleV1.PreLiquidSaleStatus memory _saleStatus =
+            LegionPreLiquidSaleV1(payable(legionPreLiquidSaleInstance)).saleStatusDetails();
+        return _saleStatus.refundEndTime;
+    }
+
     /*//////////////////////////////////////////////////////////////////////////
                         INITIALIZATION TESTS
     //////////////////////////////////////////////////////////////////////////*/
@@ -788,7 +799,7 @@ contract LegionPreLiquidSaleV1Test is Test {
         vm.warp(1);
 
         // Expect revert with InvalidSignature error
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidSignature.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidSignature.selector, signatureInv1));
 
         // Act
         vm.prank(investor5);
@@ -813,7 +824,7 @@ contract LegionPreLiquidSaleV1Test is Test {
         ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
 
         // Expect revert with SaleHasEnded error
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasEnded.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasEnded.selector, 1));
 
         // Act
         vm.prank(investor1);
@@ -905,7 +916,7 @@ contract LegionPreLiquidSaleV1Test is Test {
         vm.warp(block.timestamp + 2 weeks + 1);
 
         // Expect revert with RefundPeriodIsOver error
-        vm.expectRevert(abi.encodeWithSelector(Errors.RefundPeriodIsOver.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.RefundPeriodIsOver.selector, block.timestamp, refundEndTime()));
 
         // Act
         vm.prank(investor1);
@@ -955,7 +966,7 @@ contract LegionPreLiquidSaleV1Test is Test {
         prepareInvestorSignatures();
 
         // Expect revert with InvalidRefundAmount error
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidRefundAmount.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidRefundAmount.selector, 0));
 
         // Act
         vm.prank(investor1);
@@ -1406,7 +1417,9 @@ contract LegionPreLiquidSaleV1Test is Test {
         );
 
         // Expect revert with InvalidTokenAmountSupplied error
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidTokenAmountSupplied.selector, 19_000 * 1e18));
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.InvalidTokenAmountSupplied.selector, 19_000 * 1e18, 20_000 * 1e18)
+        );
 
         // Act
         vm.prank(projectAdmin);
@@ -1441,7 +1454,7 @@ contract LegionPreLiquidSaleV1Test is Test {
         );
 
         // Expect revert with InvalidFeeAmount error
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidFeeAmount.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidFeeAmount.selector, 499 * 1e18, 500 * 1e18));
 
         // Act
         vm.prank(projectAdmin);
@@ -1476,7 +1489,7 @@ contract LegionPreLiquidSaleV1Test is Test {
         );
 
         // Expect revert with InvalidFeeAmount error
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidFeeAmount.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidFeeAmount.selector, 199 * 1e18, 200 * 1e18));
 
         // Act
         vm.prank(projectAdmin);
@@ -1688,7 +1701,7 @@ contract LegionPreLiquidSaleV1Test is Test {
         prepareCreateLegionPreLiquidSale();
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasNotEnded.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasNotEnded.selector, block.timestamp));
 
         // Act
         vm.prank(legionBouncer);
@@ -1707,7 +1720,7 @@ contract LegionPreLiquidSaleV1Test is Test {
         ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.RefundPeriodIsNotOver.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.RefundPeriodIsNotOver.selector, block.timestamp, refundEndTime()));
 
         // Act
         vm.prank(legionBouncer);
@@ -1856,7 +1869,9 @@ contract LegionPreLiquidSaleV1Test is Test {
         ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.RefundPeriodIsNotOver.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.RefundPeriodIsNotOver.selector, (block.timestamp), refundEndTime())
+        );
 
         // Act
         vm.prank(projectAdmin);
@@ -2003,7 +2018,7 @@ contract LegionPreLiquidSaleV1Test is Test {
 
     /**
      * @notice Tests that withdrawing capital with no investment reverts
-     * @dev Expects InvalidClaimAmount revert when investor2, who didn't invest, tries to withdraw
+     * @dev Expects InvalidWithdrawAmount revert when investor2, who didn't invest, tries to withdraw
      */
     function test_withdrawInvestedCapitalIfCanceled_revertsIfNoCapitalInvested() public {
         // Arrange: Deploy sale, have investor1 invest, cancel sale, but test with investor2
@@ -2027,7 +2042,7 @@ contract LegionPreLiquidSaleV1Test is Test {
         ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).cancelSale();
 
         // Assert: Expect revert due to investor2 having no invested capital
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidClaimAmount.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidWithdrawAmount.selector, 0));
 
         // Act: Attempt withdrawal as investor2 (who did not invest)
         vm.prank(investor2);
@@ -2185,7 +2200,7 @@ contract LegionPreLiquidSaleV1Test is Test {
         vm.warp(block.timestamp + 1 days + 2 weeks);
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidSignature.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidSignature.selector, signatureInv1WithdrawExcess));
 
         // Act
         vm.prank(investor1);
@@ -2347,7 +2362,18 @@ contract LegionPreLiquidSaleV1Test is Test {
         ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).supplyTokens(20_000 * 1e18, 500 * 1e18, 200 * 1e18);
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidVestingConfig.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Errors.InvalidVestingConfig.selector,
+                uint8(ILegionVestingManager.VestingType.LEGION_LINEAR),
+                Constants.MAX_VESTING_LOCKUP_SECONDS + block.timestamp + 1,
+                520 weeks + 1,
+                520 weeks + 2,
+                0,
+                0,
+                1e18 + 1
+            )
+        );
 
         // Act
         vm.prank(investor1);
@@ -2355,7 +2381,13 @@ contract LegionPreLiquidSaleV1Test is Test {
             uint256(10_000 * 1e6),
             uint256(5_000_000_000_000_000),
             ILegionVestingManager.LegionInvestorVestingConfig(
-                ILegionVestingManager.VestingType.LEGION_LINEAR, 0, 520 weeks + 1, 520 weeks + 2, 0, 0, 1e18 + 1
+                ILegionVestingManager.VestingType.LEGION_LINEAR,
+                Constants.MAX_VESTING_LOCKUP_SECONDS + block.timestamp + 1,
+                520 weeks + 1,
+                520 weeks + 2,
+                0,
+                0,
+                1e18 + 1
             ),
             signatureInv1Claim,
             vestingSignatureInv1
@@ -2393,7 +2425,18 @@ contract LegionPreLiquidSaleV1Test is Test {
         ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).supplyTokens(20_000 * 1e18, 500 * 1e18, 200 * 1e18);
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidVestingConfig.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Errors.InvalidVestingConfig.selector,
+                uint8(ILegionVestingManager.VestingType.LEGION_LINEAR_EPOCH),
+                0,
+                520 weeks - 1,
+                520 weeks - 2,
+                520 weeks + 1,
+                100,
+                1e17
+            )
+        );
 
         // Act
         vm.prank(investor2);
@@ -2445,7 +2488,7 @@ contract LegionPreLiquidSaleV1Test is Test {
         ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).supplyTokens(20_000 * 1e18, 500 * 1e18, 200 * 1e18);
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidSignature.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidSignature.selector, signatureInv1Updated2));
 
         // Act
         vm.prank(investor1);
@@ -2526,9 +2569,9 @@ contract LegionPreLiquidSaleV1Test is Test {
 
     /**
      * @notice Test case: Attempt to claim tokens before ask tokens are supplied
-     * @dev Expects AskTokensNotSupplied revert when tokens are not yet supplied
+     * @dev Expects TokensNotSupplied revert when tokens are not yet supplied
      */
-    function test_claimTokenAllocation_revertsIfAskTokenNotSupplied() public {
+    function test_claimTokenAllocation_revertsIfTokensNotSupplied() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
         prepareMintAndApproveTokens();
@@ -2552,7 +2595,7 @@ contract LegionPreLiquidSaleV1Test is Test {
         );
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.AskTokensNotSupplied.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.TokensNotSupplied.selector));
 
         // Act
         vm.prank(investor5);
@@ -2690,7 +2733,7 @@ contract LegionPreLiquidSaleV1Test is Test {
         ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).supplyTokens(20_000 * 1e18, 500 * 1e18, 200 * 1e18);
 
         // Assert
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidSignature.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidSignature.selector, invalidVestingSignature));
 
         // Act
         vm.prank(investor1);

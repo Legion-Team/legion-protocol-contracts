@@ -44,12 +44,6 @@ library Errors {
     error AskTokenUnavailable();
 
     /**
-     * @notice Thrown when ask tokens have not been supplied by the project
-     * @dev Indicates the project has not provided tokens for distribution
-     */
-    error AskTokensNotSupplied();
-
-    /**
      * @notice Thrown when cancellation is locked
      * @dev Indicates cancellation is prevented, typically during result publication
      */
@@ -84,45 +78,60 @@ library Errors {
      * @notice Thrown when an investor is not eligible to withdraw excess capital
      * @dev Indicates the investor is not flagged for excess capital return
      * @param investor Address of the investor attempting to withdraw
+     * @param amount The amount of excess capital the investor is trying to withdraw
      */
-    error CannotWithdrawExcessInvestedCapital(address investor);
-
-    /**
-     * @notice Thrown when the token claim amount is invalid
-     * @dev Indicates the requested claim amount does not match expected values
-     */
-    error InvalidClaimAmount();
+    error CannotWithdrawExcessInvestedCapital(address investor, uint256 amount);
 
     /**
      * @notice Thrown when an invalid amount of tokens is supplied by the project
      * @dev Indicates the supplied token amount does not match allocation
      * @param amount Amount of tokens supplied
+     * @param expectedAmount Expected token amount to be supplied
      */
-    error InvalidTokenAmountSupplied(uint256 amount);
+    error InvalidTokenAmountSupplied(uint256 amount, uint256 expectedAmount);
 
     /**
      * @notice Thrown when the vesting configuration is invalid
      * @dev Indicates vesting parameters (e.g., duration, rate) are incorrect
+     * @param vestingType Type of vesting schedule (linear or epoch-based)
+     * @param vestingStartTimestamp Unix timestamp when vesting starts
+     * @param vestingDurationSeconds Duration of the vesting schedule in seconds
+     * @param vestingCliffDurationSeconds Duration of the cliff period in seconds
+     * @param epochDurationSeconds Duration of each epoch in seconds
+     * @param numberOfEpochs Total number of epochs in the vesting schedule
+     * @param tokenAllocationOnTGERate Token allocation released at TGE (18 decimals precision)
      */
-    error InvalidVestingConfig();
+    error InvalidVestingConfig(
+        uint8 vestingType,
+        uint256 vestingStartTimestamp,
+        uint256 vestingDurationSeconds,
+        uint256 vestingCliffDurationSeconds,
+        uint256 epochDurationSeconds,
+        uint256 numberOfEpochs,
+        uint256 tokenAllocationOnTGERate
+    );
 
     /**
      * @notice Thrown when an invalid amount of tokens is requested for withdrawal
      * @dev Indicates the withdrawal amount is zero or otherwise invalid
+     * @param amount Amount of tokens requested for withdrawal
      */
-    error InvalidWithdrawAmount();
+    error InvalidWithdrawAmount(uint256 amount);
 
     /**
      * @notice Thrown when an invalid amount is requested for refund
      * @dev Indicates the refund amount is zero or exceeds invested capital
+     * @param amount Amount of tokens requested for withdrawal
      */
-    error InvalidRefundAmount();
+    error InvalidRefundAmount(uint256 amount);
 
     /**
      * @notice Thrown when an invalid fee amount is provided
      * @dev Indicates the fee does not match calculated expectations
+     * @param amount Fee amount provided
+     * @param expectedAmount Expected fee amount
      */
-    error InvalidFeeAmount();
+    error InvalidFeeAmount(uint256 amount, uint256 expectedAmount);
 
     /**
      * @notice Thrown when an invalid time period configuration is provided
@@ -140,8 +149,9 @@ library Errors {
     /**
      * @notice Thrown when an invalid signature is provided for investment
      * @dev Indicates the signature does not match the Legion signer
+     * @param signature Signature provided by the investor
      */
-    error InvalidSignature();
+    error InvalidSignature(bytes signature);
 
     /**
      * @notice Thrown when invested capital does not match the SAFT amount
@@ -217,8 +227,9 @@ library Errors {
     /**
      * @notice Thrown when capital is pledged during the pre-fund allocation period
      * @dev Indicates investment is attempted before the allowed period
+     * @param timestamp The current timestamp when the investment is attempted
      */
-    error PrefundAllocationPeriodNotEnded();
+    error PrefundAllocationPeriodNotEnded(uint256 timestamp);
 
     /**
      * @notice Thrown when the private key has already been published
@@ -235,26 +246,32 @@ library Errors {
     /**
      * @notice Thrown when the refund period is not over
      * @dev Indicates an action is attempted before refunds are complete
+     * @param currentTimestamp The current timestamp when the action is attempted
+     * @param refundEndTimestamp The timestamp when the refund period ends
      */
-    error RefundPeriodIsNotOver();
+    error RefundPeriodIsNotOver(uint256 currentTimestamp, uint256 refundEndTimestamp);
 
     /**
      * @notice Thrown when the refund period is over
      * @dev Indicates an action (e.g., refund) is attempted after the period ends
+     * @param currentTimestamp The current timestamp when the action is attempted
+     * @param refundEndTimestamp The timestamp when the refund period ends
      */
-    error RefundPeriodIsOver();
+    error RefundPeriodIsOver(uint256 currentTimestamp, uint256 refundEndTimestamp);
 
     /**
      * @notice Thrown when the sale has ended
      * @dev Indicates an action is attempted after the sale period
+     * @param timestamp The current timestamp when the action is attempted
      */
-    error SaleHasEnded();
+    error SaleHasEnded(uint256 timestamp);
 
     /**
      * @notice Thrown when the sale has not ended
      * @dev Indicates an action requires the sale to be completed first
+     * @param timestamp The current timestamp when the action is attempted
      */
-    error SaleHasNotEnded();
+    error SaleHasNotEnded(uint256 timestamp);
 
     /**
      * @notice Thrown when the sale is canceled
