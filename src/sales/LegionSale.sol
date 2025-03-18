@@ -29,7 +29,6 @@ import { Errors } from "../utils/Errors.sol";
 import { ILegionAddressRegistry } from "../interfaces/registries/ILegionAddressRegistry.sol";
 import { ILegionSale } from "../interfaces/sales/ILegionSale.sol";
 import { ILegionVesting } from "../interfaces/vesting/ILegionVesting.sol";
-import { ILegionVestingFactory } from "../interfaces/factories/ILegionVestingFactory.sol";
 
 import { LegionVestingManager } from "../vesting/LegionVestingManager.sol";
 

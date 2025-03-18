@@ -79,7 +79,7 @@ contract LegionAddressRegistry is ILegionAddressRegistry, Ownable {
      * @param id Unique identifier (bytes32) for the address
      * @return Registered Legion address associated with the identifier
      */
-    function getLegionAddress(bytes32 id) public view returns (address) {
+    function getLegionAddress(bytes32 id) external view returns (address) {
         return _legionAddresses[id];
     }
 }
