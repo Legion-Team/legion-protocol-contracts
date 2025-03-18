@@ -140,7 +140,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         uint256 amountToRefund = investorPositions[msg.sender].investedCapital;
 
         // Revert in case there's nothing to refund
-        if (amountToRefund == 0) revert Errors.InvalidRefundAmount();
+        if (amountToRefund == 0) revert Errors.InvalidRefundAmount(0);
 
         // Set the total invested capital for the investor to 0
         investorPositions[msg.sender].investedCapital = 0;
@@ -359,14 +359,22 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         // Flag that tokens have been supplied
         saleStatus.tokensSupplied = true;
 
-        // Calculate and verify Legion Fee
-        if (legionFee != (saleConfig.legionFeeOnTokensSoldBps * amount) / Constants.BASIS_POINTS_DENOMINATOR) {
-            revert Errors.InvalidFeeAmount();
+        /// Calculate the expected Legion Fee amount
+        uint256 expectedLegionFeeAmount =
+            (saleConfig.legionFeeOnTokensSoldBps * amount) / Constants.BASIS_POINTS_DENOMINATOR;
+
+        /// Calculate the expected Referrer Fee amount
+        uint256 expectedReferrerFeeAmount =
+            (saleConfig.referrerFeeOnTokensSoldBps * amount) / Constants.BASIS_POINTS_DENOMINATOR;
+
+        /// Verify Legion Fee amount
+        if (legionFee != (expectedLegionFeeAmount)) {
+            revert Errors.InvalidFeeAmount(legionFee, expectedLegionFeeAmount);
         }
 
-        // Calculate and verify Referrer Fee
-        if (referrerFee != (saleConfig.referrerFeeOnTokensSoldBps * amount) / Constants.BASIS_POINTS_DENOMINATOR) {
-            revert Errors.InvalidFeeAmount();
+        /// Verify Referrer Fee amount
+        if (referrerFee != expectedReferrerFeeAmount) {
+            revert Errors.InvalidFeeAmount(referrerFee, expectedReferrerFeeAmount);
         }
 
         // Emit TokensSuppliedForDistribution
@@ -421,7 +429,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         uint256 amountToWithdraw = investorPositions[msg.sender].investedCapital;
 
         // Revert in case there's nothing to claim
-        if (amountToWithdraw == 0) revert Errors.InvalidWithdrawAmount();
+        if (amountToWithdraw == 0) revert Errors.InvalidWithdrawAmount(0);
 
         // Set the total invested capital for the investor to 0
         investorPositions[msg.sender].investedCapital = 0;
@@ -679,7 +687,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
 
         // Verify the merkle proof
         if (!MerkleProofLib.verify(_proof, saleStatus.acceptedCapitalMerkleRoot, leaf)) {
-            revert Errors.CannotWithdrawExcessInvestedCapital(_investor);
+            revert Errors.CannotWithdrawExcessInvestedCapital(_investor, _amount);
         }
     }
 
@@ -727,7 +735,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @dev Virtual function checking sale end time
      */
     function _verifySaleHasNotEnded() internal view virtual {
-        if (block.timestamp >= saleConfig.endTime) revert Errors.SaleHasEnded();
+        if (block.timestamp >= saleConfig.endTime) revert Errors.SaleHasEnded(block.timestamp);
     }
 
     /**
@@ -735,7 +743,9 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @dev Virtual function checking refund window
      */
     function _verifyRefundPeriodIsOver() internal view virtual {
-        if (block.timestamp < saleConfig.refundEndTime) revert Errors.RefundPeriodIsNotOver();
+        if (block.timestamp < saleConfig.refundEndTime) {
+            revert Errors.RefundPeriodIsNotOver(block.timestamp, saleConfig.refundEndTime);
+        }
     }
 
     /**
@@ -743,7 +753,9 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @dev Virtual function checking refund window
      */
     function _verifyRefundPeriodIsNotOver() internal view virtual {
-        if (block.timestamp >= saleConfig.refundEndTime) revert Errors.RefundPeriodIsOver();
+        if (block.timestamp >= saleConfig.refundEndTime) {
+            revert Errors.RefundPeriodIsOver(block.timestamp, saleConfig.refundEndTime);
+        }
     }
 
     /**
@@ -772,7 +784,9 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         if (saleStatus.totalTokensAllocated == 0) revert Errors.TokensNotAllocated();
 
         // Revert if the amount of tokens supplied is different than the amount set by Legion
-        if (_amount != saleStatus.totalTokensAllocated) revert Errors.InvalidTokenAmountSupplied(_amount);
+        if (_amount != saleStatus.totalTokensAllocated) {
+            revert Errors.InvalidTokenAmountSupplied(_amount, saleStatus.totalTokensAllocated);
+        }
     }
 
     /**
@@ -822,7 +836,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      */
     function _verifyLegionSignature(bytes memory _signature) internal view virtual {
         bytes32 _data = keccak256(abi.encodePacked(msg.sender, address(this), block.chainid)).toEthSignedMessageHash();
-        if (_data.recover(_signature) != addressConfig.legionSigner) revert Errors.InvalidSignature();
+        if (_data.recover(_signature) != addressConfig.legionSigner) revert Errors.InvalidSignature(_signature);
     }
 
     /**

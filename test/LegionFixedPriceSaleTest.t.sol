@@ -633,7 +633,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(startTime() - 1);
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.PrefundAllocationPeriodNotEnded.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PrefundAllocationPeriodNotEnded.selector, (startTime() - 1)));
 
         vm.prank(investor1);
         ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
@@ -666,7 +666,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(endTime() + 1);
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasEnded.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasEnded.selector, (endTime() + 1)));
 
         vm.prank(investor1);
         ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
@@ -714,7 +714,7 @@ contract LegionFixedPriceSaleTest is Test {
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidSignature.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidSignature.selector, invalidSignature));
 
         vm.prank(investor1);
         ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, invalidSignature);
@@ -863,7 +863,9 @@ contract LegionFixedPriceSaleTest is Test {
         vm.warp(refundEndTime() + 1);
 
         // Expect revert with RefundPeriodIsOver error
-        vm.expectRevert(abi.encodeWithSelector(Errors.RefundPeriodIsOver.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.RefundPeriodIsOver.selector, (refundEndTime() + 1), refundEndTime())
+        );
 
         // Act
         vm.prank(investor1);
@@ -907,7 +909,7 @@ contract LegionFixedPriceSaleTest is Test {
         vm.warp(endTime() + 1);
 
         // Expect revert with InvalidRefundAmount error
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidRefundAmount.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidRefundAmount.selector, 0));
 
         // Act
         vm.prank(investor1);
@@ -1083,7 +1085,7 @@ contract LegionFixedPriceSaleTest is Test {
         ILegionFixedPriceSale(legionSaleInstance).cancelSale();
 
         // Expect revert with InvalidWithdrawAmount error
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidWithdrawAmount.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidWithdrawAmount.selector, 0));
 
         // Act
         vm.prank(investor1);
@@ -1173,7 +1175,9 @@ contract LegionFixedPriceSaleTest is Test {
         vm.warp(refundEndTime() - 1);
 
         // Expect revert with RefundPeriodIsNotOver error
-        vm.expectRevert(abi.encodeWithSelector(Errors.RefundPeriodIsNotOver.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.RefundPeriodIsNotOver.selector, (refundEndTime() - 1), refundEndTime())
+        );
 
         // Act
         vm.prank(legionBouncer);
@@ -1255,7 +1259,7 @@ contract LegionFixedPriceSaleTest is Test {
         vm.warp(refundEndTime() + 1);
 
         // Expect revert with SaleHasEnded error
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasEnded.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasEnded.selector, (refundEndTime() + 1)));
 
         // Act
         vm.prank(legionBouncer);
@@ -1325,7 +1329,7 @@ contract LegionFixedPriceSaleTest is Test {
         );
 
         // Expect revert with InvalidFeeAmount error
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidFeeAmount.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidFeeAmount.selector, 90 * 1e18, 100 * 1e18));
 
         // Act
         vm.prank(projectAdmin);
@@ -1348,7 +1352,7 @@ contract LegionFixedPriceSaleTest is Test {
         );
 
         // Expect revert with InvalidFeeAmount error
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidFeeAmount.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidFeeAmount.selector, 39 * 1e18, 40 * 1e18));
 
         // Act
         vm.prank(projectAdmin);
@@ -1460,7 +1464,7 @@ contract LegionFixedPriceSaleTest is Test {
         );
 
         // Expect revert with InvalidTokenAmountSupplied error
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidTokenAmountSupplied.selector, 9990 * 1e18));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidTokenAmountSupplied.selector, 9990 * 1e18, 4000 * 1e18));
 
         // Act
         vm.prank(projectAdmin);
@@ -1732,7 +1736,9 @@ contract LegionFixedPriceSaleTest is Test {
         vm.warp(refundEndTime() - 1);
 
         // Expect revert with RefundPeriodIsNotOver error
-        vm.expectRevert(abi.encodeWithSelector(Errors.RefundPeriodIsNotOver.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.RefundPeriodIsNotOver.selector, (refundEndTime() - 1), refundEndTime())
+        );
 
         // Act
         vm.prank(projectAdmin);
@@ -1910,7 +1916,9 @@ contract LegionFixedPriceSaleTest is Test {
         ILegionFixedPriceSale(legionSaleInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
 
         // Expect revert with CannotWithdrawExcessInvestedCapital error
-        vm.expectRevert(abi.encodeWithSelector(Errors.CannotWithdrawExcessInvestedCapital.selector, investor2));
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.CannotWithdrawExcessInvestedCapital.selector, investor2, 1000 * 1e6)
+        );
 
         // Act
         vm.prank(investor2);
@@ -2056,7 +2064,9 @@ contract LegionFixedPriceSaleTest is Test {
         vm.warp(refundEndTime() - 1);
 
         // Expect revert with RefundPeriodIsNotOver error
-        vm.expectRevert(abi.encodeWithSelector(Errors.RefundPeriodIsNotOver.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.RefundPeriodIsNotOver.selector, (refundEndTime() - 1), refundEndTime())
+        );
 
         // Act
         vm.prank(investor2);

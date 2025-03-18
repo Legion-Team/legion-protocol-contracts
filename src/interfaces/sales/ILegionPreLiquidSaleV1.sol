@@ -240,7 +240,7 @@ interface ILegionPreLiquidSaleV1 {
         bool isCanceled;
         /// @notice Indicates if ask tokens have been supplied
         /// @dev Supply status
-        bool askTokensSupplied;
+        bool tokensSupplied;
         /// @notice Indicates if the sale has ended
         /// @dev End status
         bool hasEnded;

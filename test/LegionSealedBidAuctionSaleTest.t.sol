@@ -876,7 +876,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.warp(endTime() + 1); // After sale period
 
         // Assert: Expect revert due to sale ending
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasEnded.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasEnded.selector, (endTime() + 1)));
 
         // Act: Attempt to invest after sale end
         vm.prank(investor1);
@@ -1010,7 +1010,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         prepareInvestorSignatures();
 
         // Assert: Expect revert due to invalid signature
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidSignature.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidSignature.selector, invalidSignature));
 
         // Act: Attempt to invest with invalid signature
         vm.prank(investor1);
@@ -1180,7 +1180,9 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.warp(refundEndTime() + 1); // After refund period
 
         // Assert: Expect revert due to refund period ending
-        vm.expectRevert(abi.encodeWithSelector(Errors.RefundPeriodIsOver.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.RefundPeriodIsOver.selector, (refundEndTime() + 1), refundEndTime())
+        );
 
         // Act: Attempt to refund after period end
         vm.prank(investor1);
@@ -1219,7 +1221,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.warp(endTime() + 1); // Within refund period
 
         // Assert: Expect revert due to no investment
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidRefundAmount.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidRefundAmount.selector, 0));
 
         // Act: Attempt to refund without investing
         vm.prank(investor1);
@@ -1421,7 +1423,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelSale();
 
         // Assert: Expect revert due to no investment
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidWithdrawAmount.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidWithdrawAmount.selector, 0));
 
         // Act: Attempt to withdraw without investing
         vm.prank(investor1);
@@ -1664,7 +1666,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.warp(refundEndTime() - 1); // Before refund period ends
 
         // Assert: Expect revert due to active refund period
-        vm.expectRevert(abi.encodeWithSelector(Errors.RefundPeriodIsNotOver.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.RefundPeriodIsNotOver.selector, block.timestamp, refundEndTime()));
 
         // Act: Attempt to initialize before refund period ends
         vm.prank(legionBouncer);
@@ -1723,7 +1725,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.warp(refundEndTime() + 1); // After refund period (2 weeks + 1 second)
 
         // Assert: Expect revert due to sale having ended
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasEnded.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasEnded.selector, (refundEndTime() + 1)));
 
         // Act: Attempt to set accepted capital as legionBouncer
         vm.prank(legionBouncer);
@@ -1874,7 +1876,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         );
 
         // Assert: Expect revert due to incorrect Legion fee (2.5% of 4000 = 100 LFG, not 90 LFG)
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidFeeAmount.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidFeeAmount.selector, 90 * 1e18, 100 * 1e18));
 
         // Act: Attempt to supply tokens with incorrect Legion fee
         vm.prank(projectAdmin);
@@ -1900,7 +1902,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         );
 
         // Assert: Expect revert due to incorrect referrer fee (1% of 4000 = 40 LFG, not 39 LFG)
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidFeeAmount.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidFeeAmount.selector, 39 * 1e18, 40 * 1e18));
 
         // Act: Attempt to supply tokens with incorrect referrer fee
         vm.prank(projectAdmin);
@@ -1946,7 +1948,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         );
 
         // Assert: Expect revert due to incorrect token amount (9990 LFG < 4000 LFG)
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidTokenAmountSupplied.selector, 9990 * 1e18));
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidTokenAmountSupplied.selector, 9990 * 1e18, 4000 * 1e18));
 
         // Act: Attempt to supply incorrect amount
         vm.prank(projectAdmin);
@@ -2193,7 +2195,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.warp(refundEndTime() - 1); // Still within refund period (2 weeks - 1 second)
 
         // Assert: Expect revert due to active refund period
-        vm.expectRevert(abi.encodeWithSelector(Errors.RefundPeriodIsNotOver.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.RefundPeriodIsNotOver.selector, block.timestamp, refundEndTime()));
 
         // Act: Attempt withdrawal as projectAdmin
         vm.prank(projectAdmin);
@@ -2428,7 +2430,9 @@ contract LegionSealedBidAuctionSaleTest is Test {
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
 
         // Assert: Expect revert due to invalid Merkle proof
-        vm.expectRevert(abi.encodeWithSelector(Errors.CannotWithdrawExcessInvestedCapital.selector, investor2));
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.CannotWithdrawExcessInvestedCapital.selector, investor2, 1000 * 1e6)
+        );
 
         // Act: Attempt withdrawal with incorrect proof as investor2
         vm.prank(investor2);
@@ -2604,7 +2608,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.warp(refundEndTime() - 1); // Before refund period ends (2 weeks - 1 second)
 
         // Assert: Expect revert due to active refund period
-        vm.expectRevert(abi.encodeWithSelector(Errors.RefundPeriodIsNotOver.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.RefundPeriodIsNotOver.selector, block.timestamp, refundEndTime()));
 
         // Act: Attempt claim as investor2
         vm.prank(investor2);
