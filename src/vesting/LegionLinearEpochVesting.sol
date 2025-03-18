@@ -95,7 +95,7 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
         uint256 _epochDurationSeconds,
         uint256 _numberOfEpochs
     )
-        public
+        external
         initializer
     {
         // Initialize the LegionLinearVesting clone

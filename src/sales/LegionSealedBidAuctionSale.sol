@@ -237,7 +237,7 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
      * @param salt Salt used in the encryption process
      * @return uint256 Decrypted bid amount
      */
-    function decryptSealedBid(uint256 encryptedAmountOut, uint256 salt) public view returns (uint256) {
+    function decryptSealedBid(uint256 encryptedAmountOut, uint256 salt) external view returns (uint256) {
         // Verify that the private key has been published by Legion
         _verifyPrivateKeyIsPublished();
 

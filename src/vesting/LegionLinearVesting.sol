@@ -79,7 +79,7 @@ contract LegionLinearVesting is VestingWalletUpgradeable {
         uint64 durationSeconds,
         uint64 cliffDurationSeconds
     )
-        public
+        external
         initializer
     {
         // Initialize the LegionLinearVesting clone
