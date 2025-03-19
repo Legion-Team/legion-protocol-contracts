@@ -6,6 +6,12 @@
   optimizer = true
   optimizer_runs = 200
 
+remappings = [ 
+  "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+  "@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/",
+  "@solady/src=lib/solady/src"
+]
+
 [fmt]
   bracket_spacing = true
   int_types = "long"
