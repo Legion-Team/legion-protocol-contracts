@@ -38,9 +38,6 @@ contract LegionLinearEpochVestingTest is Test {
     /// @notice Address of the deployed vesting contract instance
     address public legionVestingInstance;
 
-    /// @notice Address representing a non-owner account, set to 0x03
-    address nonOwner = address(0x02);
-
     /// @notice Address representing the vesting contract owner, set to 0x04
     address vestingOwner = address(0x03);
 
@@ -86,12 +83,13 @@ contract LegionLinearEpochVestingTest is Test {
         // Arrange & Act
         prepareCreateLegionLinearEpochVesting();
 
-        // Assert
+        // Expect
         assertEq(LegionLinearEpochVesting(payable(legionVestingInstance)).owner(), vestingOwner);
         assertEq(LegionLinearEpochVesting(payable(legionVestingInstance)).start(), block.timestamp);
         assertEq(LegionLinearEpochVesting(payable(legionVestingInstance)).duration(), 2_678_400 * 12);
         assertEq(LegionLinearEpochVesting(payable(legionVestingInstance)).cliffEndTimestamp(), 1 hours + 1);
         assertEq(LegionLinearEpochVesting(payable(legionVestingInstance)).getCurrentEpoch(), 1);
+        assertEq(LegionLinearEpochVesting(payable(legionVestingInstance)).lastClaimedEpoch(), 0);
         assertEq(
             LegionLinearEpochVesting(payable(legionVestingInstance)).getCurrentEpochAtTimestamp(block.timestamp), 1
         );
@@ -105,11 +103,10 @@ contract LegionLinearEpochVestingTest is Test {
         // Arrange
         prepareCreateLegionLinearEpochVesting();
 
-        // Expect revert (generic revert due to Initializable's check)
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Initializable.InvalidInitialization.selector));
 
         // Act
-        vm.prank(nonOwner);
         LegionLinearEpochVesting(payable(legionVestingInstance)).initialize(
             vestingOwner, uint64(block.timestamp), 2_678_400 * 12, uint64(1 hours), 2_678_400, 12
         );
@@ -121,9 +118,9 @@ contract LegionLinearEpochVestingTest is Test {
      */
     function test_initialize_revertInitializeImplementation() public {
         // Arrange
-        address linearVestingImplementation = legionVestingFactory.linearEpochVestingTemplate();
+        address linearVestingImplementation = legionVestingFactory.i_linearEpochVestingTemplate();
 
-        // Expect revert with InvalidInitialization error
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Initializable.InvalidInitialization.selector));
 
         // Act
@@ -137,7 +134,7 @@ contract LegionLinearEpochVestingTest is Test {
      * @dev Expects InvalidInitialization revert from Initializable
      */
     function test_initialize_revertInitializeTemplate() public {
-        // Expect revert with InvalidInitialization error
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Initializable.InvalidInitialization.selector));
 
         // Act
@@ -158,7 +155,7 @@ contract LegionLinearEpochVestingTest is Test {
         // Arrange
         prepareCreateLegionLinearEpochVesting();
 
-        // Expect revert with CliffNotEnded error
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.CliffNotEnded.selector, block.timestamp));
 
         // Act
@@ -173,10 +170,9 @@ contract LegionLinearEpochVestingTest is Test {
         // Arrange
         prepareCreateLegionLinearEpochVesting();
 
-        // Move to EPOCH 2
         vm.warp(block.timestamp + 2_678_400 + 1);
 
-        // Expect event emission
+        // Expect
         vm.expectEmit();
         emit VestingWalletUpgradeable.ERC20Released(address(askToken), 100 * 1e18);
 
@@ -192,10 +188,9 @@ contract LegionLinearEpochVestingTest is Test {
         // Arrange
         prepareCreateLegionLinearEpochVesting();
 
-        // Move to EPOCH 13
         vm.warp(block.timestamp + 2_678_400 * 12 + 1);
 
-        // Expect event emission
+        // Expect
         vm.expectEmit();
         emit VestingWalletUpgradeable.ERC20Released(address(askToken), 1200 * 1e18);
 

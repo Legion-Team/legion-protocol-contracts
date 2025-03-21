@@ -33,9 +33,6 @@ contract LegionBouncerTest is Test {
     /// @notice Address representing the AWS broadcaster with BROADCASTER_ROLE
     address awsBroadcaster = address(0x10);
 
-    /// @notice Address representing a non-AWS broadcaster without BROADCASTER_ROLE
-    address nonAwsBroadcaster = address(0x02);
-
     /// @notice Bytes32 identifier for the Legion admin address in the registry
     bytes32 legionAdminId = bytes32("LEGION_ADMIN");
 
@@ -78,12 +75,14 @@ contract LegionBouncerTest is Test {
      * @notice Tests that functionCall reverts when called without BROADCASTER_ROLE
      * @dev Expects an Unauthorized revert when a non-broadcaster attempts to call setLegionAddress
      */
-    function test_functionCall_revertsIfCalledByNonBroadcasterRole() public {
+    function testFuzz_functionCall_revertsIfCalledByNonBroadcasterRole(address nonAwsBroadcaster) public {
         // Arrange
+        vm.assume(nonAwsBroadcaster != awsBroadcaster);
+
         bytes memory data =
             abi.encodeWithSignature("setLegionAddress(bytes32,address)", legionAdminId, address(legionAdmin));
 
-        // Expect revert with Ownable.Unauthorized selector
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Ownable.Unauthorized.selector));
 
         // Act

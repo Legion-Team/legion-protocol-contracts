@@ -144,22 +144,16 @@ contract LegionSealedBidAuctionSaleTest is Test {
     address public investor5 = address(0x07);
 
     /**
-     * @notice Address not authorized as Legion admin
-     * @dev Set to 0x08, used for unauthorized access tests
+     * @notice Address receiving referrer fees
+     * @dev Set to 0x08, receives fee portions from the sale
      */
-    address public nonLegionAdmin = address(0x08);
-
-    /**
-     * @notice Address not authorized as project admin
-     * @dev Set to 0x09, used for unauthorized access tests
-     */
-    address public nonProjectAdmin = address(0x09);
+    address public referrerFeeReceiver = address(0x08);
 
     /**
      * @notice Address receiving Legion fees
-     * @dev Set to 0x10, receives fee portions from the sale
+     * @dev Set to 0x09, receives fee portions from the sale
      */
-    address public legionFeeReceiver = address(0x10);
+    address public legionFeeReceiver = address(0x09);
 
     /**
      * @notice Signatures for investors 1-4 and an invalid signature
@@ -278,18 +272,18 @@ contract LegionSealedBidAuctionSaleTest is Test {
     function prepareCreateLegionSealedBidAuction() public {
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: 1 hours, // 3600 seconds
-                refundPeriodSeconds: 2 weeks, // 1,209,600 seconds
-                legionFeeOnCapitalRaisedBps: 250, // 2.5%
-                legionFeeOnTokensSoldBps: 250, // 2.5%
-                referrerFeeOnCapitalRaisedBps: 100, // 1%
-                referrerFeeOnTokensSoldBps: 100, // 1%
-                minimumInvestAmount: 1e6, // 1 USDC
+                salePeriodSeconds: 1 hours,
+                refundPeriodSeconds: 2 weeks,
+                legionFeeOnCapitalRaisedBps: 250,
+                legionFeeOnTokensSoldBps: 250,
+                referrerFeeOnCapitalRaisedBps: 100,
+                referrerFeeOnTokensSoldBps: 100,
+                minimumInvestAmount: 1e6,
                 bidToken: address(bidToken),
                 askToken: address(askToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: address(nonLegionAdmin)
+                referrerFeeReceiver: referrerFeeReceiver
             }),
             ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
@@ -459,13 +453,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      */
     function prepareInvestorVestingConfig() public {
         investorVestingConfig = ILegionVestingManager.LegionInvestorVestingConfig(
-            ILegionVestingManager.VestingType.LEGION_LINEAR, // Linear vesting
-            0, // Start time
-            31_536_000, // 1 year in seconds
-            3600, // 1 hour cliff
-            0, // No offset
-            0, // No custom release
-            1e17 // 10% initial release (0.1 * 1e18)
+            ILegionVestingManager.VestingType.LEGION_LINEAR, 0, 31_536_000, 3600, 0, 0, 1e17
         );
     }
 
@@ -533,16 +521,15 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Verifies that the sale instance is initialized with the correct public key and vesting factory
      */
     function test_createSealedBidAuction_successfullyDeployedWithValidParameters() public {
-        // Arrange & Act: Deploy the sale instance
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
-        // Retrieve configurations from the deployed instance
         ILegionSealedBidAuctionSale.SealedBidAuctionSaleConfiguration memory _sealedBidAuctionSaleConfig =
             LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).sealedBidAuctionSaleConfiguration();
         ILegionVestingManager.LegionVestingConfig memory _vestingConfig =
             LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).vestingConfiguration();
 
-        // Assert: Verify public key and vesting factory settings
+        // Expect
         assertEq(_sealedBidAuctionSaleConfig.publicKey.x, PUBLIC_KEY.x, "Public key x-coordinate mismatch");
         assertEq(_sealedBidAuctionSaleConfig.publicKey.y, PUBLIC_KEY.y, "Public key y-coordinate mismatch");
         assertEq(_vestingConfig.vestingFactory, address(legionVestingFactory), "Vesting factory address mismatch");
@@ -553,13 +540,13 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects InvalidInitialization revert from Initializable due to proxy initialization lock
      */
     function test_initialize_revertsIfAlreadyInitialized() public {
-        // Arrange: Deploy the sale instance
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
-        // Assert: Expect revert on reinitialization
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Initializable.InvalidInitialization.selector));
 
-        // Act: Attempt to reinitialize the deployed instance
+        // Act
         LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).initialize(
             testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams
         );
@@ -570,13 +557,13 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects InvalidInitialization revert from Initializable due to template protection
      */
     function test_initialize_revertInitializeImplementation() public {
-        // Arrange: Get the implementation address from the factory
-        address sealedBidAuctionImplementation = legionSaleFactory.sealedBidAuctionTemplate();
+        // Arrange
+        address sealedBidAuctionImplementation = legionSaleFactory.i_sealedBidAuctionTemplate();
 
-        // Assert: Expect revert due to initialization protection
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Initializable.InvalidInitialization.selector));
 
-        // Act: Attempt to initialize the implementation directly
+        // Act
         LegionSealedBidAuctionSale(payable(sealedBidAuctionImplementation)).initialize(
             testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams
         );
@@ -587,10 +574,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects InvalidInitialization revert from Initializable due to template protection
      */
     function test_initialize_revertInitializeTemplate() public {
-        // Assert: Expect revert due to initialization protection
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Initializable.InvalidInitialization.selector));
 
-        // Act: Attempt to initialize the template directly
+        // Act
         LegionSealedBidAuctionSale(sealedBidAuctionTemplate).initialize(
             testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams
         );
@@ -601,7 +588,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects ZeroAddressProvided revert when key addresses are zero
      */
     function test_createSealedBidAuction_revertsWithZeroAddressProvided() public {
-        // Arrange: Set params with zero addresses
+        // Arrange
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: 1 hours,
@@ -611,19 +598,19 @@ contract LegionSealedBidAuctionSaleTest is Test {
                 referrerFeeOnCapitalRaisedBps: 100,
                 referrerFeeOnTokensSoldBps: 100,
                 minimumInvestAmount: 1e6,
-                bidToken: address(0), // Zero address
-                askToken: address(0), // Zero address
-                projectAdmin: address(0), // Zero address
-                addressRegistry: address(0), // Zero address
-                referrerFeeReceiver: address(0) // Zero address
-             }),
+                bidToken: address(0),
+                askToken: address(0),
+                projectAdmin: address(0),
+                addressRegistry: address(0),
+                referrerFeeReceiver: address(0)
+            }),
             ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
 
-        // Assert: Expect revert due to zero address
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.ZeroAddressProvided.selector));
 
-        // Act: Attempt to deploy with invalid params
+        // Act
         vm.prank(legionBouncer);
         legionSaleFactory.createSealedBidAuction(testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams);
     }
@@ -633,29 +620,29 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects ZeroValueProvided revert when key parameters are zero
      */
     function test_createSealedBidAuction_revertsWithZeroValueProvided() public {
-        // Arrange: Set params with zero values
+        // Arrange
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: 0, // Zero value
-                refundPeriodSeconds: 0, // Zero value
-                legionFeeOnCapitalRaisedBps: 0, // Zero value
-                legionFeeOnTokensSoldBps: 0, // Zero value
-                referrerFeeOnCapitalRaisedBps: 0, // Zero value
-                referrerFeeOnTokensSoldBps: 0, // Zero value
-                minimumInvestAmount: 0, // Zero value
+                salePeriodSeconds: 0,
+                refundPeriodSeconds: 0,
+                legionFeeOnCapitalRaisedBps: 0,
+                legionFeeOnTokensSoldBps: 0,
+                referrerFeeOnCapitalRaisedBps: 0,
+                referrerFeeOnTokensSoldBps: 0,
+                minimumInvestAmount: 0,
                 bidToken: address(bidToken),
                 askToken: address(askToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: address(nonLegionAdmin)
+                referrerFeeReceiver: referrerFeeReceiver
             }),
             ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
 
-        // Assert: Expect revert due to zero value
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.ZeroValueProvided.selector));
 
-        // Act: Attempt to deploy with invalid params
+        // Act
         vm.prank(legionBouncer);
         legionSaleFactory.createSealedBidAuction(testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams);
     }
@@ -665,11 +652,11 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects InvalidPeriodConfig revert when sale or refund periods exceed limits
      */
     function test_createSealedBidAuction_revertsWithInvalidPeriodConfigTooLong() public {
-        // Arrange: Set params with excessively long periods
+        // Arrange
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: 12 weeks + 1, // Exceeds typical max (e.g., 12 weeks)
-                refundPeriodSeconds: 2 weeks + 1, // Slightly over 2 weeks
+                salePeriodSeconds: 12 weeks + 1,
+                refundPeriodSeconds: 2 weeks + 1,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -679,15 +666,15 @@ contract LegionSealedBidAuctionSaleTest is Test {
                 askToken: address(askToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: address(nonLegionAdmin)
+                referrerFeeReceiver: referrerFeeReceiver
             }),
             ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
 
-        // Assert: Expect revert due to invalid period configuration
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.InvalidPeriodConfig.selector));
 
-        // Act: Attempt to deploy with invalid params
+        // Act
         vm.prank(legionBouncer);
         legionSaleFactory.createSealedBidAuction(testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams);
     }
@@ -697,11 +684,11 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects InvalidPeriodConfig revert when sale or refund periods are below minimums
      */
     function test_createSealedBidAuction_revertsWithInvalidPeriodConfigTooShort() public {
-        // Arrange: Set params with excessively short periods
+        // Arrange
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: 1 hours - 1, // Below 1 hour
-                refundPeriodSeconds: 1 hours - 1, // Below typical minimum
+                salePeriodSeconds: 1 hours - 1,
+                refundPeriodSeconds: 1 hours - 1,
                 legionFeeOnCapitalRaisedBps: 250,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
@@ -711,15 +698,15 @@ contract LegionSealedBidAuctionSaleTest is Test {
                 askToken: address(askToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: address(nonLegionAdmin)
+                referrerFeeReceiver: referrerFeeReceiver
             }),
             ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
 
-        // Assert: Expect revert due to invalid period configuration
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.InvalidPeriodConfig.selector));
 
-        // Act: Attempt to deploy with invalid params
+        // Act
         vm.prank(legionBouncer);
         legionSaleFactory.createSealedBidAuction(testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams);
     }
@@ -729,7 +716,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects InvalidBidPublicKey revert when the public key is invalid (e.g., not on curve)
      */
     function test_createSealedBidAuction_revertsWithInvalidPublicKey() public {
-        // Arrange: Set params with an invalid public key
+        // Arrange
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: 1 hours,
@@ -743,15 +730,15 @@ contract LegionSealedBidAuctionSaleTest is Test {
                 askToken: address(askToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: address(nonLegionAdmin)
+                referrerFeeReceiver: referrerFeeReceiver
             }),
             ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: INVALID_PUBLIC_KEY_1 })
         );
 
-        // Assert: Expect revert due to invalid public key
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.InvalidBidPublicKey.selector));
 
-        // Act: Attempt to deploy with invalid params
+        // Act:
         vm.prank(legionBouncer);
         legionSaleFactory.createSealedBidAuction(testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams);
     }
@@ -765,14 +752,14 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Verifies that the Paused event is emitted when paused by legionBouncer
      */
     function test_pauseSale_successfullyPauseTheSale() public {
-        // Arrange: Deploy the sale instance
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
-        // Assert: Expect Paused event with legionBouncer as the caller
+        // Expect
         vm.expectEmit();
         emit Pausable.Paused(legionBouncer);
 
-        // Act: Pause the sale
+        // Act
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).pauseSale();
     }
@@ -782,17 +769,17 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Verifies that the Unpaused event is emitted after pausing and unpausing
      */
     function test_unpauseSale_successfullyUnpauseTheSale() public {
-        // Arrange: Deploy and pause the sale
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).pauseSale();
 
-        // Assert: Expect Unpaused event with legionBouncer as the caller
+        // Expect
         vm.expectEmit();
         emit Pausable.Unpaused(legionBouncer);
 
-        // Act: Unpause the sale
+        // Act
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).unpauseSale();
     }
@@ -801,14 +788,15 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @notice Tests that pausing the sale by a non-Legion admin reverts
      * @dev Expects NotCalledByLegion revert when called by nonLegionAdmin
      */
-    function test_pauseSale_revertsIfCalledByNonLegionAdmin() public {
-        // Arrange: Deploy the sale instance
+    function testFuzz_pauseSale_revertsIfCalledByNonLegionAdmin(address nonLegionAdmin) public {
+        // Arrange
+        vm.assume(nonLegionAdmin != legionBouncer);
         prepareCreateLegionSealedBidAuction();
 
-        // Assert: Expect revert due to unauthorized caller
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.NotCalledByLegion.selector));
 
-        // Act: Attempt to pause as nonLegionAdmin
+        // Act
         vm.prank(nonLegionAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).pauseSale();
     }
@@ -817,17 +805,18 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @notice Tests that unpausing the sale by a non-Legion admin reverts
      * @dev Expects NotCalledByLegion revert when called by nonLegionAdmin after pausing
      */
-    function test_unpauseSale_revertsIfNotCalledByLegionAdmin() public {
-        // Arrange: Deploy and pause the sale
+    function testFuzz_unpauseSale_revertsIfNotCalledByLegionAdmin(address nonLegionAdmin) public {
+        // Arrange
+        vm.assume(nonLegionAdmin != legionBouncer);
         prepareCreateLegionSealedBidAuction();
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).pauseSale();
 
-        // Assert: Expect revert due to unauthorized caller
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.NotCalledByLegion.selector));
 
-        // Act: Attempt to unpause as nonLegionAdmin
+        // Act
         vm.prank(nonLegionAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).unpauseSale();
     }
@@ -841,21 +830,21 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Verifies that the CapitalInvested event is emitted with correct parameters
      */
     function test_invest_successfullyEmitsCapitalInvested() public {
-        // Arrange: Set up the sale and investor prerequisites
+        // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
 
-        vm.warp(startTime() + 1); // Within sale period
+        vm.warp(startTime() + 1);
 
-        // Assert: Expect CapitalInvested event with investor1's details
+        // Expect
         vm.expectEmit();
         emit ILegionSealedBidAuctionSale.CapitalInvested(
             1000 * 1e6, encryptedAmountInvestort1, uint256(uint160(investor1)), investor1, startTime() + 1
         );
 
-        // Act: Investor1 invests 1000 USDC
+        // Act
         vm.prank(investor1);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).invest(
             1000 * 1e6, sealedBidDataInvestor1, signatureInv1
@@ -867,18 +856,18 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects SaleHasEnded revert when called after endTime
      */
     function test_invest_revertsIfSaleHasEnded() public {
-        // Arrange: Set up the sale and investor prerequisites
+        // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
 
-        vm.warp(endTime() + 1); // After sale period
+        vm.warp(endTime() + 1);
 
-        // Assert: Expect revert due to sale ending
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasEnded.selector, (endTime() + 1)));
 
-        // Act: Attempt to invest after sale end
+        // Act
         vm.prank(investor1);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).invest(
             1000 * 1e6, sealedBidDataInvestor1, signatureInv1
@@ -890,16 +879,16 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects InvalidBidPublicKey revert when using INVALID_PUBLIC_KEY
      */
     function test_invest_revertsIfDifferentPublicKey() public {
-        // Arrange: Set up the sale and investor prerequisites
+        // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
 
-        // Assert: Expect revert due to mismatched public key
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.InvalidBidPublicKey.selector));
 
-        // Act: Attempt to invest with invalid sealed bid data
+        // Act
         vm.prank(investor1);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).invest(
             1000 * 1e6, invalidSealedBidData, signatureInv1
@@ -911,16 +900,16 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects InvalidBidPublicKey revert when using INVALID_PUBLIC_KEY_1
      */
     function test_invest_revertsIfInvalidPublicKey() public {
-        // Arrange: Set up the sale and investor prerequisites
+        // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
 
-        // Assert: Expect revert due to invalid public key
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.InvalidBidPublicKey.selector));
 
-        // Act: Attempt to invest with invalid sealed bid data
+        // Act
         vm.prank(investor1);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).invest(
             1000 * 1e6, invalidSealedBidData1, signatureInv1
@@ -932,21 +921,20 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects InvalidSalt revert when salt does not match investor address
      */
     function test_invest_revertsIfInvalidSalt() public {
-        // Arrange: Set up the sale and investor prerequisites
+        // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
 
-        // Create sealed bid data with investor2's salt
         (uint256 encryptedAmountOut2,) =
             ECIES.encrypt(1000 * 1e18, PUBLIC_KEY, PRIVATE_KEY, uint256(uint160(investor2)));
         invalidSealedBidData = abi.encode(encryptedAmountOut2, uint256(uint160(investor2)), PUBLIC_KEY);
 
-        // Assert: Expect revert due to salt mismatch (investor1 using investor2's salt)
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.InvalidSalt.selector));
 
-        // Act: Attempt to invest with mismatched salt
+        // Act
         vm.prank(investor1);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).invest(
             1000 * 1e16, invalidSealedBidData, signatureInv1
@@ -958,16 +946,16 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects InvalidInvestAmount revert when amount is below 1e6
      */
     function test_invest_revertsIfAmountLessThanMinimum() public {
-        // Arrange: Set up the sale and investor prerequisites
+        // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
 
-        // Assert: Expect revert with specific amount (1e5 < 1e6)
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.InvalidInvestAmount.selector, 1 * 1e5));
 
-        // Act: Attempt to invest below minimum
+        // Act
         vm.prank(investor1);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).invest(
             1 * 1e5, sealedBidDataInvestor1, signatureInv1
@@ -979,7 +967,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects SaleIsCanceled revert after projectAdmin cancels the sale
      */
     function test_invest_revertsIfSaleIsCanceled() public {
-        // Arrange: Set up the sale and investor prerequisites
+        // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveInvestorTokens();
@@ -988,10 +976,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelSale();
 
-        // Assert: Expect revert due to canceled sale
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
 
-        // Act: Attempt to invest after cancellation
+        // Act
         vm.prank(investor1);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).invest(
             1000 * 1e16, sealedBidDataInvestor1, signatureInv1
@@ -1003,16 +991,16 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects InvalidSignature revert when using a signature from nonLegionSignerPK
      */
     function test_invest_revertsIfInvalidSignature() public {
-        // Arrange: Set up the sale and investor prerequisites
+        // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
 
-        // Assert: Expect revert due to invalid signature
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.InvalidSignature.selector, invalidSignature));
 
-        // Act: Attempt to invest with invalid signature
+        // Act
         vm.prank(investor1);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).invest(
             1000 * 1e6, sealedBidDataInvestor1, invalidSignature
@@ -1024,7 +1012,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects InvestorHasRefunded revert after investor1 refunds their investment
      */
     function test_invest_revertsIfInvestorHasRefunded() public {
-        // Arrange: Set up the sale and investor prerequisites
+        // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveInvestorTokens();
@@ -1032,7 +1020,6 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         vm.warp(startTime() + 1);
 
-        // Investor1 invests and then refunds
         vm.prank(investor1);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).invest(
             1000 * 1e6, sealedBidDataInvestor1, signatureInv1
@@ -1040,10 +1027,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.prank(investor1);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).refund();
 
-        // Assert: Expect revert due to prior refund
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.InvestorHasRefunded.selector, investor1));
 
-        // Act: Attempt to reinvest after refund
+        // Act
         vm.prank(investor1);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).invest(
             1000 * 1e6, sealedBidDataInvestor1, signatureInv1
@@ -1055,7 +1042,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects InvestorHasClaimedExcess revert after investor2 claims excess
      */
     function test_invest_revertsIfInvestorHasClaimedExcessCapital() public {
-        // Arrange: Set up the sale and investor prerequisites
+        // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveInvestorTokens();
@@ -1074,10 +1061,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
             1000 * 1e6, excessClaimProofInvestor2
         );
 
-        // Assert: Expect revert due to prior excess claim
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.InvestorHasClaimedExcess.selector, investor2));
 
-        // Act: Attempt to reinvest after claiming excess
+        // Act
         vm.prank(investor2);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).invest(
             2000 * 1e6, sealedBidDataInvestor2, signatureInv2
@@ -1093,7 +1080,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Verifies that the EmergencyWithdraw event is emitted and funds are withdrawn
      */
     function test_emergencyWithdraw_successfullyWithdrawByLegionAdmin() public {
-        // Arrange: Set up the sale and simulate an investment
+        // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveInvestorTokens();
@@ -1106,11 +1093,11 @@ contract LegionSealedBidAuctionSaleTest is Test {
             1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
-        // Assert: Expect EmergencyWithdraw event with correct parameters
+        // Expect
         vm.expectEmit();
         emit ILegionSale.EmergencyWithdraw(legionBouncer, address(bidToken), 1000 * 1e6);
 
-        // Act: Perform emergency withdrawal
+        // Act
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).emergencyWithdraw(
             legionBouncer, address(bidToken), 1000 * 1e6
@@ -1122,13 +1109,13 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects NotCalledByLegion revert when called by projectAdmin
      */
     function test_emergencyWithdraw_revertsIfCalledByNonLegionAdmin() public {
-        // Arrange: Deploy the sale instance
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
-        // Assert: Expect revert due to unauthorized caller
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.NotCalledByLegion.selector));
 
-        // Act: Attempt emergency withdrawal as projectAdmin
+        // Act
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).emergencyWithdraw(
             projectAdmin, address(bidToken), 1000 * 1e6
@@ -1144,7 +1131,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Verifies that the CapitalRefunded event is emitted and investor1's balance is restored
      */
     function test_refund_successfullyEmitsCapitalRefunded() public {
-        // Arrange: Set up the sale and simulate an investment
+        // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveInvestorTokens();
@@ -1155,16 +1142,17 @@ contract LegionSealedBidAuctionSaleTest is Test {
             1000 * 1e6, sealedBidDataInvestor1, signatureInv1
         );
 
-        vm.warp(endTime() + 1); // Within refund period
+        vm.warp(endTime() + 1);
 
-        // Act & Assert: Expect CapitalRefunded event with correct parameters
+        // Expect
         vm.expectEmit();
         emit ILegionSale.CapitalRefunded(1000 * 1e6, investor1);
 
+        // Act
         vm.prank(investor1);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).refund();
 
-        // Assert: Verify investor1's balance is restored
+        // Expect
         uint256 investor1Balance = MockToken(bidToken).balanceOf(investor1);
         assertEq(investor1Balance, 1000 * 1e6, "Investor1 balance should be restored to 1000 USDC");
     }
@@ -1174,17 +1162,17 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects RefundPeriodIsOver revert when called after refundEndTime
      */
     function test_refund_revertsIfRefundPeriodHasEnded() public {
-        // Arrange: Deploy the sale instance
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
-        vm.warp(refundEndTime() + 1); // After refund period
+        vm.warp(refundEndTime() + 1);
 
-        // Assert: Expect revert due to refund period ending
+        // Expect
         vm.expectRevert(
             abi.encodeWithSelector(Errors.RefundPeriodIsOver.selector, (refundEndTime() + 1), refundEndTime())
         );
 
-        // Act: Attempt to refund after period end
+        // Act
         vm.prank(investor1);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).refund();
     }
@@ -1194,7 +1182,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects SaleIsCanceled revert after projectAdmin cancels the sale
      */
     function test_refund_revertsIfSaleIsCanceled() public {
-        // Arrange: Deploy the sale and cancel it
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.warp(endTime() + 1);
@@ -1202,10 +1190,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelSale();
 
-        // Assert: Expect revert due to canceled sale
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
 
-        // Act: Attempt to refund after cancellation
+        // Act
         vm.prank(investor1);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).refund();
     }
@@ -1215,15 +1203,15 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects InvalidRefundAmount revert when investor1 has not invested
      */
     function test_refund_revertsIfNoCapitalIsInvested() public {
-        // Arrange: Deploy the sale instance
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.warp(endTime() + 1); // Within refund period
 
-        // Assert: Expect revert due to no investment
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.InvalidRefundAmount.selector, 0));
 
-        // Act: Attempt to refund without investing
+        // Act
         vm.prank(investor1);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).refund();
     }
@@ -1233,7 +1221,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects InvestorHasRefunded revert after investor1 refunds once
      */
     function test_refund_revertsIfInvestorHasRefunded() public {
-        // Arrange: Set up the sale and simulate an investment and refund
+        // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveInvestorTokens();
@@ -1249,10 +1237,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.prank(investor1);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).refund();
 
-        // Assert: Expect revert due to prior refund
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.InvestorHasRefunded.selector, investor1));
 
-        // Act: Attempt to refund again
+        // Act
         vm.prank(investor1);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).refund();
     }
@@ -1266,14 +1254,14 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Verifies that the SaleCanceled event is emitted before results are published
      */
     function test_cancelSale_successfullyEmitsSaleCanceled() public {
-        // Arrange: Deploy the sale instance
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
-        // Assert: Expect SaleCanceled event
+        // Expect
         vm.expectEmit();
         emit ILegionSale.SaleCanceled();
 
-        // Act: Cancel the sale
+        // Act
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelSale();
     }
@@ -1283,16 +1271,16 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects SaleIsCanceled revert after initial cancellation
      */
     function test_cancelSale_revertsIfSaleAlreadyCanceled() public {
-        // Arrange: Deploy and cancel the sale
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelSale();
 
-        // Assert: Expect revert due to prior cancellation
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
 
-        // Act: Attempt to cancel again
+        // Act
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelSale();
     }
@@ -1302,7 +1290,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects SaleResultsAlreadyPublished revert after publishing results
      */
     function test_cancelSale_revertsIfResultsArePublished() public {
-        // Arrange: Deploy the sale and publish results
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.warp(refundEndTime() + 1);
@@ -1315,10 +1303,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
             claimTokensMerkleRoot, acceptedCapitalMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
-        // Assert: Expect revert due to published results
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.SaleResultsAlreadyPublished.selector));
 
-        // Act: Attempt to cancel after results are published
+        // Act
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelSale();
     }
@@ -1327,15 +1315,16 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @notice Tests that canceling by a non-project admin reverts
      * @dev Expects NotCalledByProject revert when called by investor1
      */
-    function test_cancelSale_revertsIfCalledByNonProjectAdmin() public {
-        // Arrange: Deploy the sale instance
+    function testFuzz_cancelSale_revertsIfCalledByNonProjectAdmin(address nonProjectAdmin) public {
+        // Arrange
+        vm.assume(nonProjectAdmin != projectAdmin);
         prepareCreateLegionSealedBidAuction();
 
-        // Assert: Expect revert due to unauthorized caller
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.NotCalledByProject.selector));
 
-        // Act: Attempt to cancel as investor1
-        vm.prank(investor1);
+        // Act
+        vm.prank(nonProjectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelSale();
     }
 
@@ -1344,7 +1333,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects CancelLocked revert after initializing publish sale results
      */
     function test_cancelSale_revertsIfCancelIsLocked() public {
-        // Arrange: Deploy the sale and lock cancellation
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.warp(refundEndTime() + 1);
@@ -1352,10 +1341,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
 
-        // Assert: Expect revert due to cancel being locked
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.CancelLocked.selector));
 
-        // Act: Attempt to cancel after lock
+        // Act
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelSale();
     }
@@ -1369,7 +1358,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Verifies that the CapitalRefundedAfterCancel event is emitted and funds are returned
      */
     function test_withdrawInvestedCapitalIfCanceled_successfullyEmitsCapitalRefundedAfterCancel() public {
-        // Arrange: Set up the sale, invest, and cancel
+        // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveInvestorTokens();
@@ -1383,15 +1372,14 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelSale();
 
-        // Assert: Expect CapitalRefundedAfterCancel event
+        // Expect
         vm.expectEmit();
         emit ILegionSale.CapitalRefundedAfterCancel(1000 * 1e6, investor1);
 
-        // Act: Withdraw invested capital
+        // Act
         vm.prank(investor1);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawInvestedCapitalIfCanceled();
 
-        // Assert: Verify investor1's balance is restored
         assertEq(MockToken(bidToken).balanceOf(investor1), 1000 * 1e6, "Investor1 balance should be 1000 USDC");
     }
 
@@ -1400,13 +1388,13 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects SaleIsNotCanceled revert when sale is still active
      */
     function test_withdrawInvestedCapitalIfCanceled_revertsIfSaleIsNotCanceled() public {
-        // Arrange: Deploy the sale instance
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
-        // Assert: Expect revert due to sale not being canceled
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsNotCanceled.selector));
 
-        // Act: Attempt to withdraw without cancellation
+        // Act
         vm.prank(investor1);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawInvestedCapitalIfCanceled();
     }
@@ -1416,16 +1404,16 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects InvalidWithdrawAmount revert when investor1 has not invested
      */
     function test_withdrawInvestedCapitalIfCanceled_revertsIfNoCapitalIsPledged() public {
-        // Arrange: Deploy and cancel the sale
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelSale();
 
-        // Assert: Expect revert due to no investment
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.InvalidWithdrawAmount.selector, 0));
 
-        // Act: Attempt to withdraw without investing
+        // Act
         vm.prank(investor1);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawInvestedCapitalIfCanceled();
     }
@@ -1439,7 +1427,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Verifies that the SaleResultsPublished event is emitted with correct parameters
      */
     function test_publishSaleResults_successfullyEmitsSaleResultsPublished() public {
-        // Arrange: Deploy the sale and prepare for publishing
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.warp(refundEndTime() + 1);
@@ -1447,13 +1435,13 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
 
-        // Assert: Expect SaleResultsPublished event
+        // Expect
         vm.expectEmit();
         emit ILegionSealedBidAuctionSale.SaleResultsPublished(
             claimTokensMerkleRoot, acceptedCapitalMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
-        // Act: Publish sale results
+        // Act
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
             claimTokensMerkleRoot, acceptedCapitalMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
@@ -1465,16 +1453,16 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects SaleIsCanceled revert after cancellation
      */
     function test_publishSaleResults_revertsIfSaleIsCanceled() public {
-        // Arrange: Deploy and cancel the sale
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelSale();
 
-        // Assert: Expect revert due to canceled sale
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
 
-        // Act: Attempt to publish results
+        // Act
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
             claimTokensMerkleRoot, acceptedCapitalMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
@@ -1485,8 +1473,9 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @notice Tests that publishing results by a non-Legion admin reverts
      * @dev Expects NotCalledByLegion revert when called by nonLegionAdmin
      */
-    function test_publishSaleResults_revertsIfCalledByNonLegionAdmin() public {
-        // Arrange: Deploy the sale and prepare for publishing
+    function testFuzz_publishSaleResults_revertsIfCalledByNonLegionAdmin(address nonLegionAdmin) public {
+        // Arrange
+        vm.assume(nonLegionAdmin != legionBouncer);
         prepareCreateLegionSealedBidAuction();
 
         vm.warp(refundEndTime() + 1);
@@ -1494,10 +1483,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
 
-        // Assert: Expect revert due to unauthorized caller
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.NotCalledByLegion.selector));
 
-        // Act: Attempt to publish as nonLegionAdmin
+        // Act
         vm.prank(nonLegionAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
             claimTokensMerkleRoot, acceptedCapitalMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
@@ -1509,14 +1498,14 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects CancelNotLocked revert when initializePublishSaleResults is not called
      */
     function test_publishSaleResults_revertsIfCancelNotLocked() public {
-        // Arrange: Deploy the sale instance
+        // Arrange
         prepareCreateLegionSealedBidAuction();
         vm.warp(refundEndTime() + 1);
 
-        // Assert: Expect revert due to cancel not being locked
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.CancelNotLocked.selector));
 
-        // Act: Attempt to publish without locking
+        // Act
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
             claimTokensMerkleRoot, acceptedCapitalMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
@@ -1528,7 +1517,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects PrivateKeyAlreadyPublished revert after initial publication
      */
     function test_publishSaleResults_revertsIfPrivateKeyAlreadyPublished() public {
-        // Arrange: Deploy the sale and publish results
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.warp(refundEndTime() + 1);
@@ -1541,10 +1530,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
             claimTokensMerkleRoot, acceptedCapitalMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
-        // Assert: Expect revert due to private key already published
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.PrivateKeyAlreadyPublished.selector));
 
-        // Act: Attempt to republish
+        // Act
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
             claimTokensMerkleRoot, acceptedCapitalMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
@@ -1556,7 +1545,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects InvalidBidPrivateKey revert when using an incorrect private key
      */
     function test_publishSaleResults_revertsIfInvalidPrivateKey() public {
-        // Arrange: Deploy the sale and prepare for publishing
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.warp(refundEndTime() + 1);
@@ -1564,10 +1553,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
 
-        // Assert: Expect revert due to invalid private key
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.InvalidBidPrivateKey.selector));
 
-        // Act: Attempt to publish with incorrect private key
+        // Act
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
             claimTokensMerkleRoot, acceptedCapitalMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY - 1
@@ -1583,16 +1572,16 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Verifies that the PublishSaleResultsInitialized event is emitted
      */
     function test_initializePublishSaleResults_successfullyEmitsPublishSaleResultsInitialized() public {
-        // Arrange: Deploy the sale instance
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
-        vm.warp(refundEndTime() + 1); // After refund period
+        vm.warp(refundEndTime() + 1);
 
-        // Assert: Expect PublishSaleResultsInitialized event
+        // Expect
         vm.expectEmit();
         emit ILegionSealedBidAuctionSale.PublishSaleResultsInitialized();
 
-        // Act: Initialize publish sale results
+        // Act
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
     }
@@ -1602,16 +1591,16 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects SaleIsCanceled revert after cancellation
      */
     function test_initializePublishSaleResults_revertsIfSaleIsCanceled() public {
-        // Arrange: Deploy and cancel the sale
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelSale();
 
-        // Assert: Expect revert due to canceled sale
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
 
-        // Act: Attempt to initialize after cancellation
+        // Act
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
     }
@@ -1621,7 +1610,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects CancelLocked revert after initial initialization
      */
     function test_initializePublishSaleResults_revertsIfCancelIsLocked() public {
-        // Arrange: Deploy the sale and initialize once
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.warp(refundEndTime() + 1);
@@ -1629,10 +1618,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
 
-        // Assert: Expect revert due to cancel already locked
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.CancelLocked.selector));
 
-        // Act: Attempt to reinitialize
+        // Act
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
     }
@@ -1642,15 +1631,15 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects NotCalledByLegion revert when called by projectAdmin
      */
     function test_initializePublishSaleResults_revertsIfNotCalledByLegionAdmin() public {
-        // Arrange: Deploy the sale instance
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.warp(refundEndTime() + 1);
 
-        // Assert: Expect revert due to unauthorized caller
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.NotCalledByLegion.selector));
 
-        // Act: Attempt to initialize as projectAdmin
+        // Act
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
     }
@@ -1660,15 +1649,15 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects RefundPeriodIsNotOver revert when called before refundEndTime
      */
     function test_initializePublishSaleResults_revertsIfRefunPeriodIsNotOver() public {
-        // Arrange: Deploy the sale instance
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
-        vm.warp(refundEndTime() - 1); // Before refund period ends
+        vm.warp(refundEndTime() - 1);
 
-        // Assert: Expect revert due to active refund period
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.RefundPeriodIsNotOver.selector, block.timestamp, refundEndTime()));
 
-        // Act: Attempt to initialize before refund period ends
+        // Act
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
     }
@@ -1682,16 +1671,16 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Verifies that the AcceptedCapitalSet event is emitted with the correct Merkle root during the sale period
      */
     function test_setAcceptedCapital_successfullyEmitsAcceptedCapitalSet() public {
-        // Arrange: Deploy the sale instance and warp to just before sale end
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.warp(endTime() - 1); // Within sale period (1 hour - 1 second)
 
-        // Assert: Expect AcceptedCapitalSet event with the specified Merkle root
+        // Expect
         vm.expectEmit();
         emit ILegionSale.AcceptedCapitalSet(acceptedCapitalMerkleRoot);
 
-        // Act: Set accepted capital as legionBouncer
+        // Act
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
     }
@@ -1700,16 +1689,17 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @notice Tests that setting accepted capital by a non-Legion admin reverts
      * @dev Expects NotCalledByLegion revert when called by an unauthorized account (nonLegionAdmin)
      */
-    function test_setAcceptedCapital_revertsIfCalledByNonLegionAdmin() public {
-        // Arrange: Deploy the sale instance and warp to just before sale end
+    function testFuzz_setAcceptedCapital_revertsIfCalledByNonLegionAdmin(address nonLegionAdmin) public {
+        // Arrange
+        vm.assume(nonLegionAdmin != legionBouncer);
         prepareCreateLegionSealedBidAuction();
 
         vm.warp(endTime() - 1); // Within sale period (1 hour - 1 second)
 
-        // Assert: Expect revert due to unauthorized caller
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.NotCalledByLegion.selector));
 
-        // Act: Attempt to set accepted capital as nonLegionAdmin
+        // Act
         vm.prank(nonLegionAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
     }
@@ -1719,15 +1709,15 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects SaleHasEnded revert when called after the refund period ends
      */
     function test_setAcceptedCapital_revertsIfSaleHasEnded() public {
-        // Arrange: Deploy the sale instance and warp past the refund period
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.warp(refundEndTime() + 1); // After refund period (2 weeks + 1 second)
 
-        // Assert: Expect revert due to sale having ended
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasEnded.selector, (refundEndTime() + 1)));
 
-        // Act: Attempt to set accepted capital as legionBouncer
+        // Act
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
     }
@@ -1737,7 +1727,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects SaleIsCanceled revert after projectAdmin cancels the sale
      */
     function test_setAcceptedCapital_revertsIfSaleIsCanceled() public {
-        // Arrange: Deploy the sale instance, cancel it, and warp to before sale end
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.warp(endTime() - 1); // Within sale period (1 hour - 1 second)
@@ -1745,10 +1735,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelSale();
 
-        // Assert: Expect revert due to canceled sale
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
 
-        // Act: Attempt to set accepted capital as legionBouncer
+        // Act
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
     }
@@ -1763,7 +1753,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * published
      */
     function test_supplyTokens_successfullyEmitsTokensSuppliedForDistribution() public {
-        // Arrange: Deploy sale, mint and approve tokens, and publish results
+        // Arrange
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveProjectTokens();
 
@@ -1777,12 +1767,12 @@ contract LegionSealedBidAuctionSaleTest is Test {
             claimTokensMerkleRoot, acceptedCapitalMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
-        // Assert: Expect TokensSuppliedForDistribution event with 4000 LFG allocation, 100 LFG Legion fee, 40 LFG
+        // Expect
         // referrer fee
         vm.expectEmit();
         emit ILegionSale.TokensSuppliedForDistribution(4000 * 1e18, 100 * 1e18, 40 * 1e18);
 
-        // Act: Supply tokens as projectAdmin
+        // Act
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
     }
@@ -1792,22 +1782,22 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Verifies that TokensSuppliedForDistribution event is emitted correctly when Legion fee is configured as 0
      */
     function test_supplyTokens_successfullyEmitsIfLegionFeeIsZero() public {
-        // Arrange: Configure sale with zero Legion fee on tokens sold, deploy, and publish results
+        // Arrange
         prepareSealedBidData();
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: 1 hours, // 3600 seconds
-                refundPeriodSeconds: 2 weeks, // 1,209,600 seconds
-                legionFeeOnCapitalRaisedBps: 250, // 2.5%
-                legionFeeOnTokensSoldBps: 0, // 0% Legion fee
-                referrerFeeOnCapitalRaisedBps: 100, // 1%
-                referrerFeeOnTokensSoldBps: 100, // 1% referrer fee
-                minimumInvestAmount: 0, // No minimum
+                salePeriodSeconds: 1 hours,
+                refundPeriodSeconds: 2 weeks,
+                legionFeeOnCapitalRaisedBps: 250,
+                legionFeeOnTokensSoldBps: 0,
+                referrerFeeOnCapitalRaisedBps: 100,
+                referrerFeeOnTokensSoldBps: 100,
+                minimumInvestAmount: 0,
                 bidToken: address(bidToken),
                 askToken: address(askToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: address(nonLegionAdmin)
+                referrerFeeReceiver: referrerFeeReceiver
             }),
             ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
@@ -1829,12 +1819,12 @@ contract LegionSealedBidAuctionSaleTest is Test {
             claimTokensMerkleRoot, acceptedCapitalMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
-        // Assert: Expect TokensSuppliedForDistribution event with 4000 LFG allocation, 0 LFG Legion fee, 40 LFG
+        // Expect
         // referrer fee
         vm.expectEmit();
         emit ILegionSale.TokensSuppliedForDistribution(4000 * 1e18, 0, 40 * 1e18);
 
-        // Act: Supply tokens as projectAdmin
+        // Act
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 0, 40 * 1e18);
     }
@@ -1843,16 +1833,17 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @notice Tests that supplying tokens by a non-project admin reverts
      * @dev Expects NotCalledByProject revert when called by nonProjectAdmin
      */
-    function test_supplyTokens_revertsIfNotCalledByProjectAdmin() public {
-        // Arrange: Deploy sale and warp to after refund period
+    function testFuzz_supplyTokens_revertsIfNotCalledByProjectAdmin(address nonProjectAdmin) public {
+        // Arrange
+        vm.assume(nonProjectAdmin != projectAdmin);
         prepareCreateLegionSealedBidAuction();
 
         vm.warp(refundEndTime() + 1);
 
-        // Assert: Expect revert due to unauthorized caller
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.NotCalledByProject.selector));
 
-        // Act: Attempt to supply tokens as nonProjectAdmin
+        // Act
         vm.prank(nonProjectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(10_000 * 1e18, 250 * 1e18, 40 * 1e18);
     }
@@ -1862,7 +1853,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects InvalidFeeAmount revert when Legion fee (90 LFG) does not match expected (100 LFG)
      */
     function test_supplyTokens_revertsIfLegionFeeIsIncorrect() public {
-        // Arrange: Deploy sale and publish results
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.warp(refundEndTime() + 1);
@@ -1875,10 +1866,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
             claimTokensMerkleRoot, acceptedCapitalMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
-        // Assert: Expect revert due to incorrect Legion fee (2.5% of 4000 = 100 LFG, not 90 LFG)
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.InvalidFeeAmount.selector, 90 * 1e18, 100 * 1e18));
 
-        // Act: Attempt to supply tokens with incorrect Legion fee
+        // Act
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 90 * 1e18, 40 * 1e18);
     }
@@ -1888,7 +1879,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects InvalidFeeAmount revert when referrer fee (39 LFG) does not match expected (40 LFG)
      */
     function test_supplyTokens_revertsIfReferreFeeIsIncorrect() public {
-        // Arrange: Deploy sale and publish results
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.warp(refundEndTime() + 1);
@@ -1901,10 +1892,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
             claimTokensMerkleRoot, acceptedCapitalMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
-        // Assert: Expect revert due to incorrect referrer fee (1% of 4000 = 40 LFG, not 39 LFG)
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.InvalidFeeAmount.selector, 39 * 1e18, 40 * 1e18));
 
-        // Act: Attempt to supply tokens with incorrect referrer fee
+        // Act
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 39 * 1e18);
     }
@@ -1914,16 +1905,16 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects SaleIsCanceled revert after projectAdmin cancels the sale
      */
     function test_supplyTokens_revertsIfSaleIsCanceled() public {
-        // Arrange: Deploy sale and cancel it
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelSale();
 
-        // Assert: Expect revert due to canceled sale
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
 
-        // Act: Attempt to supply tokens after cancellation
+        // Act
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
     }
@@ -1934,7 +1925,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * LFG)
      */
     function test_supplyTokens_revertsIfIncorrectAmountSupplied() public {
-        // Arrange: Deploy sale and publish results
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.warp(refundEndTime() + 1);
@@ -1947,10 +1938,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
             claimTokensMerkleRoot, acceptedCapitalMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
-        // Assert: Expect revert due to incorrect token amount (9990 LFG < 4000 LFG)
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.InvalidTokenAmountSupplied.selector, 9990 * 1e18, 4000 * 1e18));
 
-        // Act: Attempt to supply incorrect amount
+        // Act
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(9990 * 1e18, 250 * 1e18, 40 * 1e18);
     }
@@ -1960,15 +1951,15 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects TokensNotAllocated revert when results are not yet published
      */
     function test_supplyTokens_revertsIfSaleResultsNotPublished() public {
-        // Arrange: Deploy sale and warp to after refund period
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.warp(refundEndTime() + 1);
 
-        // Assert: Expect revert due to results not being published
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.TokensNotAllocated.selector));
 
-        // Act: Attempt to supply tokens before publishing results
+        // Act
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(10_000 * 1e18, 250 * 1e18, 40 * 1e18);
     }
@@ -1978,7 +1969,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects TokensAlreadySupplied revert after initial supply
      */
     function test_supplyTokens_revertsIfTokensAlreadySupplied() public {
-        // Arrange: Deploy sale, supply tokens once, and prepare for second attempt
+        // Arrange
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveProjectTokens();
 
@@ -1995,10 +1986,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
 
-        // Assert: Expect revert due to tokens already being supplied
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.TokensAlreadySupplied.selector));
 
-        // Act: Attempt to supply tokens again
+        // Act
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
     }
@@ -2008,7 +1999,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects AskTokenUnavailable revert when askToken is set to address(0)
      */
     function test_supplyTokens_revertsIfAskTokenUnavailable() public {
-        // Arrange: Deploy sale with no askToken and publish results
+        // Arrange
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: 1 hours,
@@ -2019,10 +2010,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
                 referrerFeeOnTokensSoldBps: 100,
                 minimumInvestAmount: 1e6,
                 bidToken: address(bidToken),
-                askToken: address(0), // No askToken
+                askToken: address(0),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: address(nonLegionAdmin)
+                referrerFeeReceiver: referrerFeeReceiver
             }),
             ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
@@ -2042,10 +2033,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
             claimTokensMerkleRoot, acceptedCapitalMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
-        // Assert: Expect revert due to unavailable askToken
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.AskTokenUnavailable.selector));
 
-        // Act: Attempt to supply tokens with no askToken
+        // Act
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
     }
@@ -2059,15 +2050,15 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Verifies CapitalWithdrawn event and balance update after tokens are supplied and results published
      */
     function test_withdrawRaisedCapital_successfullyEmitsRaisedCapitalWithdrawn() public {
-        // Arrange: Set up sale, investments, and token supply
+        // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveInvestorTokens();
         prepareMintAndApproveProjectTokens();
         prepareInvestorSignatures();
-        prepareInvestedCapitalFromAllInvestors(); // Total raised: 10,000 USDC (1000 + 2000 + 3000 + 4000)
+        prepareInvestedCapitalFromAllInvestors();
 
-        vm.warp(refundEndTime() + 1); // After refund period (2 weeks + 1 second)
+        vm.warp(refundEndTime() + 1);
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
@@ -2083,16 +2074,15 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
 
-        // Assert: Expect CapitalWithdrawn event with total raised capital (10,000 USDC)
+        // Expect
         vm.expectEmit();
         emit ILegionSale.CapitalWithdrawn(capitalRaised(), projectAdmin);
 
-        // Act: Withdraw raised capital as projectAdmin
+        // Act
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawRaisedCapital();
 
-        // Assert: Verify projectAdmin receives capital minus fees (2.5% Legion + 1% referrer = 3.5%)
-        // 10,000 USDC - (250 bps = 250 USDC) - (100 bps = 100 USDC) = 9,650 USDC
+        // Expect
         assertEq(
             bidToken.balanceOf(projectAdmin),
             capitalRaised() - (capitalRaised() * 250 / 10_000) - (capitalRaised() * 100 / 10_000),
@@ -2105,22 +2095,22 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Verifies CapitalWithdrawn event and balance update when Legion fee is 0
      */
     function test_withdrawRaisedCapital_successfullyEmitsIfLegionFeeIsZero() public {
-        // Arrange: Set up sale with zero Legion fee, investments, and token supply
+        // Arrange
         prepareSealedBidData();
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: 1 hours, // 3600 seconds
-                refundPeriodSeconds: 2 weeks, // 1,209,600 seconds
-                legionFeeOnCapitalRaisedBps: 0, // 0% Legion fee
-                legionFeeOnTokensSoldBps: 250, // 2.5%
-                referrerFeeOnCapitalRaisedBps: 100, // 1% referrer fee
-                referrerFeeOnTokensSoldBps: 100, // 1%
-                minimumInvestAmount: 1e6, // 1 USDC
+                salePeriodSeconds: 1 hours,
+                refundPeriodSeconds: 2 weeks,
+                legionFeeOnCapitalRaisedBps: 0,
+                legionFeeOnTokensSoldBps: 250,
+                referrerFeeOnCapitalRaisedBps: 100,
+                referrerFeeOnTokensSoldBps: 100,
+                minimumInvestAmount: 1e6,
                 bidToken: address(bidToken),
                 askToken: address(askToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: address(nonLegionAdmin)
+                referrerFeeReceiver: referrerFeeReceiver
             }),
             ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
@@ -2133,7 +2123,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         prepareMintAndApproveInvestorTokens();
         prepareMintAndApproveProjectTokens();
         prepareInvestorSignatures();
-        prepareInvestedCapitalFromAllInvestors(); // Total raised: 10,000 USDC
+        prepareInvestedCapitalFromAllInvestors();
 
         vm.warp(refundEndTime() + 1);
 
@@ -2151,16 +2141,15 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
 
-        // Assert: Expect CapitalWithdrawn event with total raised capital (10,000 USDC)
+        // Expect
         vm.expectEmit();
         emit ILegionSale.CapitalWithdrawn(capitalRaised(), projectAdmin);
 
-        // Act: Withdraw raised capital as projectAdmin
+        // Act
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawRaisedCapital();
 
-        // Assert: Verify projectAdmin receives capital minus referrer fee (1% = 100 USDC)
-        // 10,000 USDC - (100 bps = 100 USDC) = 9,900 USDC
+        // Expect
         assertEq(
             bidToken.balanceOf(projectAdmin),
             capitalRaised() - (capitalRaised() * 100 / 10_000),
@@ -2172,14 +2161,15 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @notice Tests that withdrawal by a non-project admin reverts
      * @dev Expects NotCalledByProject revert when called by nonProjectAdmin
      */
-    function test_withdrawRaisedCapital_revertsIfNotCalledByProjectAdmin() public {
-        // Arrange: Deploy sale
+    function testFuzz_withdrawRaisedCapital_revertsIfNotCalledByProjectAdmin(address nonProjectAdmin) public {
+        // Arrange
+        vm.assume(nonProjectAdmin != projectAdmin);
         prepareCreateLegionSealedBidAuction();
 
-        // Assert: Expect revert due to unauthorized caller
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.NotCalledByProject.selector));
 
-        // Act: Attempt withdrawal as nonProjectAdmin
+        // Act
         vm.prank(nonProjectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawRaisedCapital();
     }
@@ -2189,15 +2179,15 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects RefundPeriodIsNotOver revert when called before refundEndTime
      */
     function test_withdrawRaisedCapital_revertsIfRefundPeriodNotOver() public {
-        // Arrange: Deploy sale and warp to before refund period ends
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.warp(refundEndTime() - 1); // Still within refund period (2 weeks - 1 second)
 
-        // Assert: Expect revert due to active refund period
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.RefundPeriodIsNotOver.selector, block.timestamp, refundEndTime()));
 
-        // Act: Attempt withdrawal as projectAdmin
+        // Act
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawRaisedCapital();
     }
@@ -2207,15 +2197,15 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects SaleResultsNotPublished revert when results are not yet published
      */
     function test_withdrawRaisedCapital_revertsIfSaleResultsNotPublished() public {
-        // Arrange: Deploy sale and warp to after refund period
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.warp(refundEndTime() + 1);
 
-        // Assert: Expect revert due to unpublished results
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.SaleResultsNotPublished.selector));
 
-        // Act: Attempt withdrawal as projectAdmin
+        // Act
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawRaisedCapital();
     }
@@ -2225,7 +2215,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects TokensNotSupplied revert when tokens have not been supplied
      */
     function test_withdrawRaisedCapital_revertsIfNoTokensSupplied() public {
-        // Arrange: Deploy sale and publish results without supplying tokens
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.warp(refundEndTime() + 1);
@@ -2238,10 +2228,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
             claimTokensMerkleRoot, acceptedCapitalMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
-        // Assert: Expect revert due to tokens not supplied
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.TokensNotSupplied.selector));
 
-        // Act: Attempt withdrawal as projectAdmin
+        // Act
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawRaisedCapital();
     }
@@ -2251,7 +2241,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects SaleIsCanceled revert when sale is canceled
      */
     function test_withdrawRaisedCapital_revertsIfSaleIsCanceled() public {
-        // Arrange: Deploy sale, cancel it, and warp to after refund period
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.warp(refundEndTime() + 1);
@@ -2259,10 +2249,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelSale();
 
-        // Assert: Expect revert due to canceled sale
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
 
-        // Act: Attempt withdrawal as projectAdmin
+        // Act
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawRaisedCapital();
     }
@@ -2272,7 +2262,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects CapitalAlreadyWithdrawn revert after initial withdrawal
      */
     function test_withdrawRaisedCapital_revertsIfCapitalAlreadyWithdrawn() public {
-        // Arrange: Set up sale, invest, supply tokens, and withdraw once
+        // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveInvestorTokens();
@@ -2294,10 +2284,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawRaisedCapital();
         vm.stopPrank();
 
-        // Assert: Expect revert due to capital already withdrawn
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.CapitalAlreadyWithdrawn.selector));
 
-        // Act: Attempt second withdrawal as projectAdmin
+        // Act
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawRaisedCapital();
     }
@@ -2307,7 +2297,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects CapitalNotRaised revert when published capital raised is 0
      */
     function test_withdrawRaisedCapital_revertsIfNoCapitalRaised() public {
-        // Arrange: Set up sale, invest, supply tokens, but publish 0 capital raised
+        // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveInvestorTokens();
@@ -2327,10 +2317,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
 
-        // Assert: Expect revert due to no capital raised in published results
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.CapitalNotRaised.selector));
 
-        // Act: Attempt withdrawal as projectAdmin
+        // Act
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawRaisedCapital();
     }
@@ -2344,7 +2334,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Verifies excess capital (1000 USDC) is transferred back to investor2 with valid Merkle proof
      */
     function test_withdrawExcessInvestedCapital_successfullyTransfersBackExcessCapitalTokens() public {
-        // Arrange: Set up sale, investments, and accepted capital
+        // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveInvestorTokens();
@@ -2360,13 +2350,13 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
 
-        // Act: investor2 withdraws excess capital (1000 USDC of 2000 USDC invested)
+        // Act
         vm.prank(investor2);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawExcessInvestedCapital(
             1000 * 1e6, excessClaimProofInvestor2
         );
 
-        // Assert: Verify investor2's position and balance
+        // Expect
         ILegionSale.InvestorPosition memory _investorPosition =
             LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).investorPositionDetails(investor2);
 
@@ -2383,7 +2373,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects SaleIsCanceled revert after projectAdmin cancels the sale
      */
     function test_withdrawExcessInvestedCapital_revertsIfSaleIsCanceled() public {
-        // Arrange: Deploy sale, set accepted capital, and cancel sale
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         bytes32[] memory excessClaimProofInvestor2 = new bytes32[](2);
@@ -2398,10 +2388,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelSale();
 
-        // Assert: Expect revert due to canceled sale
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
 
-        // Act: Attempt withdrawal as investor2
+        // Act
         vm.prank(investor2);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawExcessInvestedCapital(
             1000 * 1e6, excessClaimProofInvestor2
@@ -2413,7 +2403,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects CannotWithdrawExcessInvestedCapital revert with invalid proof for investor2
      */
     function test_withdrawExcessInvestedCapital_revertsWithIncorrectProof() public {
-        // Arrange: Set up sale and investments with an invalid Merkle proof
+        // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveInvestorTokens();
@@ -2429,12 +2419,12 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
 
-        // Assert: Expect revert due to invalid Merkle proof
+        // Expect
         vm.expectRevert(
             abi.encodeWithSelector(Errors.CannotWithdrawExcessInvestedCapital.selector, investor2, 1000 * 1e6)
         );
 
-        // Act: Attempt withdrawal with incorrect proof as investor2
+        // Act
         vm.prank(investor2);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawExcessInvestedCapital(
             1000 * 1e6, excessClaimProofInvestor2
@@ -2446,7 +2436,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects AlreadyClaimedExcess revert after investor2 claims excess once
      */
     function test_withdrawExcessInvestedCapital_revertsIfExcessCapitalAlreadyWithdrawn() public {
-        // Arrange: Set up sale, invest, and withdraw excess once
+        // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveInvestorTokens();
@@ -2468,10 +2458,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
             1000 * 1e6, excessClaimProofInvestor2
         );
 
-        // Assert: Expect revert due to excess already claimed
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.AlreadyClaimedExcess.selector, investor2));
 
-        // Act: Attempt second withdrawal as investor2
+        // Act
         vm.prank(investor2);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawExcessInvestedCapital(
             1000 * 1e6, excessClaimProofInvestor2
@@ -2483,7 +2473,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects NoCapitalInvested revert for investor5 who did not invest
      */
     function test_withdrawExcessInvestedCapital_revertsIfNoCapitalInvested() public {
-        // Arrange: Deploy sale and set accepted capital, no investment from investor5
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         bytes32[] memory excessClaimProofInvestor5 = new bytes32[](3);
@@ -2496,10 +2486,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).setAcceptedCapital(excessCapitalMerkleRootMalicious);
 
-        // Assert: Expect revert due to no capital invested by investor5
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.NoCapitalInvested.selector, investor5));
 
-        // Act: Attempt withdrawal as investor5
+        // Act
         vm.prank(investor5);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawExcessInvestedCapital(
             6000 * 1e6, excessClaimProofInvestor5
@@ -2516,7 +2506,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * with valid proof
      */
     function test_claimTokenAllocation_successfullyTransfersTokensToVestingContract() public {
-        // Arrange: Set up sale, investments, and token supply
+        // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveInvestorTokens();
@@ -2541,13 +2531,13 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
 
-        // Act: investor2 claims 1000 LFG allocation
+        // Act
         vm.prank(investor2);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).claimTokenAllocation(
             1000 * 1e18, investorVestingConfig, claimProofInvestor2
         );
 
-        // Assert: Verify investor2's position and vesting status
+        // Expect
         ILegionSale.InvestorPosition memory _investorPosition =
             LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).investorPositionDetails(investor2);
 
@@ -2584,7 +2574,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects RefundPeriodIsNotOver revert when called before refundEndTime
      */
     function test_claimTokenAllocation_revertsIfRefundPeriodHasNotEnded() public {
-        // Arrange: Set up sale and investments, but warp to before refund period ends
+        // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveInvestorTokens();
@@ -2607,10 +2597,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         vm.warp(refundEndTime() - 1); // Before refund period ends (2 weeks - 1 second)
 
-        // Assert: Expect revert due to active refund period
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.RefundPeriodIsNotOver.selector, block.timestamp, refundEndTime()));
 
-        // Act: Attempt claim as investor2
+        // Act
         vm.prank(investor2);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).claimTokenAllocation(
             1000 * 1e18, investorVestingConfig, claimProofInvestor2
@@ -2622,7 +2612,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects SaleIsCanceled revert after projectAdmin cancels the sale
      */
     function test_claimTokenAllocation_revertsIfSaleIsCanceled() public {
-        // Arrange: Set up sale, invest, and cancel
+        // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveInvestorTokens();
@@ -2636,10 +2626,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelSale();
 
-        // Assert: Expect revert due to canceled sale
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
 
-        // Act: Attempt claim as investor2
+        // Act
         vm.prank(investor2);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).claimTokenAllocation(
             1000 * 1e18, investorVestingConfig, claimProofInvestor2
@@ -2651,7 +2641,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects SaleResultsNotPublished revert when results are not yet published
      */
     function test_claimTokenAllocation_revertsIfSaleResultsNotPublished() public {
-        // Arrange: Deploy sale and warp to after refund period, no results published
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         bytes32[] memory claimProofInvestor2 = new bytes32[](2);
@@ -2659,10 +2649,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
         claimProofInvestor2[1] = bytes32(0xa2144e298b31c1e3aa896eab357fd937fb7a574cc7237959b432e96a9423492c);
         vm.warp(refundEndTime() + 1);
 
-        // Assert: Expect revert due to unpublished results
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.SaleResultsNotPublished.selector));
 
-        // Act: Attempt claim as investor2
+        // Act
         vm.prank(investor2);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).claimTokenAllocation(
             1000 * 1e18, investorVestingConfig, claimProofInvestor2
@@ -2674,7 +2664,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects NotInClaimWhitelist revert when investor2 tries to claim 2000 LFG instead of 1000 LFG
      */
     function test_claimTokenAllocation_revertsIfTokensAreMoreThanAllocatedAmount() public {
-        // Arrange: Set up sale and investments with invalid proof for excess amount
+        // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveInvestorTokens();
@@ -2695,10 +2685,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
             claimTokensMerkleRoot, acceptedCapitalMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
-        // Assert: Expect revert due to invalid claim amount (2000 LFG > 1000 LFG allocated)
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.NotInClaimWhitelist.selector, investor2));
 
-        // Act: Attempt claim of 2000 LFG as investor2
+        // Act
         vm.prank(investor2);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).claimTokenAllocation(
             2000 * 1e18, investorVestingConfig, claimProofInvestor2
@@ -2710,7 +2700,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects AlreadySettled revert after investor2 claims allocation once
      */
     function test_claimTokenAllocation_revertsIfTokensAlreadyDistributed() public {
-        // Arrange: Set up sale, claim tokens once
+        // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveInvestorTokens();
@@ -2739,10 +2729,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
             1000 * 1e18, investorVestingConfig, claimProofInvestor2
         );
 
-        // Assert: Expect revert due to prior settlement
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.AlreadySettled.selector, investor2));
 
-        // Act: Attempt second claim as investor2
+        // Act
         vm.prank(investor2);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).claimTokenAllocation(
             1000 * 1e18, investorVestingConfig, claimProofInvestor2
@@ -2754,7 +2744,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects AskTokenUnavailable revert when askToken is address(0)
      */
     function test_claimTokenAllocation_revertsIfAskTokenNotAvailable() public {
-        // Arrange: Deploy sale with no askToken
+        // Arrange
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: 1 hours,
@@ -2765,10 +2755,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
                 referrerFeeOnTokensSoldBps: 100,
                 minimumInvestAmount: 1e6,
                 bidToken: address(bidToken),
-                askToken: address(0), // No askToken
+                askToken: address(0),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: address(nonLegionAdmin)
+                referrerFeeReceiver: referrerFeeReceiver
             }),
             ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
@@ -2782,10 +2772,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
         claimProofInvestor2[0] = bytes32(0x2054afa66e2c4ccd7ade9889c78d8cf4a46f716980dafb935d11ce1e564fa39c);
         claimProofInvestor2[1] = bytes32(0xa2144e298b31c1e3aa896eab357fd937fb7a574cc7237959b432e96a9423492c);
 
-        // Assert: Expect revert due to unavailable askToken
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.AskTokenUnavailable.selector));
 
-        // Act: Attempt claim as investor2
+        // Act
         vm.prank(investor2);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).claimTokenAllocation(
             1000 * 1e18, investorVestingConfig, claimProofInvestor2
@@ -2801,7 +2791,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Verifies investor2 receives vested tokens (approx. 134.72 LFG) after cliff period
      */
     function test_releaseVestedTokens_successfullyReleasesVestedTokensToInvestor() public {
-        // Arrange: Set up sale, claim tokens, and warp past cliff
+        // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveInvestorTokens();
@@ -2831,12 +2821,11 @@ contract LegionSealedBidAuctionSaleTest is Test {
             1000 * 1e18, investorVestingConfig, claimProofInvestor2
         );
 
-        // Act: Release vested tokens as investor2
+        // Act
         vm.prank(investor2);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).releaseVestedTokens();
 
-        // Assert: Verify investor2 receives initial release (10% of 1000 LFG) plus some vested amount
-        // 100 LFG (initial) + ~34.62 LFG (vested) = ~134.72 LFG
+        // Expect
         assertApproxEqAbs(
             MockToken(askToken).balanceOf(investor2),
             134_726_084_474_885_844_748,
@@ -2850,13 +2839,13 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects ZeroAddressProvided revert when investor2 has no vesting deployed
      */
     function test_releaseVestedTokens_revertsIfInvestorHasNoVesting() public {
-        // Arrange: Deploy sale without setting up vesting for investor2
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
-        // Assert: Expect revert due to no vesting contract
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.ZeroAddressProvided.selector));
 
-        // Act: Attempt to release vested tokens as investor2
+        // Act
         vm.prank(investor2);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).releaseVestedTokens();
     }
@@ -2866,7 +2855,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects AskTokenUnavailable revert when askToken is address(0)
      */
     function test_releaseVestedTokens_revertsIfAskTokenNotAvailable() public {
-        // Arrange: Deploy sale with no askToken
+        // Arrange
         setSaleParams(
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: 1 hours,
@@ -2877,10 +2866,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
                 referrerFeeOnTokensSoldBps: 100,
                 minimumInvestAmount: 1e6,
                 bidToken: address(bidToken),
-                askToken: address(0), // No askToken
+                askToken: address(0),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: address(nonLegionAdmin)
+                referrerFeeReceiver: referrerFeeReceiver
             }),
             ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
@@ -2890,10 +2879,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
             testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams
         );
 
-        // Assert: Expect revert due to unavailable askToken
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.AskTokenUnavailable.selector));
 
-        // Act: Attempt to release vested tokens as investor2
+        // Act
         vm.prank(investor2);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).releaseVestedTokens();
     }
@@ -2907,7 +2896,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Verifies bids for investors 1-4 decrypt correctly to 1000-4000 LFG
      */
     function test_decryptSealedBid_successfullyDecryptSealedBid() public {
-        // Arrange: Set up sale, investments, and publish results with private key
+        // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveInvestorTokens();
@@ -2924,7 +2913,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
             claimTokensMerkleRoot, acceptedCapitalMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
-        // Act: Decrypt sealed bids for investors 1-4
+        // Act
         uint256 decryptedBidInvestor1 = ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).decryptSealedBid(
             encryptedAmountInvestort1, uint256(uint160(investor1))
         );
@@ -2938,7 +2927,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
             encryptedAmountInvestort4, uint256(uint160(investor4))
         );
 
-        // Assert: Verify decrypted bids match original amounts
+        // Expect
         assertEq(decryptedBidInvestor1, 1000 * 1e18, "Investor1 bid should decrypt to 1000 LFG");
         assertEq(decryptedBidInvestor2, 2000 * 1e18, "Investor2 bid should decrypt to 2000 LFG");
         assertEq(decryptedBidInvestor3, 3000 * 1e18, "Investor3 bid should decrypt to 3000 LFG");
@@ -2950,13 +2939,13 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Expects PrivateKeyNotPublished revert when results are not yet published
      */
     function test_decryptSealedBid_revertsIfPrivateKeyNotPublished() public {
-        // Arrange: Deploy sale without publishing results
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
-        // Assert: Expect revert due to unpublished private key
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.PrivateKeyNotPublished.selector));
 
-        // Act: Attempt to decrypt investor1's bid
+        // Act
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).decryptSealedBid(
             encryptedAmountInvestort1, uint256(uint160(investor1))
         );
@@ -2971,39 +2960,40 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Verifies LegionAddressesSynced event with updated fee receiver address
      */
     function test_syncLegionAddresses_successfullyEmitsLegionAddressesSynced() public {
-        // Arrange: Deploy sale and update fee receiver in registry
+        // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.prank(legionBouncer);
         legionAddressRegistry.setLegionAddress(bytes32("LEGION_FEE_RECEIVER"), address(1));
 
-        // Assert: Expect LegionAddressesSynced event with updated addresses
+        // Expect
         vm.expectEmit();
         emit ILegionSale.LegionAddressesSynced(
             legionBouncer, vm.addr(legionSignerPK), address(1), address(legionVestingFactory)
         );
 
-        // Act: Sync addresses as legionBouncer
+        // Act
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).syncLegionAddresses();
     }
 
     /**
      * @notice Tests that syncing Legion addresses by a non-Legion admin reverts
-     * @dev Expects NotCalledByLegion revert when called by projectAdmin
+     * @dev Expects NotCalledByLegion revert when called by non-Legion admin
      */
-    function test_syncLegionAddresses_revertsIfNotCalledByLegion() public {
-        // Arrange: Deploy sale and update fee receiver in registry
+    function testFuzz_syncLegionAddresses_revertsIfNotCalledByLegion(address nonLegionAdmin) public {
+        // Arrange
+        vm.assume(nonLegionAdmin != legionBouncer);
         prepareCreateLegionSealedBidAuction();
 
         vm.prank(legionBouncer);
         legionAddressRegistry.setLegionAddress(bytes32("LEGION_FEE_RECEIVER"), address(1));
 
-        // Assert: Expect revert due to unauthorized caller
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.NotCalledByLegion.selector));
 
-        // Act: Attempt to sync addresses as projectAdmin
-        vm.prank(projectAdmin);
+        // Act
+        vm.prank(nonLegionAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).syncLegionAddresses();
     }
 }

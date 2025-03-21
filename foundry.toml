@@ -12,6 +12,10 @@ remappings = [
   "@solady/src=lib/solady/src"
 ]
 
+[fuzz]
+  runs = 256
+  max_assume_rejects = 1000000
+
 [fmt]
   bracket_spacing = true
   int_types = "long"

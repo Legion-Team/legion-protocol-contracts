@@ -39,7 +39,7 @@ contract LegionPreLiquidSaleV2Factory is ILegionPreLiquidSaleV2Factory, Ownable 
 
     /// @notice Address of the LegionPreLiquidSaleV2 implementation contract used as template
     /// @dev Immutable reference to the base implementation deployed during construction
-    address public immutable preLiquidSaleV2Template = address(new LegionPreLiquidSaleV2());
+    address public immutable i_preLiquidSaleV2Template = address(new LegionPreLiquidSaleV2());
 
     /*//////////////////////////////////////////////////////////////////////////
                                    CONSTRUCTOR
@@ -70,7 +70,7 @@ contract LegionPreLiquidSaleV2Factory is ILegionPreLiquidSaleV2Factory, Ownable 
         returns (address payable preLiquidSaleV2Instance)
     {
         // Deploy a LegionPreLiquidSaleV2 instance
-        preLiquidSaleV2Instance = payable(preLiquidSaleV2Template.clone());
+        preLiquidSaleV2Instance = payable(i_preLiquidSaleV2Template.clone());
 
         // Emit NewPreLiquidSaleV2Created
         emit NewPreLiquidSaleV2Created(preLiquidSaleV2Instance, saleInitParams);

@@ -39,7 +39,7 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
 
     /// @notice Struct containing the sealed bid auction sale configuration
     /// @dev Stores auction-specific parameters like encryption keys and cancel lock
-    SealedBidAuctionSaleConfiguration private sealedBidAuctionSaleConfig;
+    SealedBidAuctionSaleConfiguration private s_sealedBidAuctionSaleConfig;
 
     /*//////////////////////////////////////////////////////////////////////////
                                   INITIALIZER
@@ -65,12 +65,12 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
         _setLegionSaleConfig(saleInitParams);
 
         // Set the sealed bid auction sale specific configuration
-        (sealedBidAuctionSaleConfig.publicKey) = sealedBidAuctionSaleInitParams.publicKey;
+        (s_sealedBidAuctionSaleConfig.publicKey) = sealedBidAuctionSaleInitParams.publicKey;
 
         // Calculate and set startTime, endTime and refundEndTime
-        saleConfig.startTime = block.timestamp;
-        saleConfig.endTime = saleConfig.startTime + saleInitParams.salePeriodSeconds;
-        saleConfig.refundEndTime = saleConfig.endTime + saleInitParams.refundPeriodSeconds;
+        s_saleConfig.startTime = block.timestamp;
+        s_saleConfig.endTime = s_saleConfig.startTime + saleInitParams.salePeriodSeconds;
+        s_saleConfig.refundEndTime = s_saleConfig.endTime + saleInitParams.refundPeriodSeconds;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -114,16 +114,16 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
         _verifyHasNotClaimedExcess();
 
         // Increment total capital pledged from investors
-        saleStatus.totalCapitalInvested += amount;
+        s_saleStatus.totalCapitalInvested += amount;
 
         // Increment total pledged capital for the investor
-        investorPositions[msg.sender].investedCapital += amount;
+        s_investorPositions[msg.sender].investedCapital += amount;
 
         // Emit CapitalInvested
         emit CapitalInvested(amount, encryptedAmountOut, salt, msg.sender, block.timestamp);
 
         // Transfer the pledged capital to the contract
-        SafeTransferLib.safeTransferFrom(addressConfig.bidToken, msg.sender, address(this), amount);
+        SafeTransferLib.safeTransferFrom(s_addressConfig.bidToken, msg.sender, address(this), amount);
     }
 
     /**
@@ -144,7 +144,7 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
         _verifyCanPublishSaleResults();
 
         // Flag that the sale is locked from canceling
-        sealedBidAuctionSaleConfig.cancelLocked = true;
+        s_sealedBidAuctionSaleConfig.cancelLocked = true;
 
         // Emit PublishSaleResultsInitialized
         emit PublishSaleResultsInitialized();
@@ -185,19 +185,19 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
         _verifyCanPublishSaleResults();
 
         // Set the merkle root for claiming tokens
-        saleStatus.claimTokensMerkleRoot = claimMerkleRoot;
+        s_saleStatus.claimTokensMerkleRoot = claimMerkleRoot;
 
         // Set the merkle root for accepted capital
-        saleStatus.acceptedCapitalMerkleRoot = acceptedMerkleRoot;
+        s_saleStatus.acceptedCapitalMerkleRoot = acceptedMerkleRoot;
 
         // Set the total tokens to be allocated by the Project team
-        saleStatus.totalTokensAllocated = tokensAllocated;
+        s_saleStatus.totalTokensAllocated = tokensAllocated;
 
         // Set the total capital raised to be withdrawn by the project
-        saleStatus.totalCapitalRaised = capitalRaised;
+        s_saleStatus.totalCapitalRaised = capitalRaised;
 
         // Set the private key used to decrypt sealed bids
-        sealedBidAuctionSaleConfig.privateKey = sealedBidPrivateKey;
+        s_sealedBidAuctionSaleConfig.privateKey = sealedBidPrivateKey;
 
         // Emit SaleResultsPublished
         emit SaleResultsPublished(
@@ -207,11 +207,11 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
 
     /**
      * @notice Returns the current sealed bid auction sale configuration
-     * @dev Provides read-only access to sealedBidAuctionSaleConfig
+     * @dev Provides read-only access to s_sealedBidAuctionSaleConfig
      * @return SealedBidAuctionSaleConfiguration memory Struct containing auction configuration
      */
     function sealedBidAuctionSaleConfiguration() external view returns (SealedBidAuctionSaleConfiguration memory) {
-        return sealedBidAuctionSaleConfig;
+        return s_sealedBidAuctionSaleConfig;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -243,7 +243,7 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
 
         // Decrypt the sealed bid
         return ECIES.decrypt(
-            encryptedAmountOut, sealedBidAuctionSaleConfig.publicKey, sealedBidAuctionSaleConfig.privateKey, salt
+            encryptedAmountOut, s_sealedBidAuctionSaleConfig.publicKey, s_sealedBidAuctionSaleConfig.privateKey, salt
         );
     }
 
@@ -279,7 +279,7 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
         if (
             keccak256(abi.encodePacked(_publicKey.x, _publicKey.y))
                 != keccak256(
-                    abi.encodePacked(sealedBidAuctionSaleConfig.publicKey.x, sealedBidAuctionSaleConfig.publicKey.y)
+                    abi.encodePacked(s_sealedBidAuctionSaleConfig.publicKey.x, s_sealedBidAuctionSaleConfig.publicKey.y)
                 )
         ) revert Errors.InvalidBidPublicKey();
     }
@@ -291,15 +291,15 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
      */
     function _verifyValidPrivateKey(uint256 _privateKey) private view {
         // Verify that the private key has not already been published
-        if (sealedBidAuctionSaleConfig.privateKey != 0) {
+        if (s_sealedBidAuctionSaleConfig.privateKey != 0) {
             revert Errors.PrivateKeyAlreadyPublished();
         }
 
         // Verify that the private key is valid for the public key
         Point memory calcPubKey = ECIES.calcPubKey(Point(1, 2), _privateKey);
         if (
-            calcPubKey.x != sealedBidAuctionSaleConfig.publicKey.x
-                || calcPubKey.y != sealedBidAuctionSaleConfig.publicKey.y
+            calcPubKey.x != s_sealedBidAuctionSaleConfig.publicKey.x
+                || calcPubKey.y != s_sealedBidAuctionSaleConfig.publicKey.y
         ) revert Errors.InvalidBidPrivateKey();
     }
 
@@ -308,7 +308,7 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
      * @dev Reverts if private key is not set for decryption
      */
     function _verifyPrivateKeyIsPublished() private view {
-        if (sealedBidAuctionSaleConfig.privateKey == 0) {
+        if (s_sealedBidAuctionSaleConfig.privateKey == 0) {
             revert Errors.PrivateKeyNotPublished();
         }
     }
@@ -327,7 +327,7 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
      * @dev Reverts if cancellation is locked during result publication
      */
     function _verifyCancelNotLocked() private view {
-        if (sealedBidAuctionSaleConfig.cancelLocked) {
+        if (s_sealedBidAuctionSaleConfig.cancelLocked) {
             revert Errors.CancelLocked();
         }
     }
@@ -337,7 +337,7 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
      * @dev Reverts if cancellation is not locked during result publication
      */
     function _verifyCancelLocked() private view {
-        if (!sealedBidAuctionSaleConfig.cancelLocked) {
+        if (!s_sealedBidAuctionSaleConfig.cancelLocked) {
             revert Errors.CancelNotLocked();
         }
     }

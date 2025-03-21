@@ -70,8 +70,8 @@ contract LegionFixedPriceSaleFactoryTest is Test {
     /// @notice Address representing the project admin
     address projectAdmin = address(0x02);
 
-    /// @notice Address representing a non-owner account
-    address nonOwner = address(0x03);
+    /// @notice Address representing the referrer fee receiver
+    address referrerFeeReceiver = address(0x03);
 
     /// @notice Address representing the Legion fee receiver
     address legionFeeReceiver = address(0x04);
@@ -91,8 +91,10 @@ contract LegionFixedPriceSaleFactoryTest is Test {
         legionSaleFactory = new LegionFixedPriceSaleFactory(legionBouncer);
         legionVestingFactory = new LegionVestingFactory();
         legionAddressRegistry = new LegionAddressRegistry(legionBouncer);
+
         bidToken = new MockToken("USD Coin", "USDC", 6);
         askToken = new MockToken("LFG Coin", "LFG", 18);
+
         prepareLegionAddressRegistry();
     }
 
@@ -134,7 +136,7 @@ contract LegionFixedPriceSaleFactoryTest is Test {
                 askToken: address(askToken),
                 projectAdmin: projectAdmin,
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: nonOwner
+                referrerFeeReceiver: referrerFeeReceiver
             }),
             ILegionFixedPriceSale.FixedPriceSaleInitializationParams({
                 prefundPeriodSeconds: 1 hours,
@@ -194,7 +196,10 @@ contract LegionFixedPriceSaleFactoryTest is Test {
      * @notice Tests that createFixedPriceSale reverts when called by a non-owner
      * @dev Expects an Unauthorized revert from the Ownable contract
      */
-    function test_createFixedPriceSale_revertsIfNotCalledByOwner() public {
+    function testFuzz_createFixedPriceSale_revertsIfNotCalledByOwner(address nonOwner) public {
+        // Arrange
+        vm.assume(nonOwner != legionBouncer);
+
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Ownable.Unauthorized.selector));
 
