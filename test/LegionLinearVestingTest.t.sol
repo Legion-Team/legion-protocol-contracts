@@ -38,9 +38,6 @@ contract LegionLinearVestingTest is Test {
     /// @notice Address of the deployed vesting contract instance
     address public legionVestingInstance;
 
-    /// @notice Address representing a non-owner account, set to 0x03
-    address nonOwner = address(0x02);
-
     /// @notice Address representing the vesting contract owner, set to 0x04
     address vestingOwner = address(0x03);
 
@@ -86,7 +83,7 @@ contract LegionLinearVestingTest is Test {
         // Arrange & Act
         prepareCreateLegionLinearVesting();
 
-        // Assert
+        // Expect
         assertEq(LegionLinearVesting(payable(legionVestingInstance)).owner(), vestingOwner);
         assertEq(LegionLinearVesting(payable(legionVestingInstance)).start(), block.timestamp);
         assertEq(LegionLinearVesting(payable(legionVestingInstance)).duration(), 52 weeks);
@@ -101,11 +98,10 @@ contract LegionLinearVestingTest is Test {
         // Arrange
         prepareCreateLegionLinearVesting();
 
-        // Expect revert (generic revert due to Initializable's check)
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Initializable.InvalidInitialization.selector));
 
         // Act
-        vm.prank(nonOwner);
         LegionLinearVesting(payable(legionVestingInstance)).initialize(
             vestingOwner, uint64(block.timestamp), uint64(52 weeks), uint64(1 hours)
         );
@@ -117,9 +113,9 @@ contract LegionLinearVestingTest is Test {
      */
     function test_initialize_revertInitializeImplementation() public {
         // Arrange
-        address linearVestingImplementation = legionVestingFactory.linearVestingTemplate();
+        address linearVestingImplementation = legionVestingFactory.i_linearVestingTemplate();
 
-        // Expect revert with InvalidInitialization error
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Initializable.InvalidInitialization.selector));
 
         // Act
@@ -133,7 +129,7 @@ contract LegionLinearVestingTest is Test {
      * @dev Expects InvalidInitialization revert from Initializable
      */
     function test_initialize_revertInitializeTemplate() public {
-        // Expect revert with InvalidInitialization error
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Initializable.InvalidInitialization.selector));
 
         // Act
@@ -154,7 +150,7 @@ contract LegionLinearVestingTest is Test {
         // Arrange
         prepareCreateLegionLinearVesting();
 
-        // Expect revert with CliffNotEnded error
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.CliffNotEnded.selector, block.timestamp));
 
         // Act
@@ -171,7 +167,7 @@ contract LegionLinearVestingTest is Test {
 
         vm.warp(block.timestamp + 1 hours + 1);
 
-        // Expect event emission
+        // Expect
         vm.expectEmit();
         emit VestingWalletUpgradeable.ERC20Released(address(askToken), 114_500_661_375_661_375);
 

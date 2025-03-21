@@ -67,10 +67,7 @@ contract LegionVestingFactoryTest is Test {
      */
     function prepareCreateLegionLinearVesting() public returns (address) {
         legionLinearVestingInstance = legionVestingFactory.createLinearVesting(
-            vestingOwner, // Vesting contract owner
-            uint64(block.timestamp), // Start time
-            uint64(52 weeks), // Duration: 52 weeks = 31,536,000 seconds
-            uint64(1 hours) // Cliff: 1 hour = 3600 seconds
+            vestingOwner, uint64(block.timestamp), uint64(52 weeks), uint64(1 hours)
         );
         return legionLinearVestingInstance;
     }
@@ -82,12 +79,7 @@ contract LegionVestingFactoryTest is Test {
      */
     function prepareCreateLegionLinearEpochVesting() public returns (address) {
         legionLinearEpochVestingInstance = legionVestingFactory.createLinearEpochVesting(
-            vestingOwner, // Vesting contract owner
-            uint64(block.timestamp), // Start time
-            uint64(52 weeks), // Duration: 52 weeks = 31,536,000 seconds
-            uint64(1 hours), // Cliff: 1 hour = 3600 seconds,
-            1 weeks, // Epoch duration: 1 week = 604,800 seconds
-            52 // Epoch count: 52 weeks = 31,536,000 seconds
+            vestingOwner, uint64(block.timestamp), uint64(52 weeks), uint64(1 hours), 1 weeks, 52
         );
         return legionLinearEpochVestingInstance;
     }
@@ -102,13 +94,13 @@ contract LegionVestingFactoryTest is Test {
      * settings
      */
     function test_createLinearVesting_successfullyCreatesLinearVestingInstance() public {
-        // Arrange: Capture the current timestamp for consistency
+        // Arrange
         uint64 startTime = uint64(block.timestamp);
 
-        // Act: Create the vesting instance
+        // Act
         prepareCreateLegionLinearVesting();
 
-        // Assert: Verify the deployment and configuration
+        // Expect
         assertNotEq(legionLinearVestingInstance, address(0), "Vesting instance address should not be zero");
 
         LegionLinearVesting vestingContract = LegionLinearVesting(payable(legionLinearVestingInstance));
@@ -125,13 +117,13 @@ contract LegionVestingFactoryTest is Test {
      * duration and epoch count settings
      */
     function test_createLinearVesting_successfullyCreatesLinearEpochVestingInstance() public {
-        // Arrange: Capture the current timestamp for consistency
+        // Arrange
         uint64 startTime = uint64(block.timestamp);
 
-        // Act: Create the vesting instance
+        // Act
         prepareCreateLegionLinearEpochVesting();
 
-        // Assert: Verify the deployment and configuration
+        // Expect
         assertNotEq(legionLinearEpochVestingInstance, address(0), "Vesting instance address should not be zero");
 
         LegionLinearEpochVesting vestingContract = LegionLinearEpochVesting(payable(legionLinearEpochVestingInstance));

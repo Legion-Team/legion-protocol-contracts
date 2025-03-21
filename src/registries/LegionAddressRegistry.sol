@@ -33,7 +33,7 @@ contract LegionAddressRegistry is ILegionAddressRegistry, Ownable {
 
     /// @notice Mapping of unique identifiers to their corresponding Legion addresses
     /// @dev Stores the registry state as a private mapping
-    mapping(bytes32 => address) private _legionAddresses;
+    mapping(bytes32 => address) private s_legionAddresses;
 
     /*//////////////////////////////////////////////////////////////////////////
                                    CONSTRUCTOR
@@ -60,10 +60,10 @@ contract LegionAddressRegistry is ILegionAddressRegistry, Ownable {
      */
     function setLegionAddress(bytes32 id, address updatedAddress) external onlyOwner {
         // Cache the previous address before update
-        address previousAddress = _legionAddresses[id];
+        address previousAddress = s_legionAddresses[id];
 
         // Update the address in the state
-        _legionAddresses[id] = updatedAddress;
+        s_legionAddresses[id] = updatedAddress;
 
         // Emit event for address update
         emit LegionAddressSet(id, previousAddress, updatedAddress);
@@ -80,6 +80,6 @@ contract LegionAddressRegistry is ILegionAddressRegistry, Ownable {
      * @return Registered Legion address associated with the identifier
      */
     function getLegionAddress(bytes32 id) external view returns (address) {
-        return _legionAddresses[id];
+        return s_legionAddresses[id];
     }
 }

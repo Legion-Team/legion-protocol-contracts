@@ -40,7 +40,7 @@ contract LegionFixedPriceSaleFactory is ILegionFixedPriceSaleFactory, Ownable {
 
     /// @notice Address of the LegionFixedPriceSale implementation contract used as template
     /// @dev Immutable reference to the base implementation deployed during construction
-    address public immutable fixedPriceSaleTemplate = address(new LegionFixedPriceSale());
+    address public immutable i_fixedPriceSaleTemplate = address(new LegionFixedPriceSale());
 
     /*//////////////////////////////////////////////////////////////////////////
                                    CONSTRUCTOR
@@ -75,7 +75,7 @@ contract LegionFixedPriceSaleFactory is ILegionFixedPriceSaleFactory, Ownable {
         returns (address payable fixedPriceSaleInstance)
     {
         // Deploy a LegionFixedPriceSale instance
-        fixedPriceSaleInstance = payable(fixedPriceSaleTemplate.clone());
+        fixedPriceSaleInstance = payable(i_fixedPriceSaleTemplate.clone());
 
         // Emit NewFixedPriceSaleCreated
         emit NewFixedPriceSaleCreated(fixedPriceSaleInstance, saleInitParams, fixedPriceSaleInitParams);

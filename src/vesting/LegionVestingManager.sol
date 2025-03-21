@@ -34,8 +34,8 @@ abstract contract LegionVestingManager is ILegionVestingManager {
     //////////////////////////////////////////////////////////////////////////*/
 
     /// @notice Struct containing the vesting configuration for the sale
-    /// @dev Publicly accessible; stores factory address and other vesting settings
-    LegionVestingConfig public vestingConfig;
+    /// @dev Stores factory address and other vesting settings
+    LegionVestingConfig internal s_vestingConfig;
 
     /*//////////////////////////////////////////////////////////////////////////
                               EXTERNAL FUNCTIONS
@@ -47,7 +47,7 @@ abstract contract LegionVestingManager is ILegionVestingManager {
      * @return LegionVestingConfig memory Struct containing vesting configuration
      */
     function vestingConfiguration() external view virtual returns (LegionVestingConfig memory) {
-        return vestingConfig;
+        return s_vestingConfig;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -69,7 +69,7 @@ abstract contract LegionVestingManager is ILegionVestingManager {
         if (investorVestingConfig.vestingType == VestingType.LEGION_LINEAR) {
             vestingInstance = _createLinearVesting(
                 msg.sender,
-                vestingConfig.vestingFactory,
+                s_vestingConfig.vestingFactory,
                 uint64(investorVestingConfig.vestingStartTime),
                 uint64(investorVestingConfig.vestingDurationSeconds),
                 uint64(investorVestingConfig.vestingCliffDurationSeconds)
@@ -80,7 +80,7 @@ abstract contract LegionVestingManager is ILegionVestingManager {
         if (investorVestingConfig.vestingType == VestingType.LEGION_LINEAR_EPOCH) {
             vestingInstance = _createLinearEpochVesting(
                 msg.sender,
-                vestingConfig.vestingFactory,
+                s_vestingConfig.vestingFactory,
                 uint64(investorVestingConfig.vestingStartTime),
                 uint64(investorVestingConfig.vestingDurationSeconds),
                 uint64(investorVestingConfig.vestingCliffDurationSeconds),

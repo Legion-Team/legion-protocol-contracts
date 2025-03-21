@@ -74,8 +74,8 @@ contract LegionPreLiquidSaleV1FactoryTest is Test {
     /// @notice Address representing the project admin, set to 0x02
     address projectAdmin = address(0x02);
 
-    /// @notice Address representing a non-owner account, set to 0x03
-    address nonOwner = address(0x03);
+    /// @notice Address representing the Referrer fee receiver, set to 0x03
+    address referrerFeeReceiver = address(0x03);
 
     /// @notice Address representing the Legion fee receiver, set to 0x04
     address legionFeeReceiver = address(0x04);
@@ -132,7 +132,7 @@ contract LegionPreLiquidSaleV1FactoryTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: address(nonOwner)
+                referrerFeeReceiver: referrerFeeReceiver
             })
         );
 
@@ -174,7 +174,7 @@ contract LegionPreLiquidSaleV1FactoryTest is Test {
         // Arrange & Act
         prepareCreateLegionPreLiquidSale();
 
-        // Assert
+        // Expect
         assertNotEq(legionPreLiquidSaleInstance, address(0));
     }
 
@@ -182,8 +182,11 @@ contract LegionPreLiquidSaleV1FactoryTest is Test {
      * @notice Tests that creating a pre-liquid sale by a non-owner reverts
      * @dev Expects Unauthorized revert from Ownable when called by nonOwner
      */
-    function test_createPreLiquidSale_revertsIfNotCalledByOwner() public {
-        // Expect revert with Unauthorized error
+    function testFuzz_createPreLiquidSale_revertsIfNotCalledByOwner(address nonOwner) public {
+        // Arrange
+        vm.assume(nonOwner != legionBouncer);
+
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Ownable.Unauthorized.selector));
 
         // Act
@@ -196,7 +199,7 @@ contract LegionPreLiquidSaleV1FactoryTest is Test {
      * @dev Expects ZeroAddressProvided revert when config lacks initialization
      */
     function test_createPreLiquidSale_revertsWithZeroAddressProvided() public {
-        // Expect revert with ZeroAddressProvided error
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.ZeroAddressProvided.selector));
 
         // Act
@@ -220,11 +223,11 @@ contract LegionPreLiquidSaleV1FactoryTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: projectAdmin,
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: address(nonOwner)
+                referrerFeeReceiver: referrerFeeReceiver
             })
         );
 
-        // Expect revert with ZeroValueProvided error
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.ZeroValueProvided.selector));
 
         // Act
@@ -246,7 +249,7 @@ contract LegionPreLiquidSaleV1FactoryTest is Test {
         ILegionPreLiquidSaleV1.PreLiquidSaleStatus memory _preLiquidSaleStatus =
             LegionPreLiquidSaleV1(payable(legionPreLiquidSaleInstance)).saleStatusDetails();
 
-        // Assert
+        // Expect
         assertEq(_preLiquidSaleConfig.refundPeriodSeconds, 2 weeks);
         assertEq(_preLiquidSaleStatus.hasEnded, false);
     }

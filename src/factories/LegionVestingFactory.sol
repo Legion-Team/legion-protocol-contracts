@@ -38,11 +38,11 @@ contract LegionVestingFactory is ILegionVestingFactory {
 
     /// @notice Address of the LegionLinearVesting implementation contract used as template
     /// @dev Immutable reference to the base linear vesting implementation deployed during construction
-    address public immutable linearVestingTemplate = address(new LegionLinearVesting());
+    address public immutable i_linearVestingTemplate = address(new LegionLinearVesting());
 
     /// @notice Address of the LegionLinearEpochVesting implementation contract used as template
     /// @dev Immutable reference to the base epoch vesting implementation deployed during construction
-    address public immutable linearEpochVestingTemplate = address(new LegionLinearEpochVesting());
+    address public immutable i_linearEpochVestingTemplate = address(new LegionLinearEpochVesting());
 
     /*//////////////////////////////////////////////////////////////////////////
                               EXTERNAL FUNCTIONS
@@ -67,7 +67,7 @@ contract LegionVestingFactory is ILegionVestingFactory {
         returns (address payable linearVestingInstance)
     {
         // Deploy a LegionLinearVesting instance
-        linearVestingInstance = payable(linearVestingTemplate.clone());
+        linearVestingInstance = payable(i_linearVestingTemplate.clone());
 
         // Emit NewLinearVestingCreated
         emit NewLinearVestingCreated(beneficiary, startTimestamp, durationSeconds, cliffDurationSeconds);
@@ -102,7 +102,7 @@ contract LegionVestingFactory is ILegionVestingFactory {
         returns (address payable linearEpochVestingInstance)
     {
         // Deploy a LegionLinearVesting instance
-        linearEpochVestingInstance = payable(linearEpochVestingTemplate.clone());
+        linearEpochVestingInstance = payable(i_linearEpochVestingTemplate.clone());
 
         // Emit NewLinearVestingCreated
         emit NewLinearEpochVestingCreated(

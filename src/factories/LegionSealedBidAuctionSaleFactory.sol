@@ -40,7 +40,7 @@ contract LegionSealedBidAuctionSaleFactory is ILegionSealedBidAuctionSaleFactory
 
     /// @notice Address of the LegionSealedBidAuctionSale implementation contract used as template
     /// @dev Immutable reference to the base implementation deployed during construction
-    address public immutable sealedBidAuctionTemplate = address(new LegionSealedBidAuctionSale());
+    address public immutable i_sealedBidAuctionTemplate = address(new LegionSealedBidAuctionSale());
 
     /*//////////////////////////////////////////////////////////////////////////
                                    CONSTRUCTOR
@@ -76,7 +76,7 @@ contract LegionSealedBidAuctionSaleFactory is ILegionSealedBidAuctionSaleFactory
         returns (address payable sealedBidAuctionInstance)
     {
         // Deploy a LegionSealedBidAuctionSale instance
-        sealedBidAuctionInstance = payable(sealedBidAuctionTemplate.clone());
+        sealedBidAuctionInstance = payable(i_sealedBidAuctionTemplate.clone());
 
         // Emit NewSealedBidAuctionCreated
         emit NewSealedBidAuctionCreated(sealedBidAuctionInstance, saleInitParams, sealedBidAuctionSaleInitParams);
