@@ -33,19 +33,19 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
 
     /// @notice Unix timestamp (seconds) when the cliff period ends
     /// @dev Prevents token release until this timestamp is reached
-    uint256 public cliffEndTimestamp;
+    uint256 private s_cliffEndTimestamp;
 
     /// @notice Duration of each epoch in seconds
-    /// @dev Publicly accessible; defines the vesting interval
-    uint256 public epochDurationSeconds;
+    /// @dev Defines the vesting interval
+    uint256 private s_epochDurationSeconds;
 
     /// @notice Total number of epochs in the vesting schedule
-    /// @dev Publicly accessible; determines the vesting granularity
-    uint256 public numberOfEpochs;
+    /// @dev Determines the vesting granularity
+    uint256 private s_numberOfEpochs;
 
     /// @notice The last epoch for which tokens were claimed
-    /// @dev Publicly accessible; tracks vesting progress
-    uint256 public lastClaimedEpoch;
+    /// @dev Tracks vesting progress
+    uint256 private s_lastClaimedEpoch;
 
     /*//////////////////////////////////////////////////////////////////////////
                                    MODIFIERS
@@ -56,7 +56,7 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
      * @dev Reverts with CliffNotEnded if block.timestamp is before cliffEndTimestamp
      */
     modifier onlyCliffEnded() {
-        if (block.timestamp < cliffEndTimestamp) revert Errors.CliffNotEnded(block.timestamp);
+        if (block.timestamp < s_cliffEndTimestamp) revert Errors.CliffNotEnded(block.timestamp);
         _;
     }
 
@@ -102,13 +102,52 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
         __VestingWallet_init(_beneficiary, _startTimestamp, _durationSeconds);
 
         // Set the cliff end timestamp, based on the cliff duration
-        cliffEndTimestamp = _startTimestamp + _cliffDurationSeconds;
+        s_cliffEndTimestamp = _startTimestamp + _cliffDurationSeconds;
 
         // Set the epoch duration
-        epochDurationSeconds = _epochDurationSeconds;
+        s_epochDurationSeconds = _epochDurationSeconds;
 
         // Set the number of epochs
-        numberOfEpochs = _numberOfEpochs;
+        s_numberOfEpochs = _numberOfEpochs;
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                              EXTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /* @notice Returns the timestamp when the cliff period ends
+     * @dev Indicates when tokens become releasable
+     * @return uint256 Unix timestamp (seconds) of the cliff end
+     */
+    function cliffEndTimestamp() external view returns (uint256) {
+        return s_cliffEndTimestamp;
+    }
+
+    /**
+     * @notice Returns the duration of each epoch in seconds
+     * @dev Defines the vesting interval for epoch-based releases
+     * @return uint256 Duration of each epoch in seconds
+     */
+    function epochDurationSeconds() external view returns (uint256) {
+        return s_epochDurationSeconds;
+    }
+
+    /**
+     * @notice Returns the total number of epochs in the vesting schedule
+     * @dev Determines the granularity of token releases
+     * @return uint256 Total number of epochs in the vesting schedule
+     */
+    function numberOfEpochs() external view returns (uint256) {
+        return s_numberOfEpochs;
+    }
+
+    /**
+     * @notice Returns the last epoch for which tokens were claimed
+     * @dev Tracks the progress of vesting claims
+     * @return uint256 Last epoch number for which tokens were claimed
+     */
+    function lastClaimedEpoch() external view returns (uint256) {
+        return s_lastClaimedEpoch;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -134,7 +173,7 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
      */
     function getCurrentEpoch() public view returns (uint256) {
         if (block.timestamp < start()) return 0;
-        else return (block.timestamp - start()) / epochDurationSeconds + 1;
+        else return (block.timestamp - start()) / s_epochDurationSeconds + 1;
     }
 
     /**
@@ -145,7 +184,7 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
      */
     function getCurrentEpochAtTimestamp(uint256 timestamp) public view returns (uint256) {
         if (timestamp < start()) return 0;
-        else return (timestamp - start()) / epochDurationSeconds + 1;
+        else return (timestamp - start()) / s_epochDurationSeconds + 1;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -161,13 +200,13 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
         uint256 currentEpoch = getCurrentEpoch();
 
         // If all the epochs have elapsed, set the last claimed epoch to the total number of epochs
-        if (currentEpoch >= numberOfEpochs + 1) {
-            lastClaimedEpoch = numberOfEpochs;
+        if (currentEpoch >= s_numberOfEpochs + 1) {
+            s_lastClaimedEpoch = s_numberOfEpochs;
             return;
         }
 
         // If current epoch is greater than the last claimed epoch, set the last claimed epoch to the current epoch - 1
-        lastClaimedEpoch = currentEpoch - 1;
+        s_lastClaimedEpoch = currentEpoch - 1;
     }
 
     /**
@@ -190,13 +229,13 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
         uint256 currentEpoch = getCurrentEpochAtTimestamp(timestamp);
 
         // If all the epochs have elapsed, return the total allocation
-        if (currentEpoch >= numberOfEpochs + 1) {
+        if (currentEpoch >= s_numberOfEpochs + 1) {
             amountVested = totalAllocation;
         }
 
         // Else, calculate the amount vested based on the current epoch
-        if (currentEpoch > lastClaimedEpoch) {
-            amountVested = ((currentEpoch - 1 - lastClaimedEpoch) * totalAllocation) / numberOfEpochs;
+        if (currentEpoch > s_lastClaimedEpoch) {
+            amountVested = ((currentEpoch - 1 - s_lastClaimedEpoch) * totalAllocation) / s_numberOfEpochs;
         }
     }
 }

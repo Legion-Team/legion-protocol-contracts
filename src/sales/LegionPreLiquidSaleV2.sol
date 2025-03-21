@@ -39,7 +39,7 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
 
     /// @notice Struct containing the pre-liquid sale configuration
     /// @dev Stores specific sale parameters like refund period and end status
-    PreLiquidSaleConfiguration private preLiquidSaleConfig;
+    PreLiquidSaleConfiguration private s_preLiquidSaleConfig;
 
     /*//////////////////////////////////////////////////////////////////////////
                                   INITIALIZER
@@ -55,10 +55,10 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
         _setLegionSaleConfig(saleInitParams);
 
         // Set the sale start time
-        saleConfig.startTime = block.timestamp;
+        s_saleConfig.startTime = block.timestamp;
 
         /// Set the refund period duration in seconds
-        preLiquidSaleConfig.refundPeriodSeconds = saleInitParams.refundPeriodSeconds;
+        s_preLiquidSaleConfig.refundPeriodSeconds = saleInitParams.refundPeriodSeconds;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -91,16 +91,16 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
         _verifyHasNotClaimedExcess();
 
         // Increment total capital invested from investors
-        saleStatus.totalCapitalInvested += amount;
+        s_saleStatus.totalCapitalInvested += amount;
 
         // Increment total invested capital for the investor
-        investorPositions[msg.sender].investedCapital += amount;
+        s_investorPositions[msg.sender].investedCapital += amount;
 
         // Emit CapitalInvested
         emit CapitalInvested(amount, msg.sender, block.timestamp);
 
         // Transfer the invested capital to the contract
-        SafeTransferLib.safeTransferFrom(addressConfig.bidToken, msg.sender, address(this), amount);
+        SafeTransferLib.safeTransferFrom(s_addressConfig.bidToken, msg.sender, address(this), amount);
     }
 
     /**
@@ -115,13 +115,13 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
         _verifySaleHasNotEnded();
 
         // Update the `hasEnded` status to true
-        preLiquidSaleConfig.hasEnded = true;
+        s_preLiquidSaleConfig.hasEnded = true;
 
         // Set the `endTime` of the sale
-        saleConfig.endTime = block.timestamp;
+        s_saleConfig.endTime = block.timestamp;
 
         // Set the `refundEndTime` of the sale
-        saleConfig.refundEndTime = block.timestamp + preLiquidSaleConfig.refundPeriodSeconds;
+        s_saleConfig.refundEndTime = block.timestamp + s_preLiquidSaleConfig.refundPeriodSeconds;
 
         // Emit SaleEnded successfully
         emit SaleEnded(block.timestamp);
@@ -154,10 +154,10 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
         _verifyCanPublishCapitalRaised();
 
         // Set the total capital raised to be withdrawn by the project
-        saleStatus.totalCapitalRaised = capitalRaised;
+        s_saleStatus.totalCapitalRaised = capitalRaised;
 
         // Set the merkle root for accepted capital
-        saleStatus.acceptedCapitalMerkleRoot = acceptedMerkleRoot;
+        s_saleStatus.acceptedCapitalMerkleRoot = acceptedMerkleRoot;
 
         // Emit successfully CapitalRaisedPublished
         emit CapitalRaisedPublished(capitalRaised, acceptedMerkleRoot);
@@ -192,13 +192,13 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
         _verifyCanPublishSaleResults();
 
         // Set the merkle root for claiming tokens
-        saleStatus.claimTokensMerkleRoot = claimMerkleRoot;
+        s_saleStatus.claimTokensMerkleRoot = claimMerkleRoot;
 
         // Set the total tokens to be allocated by the Project team
-        saleStatus.totalTokensAllocated = tokensAllocated;
+        s_saleStatus.totalTokensAllocated = tokensAllocated;
 
         /// Set the address of the token distributed to investors
-        addressConfig.askToken = askToken;
+        s_addressConfig.askToken = askToken;
 
         // Emit successfully SaleResultsPublished
         emit SaleResultsPublished(claimMerkleRoot, tokensAllocated, askToken);
@@ -222,48 +222,48 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
         _verifyCanWithdrawCapital();
 
         // Flag that the capital has been withdrawn
-        saleStatus.capitalWithdrawn = true;
+        s_saleStatus.capitalWithdrawn = true;
 
         // Set the total capital that has been withdrawn
-        saleStatus.totalCapitalWithdrawn = saleStatus.totalCapitalRaised;
+        s_saleStatus.totalCapitalWithdrawn = s_saleStatus.totalCapitalRaised;
 
         // Cache value in memory
-        uint256 _totalCapitalRaised = saleStatus.totalCapitalRaised;
+        uint256 _totalCapitalRaised = s_saleStatus.totalCapitalRaised;
 
         // Calculate Legion Fee
         uint256 _legionFee =
-            (saleConfig.legionFeeOnCapitalRaisedBps * _totalCapitalRaised) / Constants.BASIS_POINTS_DENOMINATOR;
+            (s_saleConfig.legionFeeOnCapitalRaisedBps * _totalCapitalRaised) / Constants.BASIS_POINTS_DENOMINATOR;
 
         // Calculate Referrer Fee
         uint256 _referrerFee =
-            (saleConfig.referrerFeeOnCapitalRaisedBps * _totalCapitalRaised) / Constants.BASIS_POINTS_DENOMINATOR;
+            (s_saleConfig.referrerFeeOnCapitalRaisedBps * _totalCapitalRaised) / Constants.BASIS_POINTS_DENOMINATOR;
 
         // Emit successfully CapitalWithdrawn
         emit CapitalWithdrawn(_totalCapitalRaised, msg.sender);
 
         // Transfer the raised capital to the project owner
         SafeTransferLib.safeTransfer(
-            addressConfig.bidToken, msg.sender, (_totalCapitalRaised - _legionFee - _referrerFee)
+            s_addressConfig.bidToken, msg.sender, (_totalCapitalRaised - _legionFee - _referrerFee)
         );
 
         // Transfer the Legion fee to the Legion fee receiver address
         if (_legionFee != 0) {
-            SafeTransferLib.safeTransfer(addressConfig.bidToken, addressConfig.legionFeeReceiver, _legionFee);
+            SafeTransferLib.safeTransfer(s_addressConfig.bidToken, s_addressConfig.legionFeeReceiver, _legionFee);
         }
 
         // Transfer the Referrer fee to the Referrer fee receiver address
         if (_referrerFee != 0) {
-            SafeTransferLib.safeTransfer(addressConfig.bidToken, addressConfig.referrerFeeReceiver, _referrerFee);
+            SafeTransferLib.safeTransfer(s_addressConfig.bidToken, s_addressConfig.referrerFeeReceiver, _referrerFee);
         }
     }
 
     /**
      * @notice Returns the current pre-liquid sale configuration
-     * @dev Provides read-only access to preLiquidSaleConfig
+     * @dev Provides read-only access to s_preLiquidSaleConfig
      * @return PreLiquidSaleConfiguration memory Struct containing the sale configuration
      */
     function preLiquidSaleConfiguration() external view returns (PreLiquidSaleConfiguration memory) {
-        return preLiquidSaleConfig;
+        return s_preLiquidSaleConfig;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -282,10 +282,10 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
         _verifyTokensNotSupplied();
 
         /// Cache the amount of funds to be returned to the sale
-        uint256 capitalToReturn = saleStatus.totalCapitalWithdrawn;
+        uint256 capitalToReturn = s_saleStatus.totalCapitalWithdrawn;
 
         // Mark sale as canceled
-        saleStatus.isCanceled = true;
+        s_saleStatus.isCanceled = true;
 
         // Emit successfully SaleCanceled
         emit SaleCanceled();
@@ -293,9 +293,9 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
         /// In case there's capital to return, transfer the funds back to the contract
         if (capitalToReturn > 0) {
             /// Set the totalCapitalWithdrawn to zero
-            saleStatus.totalCapitalWithdrawn = 0;
+            s_saleStatus.totalCapitalWithdrawn = 0;
             /// Transfer the allocated amount of tokens for distribution
-            SafeTransferLib.safeTransferFrom(addressConfig.bidToken, msg.sender, address(this), capitalToReturn);
+            SafeTransferLib.safeTransferFrom(s_addressConfig.bidToken, msg.sender, address(this), capitalToReturn);
         }
     }
 
@@ -305,10 +305,10 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
 
     /**
      * @notice Verifies that the sale has not ended
-     * @dev Overrides parent to use preLiquidSaleConfig; reverts if ended
+     * @dev Overrides parent to use s_preLiquidSaleConfig; reverts if ended
      */
     function _verifySaleHasNotEnded() internal view override {
-        if (preLiquidSaleConfig.hasEnded) revert Errors.SaleHasEnded(block.timestamp);
+        if (s_preLiquidSaleConfig.hasEnded) revert Errors.SaleHasEnded(block.timestamp);
     }
 
     /**
@@ -316,8 +316,8 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
      * @dev Overrides parent to check refundEndTime; reverts if not over
      */
     function _verifyRefundPeriodIsOver() internal view override {
-        if (saleConfig.refundEndTime > 0 && block.timestamp < saleConfig.refundEndTime) {
-            revert Errors.RefundPeriodIsNotOver(block.timestamp, saleConfig.refundEndTime);
+        if (s_saleConfig.refundEndTime > 0 && block.timestamp < s_saleConfig.refundEndTime) {
+            revert Errors.RefundPeriodIsNotOver(block.timestamp, s_saleConfig.refundEndTime);
         }
     }
 
@@ -326,8 +326,8 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
      * @dev Overrides parent to check refundEndTime; reverts if over
      */
     function _verifyRefundPeriodIsNotOver() internal view override {
-        if (saleConfig.refundEndTime > 0 && block.timestamp >= saleConfig.refundEndTime) {
-            revert Errors.RefundPeriodIsOver(block.timestamp, saleConfig.refundEndTime);
+        if (s_saleConfig.refundEndTime > 0 && block.timestamp >= s_saleConfig.refundEndTime) {
+            revert Errors.RefundPeriodIsOver(block.timestamp, s_saleConfig.refundEndTime);
         }
     }
 
@@ -336,8 +336,8 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
      * @dev Overrides parent to check withdrawal status and capital raised
      */
     function _verifyCanWithdrawCapital() internal view override {
-        if (saleStatus.capitalWithdrawn) revert Errors.CapitalAlreadyWithdrawn();
-        if (saleStatus.totalCapitalRaised == 0) revert Errors.CapitalRaisedNotPublished();
+        if (s_saleStatus.capitalWithdrawn) revert Errors.CapitalAlreadyWithdrawn();
+        if (s_saleStatus.totalCapitalRaised == 0) revert Errors.CapitalRaisedNotPublished();
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -346,10 +346,10 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
 
     /**
      * @notice Verifies that the sale has ended
-     * @dev Reverts if sale has not ended based on preLiquidSaleConfig
+     * @dev Reverts if sale has not ended based on s_preLiquidSaleConfig
      */
     function _verifySaleHasEnded() private view {
-        if (!preLiquidSaleConfig.hasEnded) revert Errors.SaleHasNotEnded(block.timestamp);
+        if (!s_preLiquidSaleConfig.hasEnded) revert Errors.SaleHasNotEnded(block.timestamp);
     }
 
     /**
@@ -357,6 +357,6 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
      * @dev Reverts if capital raised is already published
      */
     function _verifyCanPublishCapitalRaised() private view {
-        if (saleStatus.totalCapitalRaised != 0) revert Errors.CapitalRaisedAlreadyPublished();
+        if (s_saleStatus.totalCapitalRaised != 0) revert Errors.CapitalRaisedAlreadyPublished();
     }
 }

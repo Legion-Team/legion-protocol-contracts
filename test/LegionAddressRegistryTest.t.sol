@@ -25,9 +25,6 @@ contract LegionAddressRegistryTest is Test {
     /// @notice Address representing the Legion admin (owner)
     address legionAdmin = address(0x01);
 
-    /// @notice Address representing a non-owner account
-    address nonOwner = address(0x02);
-
     /// @notice Address to be set in the registry for testing
     address registry = address(0x03);
 
@@ -74,7 +71,10 @@ contract LegionAddressRegistryTest is Test {
      * @notice Tests that setLegionAddress reverts when called by a non-owner
      * @dev Expects an Unauthorized revert from the Ownable contract
      */
-    function test_setLegionAddress_revertsIfNotCalledByOwner() public {
+    function testFuzz_setLegionAddress_revertsIfNotCalledByOwner(address nonOwner) public {
+        // Arrange
+        vm.assume(nonOwner != legionAdmin);
+
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Ownable.Unauthorized.selector));
 

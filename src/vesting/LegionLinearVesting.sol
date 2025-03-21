@@ -33,7 +33,7 @@ contract LegionLinearVesting is VestingWalletUpgradeable {
 
     /// @notice Unix timestamp (seconds) when the cliff period ends
     /// @dev Private variable preventing token release until this timestamp
-    uint256 public cliffEndTimestamp;
+    uint256 private s_cliffEndTimestamp;
 
     /*//////////////////////////////////////////////////////////////////////////
                                    MODIFIERS
@@ -41,10 +41,10 @@ contract LegionLinearVesting is VestingWalletUpgradeable {
 
     /**
      * @notice Restricts token release until the cliff period has ended
-     * @dev Reverts with CliffNotEnded if block.timestamp is before cliffEndTimestamp
+     * @dev Reverts with CliffNotEnded if block.timestamp is before s_cliffEndTimestamp
      */
     modifier onlyCliffEnded() {
-        if (block.timestamp < cliffEndTimestamp) revert Errors.CliffNotEnded(block.timestamp);
+        if (block.timestamp < s_cliffEndTimestamp) revert Errors.CliffNotEnded(block.timestamp);
         _;
     }
 
@@ -86,7 +86,19 @@ contract LegionLinearVesting is VestingWalletUpgradeable {
         __VestingWallet_init(beneficiary, startTimestamp, durationSeconds);
 
         // Set the cliff end timestamp, based on the cliff duration
-        cliffEndTimestamp = startTimestamp + cliffDurationSeconds;
+        s_cliffEndTimestamp = startTimestamp + cliffDurationSeconds;
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                              EXTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /* @notice Returns the timestamp when the cliff period ends
+     * @dev Indicates when tokens become releasable
+     * @return uint256 Unix timestamp (seconds) of the cliff end
+     */
+    function cliffEndTimestamp() external view returns (uint256) {
+        return s_cliffEndTimestamp;
     }
 
     /*//////////////////////////////////////////////////////////////////////////

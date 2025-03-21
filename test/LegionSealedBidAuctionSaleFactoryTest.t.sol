@@ -106,10 +106,10 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
     address public projectAdmin = address(0x02);
 
     /**
-     * @notice Address representing a non-owner account
-     * @dev Set to 0x03, used for unauthorized access tests
+     * @notice Address representing the Referrer fee receiver
+     * @dev Set to 0x03, receives referrer fees
      */
-    address public nonOwner = address(0x03);
+    address public referrerFeeReceiver = address(0x03);
 
     /**
      * @notice Address representing the Legion fee receiver
@@ -184,7 +184,7 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
                 askToken: address(askToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: address(nonOwner)
+                referrerFeeReceiver: referrerFeeReceiver
             }),
             ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
@@ -220,7 +220,7 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
      * @dev Verifies that the owner of the LegionSealedBidAuctionSaleFactory is set to legionBouncer during deployment
      */
     function test_transferOwnership_successfullySetsTheCorrectOwner() public view {
-        // Assert: Check that the owner is legionBouncer (0x01)
+        // Expect
         assertEq(legionSaleFactory.owner(), legionBouncer);
     }
 
@@ -229,10 +229,10 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
      * @dev Ensures the factory deploys a non-zero address for the sale instance when called by legionBouncer
      */
     function test_createSealedBidAuction_successullyCreatesSealedBidAuction() public {
-        // Arrange & Act: Create the sealed bid auction sale
+        // Arrange & Act
         prepareCreateLegionSealedBidAuction();
 
-        // Assert: Verify the instance address is not zero
+        // Expect
         assertNotEq(legionSealedBidAuctionInstance, address(0));
     }
 
@@ -241,16 +241,15 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
      * @dev Verifies the public key and vesting factory address are correctly set in the deployed sale contract
      */
     function test_createSealedBidAuction_successfullyCreatedWithCorrectConfiguration() public {
-        // Arrange & Act: Create the sealed bid auction sale
+        // Arrange & Act
         prepareCreateLegionSealedBidAuction();
 
-        // Retrieve the sealed bid auction and vesting configurations
         ILegionSealedBidAuctionSale.SealedBidAuctionSaleConfiguration memory _sealedBidAuctionSaleConfig =
             LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).sealedBidAuctionSaleConfiguration();
         ILegionVestingManager.LegionVestingConfig memory _vestingConfig =
             LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).vestingConfiguration();
 
-        // Assert: Verify public key coordinates and vesting factory address
+        // Expect
         assertEq(_sealedBidAuctionSaleConfig.publicKey.x, PUBLIC_KEY.x); // Check x-coordinate of public key
         assertEq(_sealedBidAuctionSaleConfig.publicKey.y, PUBLIC_KEY.y); // Check y-coordinate of public key
         assertEq(_vestingConfig.vestingFactory, address(legionVestingFactory)); // Check vesting factory address
@@ -260,11 +259,14 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
      * @notice Tests that creating a sale instance by a non-owner reverts
      * @dev Expects an Unauthorized revert from Ownable when called by nonOwner
      */
-    function test_createSealedBidAuction_revertsIfNotCalledByOwner() public {
-        // Assert: Expect revert due to unauthorized caller
+    function testFuzz_createSealedBidAuction_revertsIfNotCalledByOwner(address nonOwner) public {
+        // Arrange
+        vm.assume(nonOwner != legionBouncer);
+
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Ownable.Unauthorized.selector));
 
-        // Act: Attempt to create a sale as nonOwner (0x03)
+        // Act
         vm.prank(nonOwner);
         legionSaleFactory.createSealedBidAuction(
             testConfig.sealedBidAuctionSaleTestConfig.saleInitParams,
@@ -277,7 +279,7 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
      * @dev Expects a ZeroAddressProvided revert when key addresses (bidToken, askToken, etc.) are zero
      */
     function test_createSealedBidAuction_revertsWithZeroAddressProvided() public {
-        // Arrange: Set params with zero addresses
+        // Arrange
         setSealedBidAuctionSaleParams(
             ILegionSale.LegionSaleInitializationParams({
                 salePeriodSeconds: 1 hours,
@@ -287,19 +289,19 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
                 referrerFeeOnCapitalRaisedBps: 100,
                 referrerFeeOnTokensSoldBps: 100,
                 minimumInvestAmount: 1e18,
-                bidToken: address(0), // Zero address
-                askToken: address(0), // Zero address
-                projectAdmin: address(0), // Zero address
-                addressRegistry: address(0), // Zero address
-                referrerFeeReceiver: address(0) // Zero address
-             }),
+                bidToken: address(0),
+                askToken: address(0),
+                projectAdmin: address(0),
+                addressRegistry: address(0),
+                referrerFeeReceiver: address(0)
+            }),
             ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
 
-        // Assert: Expect revert due to zero address
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.ZeroAddressProvided.selector));
 
-        // Act: Attempt to create the sale
+        // Act
         vm.prank(legionBouncer);
         legionSaleFactory.createSealedBidAuction(
             testConfig.sealedBidAuctionSaleTestConfig.saleInitParams,
@@ -312,29 +314,29 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
      * @dev Expects a ZeroValueProvided revert when key parameters (sale period, fees, etc.) are zero
      */
     function test_createSealedBidAuction_revertsWithZeroValueProvided() public {
-        // Arrange: Set params with zero values
+        // Arrange
         setSealedBidAuctionSaleParams(
             ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: 0, // Zero value
-                refundPeriodSeconds: 0, // Zero value
-                legionFeeOnCapitalRaisedBps: 0, // Zero value
-                legionFeeOnTokensSoldBps: 0, // Zero value
-                referrerFeeOnCapitalRaisedBps: 0, // Zero value
-                referrerFeeOnTokensSoldBps: 0, // Zero value
-                minimumInvestAmount: 0, // Zero value
+                salePeriodSeconds: 0,
+                refundPeriodSeconds: 0,
+                legionFeeOnCapitalRaisedBps: 0,
+                legionFeeOnTokensSoldBps: 0,
+                referrerFeeOnCapitalRaisedBps: 0,
+                referrerFeeOnTokensSoldBps: 0,
+                minimumInvestAmount: 0,
                 bidToken: address(bidToken),
                 askToken: address(askToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: address(nonOwner)
+                referrerFeeReceiver: referrerFeeReceiver
             }),
             ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
 
-        // Assert: Expect revert due to zero value
+        // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.ZeroValueProvided.selector));
 
-        // Act: Attempt to create the sale
+        // Act
         vm.prank(legionBouncer);
         legionSaleFactory.createSealedBidAuction(
             testConfig.sealedBidAuctionSaleTestConfig.saleInitParams,

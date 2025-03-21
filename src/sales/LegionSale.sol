@@ -48,19 +48,19 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
 
     /// @notice Struct containing the sale configuration
     /// @dev Stores general sale parameters internally
-    LegionSaleConfiguration internal saleConfig;
+    LegionSaleConfiguration internal s_saleConfig;
 
     /// @notice Struct containing the sale addresses configuration
     /// @dev Stores address-related settings internally
-    LegionSaleAddressConfiguration internal addressConfig;
+    LegionSaleAddressConfiguration internal s_addressConfig;
 
     /// @notice Struct tracking the current sale status
     /// @dev Maintains runtime state of the sale internally
-    LegionSaleStatus internal saleStatus;
+    LegionSaleStatus internal s_saleStatus;
 
     /// @notice Mapping of investor addresses to their positions
     /// @dev Tracks investor data internally
-    mapping(address investorAddress => InvestorPosition investorPosition) internal investorPositions;
+    mapping(address s_investorAddress => InvestorPosition s_investorPosition) internal s_investorPositions;
 
     /*//////////////////////////////////////////////////////////////////////////
                                    MODIFIERS
@@ -71,7 +71,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @dev Reverts if caller is not the configured Legion bouncer
      */
     modifier onlyLegion() {
-        if (msg.sender != addressConfig.legionBouncer) revert Errors.NotCalledByLegion();
+        if (msg.sender != s_addressConfig.legionBouncer) revert Errors.NotCalledByLegion();
         _;
     }
 
@@ -80,7 +80,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @dev Reverts if caller is not the configured project admin
      */
     modifier onlyProject() {
-        if (msg.sender != addressConfig.projectAdmin) revert Errors.NotCalledByProject();
+        if (msg.sender != s_addressConfig.projectAdmin) revert Errors.NotCalledByProject();
         _;
     }
 
@@ -89,7 +89,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @dev Reverts if caller is neither project admin nor Legion bouncer
      */
     modifier onlyLegionOrProject() {
-        if (msg.sender != addressConfig.projectAdmin && msg.sender != addressConfig.legionBouncer) {
+        if (msg.sender != s_addressConfig.projectAdmin && msg.sender != s_addressConfig.legionBouncer) {
             revert Errors.NotCalledByLegionOrProject();
         }
         _;
@@ -100,7 +100,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @dev Reverts if askToken address is not set
      */
     modifier askTokenAvailable() {
-        if (addressConfig.askToken == address(0)) revert Errors.AskTokenUnavailable();
+        if (s_addressConfig.askToken == address(0)) revert Errors.AskTokenUnavailable();
         _;
     }
 
@@ -136,25 +136,25 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         _verifyHasNotRefunded();
 
         // Cache the amount to refund in memory
-        uint256 amountToRefund = investorPositions[msg.sender].investedCapital;
+        uint256 amountToRefund = s_investorPositions[msg.sender].investedCapital;
 
         // Revert in case there's nothing to refund
         if (amountToRefund == 0) revert Errors.InvalidRefundAmount(0);
 
         // Set the total invested capital for the investor to 0
-        investorPositions[msg.sender].investedCapital = 0;
+        s_investorPositions[msg.sender].investedCapital = 0;
 
         // Flag that the investor has refunded
-        investorPositions[msg.sender].hasRefunded = true;
+        s_investorPositions[msg.sender].hasRefunded = true;
 
         // Decrement total capital invested from investors
-        saleStatus.totalCapitalInvested -= amountToRefund;
+        s_saleStatus.totalCapitalInvested -= amountToRefund;
 
         // Emit CapitalRefunded
         emit CapitalRefunded(amountToRefund, msg.sender);
 
         // Transfer the refunded amount back to the investor
-        SafeTransferLib.safeTransfer(addressConfig.bidToken, msg.sender, amountToRefund);
+        SafeTransferLib.safeTransfer(s_addressConfig.bidToken, msg.sender, amountToRefund);
     }
 
     /**
@@ -175,41 +175,41 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         _verifyCanWithdrawCapital();
 
         // Check if projects are withdrawing capital on the sale source chain
-        if (addressConfig.askToken != address(0)) {
+        if (s_addressConfig.askToken != address(0)) {
             // Allow projects to withdraw capital only in case they've supplied tokens
             _verifyTokensSupplied();
         }
 
         // Flag that the capital has been withdrawn
-        saleStatus.capitalWithdrawn = true;
+        s_saleStatus.capitalWithdrawn = true;
 
         // Cache value in memory
-        uint256 _totalCapitalRaised = saleStatus.totalCapitalRaised;
+        uint256 _totalCapitalRaised = s_saleStatus.totalCapitalRaised;
 
         // Calculate Legion Fee
         uint256 _legionFee =
-            (saleConfig.legionFeeOnCapitalRaisedBps * _totalCapitalRaised) / Constants.BASIS_POINTS_DENOMINATOR;
+            (s_saleConfig.legionFeeOnCapitalRaisedBps * _totalCapitalRaised) / Constants.BASIS_POINTS_DENOMINATOR;
 
         // Calculate Referrer Fee
         uint256 _referrerFee =
-            (saleConfig.referrerFeeOnCapitalRaisedBps * _totalCapitalRaised) / Constants.BASIS_POINTS_DENOMINATOR;
+            (s_saleConfig.referrerFeeOnCapitalRaisedBps * _totalCapitalRaised) / Constants.BASIS_POINTS_DENOMINATOR;
 
         // Emit CapitalWithdrawn
         emit CapitalWithdrawn(_totalCapitalRaised, msg.sender);
 
         // Transfer the raised capital to the project owner
         SafeTransferLib.safeTransfer(
-            addressConfig.bidToken, msg.sender, (_totalCapitalRaised - _legionFee - _referrerFee)
+            s_addressConfig.bidToken, msg.sender, (_totalCapitalRaised - _legionFee - _referrerFee)
         );
 
         // Transfer the Legion fee to the Legion fee receiver address
         if (_legionFee != 0) {
-            SafeTransferLib.safeTransfer(addressConfig.bidToken, addressConfig.legionFeeReceiver, _legionFee);
+            SafeTransferLib.safeTransfer(s_addressConfig.bidToken, s_addressConfig.legionFeeReceiver, _legionFee);
         }
 
         // Transfer the Referrer fee to the Referrer fee receiver address
         if (_referrerFee != 0) {
-            SafeTransferLib.safeTransfer(addressConfig.bidToken, addressConfig.referrerFeeReceiver, _referrerFee);
+            SafeTransferLib.safeTransfer(s_addressConfig.bidToken, s_addressConfig.referrerFeeReceiver, _referrerFee);
         }
     }
 
@@ -246,7 +246,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         _verifyCanClaimTokenAllocation(msg.sender, amount, investorVestingConfig, proof);
 
         /// Load the investor position
-        InvestorPosition storage position = investorPositions[msg.sender];
+        InvestorPosition storage position = s_investorPositions[msg.sender];
 
         // Mark that the token amount has been settled
         position.hasSettled = true;
@@ -270,12 +270,12 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
             position.vestingAddress = vestingAddress;
 
             // Transfer the allocated amount of tokens for distribution
-            SafeTransferLib.safeTransfer(addressConfig.askToken, vestingAddress, amountToBeVested);
+            SafeTransferLib.safeTransfer(s_addressConfig.askToken, vestingAddress, amountToBeVested);
         }
 
         if (amountToDistributeOnClaim != 0) {
             // Transfer the allocated amount of tokens for distribution on claim
-            SafeTransferLib.safeTransfer(addressConfig.askToken, msg.sender, amountToDistributeOnClaim);
+            SafeTransferLib.safeTransfer(s_addressConfig.askToken, msg.sender, amountToDistributeOnClaim);
         }
     }
 
@@ -296,20 +296,20 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         _verifyCanClaimExcessCapital(msg.sender, amount, proof);
 
         // Mark that the excess capital has been returned
-        investorPositions[msg.sender].hasClaimedExcess = true;
+        s_investorPositions[msg.sender].hasClaimedExcess = true;
 
         if (amount != 0) {
             // Decrement the total invested capital for the investor
-            investorPositions[msg.sender].investedCapital -= amount;
+            s_investorPositions[msg.sender].investedCapital -= amount;
 
             // Decrement total capital invested from investors
-            saleStatus.totalCapitalInvested -= amount;
+            s_saleStatus.totalCapitalInvested -= amount;
 
             // Emit ExcessCapitalWithdrawn
             emit ExcessCapitalWithdrawn(amount, msg.sender);
 
             // Transfer the excess capital back to the investor
-            SafeTransferLib.safeTransfer(addressConfig.bidToken, msg.sender, amount);
+            SafeTransferLib.safeTransfer(s_addressConfig.bidToken, msg.sender, amount);
         }
     }
 
@@ -319,13 +319,13 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      */
     function releaseVestedTokens() external virtual askTokenAvailable whenNotPaused {
         // Get the investor position details
-        InvestorPosition memory position = investorPositions[msg.sender];
+        InvestorPosition memory position = s_investorPositions[msg.sender];
 
         // Revert in case there's no vesting for the investor
         if (position.vestingAddress == address(0)) revert Errors.ZeroAddressProvided();
 
         // Release tokens to the investor account
-        ILegionVesting(position.vestingAddress).release(addressConfig.askToken);
+        ILegionVesting(position.vestingAddress).release(s_addressConfig.askToken);
     }
 
     /**
@@ -356,15 +356,15 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         _verifyTokensNotSupplied();
 
         // Flag that tokens have been supplied
-        saleStatus.tokensSupplied = true;
+        s_saleStatus.tokensSupplied = true;
 
         /// Calculate the expected Legion Fee amount
         uint256 expectedLegionFeeAmount =
-            (saleConfig.legionFeeOnTokensSoldBps * amount) / Constants.BASIS_POINTS_DENOMINATOR;
+            (s_saleConfig.legionFeeOnTokensSoldBps * amount) / Constants.BASIS_POINTS_DENOMINATOR;
 
         /// Calculate the expected Referrer Fee amount
         uint256 expectedReferrerFeeAmount =
-            (saleConfig.referrerFeeOnTokensSoldBps * amount) / Constants.BASIS_POINTS_DENOMINATOR;
+            (s_saleConfig.referrerFeeOnTokensSoldBps * amount) / Constants.BASIS_POINTS_DENOMINATOR;
 
         /// Verify Legion Fee amount
         if (legionFee != (expectedLegionFeeAmount)) {
@@ -380,19 +380,19 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         emit TokensSuppliedForDistribution(amount, legionFee, referrerFee);
 
         // Transfer the allocated amount of tokens for distribution
-        SafeTransferLib.safeTransferFrom(addressConfig.askToken, msg.sender, address(this), amount);
+        SafeTransferLib.safeTransferFrom(s_addressConfig.askToken, msg.sender, address(this), amount);
 
         // Transfer the Legion fee to the Legion fee receiver address
         if (legionFee != 0) {
             SafeTransferLib.safeTransferFrom(
-                addressConfig.askToken, msg.sender, addressConfig.legionFeeReceiver, legionFee
+                s_addressConfig.askToken, msg.sender, s_addressConfig.legionFeeReceiver, legionFee
             );
         }
 
         // Transfer the Referrer fee to the referrer fee receiver address
         if (referrerFee != 0) {
             SafeTransferLib.safeTransferFrom(
-                addressConfig.askToken, msg.sender, addressConfig.referrerFeeReceiver, referrerFee
+                s_addressConfig.askToken, msg.sender, s_addressConfig.referrerFeeReceiver, referrerFee
             );
         }
     }
@@ -410,7 +410,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         _verifySaleHasNotEnded();
 
         // Set the merkle root for accepted capital
-        saleStatus.acceptedCapitalMerkleRoot = merkleRoot;
+        s_saleStatus.acceptedCapitalMerkleRoot = merkleRoot;
 
         // Emit AcceptedCapitalSet
         emit AcceptedCapitalSet(merkleRoot);
@@ -425,22 +425,22 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         _verifySaleIsCanceled();
 
         // Cache the amount to refund in memory
-        uint256 amountToWithdraw = investorPositions[msg.sender].investedCapital;
+        uint256 amountToWithdraw = s_investorPositions[msg.sender].investedCapital;
 
         // Revert in case there's nothing to claim
         if (amountToWithdraw == 0) revert Errors.InvalidWithdrawAmount(0);
 
         // Set the total invested capital for the investor to 0
-        investorPositions[msg.sender].investedCapital = 0;
+        s_investorPositions[msg.sender].investedCapital = 0;
 
         // Decrement total capital invested from investors
-        saleStatus.totalCapitalInvested -= amountToWithdraw;
+        s_saleStatus.totalCapitalInvested -= amountToWithdraw;
 
         // Emit CapitalRefundedAfterCancel
         emit CapitalRefundedAfterCancel(amountToWithdraw, msg.sender);
 
         // Transfer the refunded amount back to the investor
-        SafeTransferLib.safeTransfer(addressConfig.bidToken, msg.sender, amountToWithdraw);
+        SafeTransferLib.safeTransfer(s_addressConfig.bidToken, msg.sender, amountToWithdraw);
     }
 
     /**
@@ -487,20 +487,20 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
 
     /**
      * @notice Returns the current sale configuration
-     * @dev Virtual function providing read-only access to saleConfig
+     * @dev Virtual function providing read-only access to s_saleConfig
      * @return LegionSaleConfiguration memory Struct containing sale configuration
      */
     function saleConfiguration() external view virtual returns (LegionSaleConfiguration memory) {
-        return saleConfig;
+        return s_saleConfig;
     }
 
     /**
      * @notice Returns the current sale status
-     * @dev Virtual function providing read-only access to saleStatus
+     * @dev Virtual function providing read-only access to s_saleStatus
      * @return LegionSaleStatus memory Struct containing sale status
      */
     function saleStatusDetails() external view virtual returns (LegionSaleStatus memory) {
-        return saleStatus;
+        return s_saleStatus;
     }
 
     /**
@@ -510,7 +510,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @return InvestorPosition memory Struct containing investor position details
      */
     function investorPositionDetails(address investorAddress) external view virtual returns (InvestorPosition memory) {
-        return investorPositions[investorAddress];
+        return s_investorPositions[investorAddress];
     }
 
     /**
@@ -526,7 +526,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         returns (LegionInvestorVestingStatus memory vestingStatus)
     {
         /// Get the investor position details
-        address investorVestingAddress = investorPositions[investor].vestingAddress;
+        address investorVestingAddress = s_investorPositions[investor].vestingAddress;
 
         // Return the investor vesting status
         investorVestingAddress != address(0)
@@ -535,9 +535,9 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
                 ILegionVesting(investorVestingAddress).end(),
                 ILegionVesting(investorVestingAddress).cliffEndTimestamp(),
                 ILegionVesting(investorVestingAddress).duration(),
-                ILegionVesting(investorVestingAddress).released(addressConfig.askToken),
-                ILegionVesting(investorVestingAddress).releasable(addressConfig.askToken),
-                ILegionVesting(investorVestingAddress).vestedAmount(addressConfig.askToken, uint64(block.timestamp))
+                ILegionVesting(investorVestingAddress).released(s_addressConfig.askToken),
+                ILegionVesting(investorVestingAddress).releasable(s_addressConfig.askToken),
+                ILegionVesting(investorVestingAddress).vestedAmount(s_addressConfig.askToken, uint64(block.timestamp))
             )
             : vestingStatus;
     }
@@ -558,7 +558,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         _verifySaleNotCanceled();
 
         // Mark sale as canceled
-        saleStatus.isCanceled = true;
+        s_saleStatus.isCanceled = true;
 
         // Emit SaleCanceled
         emit SaleCanceled();
@@ -582,18 +582,18 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         _verifyValidInitParams(saleInitParams);
 
         // Set the sale configuration
-        saleConfig.legionFeeOnCapitalRaisedBps = saleInitParams.legionFeeOnCapitalRaisedBps;
-        saleConfig.legionFeeOnTokensSoldBps = saleInitParams.legionFeeOnTokensSoldBps;
-        saleConfig.referrerFeeOnCapitalRaisedBps = saleInitParams.referrerFeeOnCapitalRaisedBps;
-        saleConfig.referrerFeeOnTokensSoldBps = saleInitParams.referrerFeeOnTokensSoldBps;
-        saleConfig.minimumInvestAmount = saleInitParams.minimumInvestAmount;
+        s_saleConfig.legionFeeOnCapitalRaisedBps = saleInitParams.legionFeeOnCapitalRaisedBps;
+        s_saleConfig.legionFeeOnTokensSoldBps = saleInitParams.legionFeeOnTokensSoldBps;
+        s_saleConfig.referrerFeeOnCapitalRaisedBps = saleInitParams.referrerFeeOnCapitalRaisedBps;
+        s_saleConfig.referrerFeeOnTokensSoldBps = saleInitParams.referrerFeeOnTokensSoldBps;
+        s_saleConfig.minimumInvestAmount = saleInitParams.minimumInvestAmount;
 
         // Set the address configuration
-        addressConfig.bidToken = saleInitParams.bidToken;
-        addressConfig.askToken = saleInitParams.askToken;
-        addressConfig.projectAdmin = saleInitParams.projectAdmin;
-        addressConfig.addressRegistry = saleInitParams.addressRegistry;
-        addressConfig.referrerFeeReceiver = saleInitParams.referrerFeeReceiver;
+        s_addressConfig.bidToken = saleInitParams.bidToken;
+        s_addressConfig.askToken = saleInitParams.askToken;
+        s_addressConfig.projectAdmin = saleInitParams.projectAdmin;
+        s_addressConfig.addressRegistry = saleInitParams.addressRegistry;
+        s_addressConfig.referrerFeeReceiver = saleInitParams.referrerFeeReceiver;
 
         // Cache Legion addresses from `LegionAddressRegistry`
         _syncLegionAddresses();
@@ -605,21 +605,22 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      */
     function _syncLegionAddresses() internal virtual {
         // Cache Legion addresses from `LegionAddressRegistry`
-        addressConfig.legionBouncer =
-            ILegionAddressRegistry(addressConfig.addressRegistry).getLegionAddress(Constants.LEGION_BOUNCER_ID);
-        addressConfig.legionSigner =
-            ILegionAddressRegistry(addressConfig.addressRegistry).getLegionAddress(Constants.LEGION_SIGNER_ID);
-        addressConfig.legionFeeReceiver =
-            ILegionAddressRegistry(addressConfig.addressRegistry).getLegionAddress(Constants.LEGION_FEE_RECEIVER_ID);
-        vestingConfig.vestingFactory =
-            ILegionAddressRegistry(addressConfig.addressRegistry).getLegionAddress(Constants.LEGION_VESTING_FACTORY_ID);
+        s_addressConfig.legionBouncer =
+            ILegionAddressRegistry(s_addressConfig.addressRegistry).getLegionAddress(Constants.LEGION_BOUNCER_ID);
+        s_addressConfig.legionSigner =
+            ILegionAddressRegistry(s_addressConfig.addressRegistry).getLegionAddress(Constants.LEGION_SIGNER_ID);
+        s_addressConfig.legionFeeReceiver =
+            ILegionAddressRegistry(s_addressConfig.addressRegistry).getLegionAddress(Constants.LEGION_FEE_RECEIVER_ID);
+        s_vestingConfig.vestingFactory = ILegionAddressRegistry(s_addressConfig.addressRegistry).getLegionAddress(
+            Constants.LEGION_VESTING_FACTORY_ID
+        );
 
         // Emit LegionAddressesSynced
         emit LegionAddressesSynced(
-            addressConfig.legionBouncer,
-            addressConfig.legionSigner,
-            addressConfig.legionFeeReceiver,
-            vestingConfig.vestingFactory
+            s_addressConfig.legionBouncer,
+            s_addressConfig.legionSigner,
+            s_addressConfig.legionFeeReceiver,
+            s_vestingConfig.vestingFactory
         );
     }
 
@@ -645,10 +646,10 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         bytes32 leaf = keccak256(bytes.concat(keccak256(abi.encode(_investor, _amount, investorVestingConfig))));
 
         // Load the investor position
-        InvestorPosition memory position = investorPositions[_investor];
+        InvestorPosition memory position = s_investorPositions[_investor];
 
         // Verify the merkle proof
-        if (!MerkleProofLib.verify(_proof, saleStatus.claimTokensMerkleRoot, leaf)) {
+        if (!MerkleProofLib.verify(_proof, s_saleStatus.claimTokensMerkleRoot, leaf)) {
             revert Errors.NotInClaimWhitelist(_investor);
         }
 
@@ -673,7 +674,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         virtual
     {
         // Load the investor position
-        InvestorPosition memory position = investorPositions[_investor];
+        InvestorPosition memory position = s_investorPositions[_investor];
 
         // Check if the investor has already settled their allocation
         if (position.hasClaimedExcess) revert Errors.AlreadyClaimedExcess(_investor);
@@ -685,7 +686,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         bytes32 leaf = keccak256(bytes.concat(keccak256(abi.encode(_investor, (position.investedCapital - _amount)))));
 
         // Verify the merkle proof
-        if (!MerkleProofLib.verify(_proof, saleStatus.acceptedCapitalMerkleRoot, leaf)) {
+        if (!MerkleProofLib.verify(_proof, s_saleStatus.acceptedCapitalMerkleRoot, leaf)) {
             revert Errors.CannotWithdrawExcessInvestedCapital(_investor, _amount);
         }
     }
@@ -726,7 +727,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @param _amount Amount being invested
      */
     function _verifyMinimumInvestAmount(uint256 _amount) internal view virtual {
-        if (_amount < saleConfig.minimumInvestAmount) revert Errors.InvalidInvestAmount(_amount);
+        if (_amount < s_saleConfig.minimumInvestAmount) revert Errors.InvalidInvestAmount(_amount);
     }
 
     /**
@@ -734,7 +735,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @dev Virtual function checking sale end time
      */
     function _verifySaleHasNotEnded() internal view virtual {
-        if (block.timestamp >= saleConfig.endTime) revert Errors.SaleHasEnded(block.timestamp);
+        if (block.timestamp >= s_saleConfig.endTime) revert Errors.SaleHasEnded(block.timestamp);
     }
 
     /**
@@ -742,8 +743,8 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @dev Virtual function checking refund window
      */
     function _verifyRefundPeriodIsOver() internal view virtual {
-        if (block.timestamp < saleConfig.refundEndTime) {
-            revert Errors.RefundPeriodIsNotOver(block.timestamp, saleConfig.refundEndTime);
+        if (block.timestamp < s_saleConfig.refundEndTime) {
+            revert Errors.RefundPeriodIsNotOver(block.timestamp, s_saleConfig.refundEndTime);
         }
     }
 
@@ -752,8 +753,8 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @dev Virtual function checking refund window
      */
     function _verifyRefundPeriodIsNotOver() internal view virtual {
-        if (block.timestamp >= saleConfig.refundEndTime) {
-            revert Errors.RefundPeriodIsOver(block.timestamp, saleConfig.refundEndTime);
+        if (block.timestamp >= s_saleConfig.refundEndTime) {
+            revert Errors.RefundPeriodIsOver(block.timestamp, s_saleConfig.refundEndTime);
         }
     }
 
@@ -762,7 +763,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @dev Virtual function checking token allocation status
      */
     function _verifySaleResultsArePublished() internal view virtual {
-        if (saleStatus.totalTokensAllocated == 0) revert Errors.SaleResultsNotPublished();
+        if (s_saleStatus.totalTokensAllocated == 0) revert Errors.SaleResultsNotPublished();
     }
 
     /**
@@ -770,7 +771,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @dev Virtual function checking token allocation status
      */
     function _verifySaleResultsNotPublished() internal view virtual {
-        if (saleStatus.totalTokensAllocated != 0) revert Errors.SaleResultsAlreadyPublished();
+        if (s_saleStatus.totalTokensAllocated != 0) revert Errors.SaleResultsAlreadyPublished();
     }
 
     /**
@@ -780,11 +781,11 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      */
     function _verifyCanSupplyTokens(uint256 _amount) internal view virtual {
         // Revert if Legion has not set the total amount of tokens allocated for distribution
-        if (saleStatus.totalTokensAllocated == 0) revert Errors.TokensNotAllocated();
+        if (s_saleStatus.totalTokensAllocated == 0) revert Errors.TokensNotAllocated();
 
         // Revert if the amount of tokens supplied is different than the amount set by Legion
-        if (_amount != saleStatus.totalTokensAllocated) {
-            revert Errors.InvalidTokenAmountSupplied(_amount, saleStatus.totalTokensAllocated);
+        if (_amount != s_saleStatus.totalTokensAllocated) {
+            revert Errors.InvalidTokenAmountSupplied(_amount, s_saleStatus.totalTokensAllocated);
         }
     }
 
@@ -793,7 +794,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @dev Virtual function ensuring results can be set
      */
     function _verifyCanPublishSaleResults() internal view virtual {
-        if (saleStatus.totalTokensAllocated != 0) revert Errors.TokensAlreadyAllocated();
+        if (s_saleStatus.totalTokensAllocated != 0) revert Errors.TokensAlreadyAllocated();
     }
 
     /**
@@ -801,7 +802,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @dev Virtual function checking cancellation status
      */
     function _verifySaleNotCanceled() internal view virtual {
-        if (saleStatus.isCanceled) revert Errors.SaleIsCanceled();
+        if (s_saleStatus.isCanceled) revert Errors.SaleIsCanceled();
     }
 
     /**
@@ -809,7 +810,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @dev Virtual function checking cancellation status
      */
     function _verifySaleIsCanceled() internal view virtual {
-        if (!saleStatus.isCanceled) revert Errors.SaleIsNotCanceled();
+        if (!s_saleStatus.isCanceled) revert Errors.SaleIsNotCanceled();
     }
 
     /**
@@ -817,7 +818,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @dev Virtual function checking token supply status
      */
     function _verifyTokensNotSupplied() internal view virtual {
-        if (saleStatus.tokensSupplied) revert Errors.TokensAlreadySupplied();
+        if (s_saleStatus.tokensSupplied) revert Errors.TokensAlreadySupplied();
     }
 
     /**
@@ -825,7 +826,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @dev Virtual function checking token supply status
      */
     function _verifyTokensSupplied() internal view virtual {
-        if (!saleStatus.tokensSupplied) revert Errors.TokensNotSupplied();
+        if (!s_saleStatus.tokensSupplied) revert Errors.TokensNotSupplied();
     }
 
     /**
@@ -835,7 +836,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      */
     function _verifyLegionSignature(bytes memory _signature) internal view virtual {
         bytes32 _data = keccak256(abi.encodePacked(msg.sender, address(this), block.chainid)).toEthSignedMessageHash();
-        if (_data.recover(_signature) != addressConfig.legionSigner) revert Errors.InvalidSignature(_signature);
+        if (_data.recover(_signature) != s_addressConfig.legionSigner) revert Errors.InvalidSignature(_signature);
     }
 
     /**
@@ -843,8 +844,8 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @dev Virtual function ensuring withdrawal eligibility
      */
     function _verifyCanWithdrawCapital() internal view virtual {
-        if (saleStatus.capitalWithdrawn) revert Errors.CapitalAlreadyWithdrawn();
-        if (saleStatus.totalCapitalRaised == 0) revert Errors.CapitalNotRaised();
+        if (s_saleStatus.capitalWithdrawn) revert Errors.CapitalAlreadyWithdrawn();
+        if (s_saleStatus.totalCapitalRaised == 0) revert Errors.CapitalNotRaised();
     }
 
     /**
@@ -852,7 +853,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @dev Virtual function checking refund status
      */
     function _verifyHasNotRefunded() internal view virtual {
-        if (investorPositions[msg.sender].hasRefunded) revert Errors.InvestorHasRefunded(msg.sender);
+        if (s_investorPositions[msg.sender].hasRefunded) revert Errors.InvestorHasRefunded(msg.sender);
     }
 
     /**
@@ -860,6 +861,6 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @dev Virtual function checking excess claim status
      */
     function _verifyHasNotClaimedExcess() internal view virtual {
-        if (investorPositions[msg.sender].hasClaimedExcess) revert Errors.InvestorHasClaimedExcess(msg.sender);
+        if (s_investorPositions[msg.sender].hasClaimedExcess) revert Errors.InvestorHasClaimedExcess(msg.sender);
     }
 }

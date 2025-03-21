@@ -37,7 +37,7 @@ contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
 
     /// @notice Struct containing the fixed-price sale configuration
     /// @dev Stores sale-specific parameters like token price and timing details
-    FixedPriceSaleConfiguration private fixedPriceSaleConfig;
+    FixedPriceSaleConfiguration private s_fixedPriceSaleConfig;
 
     /*//////////////////////////////////////////////////////////////////////////
                                   INITIALIZER
@@ -63,18 +63,18 @@ contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
         _setLegionSaleConfig(saleInitParams);
 
         // Set the fixed price sale specific configuration
-        fixedPriceSaleConfig.tokenPrice = fixedPriceSaleInitParams.tokenPrice;
+        s_fixedPriceSaleConfig.tokenPrice = fixedPriceSaleInitParams.tokenPrice;
 
         // Calculate and set prefundStartTime and prefundEndTime
-        fixedPriceSaleConfig.prefundStartTime = block.timestamp;
-        fixedPriceSaleConfig.prefundEndTime =
-            fixedPriceSaleConfig.prefundStartTime + fixedPriceSaleInitParams.prefundPeriodSeconds;
+        s_fixedPriceSaleConfig.prefundStartTime = block.timestamp;
+        s_fixedPriceSaleConfig.prefundEndTime =
+            s_fixedPriceSaleConfig.prefundStartTime + fixedPriceSaleInitParams.prefundPeriodSeconds;
 
         // Calculate and set startTime, endTime and refundEndTime
-        saleConfig.startTime =
-            fixedPriceSaleConfig.prefundEndTime + fixedPriceSaleInitParams.prefundAllocationPeriodSeconds;
-        saleConfig.endTime = saleConfig.startTime + saleInitParams.salePeriodSeconds;
-        saleConfig.refundEndTime = saleConfig.endTime + saleInitParams.refundPeriodSeconds;
+        s_saleConfig.startTime =
+            s_fixedPriceSaleConfig.prefundEndTime + fixedPriceSaleInitParams.prefundAllocationPeriodSeconds;
+        s_saleConfig.endTime = s_saleConfig.startTime + saleInitParams.salePeriodSeconds;
+        s_saleConfig.refundEndTime = s_saleConfig.endTime + saleInitParams.refundPeriodSeconds;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -110,10 +110,10 @@ contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
         _verifyHasNotClaimedExcess();
 
         // Increment total capital invested from investors
-        saleStatus.totalCapitalInvested += amount;
+        s_saleStatus.totalCapitalInvested += amount;
 
         // Increment total invested capital for the investor
-        investorPositions[msg.sender].investedCapital += amount;
+        s_investorPositions[msg.sender].investedCapital += amount;
 
         // Flag if capital is invested during the prefund period
         bool isPrefund = _isPrefund();
@@ -122,7 +122,7 @@ contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
         emit CapitalInvested(amount, msg.sender, isPrefund, block.timestamp);
 
         // Transfer the invested capital to the contract
-        SafeTransferLib.safeTransferFrom(addressConfig.bidToken, msg.sender, address(this), amount);
+        SafeTransferLib.safeTransferFrom(s_addressConfig.bidToken, msg.sender, address(this), amount);
     }
 
     /**
@@ -152,16 +152,17 @@ contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
         _verifyCanPublishSaleResults();
 
         // Set the merkle root for claiming tokens
-        saleStatus.claimTokensMerkleRoot = claimMerkleRoot;
+        s_saleStatus.claimTokensMerkleRoot = claimMerkleRoot;
 
         // Set the merkle root for accepted capital
-        saleStatus.acceptedCapitalMerkleRoot = acceptedMerkleRoot;
+        s_saleStatus.acceptedCapitalMerkleRoot = acceptedMerkleRoot;
 
         // Set the total tokens to be allocated by the Project team
-        saleStatus.totalTokensAllocated = tokensAllocated;
+        s_saleStatus.totalTokensAllocated = tokensAllocated;
 
         // Set the total capital raised to be withdrawn by the project
-        saleStatus.totalCapitalRaised = (tokensAllocated * fixedPriceSaleConfig.tokenPrice) / (10 ** askTokenDecimals);
+        s_saleStatus.totalCapitalRaised =
+            (tokensAllocated * s_fixedPriceSaleConfig.tokenPrice) / (10 ** askTokenDecimals);
 
         // Emit successfully SaleResultsPublished
         emit SaleResultsPublished(claimMerkleRoot, acceptedMerkleRoot, tokensAllocated);
@@ -173,7 +174,7 @@ contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
      * @return FixedPriceSaleConfiguration memory Struct containing the sale configuration
      */
     function fixedPriceSaleConfiguration() external view returns (FixedPriceSaleConfiguration memory) {
-        return fixedPriceSaleConfig;
+        return s_fixedPriceSaleConfig;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -217,7 +218,7 @@ contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
      * @return bool True if within prefund period, false otherwise
      */
     function _isPrefund() private view returns (bool) {
-        return (block.timestamp < fixedPriceSaleConfig.prefundEndTime);
+        return (block.timestamp < s_fixedPriceSaleConfig.prefundEndTime);
     }
 
     /**
@@ -225,7 +226,7 @@ contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
      * @dev Reverts if called between prefundEndTime and sale startTime
      */
     function _verifyNotPrefundAllocationPeriod() private view {
-        if (block.timestamp >= fixedPriceSaleConfig.prefundEndTime && block.timestamp < saleConfig.startTime) {
+        if (block.timestamp >= s_fixedPriceSaleConfig.prefundEndTime && block.timestamp < s_saleConfig.startTime) {
             revert Errors.PrefundAllocationPeriodNotEnded(block.timestamp);
         }
     }
