@@ -537,7 +537,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that creating a sale with zero address configurations reverts
-     * @dev Expects ZeroAddressProvided revert when addresses are zero
+     * @dev Expects LegionSale__ZeroAddressProvided revert when addresses are zero
      */
     function test_createPreLiquidSale_revertsWithZeroAddressProvided() public {
         // Arrange
@@ -559,7 +559,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         );
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.ZeroAddressProvided.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__ZeroAddressProvided.selector));
 
         // Act
         vm.prank(legionBouncer);
@@ -568,7 +568,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that creating a sale with zero value configurations reverts
-     * @dev Expects ZeroValueProvided revert when key parameters are zero
+     * @dev Expects LegionSale__ZeroValueProvided revert when key parameters are zero
      */
     function test_createPreLiquidSale_revertsWithZeroValueProvided() public {
         // Arrange
@@ -590,7 +590,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         );
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.ZeroValueProvided.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__ZeroValueProvided.selector));
 
         // Act
         vm.prank(legionBouncer);
@@ -599,7 +599,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that creating a sale with an overly long period configuration reverts
-     * @dev Expects InvalidPeriodConfig revert when periods exceed limits
+     * @dev Expects LegionSale__InvalidPeriodConfig revert when periods exceed limits
      */
     function test_createPreLiquidSale_revertsWithInvalidPeriodConfigTooLong() public {
         // Arrange
@@ -621,7 +621,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         );
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidPeriodConfig.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidPeriodConfig.selector));
 
         // Act
         vm.prank(legionBouncer);
@@ -630,7 +630,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that creating a sale with an overly short period configuration reverts
-     * @dev Expects InvalidPeriodConfig revert when periods are below minimum
+     * @dev Expects LegionSale__InvalidPeriodConfig revert when periods are below minimum
      */
     function test_createPreLiquidSale_revertsWithInvalidPeriodConfigTooShort() public {
         // Arrange
@@ -652,7 +652,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         );
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidPeriodConfig.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidPeriodConfig.selector));
 
         // Act
         vm.prank(legionBouncer);
@@ -682,7 +682,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that pausing the sale by a non-Legion admin reverts
-     * @dev Expects NotCalledByLegion revert when called by nonLegionAdmin
+     * @dev Expects LegionSale__NotCalledByLegion revert when called by nonLegionAdmin
      */
     function testFuzz_pauseSale_revertsIfCalledByNonLegionAdmin(address nonLegionAdmin) public {
         // Arrange
@@ -690,7 +690,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         prepareCreateLegionPreLiquidSale();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.NotCalledByLegion.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NotCalledByLegion.selector));
 
         // Act
         vm.prank(nonLegionAdmin);
@@ -719,7 +719,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that unpausing the sale by a non-Legion admin reverts
-     * @dev Expects NotCalledByLegion revert when called by nonLegionAdmin
+     * @dev Expects LegionSale__NotCalledByLegion revert when called by nonLegionAdmin
      */
     function testFuzz_unpauseSale_revertsIfNotCalledByLegionAdmin(address nonLegionAdmin) public {
         // Arrange
@@ -730,7 +730,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).pauseSale();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.NotCalledByLegion.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NotCalledByLegion.selector));
 
         // Act
         vm.prank(nonLegionAdmin);
@@ -764,7 +764,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that investing after the sale has ended reverts
-     * @dev Expects SaleHasEnded revert when sale is no longer active
+     * @dev Expects LegionSale__SaleHasEnded revert when sale is no longer active
      */
     function test_invest_revertsIfSaleHasEnded() public {
         // Arrange
@@ -778,7 +778,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         vm.warp(endTime() + 1);
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasEnded.selector, (endTime() + 1)));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleHasEnded.selector, (endTime() + 1)));
 
         // Act
         vm.prank(investor1);
@@ -787,7 +787,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that investing with an amount less than the minimum reverts
-     * @dev Expects InvalidInvestAmount revert when investment is below threshold
+     * @dev Expects LegionSale__InvalidInvestAmount revert when investment is below threshold
      */
     function test_invest_revertsIfAmountLessThanMinimum() public {
         // Arrange
@@ -796,7 +796,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         prepareInvestorSignatures();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidInvestAmount.selector, 1 * 1e5));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidInvestAmount.selector, 1 * 1e5));
 
         // Act
         vm.prank(investor1);
@@ -805,7 +805,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that investing when the sale is canceled reverts
-     * @dev Expects SaleIsCanceled revert when sale has been canceled
+     * @dev Expects LegionSale__SaleIsCanceled revert when sale has been canceled
      */
     function test_invest_revertsIfSaleIsCanceled() public {
         // Arrange
@@ -817,7 +817,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).cancelSale();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
 
         // Act
         vm.prank(investor1);
@@ -826,7 +826,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that investing with an invalid signature reverts
-     * @dev Expects InvalidSignature revert when signature is not valid
+     * @dev Expects LegionSale__InvalidSignature revert when signature is not valid
      */
     function test_invest_revertsIfInvalidSignature() public {
         // Arrange
@@ -835,7 +835,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         prepareInvestorSignatures();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidSignature.selector, invalidSignature));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidSignature.selector, invalidSignature));
 
         // Act
         vm.prank(investor1);
@@ -844,7 +844,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that investing after refunding reverts
-     * @dev Expects InvestorHasRefunded revert when investor has already refunded
+     * @dev Expects LegionSale__InvestorHasRefunded revert when investor has already refunded
      */
     function test_invest_revertsIfInvestorHasRefunded() public {
         // Arrange
@@ -862,7 +862,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).refund();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvestorHasRefunded.selector, investor1));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorHasRefunded.selector, investor1));
 
         // Act
         vm.prank(investor1);
@@ -871,7 +871,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that investing after claiming excess capital reverts
-     * @dev Expects InvestorHasClaimedExcess revert when excess capital is claimed
+     * @dev Expects LegionSale__InvestorHasClaimedExcess revert when excess capital is claimed
      */
     function test_invest_revertsIfInvestorHasClaimedExcessCapital() public {
         // Arrange
@@ -892,7 +892,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).withdrawExcessInvestedCapital(1000 * 1e6, excessClaimProofInvestor2);
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvestorHasClaimedExcess.selector, investor2));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorHasClaimedExcess.selector, investor2));
 
         // Act
         vm.prank(investor2);
@@ -922,7 +922,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that ending the sale by non-project or non-Legion admin reverts
-     * @dev Expects NotCalledByLegionOrProject revert when called by nonProjectOrLegionAdmin
+     * @dev Expects LegionSale__NotCalledByLegionOrProject revert when called by nonProjectOrLegionAdmin
      */
     function testFuzz_endSale_revertsIfNotCalledByLegionOrProject(address nonProjectOrLegionAdmin) public {
         // Arrange
@@ -930,7 +930,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         prepareCreateLegionPreLiquidSale();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.NotCalledByLegionOrProject.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NotCalledByLegionOrProject.selector));
 
         // Act
         vm.prank(nonProjectOrLegionAdmin);
@@ -958,7 +958,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that ending the sale when canceled reverts
-     * @dev Expects SaleIsCanceled revert when sale is already canceled
+     * @dev Expects LegionSale__SaleIsCanceled revert when sale is already canceled
      */
     function test_endSale_revertsIfSaleIsCanceled() public {
         // Arrange
@@ -968,7 +968,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).cancelSale();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
 
         // Act
         vm.prank(projectAdmin);
@@ -977,7 +977,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that ending an already ended sale reverts
-     * @dev Expects SaleHasEnded revert when sale is already ended
+     * @dev Expects LegionSale__SaleHasEnded revert when sale is already ended
      */
     function test_endSale_revertsIfSaleHasEnded() public {
         // Arrange
@@ -987,7 +987,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).endSale();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasEnded.selector, block.timestamp));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleHasEnded.selector, block.timestamp));
 
         // Act
         vm.prank(legionBouncer);
@@ -1022,7 +1022,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that publishing capital raised by non-Legion admin reverts
-     * @dev Expects NotCalledByLegion revert when called by nonLegionAdmin
+     * @dev Expects LegionSale__NotCalledByLegion revert when called by nonLegionAdmin
      */
     function testFuzz_publishCapitalRaised_revertsIfCalledByNonLegionAdmin(address nonLegionAdmin) public {
         // Arrange
@@ -1035,7 +1035,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         vm.warp(refundEndTime() + 1);
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.NotCalledByLegion.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NotCalledByLegion.selector));
 
         // Act
         vm.prank(nonLegionAdmin);
@@ -1044,7 +1044,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that publishing capital raised when sale is canceled reverts
-     * @dev Expects SaleIsCanceled revert when sale is canceled
+     * @dev Expects LegionSale__SaleIsCanceled revert when sale is canceled
      */
     function test_publishCapitalRaised_revertsIfSaleIsCanceled() public {
         // Arrange
@@ -1059,7 +1059,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).cancelSale();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
 
         // Act
         vm.prank(legionBouncer);
@@ -1068,14 +1068,14 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that publishing capital raised before sale ends reverts
-     * @dev Expects SaleHasNotEnded revert when sale is still active
+     * @dev Expects LegionSale__SaleHasNotEnded revert when sale is still active
      */
     function test_publishCapitalRaised_revertsIfSaleHasNotEnded() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleHasNotEnded.selector, block.timestamp));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleHasNotEnded.selector, block.timestamp));
 
         // Act
         vm.prank(legionBouncer);
@@ -1084,7 +1084,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that publishing capital raised before refund period ends reverts
-     * @dev Expects RefundPeriodIsNotOver revert when refund period is active
+     * @dev Expects LegionSale__RefundPeriodIsNotOver revert when refund period is active
      */
     function test_publishCapitalRaised_revertsIfRefundPeriodIsNotOver() public {
         // Arrange
@@ -1094,7 +1094,9 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).endSale();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.RefundPeriodIsNotOver.selector, block.timestamp, refundEndTime()));
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.LegionSale__RefundPeriodIsNotOver.selector, block.timestamp, refundEndTime())
+        );
 
         // Act
         vm.prank(legionBouncer);
@@ -1103,7 +1105,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that publishing capital raised twice reverts
-     * @dev Expects CapitalRaisedAlreadyPublished revert when already published
+     * @dev Expects LegionSale__CapitalRaisedAlreadyPublished revert when already published
      */
     function test_publishCapitalRaised_revertsIfCapitalAlreadyPublished() public {
         // Arrange
@@ -1118,7 +1120,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).publishCapitalRaised(10_000 * 1e6, acceptedCapitalMerkleRoot);
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.CapitalRaisedAlreadyPublished.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__CapitalRaisedAlreadyPublished.selector));
 
         // Act
         vm.prank(legionBouncer);
@@ -1153,7 +1155,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that emergency withdrawal by non-Legion admin reverts
-     * @dev Expects NotCalledByLegion revert when called by projectAdmin
+     * @dev Expects LegionSale__NotCalledByLegion revert when called by projectAdmin
      */
     function test_emergencyWithdraw_revertsIfCalledByNonLegionAdmin() public {
         // Arrange
@@ -1165,7 +1167,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.NotCalledByLegion.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NotCalledByLegion.selector));
 
         // Act
         vm.prank(projectAdmin);
@@ -1207,7 +1209,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that refunding after the refund period ends reverts
-     * @dev Expects RefundPeriodIsOver revert when refund period has expired
+     * @dev Expects LegionSale__RefundPeriodIsOver revert when refund period has expired
      */
     function test_refund_revertsIfRefundPeriodHasEnded() public {
         // Arrange
@@ -1225,7 +1227,9 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         // Expect
         vm.expectRevert(
-            abi.encodeWithSelector(Errors.RefundPeriodIsOver.selector, (refundEndTime() + 1), refundEndTime())
+            abi.encodeWithSelector(
+                Errors.LegionSale__RefundPeriodIsOver.selector, (refundEndTime() + 1), refundEndTime()
+            )
         );
 
         // Act
@@ -1235,7 +1239,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that refunding when the sale is canceled reverts
-     * @dev Expects SaleIsCanceled revert when sale is canceled
+     * @dev Expects LegionSale__SaleIsCanceled revert when sale is canceled
      */
     function test_refund_revertsIfSaleIsCanceled() public {
         // Arrange
@@ -1253,7 +1257,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).cancelSale();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
 
         // Act
         vm.prank(investor1);
@@ -1262,7 +1266,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that refunding with no capital invested reverts
-     * @dev Expects InvalidRefundAmount revert when no investment exists
+     * @dev Expects LegionSale__InvalidRefundAmount revert when no investment exists
      */
     function test_refund_revertsIfNoCapitalInvested() public {
         // Arrange
@@ -1273,7 +1277,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         vm.warp(endTime() + 1);
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidRefundAmount.selector, 0));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidRefundAmount.selector, 0));
 
         // Act
         vm.prank(investor1);
@@ -1282,7 +1286,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that refunding twice reverts
-     * @dev Expects InvestorHasRefunded revert when investor has already refunded
+     * @dev Expects LegionSale__InvestorHasRefunded revert when investor has already refunded
      */
     function test_refund_revertsIfInvestorHasRefunded() public {
         // Arrange
@@ -1302,7 +1306,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).refund();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvestorHasRefunded.selector, investor1));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorHasRefunded.selector, investor1));
 
         // Act
         vm.prank(investor1);
@@ -1373,7 +1377,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that canceling an already canceled sale reverts
-     * @dev Expects SaleIsCanceled revert when sale is already canceled
+     * @dev Expects LegionSale__SaleIsCanceled revert when sale is already canceled
      */
     function test_cancelSale_revertsIfSaleAlreadyCanceled() public {
         // Arrange
@@ -1383,7 +1387,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).cancelSale();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
 
         // Act
         vm.prank(projectAdmin);
@@ -1392,7 +1396,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that canceling a sale after tokens are supplied reverts
-     * @dev Expects TokensAlreadySupplied revert when tokens are supplied
+     * @dev Expects LegionSale__TokensAlreadySupplied revert when tokens are supplied
      */
     function test_cancelSale_revertsIfTokensSupplied() public {
         // Arrange
@@ -1413,7 +1417,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.TokensAlreadySupplied.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__TokensAlreadySupplied.selector));
 
         // Act
         vm.prank(projectAdmin);
@@ -1422,14 +1426,14 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that canceling a sale by non-project admin reverts
-     * @dev Expects NotCalledByProject revert when called by investor1
+     * @dev Expects LegionSale__NotCalledByProject revert when called by investor1
      */
     function test_cancelSale_revertsIfCalledByNonProjectAdmin() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.NotCalledByProject.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NotCalledByProject.selector));
 
         // Act
         vm.prank(investor1);
@@ -1470,7 +1474,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that withdrawing invested capital when sale is not canceled reverts
-     * @dev Expects SaleIsNotCanceled revert when sale is still active
+     * @dev Expects LegionSale__SaleIsNotCanceled revert when sale is still active
      */
     function test_withdrawInvestedCapitalIfCanceled_revertsIfSaleIsNotCanceled() public {
         // Arrange
@@ -1482,7 +1486,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsNotCanceled.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsNotCanceled.selector));
 
         // Act
         vm.prank(investor1);
@@ -1491,7 +1495,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that withdrawing invested capital with no investment reverts
-     * @dev Expects InvalidWithdrawAmount revert when no capital is invested
+     * @dev Expects LegionSale__InvalidWithdrawAmount revert when no capital is invested
      */
     function test_withdrawInvestedCapitalIfCanceled_revertsIfNoCapitalInvested() public {
         // Arrange
@@ -1501,7 +1505,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).cancelSale();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidWithdrawAmount.selector, 0));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidWithdrawAmount.selector, 0));
 
         // Act
         vm.prank(investor1);
@@ -1543,7 +1547,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that publishing sale results by non-Legion admin reverts
-     * @dev Expects NotCalledByLegion revert when called by nonLegionAdmin
+     * @dev Expects LegionSale__NotCalledByLegion revert when called by nonLegionAdmin
      */
     function testFuzz_publishSaleResults_revertsIfCalledByNonLegionAdmin(address nonLegionAdmin) public {
         // Arrange
@@ -1551,7 +1555,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         prepareCreateLegionPreLiquidSale();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.NotCalledByLegion.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NotCalledByLegion.selector));
 
         // Act
         vm.prank(nonLegionAdmin);
@@ -1562,7 +1566,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that publishing sale results twice reverts
-     * @dev Expects TokensAlreadyAllocated revert when results are already published
+     * @dev Expects LegionSale__TokensAlreadyAllocated revert when results are already published
      */
     function test_publishSaleResults_revertsIfResultsAlreadyPublished() public {
         // Arrange
@@ -1579,7 +1583,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         );
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.TokensAlreadyAllocated.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__TokensAlreadyAllocated.selector));
 
         // Act
         vm.prank(legionBouncer);
@@ -1590,7 +1594,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that publishing sale results before refund period ends reverts
-     * @dev Expects RefundPeriodIsNotOver revert when refund period is active
+     * @dev Expects LegionSale__RefundPeriodIsNotOver revert when refund period is active
      */
     function test_publishSaleResults_revertsIfRefundPeriodIsNotOver() public {
         // Arrange
@@ -1602,7 +1606,9 @@ contract LegionPreLiquidSaleV2Test is Test {
         vm.warp(refundEndTime() - 1);
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.RefundPeriodIsNotOver.selector, block.timestamp, refundEndTime()));
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.LegionSale__RefundPeriodIsNotOver.selector, block.timestamp, refundEndTime())
+        );
 
         // Act
         vm.prank(legionBouncer);
@@ -1613,7 +1619,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that publishing sale results when sale is canceled reverts
-     * @dev Expects SaleIsCanceled revert when sale is canceled
+     * @dev Expects LegionSale__SaleIsCanceled revert when sale is canceled
      */
     function test_publishSaleResults_revertsIfSaleIsCanceled() public {
         // Arrange
@@ -1623,7 +1629,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).cancelSale();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
 
         // Act
         vm.prank(legionBouncer);
@@ -1657,7 +1663,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that setting accepted capital by non-Legion admin reverts
-     * @dev Expects NotCalledByLegion revert when called by nonLegionAdmin
+     * @dev Expects LegionSale__NotCalledByLegion revert when called by nonLegionAdmin
      */
     function testFuzz_setAcceptedCapital_revertsIfCalledByNonLegionAdmin(address nonLegionAdmin) public {
         // Arrange
@@ -1667,7 +1673,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         vm.warp(endTime() + 1);
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.NotCalledByLegion.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NotCalledByLegion.selector));
 
         // Act
         vm.prank(nonLegionAdmin);
@@ -1676,7 +1682,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that setting accepted capital when sale is canceled reverts
-     * @dev Expects SaleIsCanceled revert when sale is canceled
+     * @dev Expects LegionSale__SaleIsCanceled revert when sale is canceled
      */
     function test_setAcceptedCapital_revertsIfSaleIsCanceled() public {
         // Arrange
@@ -1686,7 +1692,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).cancelSale();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
 
         // Act
         vm.prank(legionBouncer);
@@ -1747,7 +1753,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         );
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidFeeAmount.selector, 90 * 1e18, 100 * 1e18));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidFeeAmount.selector, 90 * 1e18, 100 * 1e18));
 
         // Act
         vm.prank(projectAdmin);
@@ -1775,7 +1781,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         );
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidFeeAmount.selector, 39 * 1e18, 40 * 1e18));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidFeeAmount.selector, 39 * 1e18, 40 * 1e18));
 
         // Act
         vm.prank(projectAdmin);
@@ -1832,7 +1838,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that supplying tokens by a non-project admin reverts
-     * @dev Ensures only the project admin can supply tokens, expecting a NotCalledByProject revert.
+     * @dev Ensures only the project admin can supply tokens, expecting a LegionSale__NotCalledByProject revert.
      */
     function testFuzz_supplyTokens_revertsIfNotCalledByProjectAdmin(address nonProjectAdmin) public {
         // Arrange
@@ -1850,7 +1856,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         );
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.NotCalledByProject.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NotCalledByProject.selector));
 
         // Act
         vm.prank(nonProjectAdmin);
@@ -1859,7 +1865,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that supplying tokens when the sale is canceled reverts
-     * @dev Ensures token supply is blocked after cancellation, expecting a SaleIsCanceled revert.
+     * @dev Ensures token supply is blocked after cancellation, expecting a LegionSale__SaleIsCanceled revert.
      */
     function test_supplyTokens_revertsIfSaleIsCanceled() public {
         // Arrange
@@ -1880,7 +1886,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).cancelSale();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
 
         // Act
         vm.prank(projectAdmin);
@@ -1889,7 +1895,8 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that supplying tokens with an incorrect amount reverts
-     * @dev Ensures the supplied token amount matches the published result, expecting an InvalidTokenAmountSupplied
+     * @dev Ensures the supplied token amount matches the published result, expecting an
+     * LegionSale__InvalidTokenAmountSupplied
      * revert.
      */
     function test_supplyTokens_revertsIfIncorrectAmountSupplied() public {
@@ -1907,7 +1914,9 @@ contract LegionPreLiquidSaleV2Test is Test {
         );
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidTokenAmountSupplied.selector, 9990 * 1e18, 4000 * 1e18));
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.LegionSale__InvalidTokenAmountSupplied.selector, 9990 * 1e18, 4000 * 1e18)
+        );
 
         // Act
         vm.prank(projectAdmin);
@@ -1916,14 +1925,15 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that supplying tokens before sale results are published reverts
-     * @dev Ensures tokens cannot be supplied without prior allocation, expecting a TokensNotAllocated revert.
+     * @dev Ensures tokens cannot be supplied without prior allocation, expecting a LegionSale__TokensNotAllocated
+     * revert.
      */
     function test_supplyTokens_revertsIfSaleResultsNotPublished() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.TokensNotAllocated.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__TokensNotAllocated.selector));
 
         // Act
         vm.prank(projectAdmin);
@@ -1932,7 +1942,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that supplying tokens a second time reverts
-     * @dev Ensures tokens can only be supplied once, expecting a TokensAlreadySupplied revert.
+     * @dev Ensures tokens can only be supplied once, expecting a LegionSale__TokensAlreadySupplied revert.
      */
     function test_supplyTokens_revertsIfTokensAlreadySupplied() public {
         // Arrange
@@ -1953,7 +1963,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.TokensAlreadySupplied.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__TokensAlreadySupplied.selector));
 
         // Act
         vm.prank(projectAdmin);
@@ -1962,7 +1972,8 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that supplying tokens with an unavailable askToken reverts
-     * @dev Ensures the contract rejects supply attempts when the askToken is not set, expecting an AskTokenUnavailable
+     * @dev Ensures the contract rejects supply attempts when the askToken is not set, expecting an
+     * LegionSale__AskTokenUnavailable
      * revert.
      */
     function test_supplyTokens_revertsIfAskTokenUnavailable() public {
@@ -1996,7 +2007,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18, address(0));
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.AskTokenUnavailable.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__AskTokenUnavailable.selector));
 
         // Act
         vm.prank(projectAdmin);
@@ -2097,7 +2108,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that withdrawing capital by a non-project admin reverts
-     * @dev Ensures only the project admin can withdraw capital, expecting a NotCalledByProject revert.
+     * @dev Ensures only the project admin can withdraw capital, expecting a LegionSale__NotCalledByProject revert.
      */
     function testFuzz_withdrawRaisedCapital_revertsIfNotCalledByProjectAdmin(address nonProjectAdmin) public {
         // Arrange
@@ -2107,7 +2118,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         vm.warp(refundEndTime() + 1);
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.NotCalledByProject.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NotCalledByProject.selector));
 
         // Act
         vm.prank(nonProjectAdmin);
@@ -2116,7 +2127,8 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that withdrawing capital before results are published reverts
-     * @dev Ensures capital cannot be withdrawn without publishing results, expecting a CapitalRaisedNotPublished
+     * @dev Ensures capital cannot be withdrawn without publishing results, expecting a
+     * LegionSale__CapitalRaisedNotPublished
      * revert.
      */
     function test_withdrawRaisedCapital_revertsIfCapitalRaisedNotPublished() public {
@@ -2129,7 +2141,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         vm.warp(refundEndTime() + 1);
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.CapitalRaisedNotPublished.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__CapitalRaisedNotPublished.selector));
 
         // Act
         vm.prank(projectAdmin);
@@ -2138,7 +2150,8 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that withdrawing capital before the refund period ends reverts
-     * @dev Ensures withdrawal is blocked during the refund period, expecting a RefundPeriodIsNotOver revert.
+     * @dev Ensures withdrawal is blocked during the refund period, expecting a LegionSale__RefundPeriodIsNotOver
+     * revert.
      */
     function test_withdrawRaisedCapital_revertsIfRefundPeriodNotOver() public {
         // Arrange
@@ -2150,7 +2163,9 @@ contract LegionPreLiquidSaleV2Test is Test {
         vm.warp(refundEndTime() - 1);
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.RefundPeriodIsNotOver.selector, block.timestamp, refundEndTime()));
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.LegionSale__RefundPeriodIsNotOver.selector, block.timestamp, refundEndTime())
+        );
 
         // Act
         vm.prank(projectAdmin);
@@ -2159,7 +2174,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that withdrawing capital after the sale is canceled reverts
-     * @dev Ensures withdrawal is blocked when the sale is canceled, expecting a SaleIsCanceled revert.
+     * @dev Ensures withdrawal is blocked when the sale is canceled, expecting a LegionSale__SaleIsCanceled revert.
      */
     function test_withdrawRaisedCapital_revertsIfSaleIsCanceled() public {
         // Arrange
@@ -2174,7 +2189,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).cancelSale();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
 
         // Act
         vm.prank(projectAdmin);
@@ -2183,7 +2198,8 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that withdrawing capital twice reverts
-     * @dev Ensures capital can only be withdrawn once, expecting a CapitalAlreadyWithdrawn revert on the second
+     * @dev Ensures capital can only be withdrawn once, expecting a LegionSale__CapitalAlreadyWithdrawn revert on the
+     * second
      * attempt.
      */
     function test_withdrawRaisedCapital_revertsIfCapitalAlreadyWithdrawn() public {
@@ -2206,7 +2222,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).withdrawRaisedCapital();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.CapitalAlreadyWithdrawn.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__CapitalAlreadyWithdrawn.selector));
 
         // Act
         vm.prank(projectAdmin);
@@ -2252,7 +2268,8 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that withdrawing excess capital reverts if the sale is canceled
-     * @dev Ensures excess withdrawal is blocked when the sale is canceled, expecting a SaleIsCanceled revert.
+     * @dev Ensures excess withdrawal is blocked when the sale is canceled, expecting a LegionSale__SaleIsCanceled
+     * revert.
      */
     function test_withdrawExcessInvestedCapital_revertsIfSaleIsCanceled() public {
         // Arrange
@@ -2267,7 +2284,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         vm.warp(endTime() + 1);
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
 
         // Act
         vm.prank(investor2);
@@ -2276,7 +2293,8 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that withdrawing excess capital with an incorrect Merkle proof reverts
-     * @dev Ensures the contract rejects an invalid proof for investor2, expecting a CannotWithdrawExcessInvestedCapital
+     * @dev Ensures the contract rejects an invalid proof for investor2, expecting a
+     * LegionSale__CannotWithdrawExcessInvestedCapital
      * revert.
      */
     function test_withdrawExcessInvestedCapital_revertsWithIncorrectProof() public {
@@ -2295,7 +2313,9 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         // Expect
         vm.expectRevert(
-            abi.encodeWithSelector(Errors.CannotWithdrawExcessInvestedCapital.selector, investor2, 1000 * 1e6)
+            abi.encodeWithSelector(
+                Errors.LegionSale__CannotWithdrawExcessInvestedCapital.selector, investor2, 1000 * 1e6
+            )
         );
 
         // Act
@@ -2305,7 +2325,8 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that withdrawing excess capital twice reverts
-     * @dev Ensures an investor cannot claim excess capital more than once, expecting an AlreadyClaimedExcess revert.
+     * @dev Ensures an investor cannot claim excess capital more than once, expecting an
+     * LegionSale__AlreadyClaimedExcess revert.
      */
     function test_withdrawExcessInvestedCapital_revertsIfExcessCapitalAlreadyWithdrawn() public {
         // Arrange
@@ -2327,7 +2348,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).withdrawExcessInvestedCapital(1000 * 1e6, excessClaimProofInvestor2);
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.AlreadyClaimedExcess.selector, investor2));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__AlreadyClaimedExcess.selector, investor2));
 
         // Act
         vm.prank(investor2);
@@ -2336,7 +2357,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that withdrawing excess capital with no prior investment reverts
-     * @dev Ensures an investor who didn’t invest cannot claim excess, expecting a NoCapitalInvested revert.
+     * @dev Ensures an investor who didn’t invest cannot claim excess, expecting a LegionSale__NoCapitalInvested revert.
      */
     function test_withdrawExcessInvestedCapital_revertsIfNoCapitalInvested() public {
         // Arrange
@@ -2353,7 +2374,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).setAcceptedCapital(excessCapitalMerkleRootMalicious);
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.NoCapitalInvested.selector, investor5));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NoCapitalInvested.selector, investor5));
 
         // Act
         vm.prank(investor5);
@@ -2420,7 +2441,8 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that claiming tokens before the refund period ends reverts
-     * @dev Ensures token claims are blocked during the refund period, expecting a RefundPeriodIsNotOver revert.
+     * @dev Ensures token claims are blocked during the refund period, expecting a LegionSale__RefundPeriodIsNotOver
+     * revert.
      */
     function test_claimTokenAllocation_revertsIfRefundPeriodHasNotEnded() public {
         // Arrange
@@ -2445,7 +2467,9 @@ contract LegionPreLiquidSaleV2Test is Test {
         vm.warp(refundEndTime() - 1);
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.RefundPeriodIsNotOver.selector, block.timestamp, refundEndTime()));
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.LegionSale__RefundPeriodIsNotOver.selector, block.timestamp, refundEndTime())
+        );
 
         // Act
         vm.prank(investor2);
@@ -2456,7 +2480,8 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that claiming more tokens than allocated reverts
-     * @dev Ensures investor2 cannot claim 2000 LFG when only 1000 LFG is allocated, expecting a NotInClaimWhitelist
+     * @dev Ensures investor2 cannot claim 2000 LFG when only 1000 LFG is allocated, expecting a
+     * LegionSale__NotInClaimWhitelist
      * revert.
      */
     function test_claimTokenAllocation_revertsIfTokensAreMoreThanAllocatedAmount() public {
@@ -2478,7 +2503,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         );
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.NotInClaimWhitelist.selector, investor2));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NotInClaimWhitelist.selector, investor2));
 
         // Act
         vm.prank(investor2);
@@ -2489,7 +2514,8 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that claiming tokens twice reverts
-     * @dev Ensures investor2 cannot claim again after a successful claim, expecting an AlreadySettled revert.
+     * @dev Ensures investor2 cannot claim again after a successful claim, expecting an LegionSale__AlreadySettled
+     * revert.
      */
     function test_claimTokenAllocation_revertsIfTokensAlreadyClaimed() public {
         // Arrange
@@ -2522,7 +2548,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         );
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.AlreadySettled.selector, investor2));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__AlreadySettled.selector, investor2));
 
         // Act
         vm.prank(investor2);
@@ -2533,7 +2559,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that claiming tokens when the sale is canceled reverts
-     * @dev Ensures token claims are blocked after cancellation, expecting a SaleIsCanceled revert.
+     * @dev Ensures token claims are blocked after cancellation, expecting a LegionSale__SaleIsCanceled revert.
      */
     function test_claimTokenAllocation_revertsIfSaleIsCanceled() public {
         // Arrange
@@ -2560,7 +2586,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).cancelSale();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleIsCanceled.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
 
         // Act
         vm.prank(investor2);
@@ -2571,7 +2597,8 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that claiming tokens before sale results are published reverts
-     * @dev Ensures token claims are blocked without published results, expecting a SaleResultsNotPublished revert.
+     * @dev Ensures token claims are blocked without published results, expecting a LegionSale__SaleResultsNotPublished
+     * revert.
      */
     function test_claimTokenAllocation_revertsIfSaleResultsNotPublished() public {
         // Arrange
@@ -2584,7 +2611,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         vm.warp(refundEndTime() + 1);
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.SaleResultsNotPublished.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleResultsNotPublished.selector));
 
         // Act
         vm.prank(investor2);
@@ -2595,7 +2622,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that claiming tokens with an unavailable askToken reverts
-     * @dev Ensures token claims fail when no askToken is set, expecting an AskTokenUnavailable revert.
+     * @dev Ensures token claims fail when no askToken is set, expecting an LegionSale__AskTokenUnavailable revert.
      */
     function test_claimTokenAllocation_revertsIfAskTokenNotAvailable() public {
         // Arrange
@@ -2624,7 +2651,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         claimProofInvestor2[1] = bytes32(0xda52deea919ca150a57325de782da41cffff19ec1bdf5d9747c1d6aa28b7639c);
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.AskTokenUnavailable.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__AskTokenUnavailable.selector));
 
         // Act
         vm.prank(investor2);
@@ -2684,14 +2711,14 @@ contract LegionPreLiquidSaleV2Test is Test {
     /**
      * @notice Tests that releasing vested tokens without a vesting contract reverts
      * @dev Ensures an investor without a deployed vesting contract cannot release tokens, expecting a
-     * ZeroAddressProvided revert.
+     * LegionSale__ZeroAddressProvided revert.
      */
     function test_releaseVestedTokens_revertsIfInvestorHasNoVesting() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.ZeroAddressProvided.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__ZeroAddressProvided.selector));
 
         // Act
         vm.prank(investor2);
@@ -2700,7 +2727,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
     /**
      * @notice Tests that releasing vested tokens with an unavailable askToken reverts
-     * @dev Ensures token release fails when no askToken is set, expecting an AskTokenUnavailable revert.
+     * @dev Ensures token release fails when no askToken is set, expecting an LegionSale__AskTokenUnavailable revert.
      */
     function test_releaseVestedTokens_revertsIfAskTokenNotAvailable() public {
         // Arrange
@@ -2725,7 +2752,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         legionSaleInstance = legionSaleFactory.createPreLiquidSaleV2(testConfig.saleInitParams);
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.AskTokenUnavailable.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__AskTokenUnavailable.selector));
 
         // Act
         vm.prank(investor1);
@@ -2768,7 +2795,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         prepareCreateLegionPreLiquidSale();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.NotCalledByLegion.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NotCalledByLegion.selector));
 
         // Act
         vm.prank(nonLegionAdmin);

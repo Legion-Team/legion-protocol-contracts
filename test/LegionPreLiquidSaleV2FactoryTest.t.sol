@@ -235,11 +235,11 @@ contract LegionPreLiquidSaleV2FactoryTest is Test {
 
     /**
      * @notice Tests that creating a sale with zero address configurations reverts
-     * @dev Expects ZeroAddressProvided revert when addresses are not set
+     * @dev Expects LegionSale__ZeroAddressProvided revert when addresses are not set
      */
     function test_createPreLiquidSale_revertsWithZeroAddressProvided() public {
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.ZeroAddressProvided.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__ZeroAddressProvided.selector));
 
         // Act
         vm.prank(legionBouncer);
@@ -248,7 +248,7 @@ contract LegionPreLiquidSaleV2FactoryTest is Test {
 
     /**
      * @notice Tests that creating a sale with zero value configurations reverts
-     * @dev Expects ZeroValueProvided revert when key parameters are zero
+     * @dev Expects LegionSale__ZeroValueProvided revert when key parameters are zero
      */
     function test_createPreLiquidSale_revertsWithZeroValueProvided() public {
         // Arrange
@@ -270,7 +270,7 @@ contract LegionPreLiquidSaleV2FactoryTest is Test {
         );
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.ZeroValueProvided.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__ZeroValueProvided.selector));
 
         // Act
         vm.prank(legionBouncer);

@@ -276,7 +276,7 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
 
     /**
      * @notice Tests that creating a sale with zero address configurations reverts
-     * @dev Expects a ZeroAddressProvided revert when key addresses (bidToken, askToken, etc.) are zero
+     * @dev Expects a LegionSale__ZeroAddressProvided revert when key addresses (bidToken, askToken, etc.) are zero
      */
     function test_createSealedBidAuction_revertsWithZeroAddressProvided() public {
         // Arrange
@@ -299,7 +299,7 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
         );
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.ZeroAddressProvided.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__ZeroAddressProvided.selector));
 
         // Act
         vm.prank(legionBouncer);
@@ -311,7 +311,7 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
 
     /**
      * @notice Tests that creating a sale with zero value configurations reverts
-     * @dev Expects a ZeroValueProvided revert when key parameters (sale period, fees, etc.) are zero
+     * @dev Expects a LegionSale__ZeroValueProvided revert when key parameters (sale period, fees, etc.) are zero
      */
     function test_createSealedBidAuction_revertsWithZeroValueProvided() public {
         // Arrange
@@ -334,7 +334,7 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
         );
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.ZeroValueProvided.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__ZeroValueProvided.selector));
 
         // Act
         vm.prank(legionBouncer);

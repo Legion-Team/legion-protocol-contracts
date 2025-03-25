@@ -213,7 +213,7 @@ contract LegionFixedPriceSaleFactoryTest is Test {
 
     /**
      * @notice Tests that createFixedPriceSale reverts with zero address configurations
-     * @dev Sets zero addresses and expects a ZeroAddressProvided revert
+     * @dev Sets zero addresses and expects a LegionSale__ZeroAddressProvided revert
      */
     function test_createFixedPriceSale_revertsWithZeroAddressProvided() public {
         // Arrange
@@ -240,7 +240,7 @@ contract LegionFixedPriceSaleFactoryTest is Test {
         );
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.ZeroAddressProvided.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__ZeroAddressProvided.selector));
 
         // Act
         vm.prank(legionBouncer);
@@ -252,11 +252,11 @@ contract LegionFixedPriceSaleFactoryTest is Test {
 
     /**
      * @notice Tests that createFixedPriceSale reverts with uninitialized (zero) configurations
-     * @dev Uses uninitialized testConfig and expects a ZeroValueProvided revert
+     * @dev Uses uninitialized testConfig and expects a LegionSale__ZeroValueProvided revert
      */
     function test_createFixedPriceSale_revertsWithZeroValueProvided() public {
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.ZeroValueProvided.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__ZeroValueProvided.selector));
 
         // Act
         vm.prank(legionBouncer);
