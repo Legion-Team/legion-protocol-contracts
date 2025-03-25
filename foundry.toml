@@ -9,12 +9,13 @@
 remappings = [ 
   "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
   "@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/",
-  "@solady/src=lib/solady/src"
+  "@solady/src=lib/solady/src",
+  "@solady/test=lib/solady/test"
 ]
 
 [fuzz]
   runs = 256
-  max_assume_rejects = 1000000
+  max_assume_rejects = 1000
 
 [fmt]
   bracket_spacing = true
