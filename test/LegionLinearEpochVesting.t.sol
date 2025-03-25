@@ -2,6 +2,7 @@
 pragma solidity 0.8.29;
 
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import { MockERC20 } from "@solady/test/utils/mocks/MockERC20.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { VestingWalletUpgradeable } from "@openzeppelin/contracts-upgradeable/finance/VestingWalletUpgradeable.sol";
 import { Test, Vm, console2 } from "forge-std/Test.sol";
@@ -13,7 +14,6 @@ import { ILegionVestingFactory } from "../src/interfaces/factories/ILegionVestin
 
 import { LegionLinearEpochVesting } from "../src/vesting/LegionLinearEpochVesting.sol";
 import { LegionVestingFactory } from "../src/factories/LegionVestingFactory.sol";
-import { MockToken } from "../src/mocks/MockToken.sol";
 
 /**
  * @title Legion Linear Epoch Vesting Test
@@ -33,7 +33,7 @@ contract LegionLinearEpochVestingTest is Test {
     LegionVestingFactory public legionVestingFactory;
 
     /// @notice Mock ERC20 token used for vesting tests
-    MockToken public askToken;
+    MockERC20 public askToken;
 
     /// @notice Address of the deployed vesting contract instance
     address public legionVestingInstance;
@@ -52,7 +52,7 @@ contract LegionLinearEpochVestingTest is Test {
     function setUp() public {
         linearVestingTemplate = new LegionLinearEpochVesting();
         legionVestingFactory = new LegionVestingFactory();
-        askToken = new MockToken("LFG Coin", "LFG", 18);
+        askToken = new MockERC20("LFG Coin", "LFG", 18);
     }
 
     /*//////////////////////////////////////////////////////////////////////////

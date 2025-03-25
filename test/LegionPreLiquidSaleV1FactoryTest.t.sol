@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
+import { MockERC20 } from "@solady/test/utils/mocks/MockERC20.sol";
 import { Ownable } from "@solady/src/auth/Ownable.sol";
 import { Test, Vm, console2 } from "forge-std/Test.sol";
 
@@ -20,7 +21,6 @@ import { LegionPreLiquidSaleV1 } from "../src/sales/LegionPreLiquidSaleV1.sol";
 import { LegionPreLiquidSaleV1Factory } from "../src/factories/LegionPreLiquidSaleV1Factory.sol";
 import { LegionSealedBidAuctionSale } from "../src/sales/LegionSealedBidAuctionSale.sol";
 import { LegionVestingFactory } from "../src/factories/LegionVestingFactory.sol";
-import { MockToken } from "../src/mocks/MockToken.sol";
 
 /**
  * @title Legion Pre-Liquid Sale V1 Factory Test
@@ -60,10 +60,10 @@ contract LegionPreLiquidSaleV1FactoryTest is Test {
     LegionVestingFactory legionVestingFactory;
 
     /// @notice Mock token used as the bidding currency
-    MockToken bidToken;
+    MockERC20 bidToken;
 
     /// @notice Mock token used as the sale token
-    MockToken askToken;
+    MockERC20 askToken;
 
     /// @notice Address of a deployed LegionPreLiquidSaleV1 instance
     address legionPreLiquidSaleInstance;
@@ -95,8 +95,8 @@ contract LegionPreLiquidSaleV1FactoryTest is Test {
         legionSaleFactory = new LegionPreLiquidSaleV1Factory(legionBouncer);
         legionVestingFactory = new LegionVestingFactory();
         legionAddressRegistry = new LegionAddressRegistry(legionBouncer);
-        bidToken = new MockToken("USD Coin", "USDC", 6);
-        askToken = new MockToken("LFG Coin", "LFG", 18);
+        bidToken = new MockERC20("USD Coin", "USDC", 6);
+        askToken = new MockERC20("LFG Coin", "LFG", 18);
         prepareLegionAddressRegistry();
     }
 

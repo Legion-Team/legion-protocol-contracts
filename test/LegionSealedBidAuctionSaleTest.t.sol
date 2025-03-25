@@ -5,6 +5,7 @@ pragma solidity 0.8.29;
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { Initializable } from "@solady/src/utils/Initializable.sol";
 import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import { MockERC20 } from "@solady/test/utils/mocks/MockERC20.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { Test, console2, Vm } from "forge-std/Test.sol";
 
@@ -25,7 +26,6 @@ import { LegionBouncer } from "../src/access/LegionBouncer.sol";
 import { LegionSealedBidAuctionSale } from "../src/sales/LegionSealedBidAuctionSale.sol";
 import { LegionSealedBidAuctionSaleFactory } from "../src/factories/LegionSealedBidAuctionSaleFactory.sol";
 import { LegionVestingFactory } from "../src/factories/LegionVestingFactory.sol";
-import { MockToken } from "../src/mocks/MockToken.sol";
 
 /**
  * @title Legion Sealed Bid Auction Sale Test
@@ -95,13 +95,13 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @notice Mock token used as the bidding currency
      * @dev Represents USDC with 6 decimals
      */
-    MockToken public bidToken;
+    MockERC20 public bidToken;
 
     /**
      * @notice Mock token used as the sale token狂
      * @dev Represents LFG with 18 decimals
      */
-    MockToken public askToken;
+    MockERC20 public askToken;
 
     /**
      * @notice Address of the deployed sealed bid auction sale instance
@@ -223,8 +223,8 @@ contract LegionSealedBidAuctionSaleTest is Test {
         legionSaleFactory = new LegionSealedBidAuctionSaleFactory(legionBouncer);
         legionVestingFactory = new LegionVestingFactory();
         legionAddressRegistry = new LegionAddressRegistry(legionBouncer);
-        bidToken = new MockToken("USD Coin", "USDC", 6); // 6 decimals
-        askToken = new MockToken("LFG Coin", "LFG", 18); // 18 decimals
+        bidToken = new MockERC20("USD Coin", "USDC", 6); // 6 decimals
+        askToken = new MockERC20("LFG Coin", "LFG", 18); // 18 decimals
         prepareLegionAddressRegistry();
         prepareInvestorVestingConfig();
     }
@@ -300,22 +300,22 @@ contract LegionSealedBidAuctionSaleTest is Test {
      */
     function prepareMintAndApproveInvestorTokens() public {
         vm.prank(legionBouncer);
-        MockToken(bidToken).mint(investor1, 1000 * 1e6);
-        MockToken(bidToken).mint(investor2, 2000 * 1e6);
-        MockToken(bidToken).mint(investor3, 3000 * 1e6);
-        MockToken(bidToken).mint(investor4, 4000 * 1e6);
+        MockERC20(bidToken).mint(investor1, 1000 * 1e6);
+        MockERC20(bidToken).mint(investor2, 2000 * 1e6);
+        MockERC20(bidToken).mint(investor3, 3000 * 1e6);
+        MockERC20(bidToken).mint(investor4, 4000 * 1e6);
 
         vm.prank(investor1);
-        MockToken(bidToken).approve(legionSealedBidAuctionInstance, 1000 * 1e6);
+        MockERC20(bidToken).approve(legionSealedBidAuctionInstance, 1000 * 1e6);
 
         vm.prank(investor2);
-        MockToken(bidToken).approve(legionSealedBidAuctionInstance, 2000 * 1e6);
+        MockERC20(bidToken).approve(legionSealedBidAuctionInstance, 2000 * 1e6);
 
         vm.prank(investor3);
-        MockToken(bidToken).approve(legionSealedBidAuctionInstance, 3000 * 1e6);
+        MockERC20(bidToken).approve(legionSealedBidAuctionInstance, 3000 * 1e6);
 
         vm.prank(investor4);
-        MockToken(bidToken).approve(legionSealedBidAuctionInstance, 4000 * 1e6);
+        MockERC20(bidToken).approve(legionSealedBidAuctionInstance, 4000 * 1e6);
     }
 
     /**
@@ -325,8 +325,8 @@ contract LegionSealedBidAuctionSaleTest is Test {
     function prepareMintAndApproveProjectTokens() public {
         vm.startPrank(projectAdmin);
 
-        MockToken(askToken).mint(projectAdmin, 10_000 * 1e18);
-        MockToken(askToken).approve(legionSealedBidAuctionInstance, 10_000 * 1e18);
+        MockERC20(askToken).mint(projectAdmin, 10_000 * 1e18);
+        MockERC20(askToken).approve(legionSealedBidAuctionInstance, 10_000 * 1e18);
 
         vm.stopPrank();
     }
@@ -1153,7 +1153,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).refund();
 
         // Expect
-        uint256 investor1Balance = MockToken(bidToken).balanceOf(investor1);
+        uint256 investor1Balance = MockERC20(bidToken).balanceOf(investor1);
         assertEq(investor1Balance, 1000 * 1e6, "Investor1 balance should be restored to 1000 USDC");
     }
 
@@ -1380,7 +1380,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.prank(investor1);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawInvestedCapitalIfCanceled();
 
-        assertEq(MockToken(bidToken).balanceOf(investor1), 1000 * 1e6, "Investor1 balance should be 1000 USDC");
+        assertEq(MockERC20(bidToken).balanceOf(investor1), 1000 * 1e6, "Investor1 balance should be 1000 USDC");
     }
 
     /**
@@ -2362,7 +2362,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         assertEq(_investorPosition.hasClaimedExcess, true, "Investor2 should have claimed excess");
         assertEq(
-            MockToken(bidToken).balanceOf(investor2),
+            MockERC20(bidToken).balanceOf(investor2),
             1000 * 1e6,
             "Investor2 balance should be 1000 USDC after withdrawal"
         );
@@ -2546,7 +2546,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         assertEq(_investorPosition.hasSettled, true, "Investor2 should have settled position");
         assertEq(
-            MockToken(askToken).balanceOf(_investorPosition.vestingAddress),
+            MockERC20(askToken).balanceOf(_investorPosition.vestingAddress),
             9000 * 1e17,
             "Vesting contract should hold 900 LFG (90% of 1000 LFG after 10% initial release)"
         );
@@ -2827,7 +2827,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         // Expect
         assertApproxEqAbs(
-            MockToken(askToken).balanceOf(investor2),
+            MockERC20(askToken).balanceOf(investor2),
             134_726_084_474_885_844_748,
             1e18,
             "Investor2 should have approximately 134.72 LFG after release"
