@@ -3,6 +3,7 @@ pragma solidity 0.8.29;
 
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import { MockERC20 } from "@solady/test/utils/mocks/MockERC20.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { Initializable } from "@solady/src/utils/Initializable.sol";
 import { Test, Vm, console2 } from "forge-std/Test.sol";
@@ -18,7 +19,6 @@ import { LegionBouncer } from "../src/access/LegionBouncer.sol";
 import { LegionFixedPriceSale } from "../src/sales/LegionFixedPriceSale.sol";
 import { LegionFixedPriceSaleFactory } from "../src/factories/LegionFixedPriceSaleFactory.sol";
 import { LegionVestingFactory } from "../src/factories/LegionVestingFactory.sol";
-import { MockToken } from "../src/mocks/MockToken.sol";
 
 /**
  * @title Legion Fixed Price Sale Test
@@ -63,10 +63,10 @@ contract LegionFixedPriceSaleTest is Test {
     LegionVestingFactory public legionVestingFactory;
 
     /// @notice Mock token used as the bid token (e.g., USDC)
-    MockToken public bidToken;
+    MockERC20 public bidToken;
 
     /// @notice Mock token used as the ask token (e.g., LFG)
-    MockToken public askToken;
+    MockERC20 public askToken;
 
     /// @notice Decimals of the ask token
     uint8 askTokenDecimals;
@@ -131,8 +131,8 @@ contract LegionFixedPriceSaleTest is Test {
         legionVestingFactory = new LegionVestingFactory();
         legionAddressRegistry = new LegionAddressRegistry(legionBouncer);
 
-        bidToken = new MockToken("USD Coin", "USDC", 6);
-        askToken = new MockToken("LFG Coin", "LFG", 18);
+        bidToken = new MockERC20("USD Coin", "USDC", 6);
+        askToken = new MockERC20("LFG Coin", "LFG", 18);
         askTokenDecimals = uint8(askToken.decimals());
 
         prepareLegionAddressRegistry();

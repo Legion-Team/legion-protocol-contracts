@@ -3,6 +3,7 @@ pragma solidity 0.8.29;
 
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import { MockERC20 } from "@solady/test/utils/mocks/MockERC20.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { Initializable } from "@solady/src/utils/Initializable.sol";
 import { Ownable } from "@solady/src/auth/Ownable.sol";
@@ -20,7 +21,6 @@ import { LegionBouncer } from "../src/access/LegionBouncer.sol";
 import { LegionPreLiquidSaleV1 } from "../src/sales/LegionPreLiquidSaleV1.sol";
 import { LegionPreLiquidSaleV1Factory } from "../src/factories/LegionPreLiquidSaleV1Factory.sol";
 import { LegionVestingFactory } from "../src/factories/LegionVestingFactory.sol";
-import { MockToken } from "../src/mocks/MockToken.sol";
 
 /**
  * @title Legion Pre-Liquid Sale V1 Test
@@ -58,10 +58,10 @@ contract LegionPreLiquidSaleV1Test is Test {
     LegionVestingFactory legionVestingFactory;
 
     /// @notice Mock token used as the bidding currency
-    MockToken bidToken;
+    MockERC20 bidToken;
 
     /// @notice Mock token used as the sale token
-    MockToken askToken;
+    MockERC20 askToken;
 
     /// @notice Address of the deployed pre-liquid sale instance
     address legionPreLiquidSaleInstance;
@@ -141,8 +141,8 @@ contract LegionPreLiquidSaleV1Test is Test {
         legionSaleFactory = new LegionPreLiquidSaleV1Factory(legionBouncer);
         legionVestingFactory = new LegionVestingFactory();
         legionAddressRegistry = new LegionAddressRegistry(legionBouncer);
-        bidToken = new MockToken("USD Coin", "USDC", 6);
-        askToken = new MockToken("LFG Coin", "LFG", 18);
+        bidToken = new MockERC20("USD Coin", "USDC", 6);
+        askToken = new MockERC20("LFG Coin", "LFG", 18);
         prepareLegionAddressRegistry();
         prepareInvestorLinearVestingConfig();
         prepareInvestorLinearEpochVestingConfig();
@@ -2258,8 +2258,8 @@ contract LegionPreLiquidSaleV1Test is Test {
 
         // Expect
         assertEq(position.hasSettled, true);
-        assertEq(MockToken(askToken).balanceOf(position.vestingAddress), 4500 * 1e18);
-        assertEq(MockToken(askToken).balanceOf(investor1), 500 * 1e18);
+        assertEq(MockERC20(askToken).balanceOf(position.vestingAddress), 4500 * 1e18);
+        assertEq(MockERC20(askToken).balanceOf(investor1), 500 * 1e18);
 
         assertEq(vestingStatus.start, (1_209_603 + 2 weeks + 2));
         assertEq(vestingStatus.end, (1_209_603 + 2 weeks + 2 + 31_536_000));
@@ -2318,8 +2318,8 @@ contract LegionPreLiquidSaleV1Test is Test {
 
         // Expect
         assertEq(position.hasSettled, true);
-        assertEq(MockToken(askToken).balanceOf(position.vestingAddress), 4500 * 1e18);
-        assertEq(MockToken(askToken).balanceOf(investor2), 500 * 1e18);
+        assertEq(MockERC20(askToken).balanceOf(position.vestingAddress), 4500 * 1e18);
+        assertEq(MockERC20(askToken).balanceOf(investor2), 500 * 1e18);
 
         assertEq(vestingStatus.start, (1_209_603 + 2 weeks + 2));
         assertEq(vestingStatus.end, (1_209_603 + 2 weeks + 2 + 31_536_000));
@@ -2518,8 +2518,8 @@ contract LegionPreLiquidSaleV1Test is Test {
             LegionPreLiquidSaleV1(payable(legionPreLiquidSaleInstance)).investorPositionDetails(investor1);
 
         assertEq(position.hasSettled, true);
-        assertEq(MockToken(askToken).balanceOf(position.vestingAddress), 2250 * 1e18);
-        assertEq(MockToken(askToken).balanceOf(investor1), 250 * 1e18);
+        assertEq(MockERC20(askToken).balanceOf(position.vestingAddress), 2250 * 1e18);
+        assertEq(MockERC20(askToken).balanceOf(investor1), 250 * 1e18);
     }
 
     /**
@@ -2795,7 +2795,7 @@ contract LegionPreLiquidSaleV1Test is Test {
         ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).releaseVestedTokens();
 
         // Expect
-        assertEq(MockToken(askToken).balanceOf(investor1), 501_027_111_872_146_118_721);
+        assertEq(MockERC20(askToken).balanceOf(investor1), 501_027_111_872_146_118_721);
     }
 
     /**

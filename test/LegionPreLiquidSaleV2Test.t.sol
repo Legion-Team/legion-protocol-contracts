@@ -4,6 +4,7 @@ pragma solidity 0.8.29;
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { Initializable } from "@solady/src/utils/Initializable.sol";
 import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import { MockERC20 } from "@solady/test/utils/mocks/MockERC20.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { Test, Vm, console2 } from "forge-std/Test.sol";
 
@@ -20,7 +21,6 @@ import { LegionBouncer } from "../src/access/LegionBouncer.sol";
 import { LegionPreLiquidSaleV2 } from "../src/sales/LegionPreLiquidSaleV2.sol";
 import { LegionPreLiquidSaleV2Factory } from "../src/factories/LegionPreLiquidSaleV2Factory.sol";
 import { LegionVestingFactory } from "../src/factories/LegionVestingFactory.sol";
-import { MockToken } from "../src/mocks/MockToken.sol";
 
 /**
  * @title Legion Pre-Liquid Sale V2 Test
@@ -88,13 +88,13 @@ contract LegionPreLiquidSaleV2Test is Test {
      * @notice Mock token used as the bidding currency
      * @dev Represents the token used for investments (e.g., USDC)
      */
-    MockToken public bidToken;
+    MockERC20 public bidToken;
 
     /**
      * @notice Mock token used as the sale token
      * @dev Represents the token being sold (e.g., LFG)
      */
-    MockToken public askToken;
+    MockERC20 public askToken;
 
     /**
      * @notice Address of the deployed pre-liquid sale instance
@@ -241,8 +241,8 @@ contract LegionPreLiquidSaleV2Test is Test {
         legionSaleFactory = new LegionPreLiquidSaleV2Factory(legionBouncer);
         legionVestingFactory = new LegionVestingFactory();
         legionAddressRegistry = new LegionAddressRegistry(legionBouncer);
-        bidToken = new MockToken("USD Coin", "USDC", 6);
-        askToken = new MockToken("LFG Coin", "LFG", 18);
+        bidToken = new MockERC20("USD Coin", "USDC", 6);
+        askToken = new MockERC20("LFG Coin", "LFG", 18);
         prepareLegionAddressRegistry();
         prepareInvestorVestingConfig();
     }
@@ -306,24 +306,24 @@ contract LegionPreLiquidSaleV2Test is Test {
     function prepareMintAndApproveInvestorTokens() public {
         vm.startPrank(legionBouncer);
 
-        MockToken(bidToken).mint(investor1, 1000 * 1e6);
-        MockToken(bidToken).mint(investor2, 2000 * 1e6);
-        MockToken(bidToken).mint(investor3, 3000 * 1e6);
-        MockToken(bidToken).mint(investor4, 4000 * 1e6);
+        MockERC20(bidToken).mint(investor1, 1000 * 1e6);
+        MockERC20(bidToken).mint(investor2, 2000 * 1e6);
+        MockERC20(bidToken).mint(investor3, 3000 * 1e6);
+        MockERC20(bidToken).mint(investor4, 4000 * 1e6);
 
         vm.stopPrank();
 
         vm.prank(investor1);
-        MockToken(bidToken).approve(legionSaleInstance, 1000 * 1e6);
+        MockERC20(bidToken).approve(legionSaleInstance, 1000 * 1e6);
 
         vm.prank(investor2);
-        MockToken(bidToken).approve(legionSaleInstance, 2000 * 1e6);
+        MockERC20(bidToken).approve(legionSaleInstance, 2000 * 1e6);
 
         vm.prank(investor3);
-        MockToken(bidToken).approve(legionSaleInstance, 3000 * 1e6);
+        MockERC20(bidToken).approve(legionSaleInstance, 3000 * 1e6);
 
         vm.prank(investor4);
-        MockToken(bidToken).approve(legionSaleInstance, 4000 * 1e6);
+        MockERC20(bidToken).approve(legionSaleInstance, 4000 * 1e6);
     }
 
     /**
@@ -333,8 +333,8 @@ contract LegionPreLiquidSaleV2Test is Test {
     function prepareMintAndApproveProjectTokens() public {
         vm.startPrank(projectAdmin);
 
-        MockToken(askToken).mint(projectAdmin, 10_000 * 1e18);
-        MockToken(askToken).approve(legionSaleInstance, 10_000 * 1e18);
+        MockERC20(askToken).mint(projectAdmin, 10_000 * 1e18);
+        MockERC20(askToken).approve(legionSaleInstance, 10_000 * 1e18);
 
         vm.stopPrank();
     }
@@ -1201,7 +1201,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         vm.prank(investor1);
         ILegionPreLiquidSaleV2(legionSaleInstance).refund();
 
-        uint256 investor1Balance = MockToken(bidToken).balanceOf(investor1);
+        uint256 investor1Balance = MockERC20(bidToken).balanceOf(investor1);
         assertEq(investor1Balance, 1000 * 1e6);
     }
 
@@ -1355,8 +1355,8 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).withdrawRaisedCapital();
 
         vm.startPrank(projectAdmin);
-        MockToken(bidToken).mint(projectAdmin, 350 * 1e6);
-        MockToken(bidToken).approve(legionSaleInstance, 10_000 * 1e6);
+        MockERC20(bidToken).mint(projectAdmin, 350 * 1e6);
+        MockERC20(bidToken).approve(legionSaleInstance, 10_000 * 1e6);
         vm.stopPrank();
 
         // Expect
@@ -1465,7 +1465,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).withdrawInvestedCapitalIfCanceled();
 
         // Expect
-        assertEq(MockToken(bidToken).balanceOf(investor1), 1000 * 1e6);
+        assertEq(MockERC20(bidToken).balanceOf(investor1), 1000 * 1e6);
     }
 
     /**
@@ -2247,7 +2247,7 @@ contract LegionPreLiquidSaleV2Test is Test {
             LegionPreLiquidSaleV2(payable(legionSaleInstance)).investorPositionDetails(investor2);
 
         assertEq(_investorPosition.hasClaimedExcess, true);
-        assertEq(MockToken(bidToken).balanceOf(investor2), 1000 * 1e6);
+        assertEq(MockERC20(bidToken).balanceOf(investor2), 1000 * 1e6);
     }
 
     /**
@@ -2407,7 +2407,7 @@ contract LegionPreLiquidSaleV2Test is Test {
             LegionPreLiquidSaleV2(payable(legionSaleInstance)).investorVestingStatus(investor2);
 
         assertEq(_investorPosition.hasSettled, true); // Investor has claimed tokens
-        assertEq(MockToken(askToken).balanceOf(_investorPosition.vestingAddress), 9000 * 1e17); // 900 LFG tokens
+        assertEq(MockERC20(askToken).balanceOf(_investorPosition.vestingAddress), 9000 * 1e17); // 900 LFG tokens
 
         assertEq(vestingStatus.start, 0);
         assertEq(vestingStatus.end, 31_536_000);
@@ -2678,7 +2678,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).releaseVestedTokens();
 
         // Expect
-        assertEq(MockToken(askToken).balanceOf(investor2), 134_520_605_022_831_050_228);
+        assertEq(MockERC20(askToken).balanceOf(investor2), 134_520_605_022_831_050_228);
     }
 
     /**
