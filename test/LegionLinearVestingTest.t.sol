@@ -144,14 +144,14 @@ contract LegionLinearVestingTest is Test {
 
     /**
      * @notice Tests that releasing tokens before cliff period ends reverts
-     * @dev Expects CliffNotEnded revert with current timestamp
+     * @dev Expects LegionVesting__CliffNotEnded revert with current timestamp
      */
     function test_release_revertsIfCliffHasNotEnded() public {
         // Arrange
         prepareCreateLegionLinearVesting();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.CliffNotEnded.selector, block.timestamp));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionVesting__CliffNotEnded.selector, block.timestamp));
 
         // Act
         LegionLinearVesting(payable(legionVestingInstance)).release(address(askToken));

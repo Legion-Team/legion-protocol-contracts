@@ -53,10 +53,10 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
 
     /**
      * @notice Restricts token release until the cliff period has ended
-     * @dev Reverts with CliffNotEnded if block.timestamp is before cliffEndTimestamp
+     * @dev Reverts with LegionVesting__CliffNotEnded if block.timestamp is before cliffEndTimestamp
      */
     modifier onlyCliffEnded() {
-        if (block.timestamp < s_cliffEndTimestamp) revert Errors.CliffNotEnded(block.timestamp);
+        if (block.timestamp < s_cliffEndTimestamp) revert Errors.LegionVesting__CliffNotEnded(block.timestamp);
         _;
     }
 
