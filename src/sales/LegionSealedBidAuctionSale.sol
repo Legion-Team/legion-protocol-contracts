@@ -262,7 +262,7 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
     {
         // Check if the public key used for encryption is valid
         if (!ECIES.isValid(sealedBidAuctionSaleInitParams.publicKey)) {
-            revert Errors.InvalidBidPublicKey();
+            revert Errors.LegionSale__InvalidBidPublicKey();
         }
     }
 
@@ -273,7 +273,7 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
      */
     function _verifyValidPublicKey(Point memory _publicKey) private view {
         // Verify that the _publicKey is a valid point for the encryption library
-        if (!ECIES.isValid(_publicKey)) revert Errors.InvalidBidPublicKey();
+        if (!ECIES.isValid(_publicKey)) revert Errors.LegionSale__InvalidBidPublicKey();
 
         // Verify that the _publicKey is the one used for the entire auction
         if (
@@ -281,7 +281,7 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
                 != keccak256(
                     abi.encodePacked(s_sealedBidAuctionSaleConfig.publicKey.x, s_sealedBidAuctionSaleConfig.publicKey.y)
                 )
-        ) revert Errors.InvalidBidPublicKey();
+        ) revert Errors.LegionSale__InvalidBidPublicKey();
     }
 
     /**
@@ -292,7 +292,7 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
     function _verifyValidPrivateKey(uint256 _privateKey) private view {
         // Verify that the private key has not already been published
         if (s_sealedBidAuctionSaleConfig.privateKey != 0) {
-            revert Errors.PrivateKeyAlreadyPublished();
+            revert Errors.LegionSale__PrivateKeyAlreadyPublished();
         }
 
         // Verify that the private key is valid for the public key
@@ -300,7 +300,7 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
         if (
             calcPubKey.x != s_sealedBidAuctionSaleConfig.publicKey.x
                 || calcPubKey.y != s_sealedBidAuctionSaleConfig.publicKey.y
-        ) revert Errors.InvalidBidPrivateKey();
+        ) revert Errors.LegionSale__InvalidBidPrivateKey();
     }
 
     /**
@@ -309,7 +309,7 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
      */
     function _verifyPrivateKeyIsPublished() private view {
         if (s_sealedBidAuctionSaleConfig.privateKey == 0) {
-            revert Errors.PrivateKeyNotPublished();
+            revert Errors.LegionSale__PrivateKeyNotPublished();
         }
     }
 
@@ -319,7 +319,7 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
      * @param _salt Salt value provided in the sealed bid
      */
     function _verifyValidSalt(uint256 _salt) private view {
-        if (uint256(uint160(msg.sender)) != _salt) revert Errors.InvalidSalt();
+        if (uint256(uint160(msg.sender)) != _salt) revert Errors.LegionSale__InvalidSalt();
     }
 
     /**
@@ -328,7 +328,7 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
      */
     function _verifyCancelNotLocked() private view {
         if (s_sealedBidAuctionSaleConfig.cancelLocked) {
-            revert Errors.CancelLocked();
+            revert Errors.LegionSale__CancelLocked();
         }
     }
 
@@ -338,7 +338,7 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
      */
     function _verifyCancelLocked() private view {
         if (!s_sealedBidAuctionSaleConfig.cancelLocked) {
-            revert Errors.CancelNotLocked();
+            revert Errors.LegionSale__CancelNotLocked();
         }
     }
 }

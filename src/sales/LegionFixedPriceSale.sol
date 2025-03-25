@@ -192,7 +192,7 @@ contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
             fixedPriceSaleInitParams.prefundPeriodSeconds == 0
                 || fixedPriceSaleInitParams.prefundAllocationPeriodSeconds == 0 || fixedPriceSaleInitParams.tokenPrice == 0
         ) {
-            revert Errors.ZeroValueProvided();
+            revert Errors.LegionSale__ZeroValueProvided();
         }
 
         // Check whether prefund and allocation periods are longer than allowed
@@ -200,7 +200,7 @@ contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
             fixedPriceSaleInitParams.prefundPeriodSeconds > 12 weeks
                 || fixedPriceSaleInitParams.prefundAllocationPeriodSeconds > 2 weeks
         ) {
-            revert Errors.InvalidPeriodConfig();
+            revert Errors.LegionSale__InvalidPeriodConfig();
         }
 
         // Check whether prefund and allocation periods are shorter than allowed
@@ -208,7 +208,7 @@ contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
             fixedPriceSaleInitParams.prefundPeriodSeconds < 1 hours
                 || fixedPriceSaleInitParams.prefundAllocationPeriodSeconds < 1 hours
         ) {
-            revert Errors.InvalidPeriodConfig();
+            revert Errors.LegionSale__InvalidPeriodConfig();
         }
     }
 
@@ -227,7 +227,7 @@ contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
      */
     function _verifyNotPrefundAllocationPeriod() private view {
         if (block.timestamp >= s_fixedPriceSaleConfig.prefundEndTime && block.timestamp < s_saleConfig.startTime) {
-            revert Errors.PrefundAllocationPeriodNotEnded(block.timestamp);
+            revert Errors.LegionSale__PrefundAllocationPeriodNotEnded(block.timestamp);
         }
     }
 }

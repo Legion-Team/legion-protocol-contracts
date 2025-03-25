@@ -308,7 +308,7 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
      * @dev Overrides parent to use s_preLiquidSaleConfig; reverts if ended
      */
     function _verifySaleHasNotEnded() internal view override {
-        if (s_preLiquidSaleConfig.hasEnded) revert Errors.SaleHasEnded(block.timestamp);
+        if (s_preLiquidSaleConfig.hasEnded) revert Errors.LegionSale__SaleHasEnded(block.timestamp);
     }
 
     /**
@@ -317,7 +317,7 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
      */
     function _verifyRefundPeriodIsOver() internal view override {
         if (s_saleConfig.refundEndTime > 0 && block.timestamp < s_saleConfig.refundEndTime) {
-            revert Errors.RefundPeriodIsNotOver(block.timestamp, s_saleConfig.refundEndTime);
+            revert Errors.LegionSale__RefundPeriodIsNotOver(block.timestamp, s_saleConfig.refundEndTime);
         }
     }
 
@@ -327,7 +327,7 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
      */
     function _verifyRefundPeriodIsNotOver() internal view override {
         if (s_saleConfig.refundEndTime > 0 && block.timestamp >= s_saleConfig.refundEndTime) {
-            revert Errors.RefundPeriodIsOver(block.timestamp, s_saleConfig.refundEndTime);
+            revert Errors.LegionSale__RefundPeriodIsOver(block.timestamp, s_saleConfig.refundEndTime);
         }
     }
 
@@ -336,8 +336,8 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
      * @dev Overrides parent to check withdrawal status and capital raised
      */
     function _verifyCanWithdrawCapital() internal view override {
-        if (s_saleStatus.capitalWithdrawn) revert Errors.CapitalAlreadyWithdrawn();
-        if (s_saleStatus.totalCapitalRaised == 0) revert Errors.CapitalRaisedNotPublished();
+        if (s_saleStatus.capitalWithdrawn) revert Errors.LegionSale__CapitalAlreadyWithdrawn();
+        if (s_saleStatus.totalCapitalRaised == 0) revert Errors.LegionSale__CapitalRaisedNotPublished();
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -349,7 +349,7 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
      * @dev Reverts if sale has not ended based on s_preLiquidSaleConfig
      */
     function _verifySaleHasEnded() private view {
-        if (!s_preLiquidSaleConfig.hasEnded) revert Errors.SaleHasNotEnded(block.timestamp);
+        if (!s_preLiquidSaleConfig.hasEnded) revert Errors.LegionSale__SaleHasNotEnded(block.timestamp);
     }
 
     /**
@@ -357,6 +357,6 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
      * @dev Reverts if capital raised is already published
      */
     function _verifyCanPublishCapitalRaised() private view {
-        if (s_saleStatus.totalCapitalRaised != 0) revert Errors.CapitalRaisedAlreadyPublished();
+        if (s_saleStatus.totalCapitalRaised != 0) revert Errors.LegionSale__CapitalRaisedAlreadyPublished();
     }
 }

@@ -166,7 +166,7 @@ abstract contract LegionVestingManager is ILegionVestingManager {
                 || investorVestingConfig.vestingCliffDurationSeconds > investorVestingConfig.vestingDurationSeconds
                 || investorVestingConfig.tokenAllocationOnTGERate > Constants.TOKEN_ALLOCATION_RATE_DENOMINATOR
         ) {
-            revert Errors.InvalidVestingConfig(
+            revert Errors.LegionVesting__InvalidVestingConfig(
                 uint8(investorVestingConfig.vestingType),
                 investorVestingConfig.vestingStartTime,
                 investorVestingConfig.vestingDurationSeconds,
@@ -188,7 +188,7 @@ abstract contract LegionVestingManager is ILegionVestingManager {
                         != investorVestingConfig.vestingDurationSeconds
                     || investorVestingConfig.epochDurationSeconds > Constants.MAX_EPOCH_DURATION_SECONDS
             ) {
-                revert Errors.InvalidVestingConfig(
+                revert Errors.LegionVesting__InvalidVestingConfig(
                     uint8(investorVestingConfig.vestingType),
                     investorVestingConfig.vestingStartTime,
                     investorVestingConfig.vestingDurationSeconds,
