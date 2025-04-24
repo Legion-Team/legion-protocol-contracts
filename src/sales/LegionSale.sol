@@ -95,15 +95,6 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         _;
     }
 
-    /**
-     * @notice Ensures the ask token is available before execution
-     * @dev Reverts if askToken address is not set
-     */
-    modifier askTokenAvailable() {
-        if (s_addressConfig.askToken == address(0)) revert Errors.LegionSale__AskTokenUnavailable();
-        _;
-    }
-
     /*//////////////////////////////////////////////////////////////////////////
                                    CONSTRUCTOR
     //////////////////////////////////////////////////////////////////////////*/
@@ -227,7 +218,6 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
     )
         external
         virtual
-        askTokenAvailable
         whenNotPaused
     {
         // Verify that the sale is not canceled
@@ -317,7 +307,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @notice Releases vested tokens to the investor
      * @dev Virtual function interacting with vesting contract
      */
-    function releaseVestedTokens() external virtual askTokenAvailable whenNotPaused {
+    function releaseVestedTokens() external virtual whenNotPaused {
         // Get the investor position details
         InvestorPosition memory position = s_investorPositions[msg.sender];
 
@@ -343,7 +333,6 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         external
         virtual
         onlyProject
-        askTokenAvailable
         whenNotPaused
     {
         // Verify that the sale is not canceled

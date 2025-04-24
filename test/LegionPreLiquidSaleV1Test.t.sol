@@ -1502,41 +1502,6 @@ contract LegionPreLiquidSaleV1Test is Test {
     }
 
     /**
-     * @notice Tests that supplying tokens when ask token is unavailable reverts
-     * @dev Expects LegionSale__AskTokenUnavailable revert when askToken is address(0)
-     */
-    function test_supplyTokens_revertsIfAskTokenUnavailable() public {
-        // Arrange
-        prepareCreateLegionPreLiquidSale();
-        prepareMintAndApproveTokens();
-        prepareInvestorSignatures();
-
-        vm.warp(block.timestamp + 1);
-
-        vm.prank(investor1);
-        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).invest(
-            10_000 * 1e6, 10_000 * 1e6, 5_000_000_000_000_000, signatureInv1
-        );
-
-        vm.prank(projectAdmin);
-        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
-
-        vm.warp(block.timestamp + 2 weeks + 1);
-
-        vm.prank(legionBouncer);
-        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).publishTgeDetails(
-            address(0), 1_000_000 * 1e18, 20_000 * 1e18
-        );
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__AskTokenUnavailable.selector));
-
-        // Act
-        vm.prank(projectAdmin);
-        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).supplyTokens(20_000 * 1e18, 499 * 1e18, 200 * 1e18);
-    }
-
-    /**
      * @notice Tests that supplying tokens with no allocation reverts
      * @dev Expects LegionSale__TokensNotAllocated revert when total tokens allocated is zero
      */
@@ -2618,47 +2583,6 @@ contract LegionPreLiquidSaleV1Test is Test {
     }
 
     /**
-     * @notice Test case: Attempt to claim tokens if ask token is not available
-     * @dev Expects LegionSale__AskTokenUnavailable revert when ask token address is zero
-     */
-    function test_claimTokenAllocation_revertsIfAskTokenNotAvailable() public {
-        // Arrange
-        prepareCreateLegionPreLiquidSale();
-        prepareMintAndApproveTokens();
-        prepareInvestorSignatures();
-
-        vm.warp(block.timestamp + 1);
-
-        vm.prank(investor1);
-        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).invest(
-            10_000 * 1e6, 10_000 * 1e6, 5_000_000_000_000_000, signatureInv1
-        );
-
-        vm.prank(projectAdmin);
-        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
-
-        vm.warp(block.timestamp + 2 weeks + 1);
-
-        vm.prank(legionBouncer);
-        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).publishTgeDetails(
-            address(0), 1_000_000 * 1e18, 20_000 * 1e18
-        );
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__AskTokenUnavailable.selector));
-
-        // Act
-        vm.prank(investor5);
-        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).claimTokenAllocation(
-            uint256(10_000 * 1e6),
-            uint256(5_000_000_000_000_000),
-            investorLinearVestingConfig,
-            signatureInv1,
-            vestingSignatureInv1
-        );
-    }
-
-    /**
      * @notice Test case: Attempt to claim tokens that were already claimed
      * @dev Expects LegionSale__AlreadySettled revert when attempting to claim a settled position
      */
@@ -2843,41 +2767,6 @@ contract LegionPreLiquidSaleV1Test is Test {
 
         // Act
         vm.prank(investor2);
-        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).releaseVestedTokens();
-    }
-
-    /**
-     * @notice Test case: Attempt to release tokens if ask token is not available
-     * @dev Expects LegionSale__AskTokenUnavailable revert when ask token address is zero
-     */
-    function test_releaseVestedTokens_revertsIfAskTokenUnavailable() public {
-        // Arrange
-        prepareCreateLegionPreLiquidSale();
-        prepareMintAndApproveTokens();
-        prepareInvestorSignatures();
-
-        vm.warp(block.timestamp + 1);
-
-        vm.prank(investor1);
-        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).invest(
-            10_000 * 1e6, 10_000 * 1e6, 5_000_000_000_000_000, signatureInv1
-        );
-
-        vm.prank(projectAdmin);
-        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).endSale();
-
-        vm.warp(block.timestamp + 2 weeks + 1);
-
-        vm.prank(legionBouncer);
-        ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).publishTgeDetails(
-            address(0), 1_000_000 * 1e18, 20_000 * 1e18
-        );
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__AskTokenUnavailable.selector));
-
-        // Act
-        vm.prank(investor1);
         ILegionPreLiquidSaleV1(legionPreLiquidSaleInstance).releaseVestedTokens();
     }
 

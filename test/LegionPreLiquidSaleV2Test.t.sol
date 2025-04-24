@@ -1970,50 +1970,6 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
     }
 
-    /**
-     * @notice Tests that supplying tokens with an unavailable askToken reverts
-     * @dev Ensures the contract rejects supply attempts when the askToken is not set, expecting an
-     * LegionSale__AskTokenUnavailable
-     * revert.
-     */
-    function test_supplyTokens_revertsIfAskTokenUnavailable() public {
-        // Arrange
-        setSaleParams(
-            ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: 1 hours,
-                refundPeriodSeconds: 2 weeks,
-                legionFeeOnCapitalRaisedBps: 250,
-                legionFeeOnTokensSoldBps: 250,
-                referrerFeeOnCapitalRaisedBps: 100,
-                referrerFeeOnTokensSoldBps: 100,
-                minimumInvestAmount: 1e6,
-                bidToken: address(bidToken),
-                askToken: address(0),
-                projectAdmin: address(projectAdmin),
-                addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver
-            })
-        );
-
-        vm.prank(legionBouncer);
-        legionSaleInstance = legionSaleFactory.createPreLiquidSaleV2(testConfig.saleInitParams);
-
-        vm.prank(legionBouncer);
-        ILegionPreLiquidSaleV2(legionSaleInstance).endSale();
-
-        vm.warp(refundEndTime() + 1);
-
-        vm.prank(legionBouncer);
-        ILegionPreLiquidSaleV2(legionSaleInstance).publishSaleResults(claimTokensMerkleRoot, 4000 * 1e18, address(0));
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__AskTokenUnavailable.selector));
-
-        // Act
-        vm.prank(projectAdmin);
-        ILegionPreLiquidSaleV2(legionSaleInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
-    }
-
     /*//////////////////////////////////////////////////////////////////////////
                         WITHDRAW RAISED CAPITAL TESTS
     //////////////////////////////////////////////////////////////////////////*/
@@ -2620,46 +2576,6 @@ contract LegionPreLiquidSaleV2Test is Test {
         );
     }
 
-    /**
-     * @notice Tests that claiming tokens with an unavailable askToken reverts
-     * @dev Ensures token claims fail when no askToken is set, expecting an LegionSale__AskTokenUnavailable revert.
-     */
-    function test_claimTokenAllocation_revertsIfAskTokenNotAvailable() public {
-        // Arrange
-        setSaleParams(
-            ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: 1 hours,
-                refundPeriodSeconds: 2 weeks,
-                legionFeeOnCapitalRaisedBps: 250,
-                legionFeeOnTokensSoldBps: 250,
-                referrerFeeOnCapitalRaisedBps: 100,
-                referrerFeeOnTokensSoldBps: 100,
-                minimumInvestAmount: 1e6,
-                bidToken: address(bidToken),
-                askToken: address(0),
-                projectAdmin: address(projectAdmin),
-                addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver
-            })
-        );
-
-        vm.prank(legionBouncer);
-        legionSaleInstance = legionSaleFactory.createPreLiquidSaleV2(testConfig.saleInitParams);
-
-        bytes32[] memory claimProofInvestor2 = new bytes32[](2);
-        claimProofInvestor2[0] = bytes32(0x4287a77f3e3d040f42dcb9539e336d83d166ff810eb9d5d74bc440a2bdac5dae);
-        claimProofInvestor2[1] = bytes32(0xda52deea919ca150a57325de782da41cffff19ec1bdf5d9747c1d6aa28b7639c);
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__AskTokenUnavailable.selector));
-
-        // Act
-        vm.prank(investor2);
-        ILegionPreLiquidSaleV2(legionSaleInstance).claimTokenAllocation(
-            1000 * 1e18, investorVestingConfig, claimProofInvestor2
-        );
-    }
-
     /*//////////////////////////////////////////////////////////////////////////
                         RELEASE VESTED TOKENS TESTS
     //////////////////////////////////////////////////////////////////////////*/
@@ -2722,40 +2638,6 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         // Act
         vm.prank(investor2);
-        ILegionPreLiquidSaleV2(legionSaleInstance).releaseVestedTokens();
-    }
-
-    /**
-     * @notice Tests that releasing vested tokens with an unavailable askToken reverts
-     * @dev Ensures token release fails when no askToken is set, expecting an LegionSale__AskTokenUnavailable revert.
-     */
-    function test_releaseVestedTokens_revertsIfAskTokenNotAvailable() public {
-        // Arrange
-        setSaleParams(
-            ILegionSale.LegionSaleInitializationParams({
-                salePeriodSeconds: 1 hours,
-                refundPeriodSeconds: 2 weeks,
-                legionFeeOnCapitalRaisedBps: 250,
-                legionFeeOnTokensSoldBps: 250,
-                referrerFeeOnCapitalRaisedBps: 100,
-                referrerFeeOnTokensSoldBps: 100,
-                minimumInvestAmount: 1e6,
-                bidToken: address(bidToken),
-                askToken: address(0),
-                projectAdmin: address(projectAdmin),
-                addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver
-            })
-        );
-
-        vm.prank(legionBouncer);
-        legionSaleInstance = legionSaleFactory.createPreLiquidSaleV2(testConfig.saleInitParams);
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__AskTokenUnavailable.selector));
-
-        // Act
-        vm.prank(investor1);
         ILegionPreLiquidSaleV2(legionSaleInstance).releaseVestedTokens();
     }
 
