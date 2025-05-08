@@ -38,12 +38,6 @@ library Errors {
     error LegionSale__AlreadyClaimedExcess(address investor);
 
     /**
-     * @notice Thrown when the ask token is not available
-     * @dev Indicates the ask token address is not set or invalid
-     */
-    error LegionSale__AskTokenUnavailable();
-
-    /**
      * @notice Thrown when cancellation is locked
      * @dev Indicates cancellation is prevented, typically during result publication
      */

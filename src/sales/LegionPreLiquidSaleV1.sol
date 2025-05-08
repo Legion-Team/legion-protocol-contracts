@@ -96,15 +96,6 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, LegionVestingManager, 
         _;
     }
 
-    /**
-     * @notice Ensures the ask token is available before execution
-     * @dev Reverts if askToken address is not set
-     */
-    modifier askTokenAvailable() {
-        if (s_saleStatus.askToken == address(0)) revert Errors.LegionSale__AskTokenUnavailable();
-        _;
-    }
-
     /*//////////////////////////////////////////////////////////////////////////
                                    CONSTRUCTOR
     //////////////////////////////////////////////////////////////////////////*/
@@ -273,16 +264,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, LegionVestingManager, 
      * @param legionFee Fee amount for Legion
      * @param referrerFee Fee amount for referrer
      */
-    function supplyTokens(
-        uint256 amount,
-        uint256 legionFee,
-        uint256 referrerFee
-    )
-        external
-        onlyProject
-        whenNotPaused
-        askTokenAvailable
-    {
+    function supplyTokens(uint256 amount, uint256 legionFee, uint256 referrerFee) external onlyProject whenNotPaused {
         /// Verify that the sale is not canceled
         _verifySaleNotCanceled();
 
@@ -411,7 +393,6 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, LegionVestingManager, 
     )
         external
         whenNotPaused
-        askTokenAvailable
     {
         /// Verify that the sale has not been canceled
         _verifySaleNotCanceled();
@@ -583,7 +564,7 @@ contract LegionPreLiquidSaleV1 is ILegionPreLiquidSaleV1, LegionVestingManager, 
      * @notice Releases vested tokens to the investor
      * @dev Calls vesting contract to release tokens
      */
-    function releaseVestedTokens() external whenNotPaused askTokenAvailable {
+    function releaseVestedTokens() external whenNotPaused {
         /// Get the investor position details
         InvestorPosition memory position = s_investorPositions[msg.sender];
 
