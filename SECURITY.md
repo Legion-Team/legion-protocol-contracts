@@ -4,7 +4,7 @@
 
 ## Reporting a Vulnerability
 
-If you find a bug, please contact security@legion.cc. We have a live [Bug Bounty Program](https://github.com/Legion-Team/legion-protocol-contracts/blob/master/BUG_BOUNTY.md) you can check out.
+Legion’s Bug Bounty Program is active on [Code4rena](https://code4rena.com/bounties/legion.cc). Feel free to submit any issues you discover.
 
 ## Responsible Parties
 
