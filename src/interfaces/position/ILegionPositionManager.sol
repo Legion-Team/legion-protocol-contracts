@@ -29,4 +29,13 @@ interface ILegionPositionManager {
         string baseURI;
         uint256 lastPositionId;
     }
+
+    /**
+     * @notice Transfers an investor position from one address to another
+     * @param from The address of the current owner
+     * @param to The address of the new owner
+     * @param positionId The ID of the position
+     * @dev This function needs to be implemented in the derived contract
+     */
+    function transferInvestorPosition(address from, address to, uint256 positionId) external;
 }

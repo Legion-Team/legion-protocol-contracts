@@ -64,6 +64,15 @@ abstract contract LegionPositionManager is ILegionPositionManager, ERC5192 {
     }
 
     /**
+     * @notice Transfers an investor position from one address to another
+     * @param from The address of the current owner
+     * @param to The address of the new owner
+     * @param positionId The ID of the position
+     * @dev This function needs to be implemented in the derived contract
+     */
+    function transferInvestorPosition(address from, address to, uint256 positionId) external virtual;
+
+    /**
      * @inheritdoc ERC5192
      */
     function _afterTokenTransfer(address from, address to, uint256 id) internal override {
@@ -85,6 +94,20 @@ abstract contract LegionPositionManager is ILegionPositionManager, ERC5192 {
         }
 
         super._afterTokenTransfer(from, to, id);
+    }
+
+    /**
+     * @notice Internal function to transfer an investor position
+     * @param from The address of the current owner
+     * @param to The address of the new owner
+     * @param positionId The ID of the position
+     */
+    function _transferInvestorPosition(address from, address to, uint256 positionId) internal {
+        // Unlock the position before transferring
+        _updateLockedStatus(positionId, false);
+
+        // Transfer the position token
+        _transfer(from, to, positionId);
     }
 
     /**

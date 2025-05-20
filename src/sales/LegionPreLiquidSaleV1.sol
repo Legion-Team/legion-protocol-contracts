@@ -671,6 +671,27 @@ contract LegionPreLiquidSaleV1 is
     }
 
     /**
+     * @notice Transfers an investor position from one address to another
+     * @param from The address of the current owner
+     * @param to The address of the new owner
+     * @param positionId The ID of the position
+     * @dev This function needs to be implemented in the derived contract
+     */
+    function transferInvestorPosition(address from, address to, uint256 positionId) external override onlyLegion {
+        // Verify that the sale is not canceled
+        _verifySaleNotCanceled();
+
+        // Verify that the refund period is over
+        _verifyRefundPeriodIsOver();
+
+        /// Verify that no tokens have been supplied to the sale by the Project
+        _verifyTokensNotSupplied();
+
+        /// Transfer the investor position to the new address
+        _transferInvestorPosition(from, to, positionId);
+    }
+
+    /**
      * @notice Syncs Legion addresses from the address registry
      * @dev Updates configuration with latest addresses; restricted to Legion
      */
