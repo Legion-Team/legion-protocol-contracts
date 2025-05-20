@@ -64,6 +64,30 @@ abstract contract LegionPositionManager is ILegionPositionManager, ERC5192 {
     }
 
     /**
+     * @inheritdoc ERC5192
+     */
+    function _afterTokenTransfer(address from, address to, uint256 id) internal override {
+        // Check if this is not a new mint or burn
+        if (from != address(0) && to != address(0)) {
+            // Get the position ID of the sender
+            uint256 positionId = s_investorPositionIds[from];
+
+            // If the position ID is not assigned to the sender, revert
+            if (positionId != id) {
+                revert NotOwnerNorApproved();
+            }
+
+            // Delete the assigned position ID from the sender
+            delete s_investorPositionIds[from];
+
+            // Assign the position ID to the new owner
+            s_investorPositionIds[to] = id;
+        }
+
+        super._afterTokenTransfer(from, to, id);
+    }
+
+    /**
      * @notice Internal function to create a new investor position
      * @param investor The address of the investor
      * @return postionId The ID of the newly created position

@@ -140,4 +140,14 @@ abstract contract ERC5192 is IERC5192, ERC721 {
 
         super._beforeTokenTransfer(from, to, id);
     }
+
+    /**
+     * @inheritdoc ERC721
+     */
+    function _afterTokenTransfer(address from, address to, uint256 id) internal virtual override {
+        // Update the locked status of the token to true
+        _updateLockedStatus(id, true);
+
+        super._afterTokenTransfer(from, to, id);
+    }
 }
