@@ -32,8 +32,11 @@ interface ILegionPreLiquidSaleV1 {
      * @param investor Address of the investor
      * @param tokenAllocationRate Token allocation percentage (18 decimals)
      * @param investTimestamp Unix timestamp (in seconds) of the investment
+     * @param positionId ID of the investor's position
      */
-    event CapitalInvested(uint256 amount, address investor, uint256 tokenAllocationRate, uint256 investTimestamp);
+    event CapitalInvested(
+        uint256 amount, address investor, uint256 tokenAllocationRate, uint256 investTimestamp, uint256 positionId
+    );
 
     /**
      * @notice Emitted when excess capital is successfully withdrawn by an investor
@@ -42,9 +45,10 @@ interface ILegionPreLiquidSaleV1 {
      * @param investor Address of the investor
      * @param tokenAllocationRate Token allocation percentage (18 decimals)
      * @param investTimestamp Unix timestamp (in seconds) of the withdrawal
+     * @param positionId ID of the investor's position
      */
     event ExcessCapitalWithdrawn(
-        uint256 amount, address investor, uint256 tokenAllocationRate, uint256 investTimestamp
+        uint256 amount, address investor, uint256 tokenAllocationRate, uint256 investTimestamp, uint256 positionId
     );
 
     /**
@@ -52,16 +56,18 @@ interface ILegionPreLiquidSaleV1 {
      * @dev Logs refund details during the refund period
      * @param amount Amount of capital refunded
      * @param investor Address of the investor receiving the refund
+     * @param positionId ID of the investor's position
      */
-    event CapitalRefunded(uint256 amount, address investor);
+    event CapitalRefunded(uint256 amount, address investor, uint256 positionId);
 
     /**
      * @notice Emitted when capital is refunded after sale cancellation
      * @dev Logs refund details post-cancellation
      * @param amount Amount of capital refunded
      * @param investor Address of the investor receiving the refund
+     * @param positionId ID of the investor's position
      */
-    event CapitalRefundedAfterCancel(uint256 amount, address investor);
+    event CapitalRefundedAfterCancel(uint256 amount, address investor, uint256 positionId);
 
     /**
      * @notice Emitted when capital is successfully withdrawn by the Project
@@ -119,8 +125,9 @@ interface ILegionPreLiquidSaleV1 {
      * @param amountToBeVested Amount of tokens sent to vesting contract
      * @param amountOnClaim Amount of tokens distributed immediately
      * @param investor Address of the claiming investor
+     * @param positionId ID of the investor's position
      */
-    event TokenAllocationClaimed(uint256 amountToBeVested, uint256 amountOnClaim, address investor);
+    event TokenAllocationClaimed(uint256 amountToBeVested, uint256 amountOnClaim, address investor, uint256 positionId);
 
     /**
      * @notice Emitted when tokens are supplied for distribution by the Project
@@ -167,6 +174,15 @@ interface ILegionPreLiquidSaleV1 {
         /// @notice Address of the referrer fee receiver
         /// @dev Destination for referrer fees
         address referrerFeeReceiver;
+        /// @notice Name of the pre-liquid sale soulbound token
+        /// @dev Name of the SBT representing the sale
+        string saleName;
+        /// @notice Symbol of the pre-liquid sale soulbound token
+        /// @dev Symbol of the SBT representing the sale
+        string saleSymbol;
+        /// @notice Base URI for the pre-liquid sale soulbound token
+        /// @dev URI prefix for the SBT metadata
+        string saleBaseURI;
     }
 
     /// @notice Struct containing the runtime configuration of the pre-liquid sale

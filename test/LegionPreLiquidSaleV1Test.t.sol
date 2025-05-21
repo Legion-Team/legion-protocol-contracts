@@ -165,7 +165,10 @@ contract LegionPreLiquidSaleV1Test is Test {
             bidToken: _preLiquidSaleInitParams.bidToken,
             projectAdmin: _preLiquidSaleInitParams.projectAdmin,
             addressRegistry: _preLiquidSaleInitParams.addressRegistry,
-            referrerFeeReceiver: _preLiquidSaleInitParams.referrerFeeReceiver
+            referrerFeeReceiver: _preLiquidSaleInitParams.referrerFeeReceiver,
+            saleName: _preLiquidSaleInitParams.saleName,
+            saleSymbol: _preLiquidSaleInitParams.saleSymbol,
+            saleBaseURI: _preLiquidSaleInitParams.saleBaseURI
         });
     }
 
@@ -184,7 +187,10 @@ contract LegionPreLiquidSaleV1Test is Test {
                 bidToken: address(bidToken),
                 projectAdmin: projectAdmin,
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver
+                referrerFeeReceiver: referrerFeeReceiver,
+                saleName: "Legion LFG Pre-Liquid Sale",
+                saleSymbol: "LLFGPS",
+                saleBaseURI: "https://metadata.legion.cc"
             })
         );
         vm.prank(legionBouncer);
@@ -482,7 +488,10 @@ contract LegionPreLiquidSaleV1Test is Test {
                 bidToken: address(bidToken),
                 projectAdmin: projectAdmin,
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver
+                referrerFeeReceiver: referrerFeeReceiver,
+                saleName: "Legion LFG Pre-Liquid Sale",
+                saleSymbol: "LLFGPS",
+                saleBaseURI: "https://metadata.legion.cc"
             })
         );
 
@@ -511,7 +520,10 @@ contract LegionPreLiquidSaleV1Test is Test {
                 bidToken: address(bidToken),
                 projectAdmin: projectAdmin,
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver
+                referrerFeeReceiver: referrerFeeReceiver,
+                saleName: "Legion LFG Pre-Liquid Sale",
+                saleSymbol: "LLFGPS",
+                saleBaseURI: "https://metadata.legion.cc"
             })
         );
 
@@ -538,7 +550,10 @@ contract LegionPreLiquidSaleV1Test is Test {
                 bidToken: address(0),
                 projectAdmin: address(0),
                 addressRegistry: address(0),
-                referrerFeeReceiver: address(0)
+                referrerFeeReceiver: address(0),
+                saleName: "Legion LFG Pre-Liquid Sale",
+                saleSymbol: "LLFGPS",
+                saleBaseURI: "https://metadata.legion.cc"
             })
         );
 
@@ -566,7 +581,10 @@ contract LegionPreLiquidSaleV1Test is Test {
                 bidToken: address(bidToken),
                 projectAdmin: projectAdmin,
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver
+                referrerFeeReceiver: referrerFeeReceiver,
+                saleName: "Legion LFG Pre-Liquid Sale",
+                saleSymbol: "LLFGPS",
+                saleBaseURI: "https://metadata.legion.cc"
             })
         );
 
@@ -594,7 +612,10 @@ contract LegionPreLiquidSaleV1Test is Test {
                 bidToken: address(bidToken),
                 projectAdmin: projectAdmin,
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver
+                referrerFeeReceiver: referrerFeeReceiver,
+                saleName: "Legion LFG Pre-Liquid Sale",
+                saleSymbol: "LLFGPS",
+                saleBaseURI: "https://metadata.legion.cc"
             })
         );
 
@@ -702,7 +723,7 @@ contract LegionPreLiquidSaleV1Test is Test {
 
         // Expect
         vm.expectEmit();
-        emit ILegionPreLiquidSaleV1.CapitalInvested(10_000 * 1e6, investor1, 5_000_000_000_000_000, 1);
+        emit ILegionPreLiquidSaleV1.CapitalInvested(10_000 * 1e6, investor1, 5_000_000_000_000_000, 1, 1);
 
         // Act
         vm.prank(investor1);
@@ -857,7 +878,7 @@ contract LegionPreLiquidSaleV1Test is Test {
 
         // Expect
         vm.expectEmit();
-        emit ILegionPreLiquidSaleV1.CapitalRefunded(10_000 * 1e6, investor1);
+        emit ILegionPreLiquidSaleV1.CapitalRefunded(10_000 * 1e6, investor1, 1);
 
         // Act
         vm.prank(investor1);
@@ -1953,7 +1974,7 @@ contract LegionPreLiquidSaleV1Test is Test {
 
         // Expect
         vm.expectEmit();
-        emit ILegionPreLiquidSaleV1.CapitalRefundedAfterCancel(10_000 * 1e6, investor1);
+        emit ILegionPreLiquidSaleV1.CapitalRefundedAfterCancel(10_000 * 1e6, investor1, 1);
 
         // Act
         vm.prank(investor1);
@@ -2043,7 +2064,7 @@ contract LegionPreLiquidSaleV1Test is Test {
         // Expect
         vm.expectEmit();
         emit ILegionPreLiquidSaleV1.ExcessCapitalWithdrawn(
-            1000 * 1e6, investor1, 4_000_000_000_000_000, (block.timestamp)
+            1000 * 1e6, investor1, 4_000_000_000_000_000, (block.timestamp), 1
         );
 
         // Act

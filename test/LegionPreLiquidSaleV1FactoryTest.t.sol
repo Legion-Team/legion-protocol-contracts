@@ -132,7 +132,10 @@ contract LegionPreLiquidSaleV1FactoryTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver
+                referrerFeeReceiver: referrerFeeReceiver,
+                saleName: "Legion LFG Pre-Liquid Sale",
+                saleSymbol: "LLFGPS",
+                saleBaseURI: "https://metadata.legion.cc"
             })
         );
 
@@ -223,7 +226,10 @@ contract LegionPreLiquidSaleV1FactoryTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: projectAdmin,
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver
+                referrerFeeReceiver: referrerFeeReceiver,
+                saleName: "Legion LFG Pre-Liquid Sale",
+                saleSymbol: "LLFGPS",
+                saleBaseURI: "https://metadata.legion.cc"
             })
         );
 
