@@ -28,14 +28,14 @@ library Errors {
      * @dev Indicates the investor has already claimed their token allocation
      * @param investor Address of the investor attempting to claim
      */
-    error LegionSale__AlreadySettled(address investor);
+    error LegionSale__AlreadyClaimedExcess(address investor);
 
     /**
      * @notice Thrown when an investor tries to claim excess capital already claimed
      * @dev Indicates the investor has already withdrawn excess capital
      * @param investor Address of the investor attempting to claim excess
      */
-    error LegionSale__AlreadyClaimedExcess(address investor);
+    error LegionSale__AlreadySettled(address investor);
 
     /**
      * @notice Thrown when cancellation is locked
@@ -50,23 +50,28 @@ library Errors {
     error LegionSale__CancelNotLocked();
 
     /**
-     * @notice Thrown when attempting to release tokens before the cliff period ends
-     * @dev Indicates the vesting cliff has not yet been reached
-     * @param currentTimestamp Current block timestamp when the attempt was made
-     */
-    error LegionVesting__CliffNotEnded(uint256 currentTimestamp);
-
-    /**
      * @notice Thrown when capital has already been withdrawn by the project
      * @dev Indicates the project has already taken the raised capital
      */
     error LegionSale__CapitalAlreadyWithdrawn();
 
     /**
+     * @notice Thrown when raised capital has already been published
+     * @dev Indicates an attempt to republish capital raised data
+     */
+    error LegionSale__CapitalNotRaised();
+
+    /**
+     * @notice Thrown when raised capital has not been published
+     * @dev Indicates an action requires published capital data
+     */
+    error LegionSale__CapitalRaisedAlreadyPublished();
+
+    /**
      * @notice Thrown when no capital has been raised
      * @dev Indicates no capital is available for withdrawal
      */
-    error LegionSale__CapitalNotRaised();
+    error LegionSale__CapitalRaisedNotPublished();
 
     /**
      * @notice Thrown when an investor is not eligible to withdraw excess capital
@@ -77,47 +82,16 @@ library Errors {
     error LegionSale__CannotWithdrawExcessInvestedCapital(address investor, uint256 amount);
 
     /**
-     * @notice Thrown when an invalid amount of tokens is supplied by the project
-     * @dev Indicates the supplied token amount does not match allocation
-     * @param amount Amount of tokens supplied
-     * @param expectedAmount Expected token amount to be supplied
+     * @notice Thrown when an invalid private key is provided to decrypt a bid
+     * @dev Indicates the private key does not correspond to the public key
      */
-    error LegionSale__InvalidTokenAmountSupplied(uint256 amount, uint256 expectedAmount);
+    error LegionSale__InvalidBidPrivateKey();
 
     /**
-     * @notice Thrown when the vesting configuration is invalid
-     * @dev Indicates vesting parameters (e.g., duration, rate) are incorrect
-     * @param vestingType Type of vesting schedule (linear or epoch-based)
-     * @param vestingStartTimestamp Unix timestamp when vesting starts
-     * @param vestingDurationSeconds Duration of the vesting schedule in seconds
-     * @param vestingCliffDurationSeconds Duration of the cliff period in seconds
-     * @param epochDurationSeconds Duration of each epoch in seconds
-     * @param numberOfEpochs Total number of epochs in the vesting schedule
-     * @param tokenAllocationOnTGERate Token allocation released at TGE (18 decimals precision)
+     * @notice Thrown when an invalid public key is used to encrypt a bid
+     * @dev Indicates the public key is not valid or does not match the auction key
      */
-    error LegionVesting__InvalidVestingConfig(
-        uint8 vestingType,
-        uint256 vestingStartTimestamp,
-        uint256 vestingDurationSeconds,
-        uint256 vestingCliffDurationSeconds,
-        uint256 epochDurationSeconds,
-        uint256 numberOfEpochs,
-        uint256 tokenAllocationOnTGERate
-    );
-
-    /**
-     * @notice Thrown when an invalid amount of tokens is requested for withdrawal
-     * @dev Indicates the withdrawal amount is zero or otherwise invalid
-     * @param amount Amount of tokens requested for withdrawal
-     */
-    error LegionSale__InvalidWithdrawAmount(uint256 amount);
-
-    /**
-     * @notice Thrown when an invalid amount is requested for refund
-     * @dev Indicates the refund amount is zero or exceeds invested capital
-     * @param amount Amount of tokens requested for withdrawal
-     */
-    error LegionSale__InvalidRefundAmount(uint256 amount);
+    error LegionSale__InvalidBidPublicKey();
 
     /**
      * @notice Thrown when an invalid fee amount is provided
@@ -128,12 +102,6 @@ library Errors {
     error LegionSale__InvalidFeeAmount(uint256 amount, uint256 expectedAmount);
 
     /**
-     * @notice Thrown when an invalid time period configuration is provided
-     * @dev Indicates periods (e.g., sale, refund) are outside allowed ranges
-     */
-    error LegionSale__InvalidPeriodConfig();
-
-    /**
      * @notice Thrown when an invalid investment amount is pledged
      * @dev Indicates the amount is below minimum or otherwise incorrect
      * @param amount Amount being pledged
@@ -141,11 +109,10 @@ library Errors {
     error LegionSale__InvalidInvestAmount(uint256 amount);
 
     /**
-     * @notice Thrown when an invalid signature is provided for investment
-     * @dev Indicates the signature does not match the Legion signer
-     * @param signature Signature provided by the investor
+     * @notice Thrown when an invalid time period configuration is provided
+     * @dev Indicates periods (e.g., sale, refund) are outside allowed ranges
      */
-    error LegionSale__InvalidSignature(bytes signature);
+    error LegionSale__InvalidPeriodConfig();
 
     /**
      * @notice Thrown when invested capital does not match the SAFT amount
@@ -155,11 +122,39 @@ library Errors {
     error LegionSale__InvalidPositionAmount(address investor);
 
     /**
-     * @notice Thrown when an investor who has refunded attempts an action
-     * @dev Indicates the investor has already received a refund
-     * @param investor Address of the refunded investor
+     * @notice Thrown when an invalid amount is requested for refund
+     * @dev Indicates the refund amount is zero or exceeds invested capital
+     * @param amount Amount of tokens requested for withdrawal
      */
-    error LegionSale__InvestorHasRefunded(address investor);
+    error LegionSale__InvalidRefundAmount(uint256 amount);
+
+    /**
+     * @notice Thrown when an invalid salt is used to encrypt a bid
+     * @dev Indicates the salt does not match the expected value (e.g., investor address)
+     */
+    error LegionSale__InvalidSalt();
+
+    /**
+     * @notice Thrown when an invalid signature is provided for investment
+     * @dev Indicates the signature does not match the Legion signer
+     * @param signature Signature provided by the investor
+     */
+    error LegionSale__InvalidSignature(bytes signature);
+
+    /**
+     * @notice Thrown when an invalid amount of tokens is supplied by the project
+     * @dev Indicates the supplied token amount does not match allocation
+     * @param amount Amount of tokens supplied
+     * @param expectedAmount Expected token amount to be supplied
+     */
+    error LegionSale__InvalidTokenAmountSupplied(uint256 amount, uint256 expectedAmount);
+
+    /**
+     * @notice Thrown when an invalid amount of tokens is requested for withdrawal
+     * @dev Indicates the withdrawal amount is zero or otherwise invalid
+     * @param amount Amount of tokens requested for withdrawal
+     */
+    error LegionSale__InvalidWithdrawAmount(uint256 amount);
 
     /**
      * @notice Thrown when an investor who has claimed excess capital attempts an action
@@ -169,29 +164,11 @@ library Errors {
     error LegionSale__InvestorHasClaimedExcess(address investor);
 
     /**
-     * @notice Thrown when an invalid salt is used to encrypt a bid
-     * @dev Indicates the salt does not match the expected value (e.g., investor address)
+     * @notice Thrown when an investor who has refunded attempts an action
+     * @dev Indicates the investor has already received a refund
+     * @param investor Address of the refunded investor
      */
-    error LegionSale__InvalidSalt();
-
-    /**
-     * @notice Thrown when an invalid public key is used to encrypt a bid
-     * @dev Indicates the public key is not valid or does not match the auction key
-     */
-    error LegionSale__InvalidBidPublicKey();
-
-    /**
-     * @notice Thrown when an invalid private key is provided to decrypt a bid
-     * @dev Indicates the private key does not correspond to the public key
-     */
-    error LegionSale__InvalidBidPrivateKey();
-
-    /**
-     * @notice Thrown when an investor is not in the token claim whitelist
-     * @dev Indicates the investor is not eligible to claim tokens
-     * @param investor Address of the non-whitelisted investor
-     */
-    error LegionSale__NotInClaimWhitelist(address investor);
+    error LegionSale__InvestorHasRefunded(address investor);
 
     /**
      * @notice Thrown when an investor has not invested any capital
@@ -207,16 +184,29 @@ library Errors {
     error LegionSale__NotCalledByLegion();
 
     /**
+     * @notice Thrown when a function is not called by Legion or Project
+     * @dev Indicates unauthorized access by a non-authorized caller
+     */
+    error LegionSale__NotCalledByLegionOrProject();
+
+    /**
      * @notice Thrown when a function is not called by the Project address
      * @dev Indicates unauthorized access by a non-Project caller
      */
     error LegionSale__NotCalledByProject();
 
     /**
-     * @notice Thrown when a function is not called by Legion or Project
-     * @dev Indicates unauthorized access by a non-authorized caller
+     * @notice Thrown when an investor is not in the token claim whitelist
+     * @dev Indicates the investor is not eligible to claim tokens
+     * @param investor Address of the non-whitelisted investor
      */
-    error LegionSale__NotCalledByLegionOrProject();
+    error LegionSale__NotInClaimWhitelist(address investor);
+
+    /**
+     * @notice Thrown when a position does not exist
+     * @dev Indicates an attempt to access a non-existent position
+     */
+    error LegionSale__InvestorPostionDoesNotExist();
 
     /**
      * @notice Thrown when capital is pledged during the pre-fund allocation period
@@ -280,6 +270,12 @@ library Errors {
     error LegionSale__SaleIsNotCanceled();
 
     /**
+     * @notice Thrown when sale results are already published
+     * @dev Indicates an attempt to republish sale results
+     */
+    error LegionSale__SaleResultsAlreadyPublished();
+
+    /**
      * @notice Thrown when sale results are not published
      * @dev Indicates an action requires published sale results
      */
@@ -293,40 +289,22 @@ library Errors {
     error LegionSale__SignatureAlreadyUsed(bytes signature);
 
     /**
-     * @notice Thrown when raised capital has not been published
-     * @dev Indicates an action requires published capital data
-     */
-    error LegionSale__CapitalRaisedNotPublished();
-
-    /**
-     * @notice Thrown when sale results have already been published
-     * @dev Indicates an attempt to republish sale results
-     */
-    error LegionSale__SaleResultsAlreadyPublished();
-
-    /**
-     * @notice Thrown when raised capital has already been published
-     * @dev Indicates an attempt to republish capital raised data
-     */
-    error LegionSale__CapitalRaisedAlreadyPublished();
-
-    /**
      * @notice Thrown when tokens have already been allocated
      * @dev Indicates an attempt to reallocate tokens
      */
     error LegionSale__TokensAlreadyAllocated();
 
     /**
-     * @notice Thrown when tokens have not been allocated
-     * @dev Indicates an action requires token allocation first
-     */
-    error LegionSale__TokensNotAllocated();
-
-    /**
      * @notice Thrown when tokens have already been supplied
      * @dev Indicates an attempt to resupply tokens
      */
     error LegionSale__TokensAlreadySupplied();
+
+    /**
+     * @notice Thrown when tokens have not been allocated
+     * @dev Indicates an action requires token allocation first
+     */
+    error LegionSale__TokensNotAllocated();
 
     /**
      * @notice Thrown when tokens have not been supplied
@@ -345,4 +323,32 @@ library Errors {
      * @dev Indicates an invalid numeric parameter (e.g., 0)
      */
     error LegionSale__ZeroValueProvided();
+
+    /**
+     * @notice Thrown when attempting to release tokens before the cliff period ends
+     * @dev Indicates the vesting cliff has not yet been reached
+     * @param currentTimestamp Current block timestamp when the attempt was made
+     */
+    error LegionVesting__CliffNotEnded(uint256 currentTimestamp);
+
+    /**
+     * @notice Thrown when the vesting configuration is invalid
+     * @dev Indicates vesting parameters (e.g., duration, rate) are incorrect
+     * @param vestingType Type of vesting schedule (linear or epoch-based)
+     * @param vestingStartTimestamp Unix timestamp when vesting starts
+     * @param vestingDurationSeconds Duration of the vesting schedule in seconds
+     * @param vestingCliffDurationSeconds Duration of the cliff period in seconds
+     * @param epochDurationSeconds Duration of each epoch in seconds
+     * @param numberOfEpochs Total number of epochs in the vesting schedule
+     * @param tokenAllocationOnTGERate Token allocation released at TGE (18 decimals precision)
+     */
+    error LegionVesting__InvalidVestingConfig(
+        uint8 vestingType,
+        uint256 vestingStartTimestamp,
+        uint256 vestingDurationSeconds,
+        uint256 vestingCliffDurationSeconds,
+        uint256 epochDurationSeconds,
+        uint256 numberOfEpochs,
+        uint256 tokenAllocationOnTGERate
+    );
 }

@@ -72,6 +72,12 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
      * @param signature Legion signature for investor verification
      */
     function invest(uint256 amount, bytes memory signature) external whenNotPaused {
+        // Check if the investor has already invested
+        // If not, create a new investor position
+        uint256 positionId = _getInvestorPositionId(msg.sender) == 0
+            ? _createInvestorPosition(msg.sender)
+            : s_investorPositionIds[msg.sender];
+
         // Verify that the investor is allowed to pledge capital
         _verifyLegionSignature(signature);
 
@@ -85,19 +91,19 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
         _verifyMinimumInvestAmount(amount);
 
         // Verify that the investor has not refunded
-        _verifyHasNotRefunded();
+        _verifyHasNotRefunded(positionId);
 
         // Verify that the investor has not claimed excess capital
-        _verifyHasNotClaimedExcess();
+        _verifyHasNotClaimedExcess(positionId);
 
         // Increment total capital invested from investors
         s_saleStatus.totalCapitalInvested += amount;
 
         // Increment total invested capital for the investor
-        s_investorPositions[msg.sender].investedCapital += amount;
+        s_investorPositions[positionId].investedCapital += amount;
 
         // Emit CapitalInvested
-        emit CapitalInvested(amount, msg.sender, block.timestamp);
+        emit CapitalInvested(amount, msg.sender, block.timestamp, positionId);
 
         // Transfer the invested capital to the contract
         SafeTransferLib.safeTransferFrom(s_addressConfig.bidToken, msg.sender, address(this), amount);

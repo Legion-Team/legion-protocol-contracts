@@ -184,8 +184,9 @@ interface ILegionSale {
      * @dev Logs refund details during refund period
      * @param amount Amount of capital refunded
      * @param investor Address of the investor receiving refund
+     * @param positionId ID of the investor's position
      */
-    event CapitalRefunded(uint256 amount, address investor);
+    event CapitalRefunded(uint256 amount, address investor, uint256 positionId);
 
     /**
      * @notice Emitted when capital is refunded after sale cancellation
@@ -200,8 +201,9 @@ interface ILegionSale {
      * @dev Logs excess capital withdrawal details
      * @param amount Amount of excess capital withdrawn
      * @param investor Address of the investor claiming excess
+     * @param positionId ID of the investor's position
      */
-    event ExcessCapitalWithdrawn(uint256 amount, address investor);
+    event ExcessCapitalWithdrawn(uint256 amount, address investor, uint256 positionId);
 
     /**
      * @notice Emitted when accepted capital Merkle root is published by Legion
