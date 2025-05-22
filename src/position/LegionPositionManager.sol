@@ -17,6 +17,7 @@ pragma solidity 0.8.29;
 // We will pay a fair bounty for any issue that puts users' funds at risk.
 
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
+import { Errors } from "../utils/Errors.sol";
 
 import { ERC5192 } from "../lib/ERC5192.sol";
 import { ILegionPositionManager } from "../interfaces/position/ILegionPositionManager.sol";
@@ -150,5 +151,14 @@ abstract contract LegionPositionManager is ILegionPositionManager, ERC5192 {
      */
     function _getInvestorPositionId(address investor) internal view returns (uint256) {
         return s_investorPositionIds[investor];
+    }
+
+    /**
+     * @notice Verifies the existence of an investor's position
+     * @param positionId ID of the investor's position
+     * @dev Reverts if position does not exist
+     */
+    function _verifyPositionExists(uint256 positionId) internal pure {
+        if (positionId == 0) revert Errors.LegionSale__InvestorPostionDoesNotExist();
     }
 }

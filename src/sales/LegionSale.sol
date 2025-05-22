@@ -30,6 +30,7 @@ import { ILegionAddressRegistry } from "../interfaces/registries/ILegionAddressR
 import { ILegionSale } from "../interfaces/sales/ILegionSale.sol";
 import { ILegionVesting } from "../interfaces/vesting/ILegionVesting.sol";
 
+import { LegionPositionManager } from "../position/LegionPositionManager.sol";
 import { LegionVestingManager } from "../vesting/LegionVestingManager.sol";
 
 /**
@@ -38,7 +39,7 @@ import { LegionVestingManager } from "../vesting/LegionVestingManager.sol";
  * @notice A contract used for managing token sales in the Legion Protocol
  * @dev Abstract base contract implementing ILegionSale with vesting, pausing, and core sale functionality
  */
-abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable, Pausable {
+abstract contract LegionSale is ILegionSale, LegionVestingManager, LegionPositionManager, Initializable, Pausable {
     using ECDSA for bytes32;
     using MessageHashUtils for bytes32;
 
@@ -58,9 +59,9 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
     /// @dev Maintains runtime state of the sale internally
     LegionSaleStatus internal s_saleStatus;
 
-    /// @notice Mapping of investor addresses to their positions
-    /// @dev Tracks investor data internally
-    mapping(address s_investorAddress => InvestorPosition s_investorPosition) internal s_investorPositions;
+    /// @notice Mapping of position IDs to their respective positions
+    /// @dev Investor data
+    mapping(uint256 s_positionId => InvestorPosition s_investorPosition) internal s_investorPositions;
 
     /*//////////////////////////////////////////////////////////////////////////
                                    MODIFIERS
@@ -117,6 +118,12 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @dev Virtual function to process refunds; transfers capital back to investor
      */
     function refund() external virtual whenNotPaused {
+        /// Get the investor position ID
+        uint256 positionId = _getInvestorPositionId(msg.sender);
+
+        /// Verify that the position exists
+        _verifyPositionExists(positionId);
+
         // Verify that the refund period is not over
         _verifyRefundPeriodIsNotOver();
 
@@ -124,25 +131,25 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         _verifySaleNotCanceled();
 
         // Verify that the investor has not refunded
-        _verifyHasNotRefunded();
+        _verifyHasNotRefunded(positionId);
 
         // Cache the amount to refund in memory
-        uint256 amountToRefund = s_investorPositions[msg.sender].investedCapital;
+        uint256 amountToRefund = s_investorPositions[positionId].investedCapital;
 
         // Revert in case there's nothing to refund
         if (amountToRefund == 0) revert Errors.LegionSale__InvalidRefundAmount(0);
 
         // Set the total invested capital for the investor to 0
-        s_investorPositions[msg.sender].investedCapital = 0;
+        s_investorPositions[positionId].investedCapital = 0;
 
         // Flag that the investor has refunded
-        s_investorPositions[msg.sender].hasRefunded = true;
+        s_investorPositions[positionId].hasRefunded = true;
 
         // Decrement total capital invested from investors
         s_saleStatus.totalCapitalInvested -= amountToRefund;
 
         // Emit CapitalRefunded
-        emit CapitalRefunded(amountToRefund, msg.sender);
+        emit CapitalRefunded(amountToRefund, msg.sender, positionId);
 
         // Transfer the refunded amount back to the investor
         SafeTransferLib.safeTransfer(s_addressConfig.bidToken, msg.sender, amountToRefund);
@@ -220,6 +227,12 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         virtual
         whenNotPaused
     {
+        /// Get the investor position ID
+        uint256 positionId = _getInvestorPositionId(msg.sender);
+
+        /// Verify that the position exists
+        _verifyPositionExists(positionId);
+
         // Verify that the sale is not canceled
         _verifySaleNotCanceled();
 
@@ -236,7 +249,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         _verifyCanClaimTokenAllocation(msg.sender, amount, investorVestingConfig, proof);
 
         /// Load the investor position
-        InvestorPosition storage position = s_investorPositions[msg.sender];
+        InvestorPosition storage position = s_investorPositions[positionId];
 
         // Mark that the token amount has been settled
         position.hasSettled = true;
@@ -276,27 +289,33 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @param proof Merkle proof for excess capital verification
      */
     function withdrawExcessInvestedCapital(uint256 amount, bytes32[] calldata proof) external virtual whenNotPaused {
+        /// Get the investor position ID
+        uint256 positionId = _getInvestorPositionId(msg.sender);
+
+        /// Verify that the position exists
+        _verifyPositionExists(positionId);
+
         // Verify that the sale is not canceled
         _verifySaleNotCanceled();
 
         // Verify that the investor has not refunded
-        _verifyHasNotRefunded();
+        _verifyHasNotRefunded(positionId);
 
         // Verify that the investor is eligible to get excess capital back
-        _verifyCanClaimExcessCapital(msg.sender, amount, proof);
+        _verifyCanClaimExcessCapital(msg.sender, positionId, amount, proof);
 
         // Mark that the excess capital has been returned
-        s_investorPositions[msg.sender].hasClaimedExcess = true;
+        s_investorPositions[positionId].hasClaimedExcess = true;
 
         if (amount != 0) {
             // Decrement the total invested capital for the investor
-            s_investorPositions[msg.sender].investedCapital -= amount;
+            s_investorPositions[positionId].investedCapital -= amount;
 
             // Decrement total capital invested from investors
             s_saleStatus.totalCapitalInvested -= amount;
 
             // Emit ExcessCapitalWithdrawn
-            emit ExcessCapitalWithdrawn(amount, msg.sender);
+            emit ExcessCapitalWithdrawn(amount, msg.sender, positionId);
 
             // Transfer the excess capital back to the investor
             SafeTransferLib.safeTransfer(s_addressConfig.bidToken, msg.sender, amount);
@@ -308,8 +327,14 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @dev Virtual function interacting with vesting contract
      */
     function releaseVestedTokens() external virtual whenNotPaused {
+        /// Get the investor position ID
+        uint256 positionId = _getInvestorPositionId(msg.sender);
+
+        /// Verify that the position exists
+        _verifyPositionExists(positionId);
+
         // Get the investor position details
-        InvestorPosition memory position = s_investorPositions[msg.sender];
+        InvestorPosition memory position = s_investorPositions[positionId];
 
         // Revert in case there's no vesting for the investor
         if (position.vestingAddress == address(0)) revert Errors.LegionSale__ZeroAddressProvided();
@@ -410,17 +435,23 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @dev Virtual function to return capital post-cancellation
      */
     function withdrawInvestedCapitalIfCanceled() external virtual whenNotPaused {
+        /// Get the investor position ID
+        uint256 positionId = _getInvestorPositionId(msg.sender);
+
+        /// Verify that the position exists
+        _verifyPositionExists(positionId);
+
         // Verify that the sale has been actually canceled
         _verifySaleIsCanceled();
 
         // Cache the amount to refund in memory
-        uint256 amountToWithdraw = s_investorPositions[msg.sender].investedCapital;
+        uint256 amountToWithdraw = s_investorPositions[positionId].investedCapital;
 
         // Revert in case there's nothing to claim
         if (amountToWithdraw == 0) revert Errors.LegionSale__InvalidWithdrawAmount(0);
 
         // Set the total invested capital for the investor to 0
-        s_investorPositions[msg.sender].investedCapital = 0;
+        s_investorPositions[positionId].investedCapital = 0;
 
         // Decrement total capital invested from investors
         s_saleStatus.totalCapitalInvested -= amountToWithdraw;
@@ -475,6 +506,37 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
     }
 
     /**
+     * @notice Transfers an investor position from one address to another
+     * @param from The address of the current owner
+     * @param to The address of the new owner
+     * @param positionId The ID of the position
+     * @dev This function needs to be implemented in the derived contract
+     */
+    function transferInvestorPosition(
+        address from,
+        address to,
+        uint256 positionId
+    )
+        external
+        virtual
+        override
+        onlyLegion
+        whenNotPaused
+    {
+        // Verify that the sale is not canceled
+        _verifySaleNotCanceled();
+
+        // Verify that the refund period is over
+        _verifyRefundPeriodIsOver();
+
+        /// Verify that no tokens have been supplied to the sale by the Project
+        _verifyTokensNotSupplied();
+
+        /// Transfer the investor position to the new address
+        _transferInvestorPosition(from, to, positionId);
+    }
+
+    /**
      * @notice Returns the current sale configuration
      * @dev Virtual function providing read-only access to s_saleConfig
      * @return LegionSaleConfiguration memory Struct containing sale configuration
@@ -499,7 +561,13 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @return InvestorPosition memory Struct containing investor position details
      */
     function investorPositionDetails(address investorAddress) external view virtual returns (InvestorPosition memory) {
-        return s_investorPositions[investorAddress];
+        /// Get the investor position ID
+        uint256 positionId = _getInvestorPositionId(investorAddress);
+
+        /// Verify that the position exists
+        _verifyPositionExists(positionId);
+
+        return s_investorPositions[positionId];
     }
 
     /**
@@ -514,8 +582,14 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         virtual
         returns (LegionInvestorVestingStatus memory vestingStatus)
     {
+        /// Get the investor position ID
+        uint256 positionId = _getInvestorPositionId(investor);
+
+        /// Verify that the position exists
+        _verifyPositionExists(positionId);
+
         /// Get the investor position details
-        address investorVestingAddress = s_investorPositions[investor].vestingAddress;
+        address investorVestingAddress = s_investorPositions[positionId].vestingAddress;
 
         // Return the investor vesting status
         investorVestingAddress != address(0)
@@ -631,11 +705,17 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         view
         virtual
     {
+        /// Get the investor position ID
+        uint256 positionId = _getInvestorPositionId(_investor);
+
+        /// Verify that the position exists
+        _verifyPositionExists(positionId);
+
         // Generate the merkle leaf
         bytes32 leaf = keccak256(bytes.concat(keccak256(abi.encode(_investor, _amount, investorVestingConfig))));
 
         // Load the investor position
-        InvestorPosition memory position = s_investorPositions[_investor];
+        InvestorPosition memory position = s_investorPositions[positionId];
 
         // Verify the merkle proof
         if (!MerkleProofLib.verify(_proof, s_saleStatus.claimTokensMerkleRoot, leaf)) {
@@ -650,11 +730,13 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
      * @notice Verifies investor eligibility to claim excess capital
      * @dev Virtual function using Merkle proof for verification
      * @param _investor Address of the investor
+     * @param _positionId Position ID of the investor
      * @param _amount Amount of excess capital to claim
      * @param _proof Merkle proof for excess capital verification
      */
     function _verifyCanClaimExcessCapital(
         address _investor,
+        uint256 _positionId,
         uint256 _amount,
         bytes32[] calldata _proof
     )
@@ -663,7 +745,7 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
         virtual
     {
         // Load the investor position
-        InvestorPosition memory position = s_investorPositions[_investor];
+        InvestorPosition memory position = s_investorPositions[_positionId];
 
         // Check if the investor has already settled their allocation
         if (position.hasClaimedExcess) revert Errors.LegionSale__AlreadyClaimedExcess(_investor);
@@ -841,18 +923,20 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, Initializable
 
     /**
      * @notice Verifies that the investor has not refunded
+     * @param positionId ID of the investor's position
      * @dev Virtual function checking refund status
      */
-    function _verifyHasNotRefunded() internal view virtual {
-        if (s_investorPositions[msg.sender].hasRefunded) revert Errors.LegionSale__InvestorHasRefunded(msg.sender);
+    function _verifyHasNotRefunded(uint256 positionId) internal view virtual {
+        if (s_investorPositions[positionId].hasRefunded) revert Errors.LegionSale__InvestorHasRefunded(msg.sender);
     }
 
     /**
      * @notice Verifies that the investor has not claimed excess capital
+     * @param positionId ID of the investor's position
      * @dev Virtual function checking excess claim status
      */
-    function _verifyHasNotClaimedExcess() internal view virtual {
-        if (s_investorPositions[msg.sender].hasClaimedExcess) {
+    function _verifyHasNotClaimedExcess(uint256 positionId) internal view virtual {
+        if (s_investorPositions[positionId].hasClaimedExcess) {
             revert Errors.LegionSale__InvestorHasClaimedExcess(msg.sender);
         }
     }

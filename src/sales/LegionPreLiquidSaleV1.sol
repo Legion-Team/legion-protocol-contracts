@@ -231,9 +231,6 @@ contract LegionPreLiquidSaleV1 is
         /// Decrement total capital invested from investors
         s_saleStatus.totalCapitalInvested -= amountToRefund;
 
-        /// Burn the investor position ID
-        _burnInvestorPosition(msg.sender);
-
         /// Emit successfully CapitalRefunded
         emit CapitalRefunded(amountToRefund, msg.sender, positionId);
 
@@ -1069,15 +1066,6 @@ contract LegionPreLiquidSaleV1 is
      */
     function _verifyCanPublishCapitalRaised() private view {
         if (s_saleStatus.totalCapitalRaised != 0) revert Errors.LegionSale__CapitalRaisedAlreadyPublished();
-    }
-
-    /**
-     * @notice Verifies the existence of an investor's position
-     * @param positionId ID of the investor's position
-     * @dev Reverts if position does not exist
-     */
-    function _verifyPositionExists(uint256 positionId) private pure {
-        if (positionId == 0) revert Errors.LegionSale__InvestorPostionDoesNotExist();
     }
 
     /**

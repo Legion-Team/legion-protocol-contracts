@@ -841,7 +841,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         // Expect
         vm.expectEmit();
         emit ILegionSealedBidAuctionSale.CapitalInvested(
-            1000 * 1e6, encryptedAmountInvestort1, uint256(uint160(investor1)), investor1, startTime() + 1
+            1000 * 1e6, encryptedAmountInvestort1, uint256(uint160(investor1)), investor1, startTime() + 1, 1
         );
 
         // Act
@@ -1146,7 +1146,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         // Expect
         vm.expectEmit();
-        emit ILegionSale.CapitalRefunded(1000 * 1e6, investor1);
+        emit ILegionSale.CapitalRefunded(1000 * 1e6, investor1, 1);
 
         // Act
         vm.prank(investor1);
@@ -1163,7 +1163,15 @@ contract LegionSealedBidAuctionSaleTest is Test {
      */
     function test_refund_revertsIfRefundPeriodHasEnded() public {
         // Arrange
+        prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
+        prepareMintAndApproveInvestorTokens();
+        prepareInvestorSignatures();
+
+        vm.prank(investor1);
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).invest(
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
+        );
 
         vm.warp(refundEndTime() + 1);
 
@@ -1185,7 +1193,15 @@ contract LegionSealedBidAuctionSaleTest is Test {
      */
     function test_refund_revertsIfSaleIsCanceled() public {
         // Arrange
+        prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
+        prepareMintAndApproveInvestorTokens();
+        prepareInvestorSignatures();
+
+        vm.prank(investor1);
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).invest(
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
+        );
 
         vm.warp(endTime() + 1);
 
@@ -1211,7 +1227,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.warp(endTime() + 1); // Within refund period
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidRefundAmount.selector, 0));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPostionDoesNotExist.selector));
 
         // Act
         vm.prank(investor1);
@@ -1391,7 +1407,15 @@ contract LegionSealedBidAuctionSaleTest is Test {
      */
     function test_withdrawInvestedCapitalIfCanceled_revertsIfSaleIsNotCanceled() public {
         // Arrange
+        prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
+        prepareMintAndApproveInvestorTokens();
+        prepareInvestorSignatures();
+
+        vm.prank(investor1);
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).invest(
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
+        );
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsNotCanceled.selector));
@@ -1413,7 +1437,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancelSale();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidWithdrawAmount.selector, 0));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPostionDoesNotExist.selector));
 
         // Act
         vm.prank(investor1);
@@ -2336,7 +2360,11 @@ contract LegionSealedBidAuctionSaleTest is Test {
      */
     function test_withdrawExcessInvestedCapital_revertsIfSaleIsCanceled() public {
         // Arrange
+        prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
+        prepareMintAndApproveInvestorTokens();
+        prepareInvestorSignatures();
+        prepareInvestedCapitalFromAllInvestors();
 
         bytes32[] memory excessClaimProofInvestor2 = new bytes32[](2);
         excessClaimProofInvestor2[0] = bytes32(0x048605503187722f63911ca26b8cca1d0a2afc10509c8be7f963371fec52b188);
@@ -2451,7 +2479,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).setAcceptedCapital(excessCapitalMerkleRootMalicious);
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NoCapitalInvested.selector, investor5));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPostionDoesNotExist.selector));
 
         // Act
         vm.prank(investor5);
@@ -2608,7 +2636,11 @@ contract LegionSealedBidAuctionSaleTest is Test {
      */
     function test_claimTokenAllocation_revertsIfSaleResultsNotPublished() public {
         // Arrange
+        prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
+        prepareMintAndApproveInvestorTokens();
+        prepareInvestorSignatures();
+        prepareInvestedCapitalFromAllInvestors();
 
         bytes32[] memory claimProofInvestor2 = new bytes32[](2);
         claimProofInvestor2[0] = bytes32(0x2054afa66e2c4ccd7ade9889c78d8cf4a46f716980dafb935d11ce1e564fa39c);
@@ -2766,7 +2798,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         prepareCreateLegionSealedBidAuction();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__ZeroAddressProvided.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPostionDoesNotExist.selector));
 
         // Act
         vm.prank(investor2);

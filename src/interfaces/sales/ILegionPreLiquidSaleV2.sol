@@ -41,8 +41,9 @@ interface ILegionPreLiquidSaleV2 is ILegionSale {
      * @param amount Amount of capital invested (in bid tokens)
      * @param investor Address of the investor
      * @param investTimestamp Unix timestamp (in seconds) of the investment
+     * @param positionId Unique identifier for the investment position
      */
-    event CapitalInvested(uint256 amount, address investor, uint256 investTimestamp);
+    event CapitalInvested(uint256 amount, address investor, uint256 investTimestamp, uint256 positionId);
 
     /**
      * @notice Emitted when sale results are published by the Legion admin

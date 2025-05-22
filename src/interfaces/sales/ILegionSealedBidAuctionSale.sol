@@ -64,9 +64,15 @@ interface ILegionSealedBidAuctionSale is ILegionSale {
      * @param salt Unique salt used in encryption (typically investor address)
      * @param investor Address of the investor
      * @param investTimestamp Unix timestamp (seconds) of the investment
+     * @param positionId Unique identifier for the investment position
      */
     event CapitalInvested(
-        uint256 amount, uint256 encryptedAmountOut, uint256 salt, address investor, uint256 investTimestamp
+        uint256 amount,
+        uint256 encryptedAmountOut,
+        uint256 salt,
+        address investor,
+        uint256 investTimestamp,
+        uint256 positionId
     );
 
     /**

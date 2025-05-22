@@ -755,7 +755,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         // Expect
         vm.expectEmit();
-        emit ILegionPreLiquidSaleV2.CapitalInvested(1000 * 1e6, investor1, startTime() + 1);
+        emit ILegionPreLiquidSaleV2.CapitalInvested(1000 * 1e6, investor1, startTime() + 1, 1);
 
         // Act
         vm.prank(investor1);
@@ -1198,7 +1198,7 @@ contract LegionPreLiquidSaleV2Test is Test {
 
         // Act & Assert
         vm.expectEmit();
-        emit ILegionSale.CapitalRefunded(1000 * 1e6, investor1);
+        emit ILegionSale.CapitalRefunded(1000 * 1e6, investor1, 1);
 
         vm.prank(investor1);
         ILegionPreLiquidSaleV2(legionSaleInstance).refund();
@@ -1277,7 +1277,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         vm.warp(endTime() + 1);
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidRefundAmount.selector, 0));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPostionDoesNotExist.selector));
 
         // Act
         vm.prank(investor1);
@@ -1505,7 +1505,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).cancelSale();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidWithdrawAmount.selector, 0));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPostionDoesNotExist.selector));
 
         // Act
         vm.prank(investor1);
@@ -2230,6 +2230,9 @@ contract LegionPreLiquidSaleV2Test is Test {
     function test_withdrawExcessInvestedCapital_revertsIfSaleIsCanceled() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
+        prepareMintAndApproveInvestorTokens();
+        prepareInvestorSignatures();
+        prepareInvestedCapitalFromAllInvestors();
 
         bytes32[] memory excessClaimProofInvestor2 = new bytes32[](2);
         excessClaimProofInvestor2[0] = bytes32(0x048605503187722f63911ca26b8cca1d0a2afc10509c8be7f963371fec52b188);
@@ -2330,7 +2333,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         ILegionPreLiquidSaleV2(legionSaleInstance).setAcceptedCapital(excessCapitalMerkleRootMalicious);
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NoCapitalInvested.selector, investor5));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPostionDoesNotExist.selector));
 
         // Act
         vm.prank(investor5);
@@ -2443,6 +2446,9 @@ contract LegionPreLiquidSaleV2Test is Test {
     function test_claimTokenAllocation_revertsIfTokensAreMoreThanAllocatedAmount() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
+        prepareMintAndApproveInvestorTokens();
+        prepareInvestorSignatures();
+        prepareInvestedCapitalFromAllInvestors();
 
         bytes32[] memory claimProofInvestor2 = new bytes32[](2);
         claimProofInvestor2[0] = bytes32(0x4287a77f3e3d040f42dcb9539e336d83d166ff810eb9d5d74bc440a2bdac5dae);
@@ -2559,6 +2565,9 @@ contract LegionPreLiquidSaleV2Test is Test {
     function test_claimTokenAllocation_revertsIfSaleResultsNotPublished() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
+        prepareMintAndApproveInvestorTokens();
+        prepareInvestorSignatures();
+        prepareInvestedCapitalFromAllInvestors();
 
         bytes32[] memory claimProofInvestor2 = new bytes32[](2);
         claimProofInvestor2[0] = bytes32(0x4287a77f3e3d040f42dcb9539e336d83d166ff810eb9d5d74bc440a2bdac5dae);
@@ -2634,7 +2643,7 @@ contract LegionPreLiquidSaleV2Test is Test {
         prepareCreateLegionPreLiquidSale();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__ZeroAddressProvided.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPostionDoesNotExist.selector));
 
         // Act
         vm.prank(investor2);

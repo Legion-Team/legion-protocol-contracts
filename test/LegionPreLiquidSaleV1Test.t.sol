@@ -970,7 +970,7 @@ contract LegionPreLiquidSaleV1Test is Test {
         vm.warp(block.timestamp + 7200);
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPostionDoesNotExist.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorHasRefunded.selector, investor1));
 
         // Act
         vm.prank(investor1);
