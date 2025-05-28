@@ -31,8 +31,11 @@ interface ILegionCapitalRaise {
      * @param investor Address of the investor
      * @param tokenAllocationRate Token allocation percentage (18 decimals)
      * @param investTimestamp Unix timestamp (in seconds) of the investment
+     * @param positionId Unique identifier for the investor's position
      */
-    event CapitalInvested(uint256 amount, address investor, uint256 tokenAllocationRate, uint256 investTimestamp);
+    event CapitalInvested(
+        uint256 amount, address investor, uint256 tokenAllocationRate, uint256 investTimestamp, uint256 positionId
+    );
 
     /**
      * @notice Emitted when excess capital is successfully withdrawn by an investor
@@ -41,9 +44,10 @@ interface ILegionCapitalRaise {
      * @param investor Address of the investor
      * @param tokenAllocationRate Token allocation percentage (18 decimals)
      * @param investTimestamp Unix timestamp (in seconds) of the withdrawal
+     * @param positionId Unique identifier for the investor's position
      */
     event ExcessCapitalWithdrawn(
-        uint256 amount, address investor, uint256 tokenAllocationRate, uint256 investTimestamp
+        uint256 amount, address investor, uint256 tokenAllocationRate, uint256 investTimestamp, uint256 positionId
     );
 
     /**
@@ -51,16 +55,18 @@ interface ILegionCapitalRaise {
      * @dev Logs refund details during the refund period
      * @param amount Amount of capital refunded
      * @param investor Address of the investor receiving the refund
+     * @param positionId Unique identifier for the investor's position
      */
-    event CapitalRefunded(uint256 amount, address investor);
+    event CapitalRefunded(uint256 amount, address investor, uint256 positionId);
 
     /**
      * @notice Emitted when capital is refunded after capital raise cancellation
      * @dev Logs refund details post-cancellation
      * @param amount Amount of capital refunded
      * @param investor Address of the investor receiving the refund
+     * @param positionId Unique identifier for the investor's position
      */
-    event CapitalRefundedAfterCancel(uint256 amount, address investor);
+    event CapitalRefundedAfterCancel(uint256 amount, address investor, uint256 positionId);
 
     /**
      * @notice Emitted when capital is successfully withdrawn by the Project

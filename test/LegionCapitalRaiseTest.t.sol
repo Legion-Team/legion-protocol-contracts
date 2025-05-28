@@ -566,7 +566,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Expect
         vm.expectEmit();
-        emit ILegionCapitalRaise.CapitalInvested(10_000 * 1e6, investor1, 5_000_000_000_000_000, 1);
+        emit ILegionCapitalRaise.CapitalInvested(10_000 * 1e6, investor1, 5_000_000_000_000_000, 1, 1);
 
         // Act
         vm.prank(investor1);
@@ -726,7 +726,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Expect
         vm.expectEmit();
-        emit ILegionCapitalRaise.CapitalRefunded(10_000 * 1e6, investor1);
+        emit ILegionCapitalRaise.CapitalRefunded(10_000 * 1e6, investor1, 1);
 
         // Act
         vm.prank(investor1);
@@ -827,7 +827,7 @@ contract LegionCapitalRaiseTest is Test {
 
     /**
      * @notice Tests that refunding with no capital invested reverts
-     * @dev Expects LegionSale__InvalidRefundAmount revert when no investment exists
+     * @dev Expects LegionSale__InvestorPostionDoesNotExist revert when no investment exists
      */
     function test_refund_revertsIfInvestorHasNoCapitalToRefund() public {
         // Arrange
@@ -836,7 +836,7 @@ contract LegionCapitalRaiseTest is Test {
         prepareInvestorSignatures();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidRefundAmount.selector, 0));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPostionDoesNotExist.selector));
 
         // Act
         vm.prank(investor1);
@@ -1391,7 +1391,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Expect
         vm.expectEmit();
-        emit ILegionCapitalRaise.CapitalRefundedAfterCancel(10_000 * 1e6, investor1);
+        emit ILegionCapitalRaise.CapitalRefundedAfterCancel(10_000 * 1e6, investor1, 1);
 
         // Act
         vm.prank(investor1);
@@ -1427,7 +1427,7 @@ contract LegionCapitalRaiseTest is Test {
 
     /**
      * @notice Tests that withdrawing capital with no investment reverts
-     * @dev Expects LegionSale__InvalidWithdrawAmount revert when investor2, who didn't invest, tries to withdraw
+     * @dev Expects LegionSale__InvestorPostionDoesNotExist revert when investor2, who didn't invest, tries to withdraw
      */
     function test_withdrawInvestedCapitalIfCanceled_revertsIfNoCapitalInvested() public {
         // Arrange
@@ -1448,7 +1448,7 @@ contract LegionCapitalRaiseTest is Test {
         ILegionCapitalRaise(legionCapitalRaiseInstance).cancelRaise();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidWithdrawAmount.selector, 0));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPostionDoesNotExist.selector));
 
         // Act
         vm.prank(investor2);
@@ -1480,7 +1480,9 @@ contract LegionCapitalRaiseTest is Test {
 
         // Expect
         vm.expectEmit();
-        emit ILegionCapitalRaise.ExcessCapitalWithdrawn(1000 * 1e6, investor1, 4_000_000_000_000_000, (block.timestamp));
+        emit ILegionCapitalRaise.ExcessCapitalWithdrawn(
+            1000 * 1e6, investor1, 4_000_000_000_000_000, (block.timestamp), 1
+        );
 
         // Act
         vm.prank(investor1);

@@ -28,13 +28,15 @@ import { Errors } from "../utils/Errors.sol";
 import { ILegionAddressRegistry } from "../interfaces/registries/ILegionAddressRegistry.sol";
 import { ILegionCapitalRaise } from "../interfaces/raise/ILegionCapitalRaise.sol";
 
+import { LegionPositionManager } from "../position/LegionPositionManager.sol";
+
 /**
  * @title Legion Capital Raise
  * @author Legion
  * @notice A contract used to raise capital for sales of ERC20 tokens before TGE
  * @dev Manages pre-liquid capital raise lifecycle including investment, refunds, and withdrawals
  */
-contract LegionCapitalRaise is ILegionCapitalRaise, Initializable, Pausable {
+contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initializable, Pausable {
     using ECDSA for bytes32;
     using MessageHashUtils for bytes32;
 
@@ -52,7 +54,7 @@ contract LegionCapitalRaise is ILegionCapitalRaise, Initializable, Pausable {
 
     /// @notice Mapping of investor addresses to their positions
     /// @dev Investor data
-    mapping(address s_investorAddress => InvestorPosition s_investorPosition) private s_investorPositions;
+    mapping(uint256 s_positionId => InvestorPosition s_investorPosition) private s_investorPositions;
 
     /// @notice Mapping to track used signatures per investor to prevent replay attacks
     /// @dev Nested mapping for signature usage status
@@ -139,6 +141,12 @@ contract LegionCapitalRaise is ILegionCapitalRaise, Initializable, Pausable {
         external
         whenNotPaused
     {
+        // Check if the investor has already invested
+        // If not, create a new investor position
+        uint256 positionId = _getInvestorPositionId(msg.sender) == 0
+            ? _createInvestorPosition(msg.sender)
+            : s_investorPositionIds[msg.sender];
+
         /// Verify that the capital raise is not canceled
         _verifyCapitalRaisedNotCanceled();
 
@@ -146,13 +154,13 @@ contract LegionCapitalRaise is ILegionCapitalRaise, Initializable, Pausable {
         _verifyCapitalRaiseHasNotEnded();
 
         // Verify that the investor has not refunded
-        _verifyHasNotRefunded();
+        _verifyHasNotRefunded(positionId);
 
         /// Verify that the signature has not been used
         _verifySignatureNotUsed(investSignature);
 
         /// Load the investor position
-        InvestorPosition storage position = s_investorPositions[msg.sender];
+        InvestorPosition storage position = s_investorPositions[positionId];
 
         /// Increment total capital invested from investors
         s_capitalRaiseStatus.totalCapitalInvested += amount;
@@ -167,10 +175,10 @@ contract LegionCapitalRaise is ILegionCapitalRaise, Initializable, Pausable {
         _updateInvestorPosition(investAmount, tokenAllocationRate);
 
         /// Verify that the investor position is valid
-        _verifyValidPosition(investSignature, CapitalRaiseAction.INVEST);
+        _verifyValidPosition(investSignature, positionId, CapitalRaiseAction.INVEST);
 
         /// Emit successfully CapitalInvested
-        emit CapitalInvested(amount, msg.sender, tokenAllocationRate, block.timestamp);
+        emit CapitalInvested(amount, msg.sender, tokenAllocationRate, block.timestamp, positionId);
 
         /// Transfer the invested capital to the contract
         SafeTransferLib.safeTransferFrom(s_capitalRaiseConfig.bidToken, msg.sender, address(this), amount);
@@ -181,6 +189,12 @@ contract LegionCapitalRaise is ILegionCapitalRaise, Initializable, Pausable {
      * @dev Transfers invested capital back to the investor if conditions are met
      */
     function refund() external whenNotPaused {
+        /// Get the investor position ID
+        uint256 positionId = _getInvestorPositionId(msg.sender);
+
+        /// Verify that the position exists
+        _verifyPositionExists(positionId);
+
         /// Verify that the capital raise is not canceled
         _verifyCapitalRaisedNotCanceled();
 
@@ -188,10 +202,10 @@ contract LegionCapitalRaise is ILegionCapitalRaise, Initializable, Pausable {
         _verifyRefundPeriodIsNotOver();
 
         // Verify that the investor has not refunded
-        _verifyHasNotRefunded();
+        _verifyHasNotRefunded(positionId);
 
         /// Load the investor position
-        InvestorPosition storage position = s_investorPositions[msg.sender];
+        InvestorPosition storage position = s_investorPositions[positionId];
 
         /// Cache the amount to refund in memory
         uint256 amountToRefund = position.investedCapital;
@@ -203,13 +217,13 @@ contract LegionCapitalRaise is ILegionCapitalRaise, Initializable, Pausable {
         position.investedCapital = 0;
 
         // Flag that the investor has refunded
-        s_investorPositions[msg.sender].hasRefunded = true;
+        s_investorPositions[positionId].hasRefunded = true;
 
         /// Decrement total capital invested from investors
         s_capitalRaiseStatus.totalCapitalInvested -= amountToRefund;
 
         /// Emit successfully CapitalRefunded
-        emit CapitalRefunded(amountToRefund, msg.sender);
+        emit CapitalRefunded(amountToRefund, msg.sender, positionId);
 
         /// Transfer the refunded amount back to the investor
         SafeTransferLib.safeTransfer(s_capitalRaiseConfig.bidToken, msg.sender, amountToRefund);
@@ -316,23 +330,29 @@ contract LegionCapitalRaise is ILegionCapitalRaise, Initializable, Pausable {
      * @dev Transfers invested capital back to investor
      */
     function withdrawInvestedCapitalIfCanceled() external whenNotPaused {
+        /// Get the investor position ID
+        uint256 positionId = _getInvestorPositionId(msg.sender);
+
+        /// Verify that the position exists
+        _verifyPositionExists(positionId);
+
         /// Verify that the capital raise has been actually canceled
         _verifyCapitalRaiseIsCanceled();
 
         /// Cache the amount to refund in memory
-        uint256 amountToClaim = s_investorPositions[msg.sender].investedCapital;
+        uint256 amountToClaim = s_investorPositions[positionId].investedCapital;
 
         /// Revert in case there's nothing to claim
         if (amountToClaim == 0) revert Errors.LegionSale__InvalidWithdrawAmount(0);
 
         /// Set the total pledged capital for the investor to 0
-        s_investorPositions[msg.sender].investedCapital = 0;
+        s_investorPositions[positionId].investedCapital = 0;
 
         /// Decrement total capital pledged from investors
         s_capitalRaiseStatus.totalCapitalInvested -= amountToClaim;
 
         /// Emit successfully CapitalRefundedAfterCancel
-        emit CapitalRefundedAfterCancel(amountToClaim, msg.sender);
+        emit CapitalRefundedAfterCancel(amountToClaim, msg.sender, positionId);
 
         /// Transfer the refunded amount back to the investor
         SafeTransferLib.safeTransfer(s_capitalRaiseConfig.bidToken, msg.sender, amountToClaim);
@@ -355,6 +375,12 @@ contract LegionCapitalRaise is ILegionCapitalRaise, Initializable, Pausable {
         external
         whenNotPaused
     {
+        /// Get the investor position ID
+        uint256 positionId = _getInvestorPositionId(msg.sender);
+
+        /// Verify that the position exists
+        _verifyPositionExists(positionId);
+
         /// Verify that the capital raise has not been canceled
         _verifyCapitalRaisedNotCanceled();
 
@@ -362,7 +388,7 @@ contract LegionCapitalRaise is ILegionCapitalRaise, Initializable, Pausable {
         _verifySignatureNotUsed(investSignature);
 
         /// Load the investor position
-        InvestorPosition storage position = s_investorPositions[msg.sender];
+        InvestorPosition storage position = s_investorPositions[positionId];
 
         /// Decrement total capital invested from investors
         s_capitalRaiseStatus.totalCapitalInvested -= amount;
@@ -377,10 +403,10 @@ contract LegionCapitalRaise is ILegionCapitalRaise, Initializable, Pausable {
         _updateInvestorPosition(investAmount, tokenAllocationRate);
 
         /// Verify that the investor position is valid
-        _verifyValidPosition(investSignature, CapitalRaiseAction.WITHDRAW_EXCESS_CAPITAL);
+        _verifyValidPosition(investSignature, positionId, CapitalRaiseAction.WITHDRAW_EXCESS_CAPITAL);
 
         /// Emit successfully ExcessCapitalWithdrawn
-        emit ExcessCapitalWithdrawn(amount, msg.sender, tokenAllocationRate, block.timestamp);
+        emit ExcessCapitalWithdrawn(amount, msg.sender, tokenAllocationRate, block.timestamp, positionId);
 
         /// Transfer the excess capital to the investor
         SafeTransferLib.safeTransfer(s_capitalRaiseConfig.bidToken, msg.sender, amount);
@@ -436,6 +462,33 @@ contract LegionCapitalRaise is ILegionCapitalRaise, Initializable, Pausable {
     }
 
     /**
+     * @notice Transfers an investor position from one address to another
+     * @param from The address of the current owner
+     * @param to The address of the new owner
+     * @param positionId The ID of the position
+     * @dev Allow transfers only between end of refund period and before TGE
+     */
+    function transferInvestorPosition(
+        address from,
+        address to,
+        uint256 positionId
+    )
+        external
+        override
+        onlyLegion
+        whenNotPaused
+    {
+        // Verify that the sale is not canceled
+        _verifyCapitalRaisedNotCanceled();
+
+        // Verify that the refund period is over
+        _verifyRefundPeriodIsOver();
+
+        /// Transfer the investor position to the new address
+        _transferInvestorPosition(from, to, positionId);
+    }
+
+    /**
      * @notice Syncs Legion addresses from the address registry
      * @dev Updates configuration with latest addresses; restricted to Legion
      */
@@ -488,7 +541,13 @@ contract LegionCapitalRaise is ILegionCapitalRaise, Initializable, Pausable {
      * @return InvestorPosition memory Struct containing investor position details
      */
     function investorPositionDetails(address investorAddress) external view returns (InvestorPosition memory) {
-        return s_investorPositions[investorAddress];
+        /// Get the investor position ID
+        uint256 positionId = _getInvestorPositionId(investorAddress);
+
+        /// Verify that the position exists
+        _verifyPositionExists(positionId);
+
+        return s_investorPositions[positionId];
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -548,8 +607,14 @@ contract LegionCapitalRaise is ILegionCapitalRaise, Initializable, Pausable {
      * @param tokenAllocationRate Token allocation percentage (18 decimals)
      */
     function _updateInvestorPosition(uint256 investAmount, uint256 tokenAllocationRate) private {
+        /// Get the investor position ID
+        uint256 positionId = _getInvestorPositionId(msg.sender);
+
+        /// Verify that the position exists
+        _verifyPositionExists(positionId);
+
         /// Load the investor position
-        InvestorPosition storage position = s_investorPositions[msg.sender];
+        InvestorPosition storage position = s_investorPositions[positionId];
 
         /// Cache the SAFT amount the investor is allowed to invest
         if (position.cachedInvestAmount != investAmount) {
@@ -656,10 +721,11 @@ contract LegionCapitalRaise is ILegionCapitalRaise, Initializable, Pausable {
 
     /**
      * @notice Ensures the investor has not refunded
+     * @param positionId ID of the investor's position
      * @dev Reverts if investor has already refunded; virtual for overrides
      */
-    function _verifyHasNotRefunded() internal view virtual {
-        if (s_investorPositions[msg.sender].hasRefunded) revert Errors.LegionSale__InvestorHasRefunded(msg.sender);
+    function _verifyHasNotRefunded(uint256 positionId) internal view virtual {
+        if (s_investorPositions[positionId].hasRefunded) revert Errors.LegionSale__InvestorHasRefunded(msg.sender);
     }
 
     /**
@@ -674,11 +740,19 @@ contract LegionCapitalRaise is ILegionCapitalRaise, Initializable, Pausable {
      * @notice Validates an investor's position
      * @dev Verifies investment amount and signature
      * @param signature Signature to verify
+     * @param positionId ID of the investor's position
      * @param actionType Type of capital raise action being performed
      */
-    function _verifyValidPosition(bytes memory signature, CapitalRaiseAction actionType) internal view {
+    function _verifyValidPosition(
+        bytes memory signature,
+        uint256 positionId,
+        CapitalRaiseAction actionType
+    )
+        internal
+        view
+    {
         /// Load the investor position
-        InvestorPosition memory position = s_investorPositions[msg.sender];
+        InvestorPosition memory position = s_investorPositions[positionId];
 
         /// Verify that the amount invested is equal to the SAFT amount
         if (position.investedCapital != position.cachedInvestAmount) {
