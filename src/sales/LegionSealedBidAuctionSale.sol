@@ -92,7 +92,7 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
             : s_investorPositionIds[msg.sender];
 
         // Verify that the investor is allowed to pledge capital
-        _verifyLegionSignature(signature);
+        _verifyInvestSignature(signature);
 
         // Decode the sealed bid data
         (uint256 encryptedAmountOut, uint256 salt, Point memory sealedBidPublicKey) =

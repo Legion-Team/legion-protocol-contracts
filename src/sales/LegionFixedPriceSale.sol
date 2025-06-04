@@ -95,7 +95,7 @@ contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
             : s_investorPositionIds[msg.sender];
 
         // Verify that the investor is allowed to invest capital
-        _verifyLegionSignature(signature);
+        _verifyInvestSignature(signature);
 
         // Verify that invest is not during the prefund allocation period
         _verifyNotPrefundAllocationPeriod();

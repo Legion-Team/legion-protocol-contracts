@@ -510,7 +510,6 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, LegionPositio
      * @param from The address of the current owner
      * @param to The address of the new owner
      * @param positionId The ID of the position
-     * @dev This function needs to be implemented in the derived contract
      */
     function transferInvestorPosition(
         address from,
@@ -531,6 +530,40 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, LegionPositio
 
         /// Verify that no tokens have been supplied to the sale by the Project
         _verifyTokensNotSupplied();
+
+        /// Transfer the investor position to the new address
+        _transferInvestorPosition(from, to, positionId);
+    }
+
+    /**
+     * @notice Transfers an investor position with a signature
+     * @param from The address of the current owner
+     * @param to The address of the new owner
+     * @param positionId The ID of the position
+     * @param signature The signature authorizing the transfer
+     */
+    function transferInvestorPositionWithSignature(
+        address from,
+        address to,
+        uint256 positionId,
+        bytes calldata signature
+    )
+        external
+        virtual
+        override
+        whenNotPaused
+    {
+        // Verify that the sale is not canceled
+        _verifySaleNotCanceled();
+
+        // Verify that the refund period is over
+        _verifyRefundPeriodIsOver();
+
+        // Verify that no tokens have been supplied to the sale by the Project
+        _verifyTokensNotSupplied();
+
+        // Verify the signature for transferring the position
+        _verifyTransferSignature(from, to, positionId, s_addressConfig.legionSigner, signature);
 
         /// Transfer the investor position to the new address
         _transferInvestorPosition(from, to, positionId);
@@ -901,11 +934,11 @@ abstract contract LegionSale is ILegionSale, LegionVestingManager, LegionPositio
     }
 
     /**
-     * @notice Verifies that a signature is from Legion
+     * @notice Verifies that a invest signature is valid
      * @dev Virtual function validating signature authenticity
      * @param _signature Signature to verify
      */
-    function _verifyLegionSignature(bytes memory _signature) internal view virtual {
+    function _verifyInvestSignature(bytes memory _signature) internal view virtual {
         bytes32 _data = keccak256(abi.encodePacked(msg.sender, address(this), block.chainid)).toEthSignedMessageHash();
         if (_data.recover(_signature) != s_addressConfig.legionSigner) {
             revert Errors.LegionSale__InvalidSignature(_signature);

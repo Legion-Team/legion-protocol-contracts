@@ -79,7 +79,7 @@ contract LegionPreLiquidSaleV2 is LegionSale, ILegionPreLiquidSaleV2 {
             : s_investorPositionIds[msg.sender];
 
         // Verify that the investor is allowed to pledge capital
-        _verifyLegionSignature(signature);
+        _verifyInvestSignature(signature);
 
         // Verify that the sale has not ended
         _verifySaleHasNotEnded();

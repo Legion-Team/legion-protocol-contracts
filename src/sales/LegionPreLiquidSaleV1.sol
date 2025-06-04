@@ -698,6 +698,40 @@ contract LegionPreLiquidSaleV1 is
     }
 
     /**
+     * @notice Transfers an investor position with a signature
+     * @param from The address of the current owner
+     * @param to The address of the new owner
+     * @param positionId The ID of the position
+     * @param signature The signature authorizing the transfer
+     */
+    function transferInvestorPositionWithSignature(
+        address from,
+        address to,
+        uint256 positionId,
+        bytes calldata signature
+    )
+        external
+        virtual
+        override
+        whenNotPaused
+    {
+        // Verify that the sale is not canceled
+        _verifySaleNotCanceled();
+
+        // Verify that the refund period is over
+        _verifyRefundPeriodIsOver();
+
+        // Verify that no tokens have been supplied to the sale by the Project
+        _verifyTokensNotSupplied();
+
+        // Verify the signature for transferring the position
+        _verifyTransferSignature(from, to, positionId, s_saleConfig.legionSigner, signature);
+
+        /// Transfer the investor position to the new address
+        _transferInvestorPosition(from, to, positionId);
+    }
+
+    /**
      * @notice Syncs Legion addresses from the address registry
      * @dev Updates configuration with latest addresses; restricted to Legion
      */

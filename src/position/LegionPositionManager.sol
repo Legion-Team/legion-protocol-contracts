@@ -16,6 +16,8 @@ pragma solidity 0.8.29;
 // If you find a bug, please contact security[at]legion.cc
 // We will pay a fair bounty for any issue that puts users' funds at risk.
 
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { Errors } from "../utils/Errors.sol";
 
@@ -29,6 +31,8 @@ import { ILegionPositionManager } from "../interfaces/position/ILegionPositionMa
  * @dev Abstract contract implementing ILegionPositionManager; handles investor positions
  */
 abstract contract LegionPositionManager is ILegionPositionManager, ERC5192 {
+    using ECDSA for bytes32;
+    using MessageHashUtils for bytes32;
     using Strings for uint256;
 
     /**
@@ -72,6 +76,22 @@ abstract contract LegionPositionManager is ILegionPositionManager, ERC5192 {
      * @dev This function needs to be implemented in the derived contract
      */
     function transferInvestorPosition(address from, address to, uint256 positionId) external virtual;
+
+    /**
+     * @notice Transfers an investor position with a signature
+     * @param from The address of the current owner
+     * @param to The address of the new owner
+     * @param positionId The ID of the position
+     * @param signature The signature authorizing the transfer
+     */
+    function transferInvestorPositionWithSignature(
+        address from,
+        address to,
+        uint256 positionId,
+        bytes calldata signature
+    )
+        external
+        virtual;
 
     /**
      * @inheritdoc ERC5192
@@ -160,5 +180,31 @@ abstract contract LegionPositionManager is ILegionPositionManager, ERC5192 {
      */
     function _verifyPositionExists(uint256 positionId) internal pure {
         if (positionId == 0) revert Errors.LegionSale__InvestorPostionDoesNotExist();
+    }
+
+    /**
+     * @notice Verifies that a transfer signature is valid
+     * @dev Virtual function validating transfer signature authenticity
+     * @param _from Address of the current owner
+     * @param _to Address of the new owner
+     * @param _positionId ID of the position being transferred
+     * @param _signature Signature authorizing the transfer
+     */
+    function _verifyTransferSignature(
+        address _from,
+        address _to,
+        uint256 _positionId,
+        address _signer,
+        bytes memory _signature
+    )
+        internal
+        view
+        virtual
+    {
+        bytes32 _data = keccak256(abi.encodePacked(_from, _to, _positionId, msg.sender, address(this), block.chainid))
+            .toEthSignedMessageHash();
+        if (_data.recover(_signature) != _signer) {
+            revert Errors.LegionSale__InvalidSignature(_signature);
+        }
     }
 }
