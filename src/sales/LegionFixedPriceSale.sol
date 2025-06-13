@@ -12,9 +12,6 @@ pragma solidity 0.8.29;
 //    \:\  \    \:\ \/__/     \:\/:/  /    \:\__\       \:\/:/  /       |::/  /
 //     \:\__\    \:\__\        \::/  /      \/__/        \::/  /        /:/  /
 //      \/__/     \/__/         \/__/                     \/__/         \/__/
-//
-// If you find a bug, please contact security[at]legion.cc
-// We will pay a fair bounty for any issue that puts users' funds at risk.
 
 import { SafeTransferLib } from "@solady/src/utils/SafeTransferLib.sol";
 
@@ -22,15 +19,15 @@ import { Errors } from "../utils/Errors.sol";
 
 import { ILegionFixedPriceSale } from "../interfaces/sales/ILegionFixedPriceSale.sol";
 
-import { LegionSale } from "./LegionSale.sol";
+import { LegionAbstractSale } from "./LegionAbstractSale.sol";
 
 /**
  * @title Legion Fixed Price Sale
  * @author Legion
  * @notice A contract used to execute fixed-price sales of ERC20 tokens after TGE
- * @dev Inherits from LegionSale and implements ILegionFixedPriceSale for fixed-price token sales
+ * @dev Inherits from LegionAbstractSale and implements ILegionFixedPriceSale for fixed-price token sales
  */
-contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
+contract LegionFixedPriceSale is LegionAbstractSale, ILegionFixedPriceSale {
     /*//////////////////////////////////////////////////////////////////////////
                                  STATE VARIABLES
     //////////////////////////////////////////////////////////////////////////*/

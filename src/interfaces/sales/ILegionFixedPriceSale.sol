@@ -12,19 +12,16 @@ pragma solidity 0.8.29;
 //    \:\  \    \:\ \/__/     \:\/:/  /    \:\__\       \:\/:/  /       |::/  /
 //     \:\__\    \:\__\        \::/  /      \/__/        \::/  /        /:/  /
 //      \/__/     \/__/         \/__/                     \/__/         \/__/
-//
-// If you find a bug, please contact security[at]legion.cc
-// We will pay a fair bounty for any issue that puts users' funds at risk.
 
-import { ILegionSale } from "./ILegionSale.sol";
+import { ILegionAbstractSale } from "./ILegionAbstractSale.sol";
 
 /**
  * @title ILegionFixedPriceSale
  * @author Legion
  * @notice Interface for managing fixed-price sales of ERC20 tokens in the Legion Protocol
- * @dev Extends ILegionSale with fixed-price sale specific functionality and events
+ * @dev Extends ILegionAbstractSale with fixed-price sale specific functionality and events
  */
-interface ILegionFixedPriceSale is ILegionSale {
+interface ILegionFixedPriceSale is ILegionAbstractSale {
     /// @notice Struct defining the initialization parameters for a fixed-price sale
     struct FixedPriceSaleInitializationParams {
         /// @notice Duration of the prefund period in seconds

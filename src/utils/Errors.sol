@@ -12,9 +12,6 @@ pragma solidity 0.8.29;
 //    \:\  \    \:\ \/__/     \:\/:/  /    \:\__\       \:\/:/  /       |::/  /
 //     \:\__\    \:\__\        \::/  /      \/__/        \::/  /        /:/  /
 //      \/__/     \/__/         \/__/                     \/__/         \/__/
-//
-// If you find a bug, please contact security[at]legion.cc
-// We will pay a fair bounty for any issue that puts users' funds at risk.
 
 /**
  * @title Legion Errors Library
@@ -122,13 +119,6 @@ library Errors {
     error LegionSale__InvalidPositionAmount(address investor);
 
     /**
-     * @notice Thrown when an invalid amount is requested for refund
-     * @dev Indicates the refund amount is zero or exceeds invested capital
-     * @param amount Amount of tokens requested for withdrawal
-     */
-    error LegionSale__InvalidRefundAmount(uint256 amount);
-
-    /**
      * @notice Thrown when an invalid salt is used to encrypt a bid
      * @dev Indicates the salt does not match the expected value (e.g., investor address)
      */
@@ -171,11 +161,11 @@ library Errors {
     error LegionSale__InvestorHasRefunded(address investor);
 
     /**
-     * @notice Thrown when an investor has not invested any capital
-     * @dev Indicates no capital is available for refund or withdrawal
-     * @param investor Address of the investor with no investment
+     * @notice Thrown when a position which has refunded or settled is attempted to be transferred
+     * @dev Indicates the position is no longer active for transfer
+     * @param positionId ID of the position that cannot be transferred
      */
-    error LegionSale__NoCapitalInvested(address investor);
+    error LegionSale__UnableToTransferInvestorPosition(uint256 positionId);
 
     /**
      * @notice Thrown when a function is not called by the Legion address
@@ -206,7 +196,7 @@ library Errors {
      * @notice Thrown when a position does not exist
      * @dev Indicates an attempt to access a non-existent position
      */
-    error LegionSale__InvestorPostionDoesNotExist();
+    error LegionSale__InvestorPositionDoesNotExist();
 
     /**
      * @notice Thrown when capital is pledged during the pre-fund allocation period

@@ -12,9 +12,6 @@ pragma solidity 0.8.29;
 //    \:\  \    \:\ \/__/     \:\/:/  /    \:\__\       \:\/:/  /       |::/  /
 //     \:\__\    \:\__\        \::/  /      \/__/        \::/  /        /:/  /
 //      \/__/     \/__/         \/__/                     \/__/         \/__/
-//
-// If you find a bug, please contact security[at]legion.cc
-// We will pay a fair bounty for any issue that puts users' funds at risk.
 
 /**
  * @title ILegionCapitalRaise
@@ -208,15 +205,12 @@ interface ILegionCapitalRaise {
         /// @notice Token allocation rate as percentage of total supply (18 decimals)
         /// @dev Cached allocation rate
         uint256 cachedTokenAllocationRate;
+        /// @notice Flag indicating if investor has claimed excess capital
+        /// @dev Excess claim status
+        bool hasClaimedExcess;
         /// @notice Flag indicating if investor has refunded
         /// @dev Refund status
         bool hasRefunded;
-        /// @notice Flag indicating if investor has settled tokens
-        /// @dev Settlement status
-        bool hasSettled;
-        /// @notice Address of the investor's vesting contract
-        /// @dev Vesting contract address
-        address vestingAddress;
     }
 
     /// @notice Enum defining possible actions during the capital raise
@@ -274,7 +268,7 @@ interface ILegionCapitalRaise {
      * @notice Cancels the pre-liquid capital raise
      * @dev Must be restricted to Project; handles cancellation logic
      */
-    function cancelRaise() external;
+    function cancelSale() external;
 
     /**
      * @notice Withdraws invested capital if the capital raise is canceled
@@ -302,7 +296,7 @@ interface ILegionCapitalRaise {
      * @notice Ends the pre-liquid capital raise manually
      * @dev Must set capital raise end times and status
      */
-    function endRaise() external;
+    function endSale() external;
 
     /**
      * @notice Publishes the total capital raised
@@ -321,27 +315,27 @@ interface ILegionCapitalRaise {
      * @notice Pauses the pre-liquid capital raise
      * @dev Must halt capital raise operations
      */
-    function pauseRaise() external;
+    function pauseSale() external;
 
     /**
      * @notice Unpauses the pre-liquid capital raise
      * @dev Must resume capital raise operations
      */
-    function unpauseRaise() external;
+    function unpauseSale() external;
 
     /**
      * @notice Retrieves the current capital raise configuration
      * @dev Must return the CapitalRaiseConfig struct
      * @return CapitalRaiseConfig memory Struct containing capital raise configuration
      */
-    function raiseConfiguration() external view returns (CapitalRaiseConfig memory);
+    function saleConfiguration() external view returns (CapitalRaiseConfig memory);
 
     /**
      * @notice Retrieves the current capital raise status
      * @dev Must return the CapitalRaiseStatus struct
      * @return CapitalRaiseStatus memory Struct containing capital raise status
      */
-    function raiseStatusDetails() external view returns (CapitalRaiseStatus memory);
+    function saleStatusDetails() external view returns (CapitalRaiseStatus memory);
 
     /**
      * @notice Retrieves an investor's position details

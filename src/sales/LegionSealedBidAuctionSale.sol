@@ -12,27 +12,24 @@ pragma solidity 0.8.29;
 //    \:\  \    \:\ \/__/     \:\/:/  /    \:\__\       \:\/:/  /       |::/  /
 //     \:\__\    \:\__\        \::/  /      \/__/        \::/  /        /:/  /
 //      \/__/     \/__/         \/__/                     \/__/         \/__/
-//
-// If you find a bug, please contact security[at]legion.cc
-// We will pay a fair bounty for any issue that puts users' funds at risk.
 
 import { SafeTransferLib } from "@solady/src/utils/SafeTransferLib.sol";
 
 import { ECIES, Point } from "../lib/ECIES.sol";
 import { Errors } from "../utils/Errors.sol";
 
-import { ILegionSale } from "../interfaces/sales/ILegionSale.sol";
+import { ILegionAbstractSale } from "../interfaces/sales/ILegionAbstractSale.sol";
 import { ILegionSealedBidAuctionSale } from "../interfaces/sales/ILegionSealedBidAuctionSale.sol";
 
-import { LegionSale } from "./LegionSale.sol";
+import { LegionAbstractSale } from "./LegionAbstractSale.sol";
 
 /**
  * @title Legion Sealed Bid Auction
  * @author Legion
  * @notice A contract used to execute sealed bid auctions of ERC20 tokens after TGE
- * @dev Inherits from LegionSale and implements ILegionSealedBidAuctionSale with encryption features
+ * @dev Inherits from LegionAbstractSale and implements ILegionSealedBidAuctionSale with encryption features
  */
-contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
+contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAuctionSale {
     /*//////////////////////////////////////////////////////////////////////////
                                  STATE VARIABLES
     //////////////////////////////////////////////////////////////////////////*/
@@ -226,9 +223,9 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
 
     /**
      * @notice Cancels the ongoing sealed bid auction sale
-     * @dev Overrides LegionSale; restricted to Project admin with additional lock check
+     * @dev Overrides LegionAbstractSale; restricted to Project admin with additional lock check
      */
-    function cancelSale() public override(ILegionSale, LegionSale) onlyProject whenNotPaused {
+    function cancelSale() public override(ILegionAbstractSale, LegionAbstractSale) onlyProject whenNotPaused {
         // Call parent method
         super.cancelSale();
 

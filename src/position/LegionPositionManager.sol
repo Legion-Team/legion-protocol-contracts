@@ -12,9 +12,6 @@ pragma solidity 0.8.29;
 //    \:\  \    \:\ \/__/     \:\/:/  /    \:\__\       \:\/:/  /       |::/  /
 //     \:\__\    \:\__\        \::/  /      \/__/        \::/  /        /:/  /
 //      \/__/     \/__/         \/__/                     \/__/         \/__/
-//
-// If you find a bug, please contact security[at]legion.cc
-// We will pay a fair bounty for any issue that puts users' funds at risk.
 
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
@@ -38,7 +35,7 @@ abstract contract LegionPositionManager is ILegionPositionManager, ERC5192 {
     /**
      * @dev Configuration for the Legion Position Manager
      */
-    LegionPositionManagerConfig public s_positionManagerconfig;
+    LegionPositionManagerConfig public s_positionManagerConfig;
 
     /**
      * @notice Mapping of investor addresses to their position IDs
@@ -50,21 +47,21 @@ abstract contract LegionPositionManager is ILegionPositionManager, ERC5192 {
      * @inheritdoc ERC5192
      */
     function name() public view override returns (string memory) {
-        return s_positionManagerconfig.name;
+        return s_positionManagerConfig.name;
     }
 
     /**
      * @inheritdoc ERC5192
      */
     function symbol() public view override returns (string memory) {
-        return s_positionManagerconfig.symbol;
+        return s_positionManagerConfig.symbol;
     }
 
     /**
      * @inheritdoc ERC5192
      */
     function tokenURI(uint256 id) public view override returns (string memory) {
-        string memory baseURI = s_positionManagerconfig.baseURI;
+        string memory baseURI = s_positionManagerConfig.baseURI;
         return bytes(baseURI).length > 0 ? string.concat(baseURI, id.toString()) : "";
     }
 
@@ -78,13 +75,13 @@ abstract contract LegionPositionManager is ILegionPositionManager, ERC5192 {
     function transferInvestorPosition(address from, address to, uint256 positionId) external virtual;
 
     /**
-     * @notice Transfers an investor position with a signature
+     * @notice Transfers an investor position with authorization
      * @param from The address of the current owner
      * @param to The address of the new owner
      * @param positionId The ID of the position
      * @param signature The signature authorizing the transfer
      */
-    function transferInvestorPositionWithSignature(
+    function transferInvestorPositionWithAuthorization(
         address from,
         address to,
         uint256 positionId,
@@ -99,14 +96,6 @@ abstract contract LegionPositionManager is ILegionPositionManager, ERC5192 {
     function _afterTokenTransfer(address from, address to, uint256 id) internal override {
         // Check if this is not a new mint or burn
         if (from != address(0) && to != address(0)) {
-            // Get the position ID of the sender
-            uint256 positionId = s_investorPositionIds[from];
-
-            // If the position ID is not assigned to the sender, revert
-            if (positionId != id) {
-                revert NotOwnerNorApproved();
-            }
-
             // Delete the assigned position ID from the sender
             delete s_investorPositionIds[from];
 
@@ -138,10 +127,10 @@ abstract contract LegionPositionManager is ILegionPositionManager, ERC5192 {
      */
     function _createInvestorPosition(address investor) internal returns (uint256 postionId) {
         // Increment the last position ID
-        ++s_positionManagerconfig.lastPositionId;
+        ++s_positionManagerConfig.lastPositionId;
 
         // Assign the new position ID to the investor
-        postionId = s_positionManagerconfig.lastPositionId;
+        postionId = s_positionManagerConfig.lastPositionId;
 
         // Map the investor address to the position ID
         s_investorPositionIds[investor] = postionId;
@@ -179,7 +168,7 @@ abstract contract LegionPositionManager is ILegionPositionManager, ERC5192 {
      * @dev Reverts if position does not exist
      */
     function _verifyPositionExists(uint256 positionId) internal pure {
-        if (positionId == 0) revert Errors.LegionSale__InvestorPostionDoesNotExist();
+        if (positionId == 0) revert Errors.LegionSale__InvestorPositionDoesNotExist();
     }
 
     /**

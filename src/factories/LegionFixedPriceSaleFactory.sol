@@ -12,16 +12,13 @@ pragma solidity 0.8.29;
 //    \:\  \    \:\ \/__/     \:\/:/  /    \:\__\       \:\/:/  /       |::/  /
 //     \:\__\    \:\__\        \::/  /      \/__/        \::/  /        /:/  /
 //      \/__/     \/__/         \/__/                     \/__/         \/__/
-//
-// If you find a bug, please contact security[at]legion.cc
-// We will pay a fair bounty for any issue that puts users' funds at risk.
 
 import { LibClone } from "@solady/src/utils/LibClone.sol";
 import { Ownable } from "@solady/src/auth/Ownable.sol";
 
 import { ILegionFixedPriceSale } from "../interfaces/sales/ILegionFixedPriceSale.sol";
 import { ILegionFixedPriceSaleFactory } from "../interfaces/factories/ILegionFixedPriceSaleFactory.sol";
-import { ILegionSale } from "../interfaces/sales/ILegionSale.sol";
+import { ILegionAbstractSale } from "../interfaces/sales/ILegionAbstractSale.sol";
 
 import { LegionFixedPriceSale } from "../sales/LegionFixedPriceSale.sol";
 
@@ -67,7 +64,7 @@ contract LegionFixedPriceSaleFactory is ILegionFixedPriceSaleFactory, Ownable {
      * @return fixedPriceSaleInstance Address of the newly deployed and initialized FixedPriceSale instance
      */
     function createFixedPriceSale(
-        ILegionSale.LegionSaleInitializationParams memory saleInitParams,
+        ILegionAbstractSale.LegionSaleInitializationParams memory saleInitParams,
         ILegionFixedPriceSale.FixedPriceSaleInitializationParams memory fixedPriceSaleInitParams
     )
         external
