@@ -12,9 +12,6 @@ pragma solidity 0.8.29;
 //    \:\  \    \:\ \/__/     \:\/:/  /    \:\__\       \:\/:/  /       |::/  /
 //     \:\__\    \:\__\        \::/  /      \/__/        \::/  /        /:/  /
 //      \/__/     \/__/         \/__/                     \/__/         \/__/
-//
-// If you find a bug, please contact security[at]legion.cc
-// We will pay a fair bounty for any issue that puts users' funds at risk.
 
 import { LibClone } from "@solady/src/utils/LibClone.sol";
 import { Ownable } from "@solady/src/auth/Ownable.sol";
@@ -27,7 +24,7 @@ import { LegionTokenDistributor } from "../distribution/LegionTokenDistributor.s
 /**
  * @title Legion Token Distributor Factory
  * @author Legion
- * @notice A factory contract for deploying proxy instances of Legion Token Distributor contracts
+ * @notice A factory contract for deploying proxy instances of Legion token distributor contracts
  * @dev Uses the clone pattern to create new instances of LegionTokenDistributor contracts
  */
 contract LegionTokenDistributorFactory is ILegionTokenDistributorFactory, Ownable {
@@ -60,7 +57,7 @@ contract LegionTokenDistributorFactory is ILegionTokenDistributorFactory, Ownabl
 
     /**
      * @notice Deploys a new LegionTokenDistributor contract instance
-     * @dev Must be implemented to create and initialize a new token distributor contract
+     * @dev Clones the template contract and initializes it with provided parameters; restricted to owner
      * @param distributorInitParams Struct containing Legion Token Distributor initialization parameters
      * @return distributorInstance Address of the newly deployed LegionTokenDistributor instance
      */
@@ -77,7 +74,7 @@ contract LegionTokenDistributorFactory is ILegionTokenDistributorFactory, Ownabl
         // Emit NewTokenDistributorCreated
         emit NewTokenDistributorCreated(distributorInstance, distributorInitParams);
 
-        // Initialize the LegionFixedPriceSale with the provided configuration
+        // Initialize the LegionTokenDistributor with the provided configuration
         LegionTokenDistributor(distributorInstance).initialize(distributorInitParams);
     }
 }

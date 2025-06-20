@@ -12,19 +12,16 @@ pragma solidity 0.8.29;
 //    \:\  \    \:\ \/__/     \:\/:/  /    \:\__\       \:\/:/  /       |::/  /
 //     \:\__\    \:\__\        \::/  /      \/__/        \::/  /        /:/  /
 //      \/__/     \/__/         \/__/                     \/__/         \/__/
-//
-// If you find a bug, please contact security[at]legion.cc
-// We will pay a fair bounty for any issue that puts users' funds at risk.
 
-import { ILegionSale } from "./ILegionSale.sol";
+import { ILegionAbstractSale } from "./ILegionAbstractSale.sol";
 
 /**
  * @title ILegionFixedPriceSale
  * @author Legion
  * @notice Interface for managing fixed-price sales of ERC20 tokens in the Legion Protocol
- * @dev Extends ILegionSale with fixed-price sale specific functionality and events
+ * @dev Extends ILegionAbstractSale with fixed-price sale specific functionality and events
  */
-interface ILegionFixedPriceSale is ILegionSale {
+interface ILegionFixedPriceSale is ILegionAbstractSale {
     /// @notice Struct defining the initialization parameters for a fixed-price sale
     struct FixedPriceSaleInitializationParams {
         /// @notice Duration of the prefund period in seconds
@@ -57,9 +54,9 @@ interface ILegionFixedPriceSale is ILegionSale {
      * @param amount Amount of capital invested (in bid tokens)
      * @param investor Address of the investor
      * @param isPrefund Indicates if investment occurred before sale start
-     * @param investTimestamp Unix timestamp (in seconds) of the investment
+     * @param positionId Unique identifier for the investment position
      */
-    event CapitalInvested(uint256 amount, address investor, bool isPrefund, uint256 investTimestamp);
+    event CapitalInvested(uint256 amount, address investor, bool isPrefund, uint256 positionId);
 
     /**
      * @notice Emitted when sale results are published by the Legion admin

@@ -12,9 +12,6 @@ pragma solidity 0.8.29;
 //    \:\  \    \:\ \/__/     \:\/:/  /    \:\__\       \:\/:/  /       |::/  /
 //     \:\__\    \:\__\        \::/  /      \/__/        \::/  /        /:/  /
 //      \/__/     \/__/         \/__/                     \/__/         \/__/
-//
-// If you find a bug, please contact security[at]legion.cc
-// We will pay a fair bounty for any issue that puts users' funds at risk.
 
 import { LibClone } from "@solady/src/utils/LibClone.sol";
 import { Ownable } from "@solady/src/auth/Ownable.sol";
@@ -27,7 +24,7 @@ import { LegionCapitalRaise } from "../raise/LegionCapitalRaise.sol";
 /**
  * @title Legion Capital Raise Factory
  * @author Legion
- * @notice A factory contract for deploying proxy instances of Legion pre-liquid capital raise contracts
+ * @notice A factory contract for deploying proxy instances of Legion capital raise contracts
  * @dev Utilizes the clone pattern to create new instances of LegionCapitalRaise contracts
  */
 contract LegionCapitalRaiseFactory is ILegionCapitalRaiseFactory, Ownable {
@@ -61,7 +58,7 @@ contract LegionCapitalRaiseFactory is ILegionCapitalRaiseFactory, Ownable {
     /**
      * @notice Deploys a new LegionCapitalRaise contract instance
      * @dev Clones the template contract and initializes it with provided parameters; restricted to owner
-     * @param capitalRaiseInitParams Calldata struct containing pre-liquid capital raise initialization parameters
+     * @param capitalRaiseInitParams Calldata struct containing capital raise initialization parameters
      * @return capitalRaiseInstance Address of the newly deployed and initialized LegionCapitalRaise instance
      */
     function createCapitalRaise(LegionCapitalRaise.CapitalRaiseInitializationParams calldata capitalRaiseInitParams)

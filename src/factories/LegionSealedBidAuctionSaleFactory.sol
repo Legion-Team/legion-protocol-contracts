@@ -12,14 +12,11 @@ pragma solidity 0.8.29;
 //    \:\  \    \:\ \/__/     \:\/:/  /    \:\__\       \:\/:/  /       |::/  /
 //     \:\__\    \:\__\        \::/  /      \/__/        \::/  /        /:/  /
 //      \/__/     \/__/         \/__/                     \/__/         \/__/
-//
-// If you find a bug, please contact security[at]legion.cc
-// We will pay a fair bounty for any issue that puts users' funds at risk.
 
 import { LibClone } from "@solady/src/utils/LibClone.sol";
 import { Ownable } from "@solady/src/auth/Ownable.sol";
 
-import { ILegionSale } from "../interfaces/sales/ILegionSale.sol";
+import { ILegionAbstractSale } from "../interfaces/sales/ILegionAbstractSale.sol";
 import { ILegionSealedBidAuctionSale } from "../interfaces/sales/ILegionSealedBidAuctionSale.sol";
 import { ILegionSealedBidAuctionSaleFactory } from "../interfaces/factories/ILegionSealedBidAuctionSaleFactory.sol";
 
@@ -65,10 +62,11 @@ contract LegionSealedBidAuctionSaleFactory is ILegionSealedBidAuctionSaleFactory
      * @param saleInitParams Struct containing Legion sale initialization parameters
      * @param sealedBidAuctionSaleInitParams Struct containing sealed bid auction sale specific initialization
      * parameters
-     * @return sealedBidAuctionInstance Address of the newly deployed and initialized SealedBidAuction instance
+     * @return sealedBidAuctionInstance Address of the newly deployed and initialized LegionSealedBidAuctionSale
+     * instance
      */
-    function createSealedBidAuction(
-        ILegionSale.LegionSaleInitializationParams memory saleInitParams,
+    function createSealedBidAuctionSale(
+        ILegionAbstractSale.LegionSaleInitializationParams memory saleInitParams,
         ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams memory sealedBidAuctionSaleInitParams
     )
         external
@@ -78,8 +76,8 @@ contract LegionSealedBidAuctionSaleFactory is ILegionSealedBidAuctionSaleFactory
         // Deploy a LegionSealedBidAuctionSale instance
         sealedBidAuctionInstance = payable(i_sealedBidAuctionTemplate.clone());
 
-        // Emit NewSealedBidAuctionCreated
-        emit NewSealedBidAuctionCreated(sealedBidAuctionInstance, saleInitParams, sealedBidAuctionSaleInitParams);
+        // Emit NewSealedBidAuctionSaleCreated
+        emit NewSealedBidAuctionSaleCreated(sealedBidAuctionInstance, saleInitParams, sealedBidAuctionSaleInitParams);
 
         // Initialize the LegionSealedBidAuctionSale with the provided configuration
         LegionSealedBidAuctionSale(sealedBidAuctionInstance).initialize(saleInitParams, sealedBidAuctionSaleInitParams);

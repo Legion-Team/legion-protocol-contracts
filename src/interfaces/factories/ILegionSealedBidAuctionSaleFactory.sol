@@ -12,11 +12,8 @@ pragma solidity 0.8.29;
 //    \:\  \    \:\ \/__/     \:\/:/  /    \:\__\       \:\/:/  /       |::/  /
 //     \:\__\    \:\__\        \::/  /      \/__/        \::/  /        /:/  /
 //      \/__/     \/__/         \/__/                     \/__/         \/__/
-//
-// If you find a bug, please contact security[at]legion.cc
-// We will pay a fair bounty for any issue that puts users' funds at risk.
 
-import { ILegionSale } from "../sales/ILegionSale.sol";
+import { ILegionAbstractSale } from "../sales/ILegionAbstractSale.sol";
 import { ILegionSealedBidAuctionSale } from "../sales/ILegionSealedBidAuctionSale.sol";
 
 /**
@@ -34,9 +31,9 @@ interface ILegionSealedBidAuctionSaleFactory {
      * @param sealedBidAuctionSaleInitParams Struct containing sealed bid auction sale specific initialization
      * parameters
      */
-    event NewSealedBidAuctionCreated(
+    event NewSealedBidAuctionSaleCreated(
         address saleInstance,
-        ILegionSale.LegionSaleInitializationParams saleInitParams,
+        ILegionAbstractSale.LegionSaleInitializationParams saleInitParams,
         ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams sealedBidAuctionSaleInitParams
     );
 
@@ -48,8 +45,8 @@ interface ILegionSealedBidAuctionSaleFactory {
      * parameters
      * @return sealedBidAuctionInstance Address of the newly deployed SealedBidAuction instance
      */
-    function createSealedBidAuction(
-        ILegionSale.LegionSaleInitializationParams memory saleInitParams,
+    function createSealedBidAuctionSale(
+        ILegionAbstractSale.LegionSaleInitializationParams memory saleInitParams,
         ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams memory sealedBidAuctionSaleInitParams
     )
         external

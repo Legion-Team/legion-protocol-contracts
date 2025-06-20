@@ -12,27 +12,24 @@ pragma solidity 0.8.29;
 //    \:\  \    \:\ \/__/     \:\/:/  /    \:\__\       \:\/:/  /       |::/  /
 //     \:\__\    \:\__\        \::/  /      \/__/        \::/  /        /:/  /
 //      \/__/     \/__/         \/__/                     \/__/         \/__/
-//
-// If you find a bug, please contact security[at]legion.cc
-// We will pay a fair bounty for any issue that puts users' funds at risk.
 
 import { SafeTransferLib } from "@solady/src/utils/SafeTransferLib.sol";
 
 import { ECIES, Point } from "../lib/ECIES.sol";
 import { Errors } from "../utils/Errors.sol";
 
-import { ILegionSale } from "../interfaces/sales/ILegionSale.sol";
+import { ILegionAbstractSale } from "../interfaces/sales/ILegionAbstractSale.sol";
 import { ILegionSealedBidAuctionSale } from "../interfaces/sales/ILegionSealedBidAuctionSale.sol";
 
-import { LegionSale } from "./LegionSale.sol";
+import { LegionAbstractSale } from "./LegionAbstractSale.sol";
 
 /**
  * @title Legion Sealed Bid Auction
  * @author Legion
  * @notice A contract used to execute sealed bid auctions of ERC20 tokens after TGE
- * @dev Inherits from LegionSale and implements ILegionSealedBidAuctionSale with encryption features
+ * @dev Inherits from LegionAbstractSale and implements ILegionSealedBidAuctionSale with encryption features
  */
-contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
+contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAuctionSale {
     /*//////////////////////////////////////////////////////////////////////////
                                  STATE VARIABLES
     //////////////////////////////////////////////////////////////////////////*/
@@ -80,13 +77,19 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
     /**
      * @notice Allows an investor to invest in the sealed bid auction
      * @dev Verifies conditions, handles encrypted bids, and transfers capital
-     * @param amount Amount of capital (in bid tokens) to invest
+     * @param amount Amount of capital to invest
      * @param sealedBid Encoded sealed bid data (encrypted amount out, salt, public key)
      * @param signature Legion signature for investor verification
      */
     function invest(uint256 amount, bytes calldata sealedBid, bytes memory signature) external whenNotPaused {
-        // Verify that the investor is allowed to pledge capital
-        _verifyLegionSignature(signature);
+        // Check if the investor has already invested
+        // If not, create a new investor position
+        uint256 positionId = _getInvestorPositionId(msg.sender) == 0
+            ? _createInvestorPosition(msg.sender)
+            : s_investorPositionIds[msg.sender];
+
+        // Verify that the investor is allowed to invest capital
+        _verifyInvestSignature(signature);
 
         // Decode the sealed bid data
         (uint256 encryptedAmountOut, uint256 salt, Point memory sealedBidPublicKey) =
@@ -104,25 +107,25 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
         // Verify that the sale is not canceled
         _verifySaleNotCanceled();
 
-        // Verify that the amount pledged is more than the minimum required
+        // Verify that the amount invested is more than the minimum required
         _verifyMinimumInvestAmount(amount);
 
         // Verify that the investor has not refunded
-        _verifyHasNotRefunded();
+        _verifyHasNotRefunded(positionId);
 
         // Verify that the investor has not claimed excess capital
-        _verifyHasNotClaimedExcess();
+        _verifyHasNotClaimedExcess(positionId);
 
-        // Increment total capital pledged from investors
+        // Increment total capital invested from all investors
         s_saleStatus.totalCapitalInvested += amount;
 
-        // Increment total pledged capital for the investor
-        s_investorPositions[msg.sender].investedCapital += amount;
+        // Increment total invested capital for the investor
+        s_investorPositions[positionId].investedCapital += amount;
 
         // Emit CapitalInvested
-        emit CapitalInvested(amount, encryptedAmountOut, salt, msg.sender, block.timestamp);
+        emit CapitalInvested(amount, encryptedAmountOut, salt, msg.sender, positionId);
 
-        // Transfer the pledged capital to the contract
+        // Transfer the invested capital to the contract
         SafeTransferLib.safeTransferFrom(s_addressConfig.bidToken, msg.sender, address(this), amount);
     }
 
@@ -220,9 +223,9 @@ contract LegionSealedBidAuctionSale is LegionSale, ILegionSealedBidAuctionSale {
 
     /**
      * @notice Cancels the ongoing sealed bid auction sale
-     * @dev Overrides LegionSale; restricted to Project admin with additional lock check
+     * @dev Overrides LegionAbstractSale; restricted to Project admin with additional lock check
      */
-    function cancelSale() public override(ILegionSale, LegionSale) onlyProject whenNotPaused {
+    function cancelSale() public override(ILegionAbstractSale, LegionAbstractSale) onlyProject whenNotPaused {
         // Call parent method
         super.cancelSale();
 

@@ -12,9 +12,6 @@ pragma solidity 0.8.29;
 //    \:\  \    \:\ \/__/     \:\/:/  /    \:\__\       \:\/:/  /       |::/  /
 //     \:\__\    \:\__\        \::/  /      \/__/        \::/  /        /:/  /
 //      \/__/     \/__/         \/__/                     \/__/         \/__/
-//
-// If you find a bug, please contact security[at]legion.cc
-// We will pay a fair bounty for any issue that puts users' funds at risk.
 
 import { SafeTransferLib } from "@solady/src/utils/SafeTransferLib.sol";
 
@@ -22,15 +19,15 @@ import { Errors } from "../utils/Errors.sol";
 
 import { ILegionFixedPriceSale } from "../interfaces/sales/ILegionFixedPriceSale.sol";
 
-import { LegionSale } from "./LegionSale.sol";
+import { LegionAbstractSale } from "./LegionAbstractSale.sol";
 
 /**
  * @title Legion Fixed Price Sale
  * @author Legion
  * @notice A contract used to execute fixed-price sales of ERC20 tokens after TGE
- * @dev Inherits from LegionSale and implements ILegionFixedPriceSale for fixed-price token sales
+ * @dev Inherits from LegionAbstractSale and implements ILegionFixedPriceSale for fixed-price token sales
  */
-contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
+contract LegionFixedPriceSale is LegionAbstractSale, ILegionFixedPriceSale {
     /*//////////////////////////////////////////////////////////////////////////
                                  STATE VARIABLES
     //////////////////////////////////////////////////////////////////////////*/
@@ -83,13 +80,19 @@ contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
 
     /**
      * @notice Allows an investor to contribute capital to the fixed-price sale
-     * @dev Verifies multiple conditions before accepting investment; uses SafeTransferLib for token transfer
-     * @param amount Amount of capital (in bid tokens) to invest
+     * @dev Verifies multiple conditions before accepting investment
+     * @param amount Amount of capital to invest
      * @param signature Legion signature for investor verification
      */
     function invest(uint256 amount, bytes memory signature) external whenNotPaused {
+        // Check if the investor has already invested
+        // If not, create a new investor position
+        uint256 positionId = _getInvestorPositionId(msg.sender) == 0
+            ? _createInvestorPosition(msg.sender)
+            : s_investorPositionIds[msg.sender];
+
         // Verify that the investor is allowed to invest capital
-        _verifyLegionSignature(signature);
+        _verifyInvestSignature(signature);
 
         // Verify that invest is not during the prefund allocation period
         _verifyNotPrefundAllocationPeriod();
@@ -104,22 +107,22 @@ contract LegionFixedPriceSale is LegionSale, ILegionFixedPriceSale {
         _verifyMinimumInvestAmount(amount);
 
         // Verify that the investor has not refunded
-        _verifyHasNotRefunded();
+        _verifyHasNotRefunded(positionId);
 
         // Verify that the investor has not claimed excess capital
-        _verifyHasNotClaimedExcess();
+        _verifyHasNotClaimedExcess(positionId);
 
         // Increment total capital invested from investors
         s_saleStatus.totalCapitalInvested += amount;
 
         // Increment total invested capital for the investor
-        s_investorPositions[msg.sender].investedCapital += amount;
+        s_investorPositions[positionId].investedCapital += amount;
 
         // Flag if capital is invested during the prefund period
         bool isPrefund = _isPrefund();
 
         // Emit successfully CapitalInvested
-        emit CapitalInvested(amount, msg.sender, isPrefund, block.timestamp);
+        emit CapitalInvested(amount, msg.sender, isPrefund, positionId);
 
         // Transfer the invested capital to the contract
         SafeTransferLib.safeTransferFrom(s_addressConfig.bidToken, msg.sender, address(this), amount);

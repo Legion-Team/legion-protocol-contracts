@@ -12,9 +12,6 @@ pragma solidity 0.8.29;
 //    \:\  \    \:\ \/__/     \:\/:/  /    \:\__\       \:\/:/  /       |::/  /
 //     \:\__\    \:\__\        \::/  /      \/__/        \::/  /        /:/  /
 //      \/__/     \/__/         \/__/                     \/__/         \/__/
-//
-// If you find a bug, please contact security[at]legion.cc
-// We will pay a fair bounty for any issue that puts users' funds at risk.
 
 /**
  * @title ILegionCapitalRaise
@@ -31,8 +28,11 @@ interface ILegionCapitalRaise {
      * @param investor Address of the investor
      * @param tokenAllocationRate Token allocation percentage (18 decimals)
      * @param investTimestamp Unix timestamp (in seconds) of the investment
+     * @param positionId Unique identifier for the investor's position
      */
-    event CapitalInvested(uint256 amount, address investor, uint256 tokenAllocationRate, uint256 investTimestamp);
+    event CapitalInvested(
+        uint256 amount, address investor, uint256 tokenAllocationRate, uint256 investTimestamp, uint256 positionId
+    );
 
     /**
      * @notice Emitted when excess capital is successfully withdrawn by an investor
@@ -41,9 +41,10 @@ interface ILegionCapitalRaise {
      * @param investor Address of the investor
      * @param tokenAllocationRate Token allocation percentage (18 decimals)
      * @param investTimestamp Unix timestamp (in seconds) of the withdrawal
+     * @param positionId Unique identifier for the investor's position
      */
     event ExcessCapitalWithdrawn(
-        uint256 amount, address investor, uint256 tokenAllocationRate, uint256 investTimestamp
+        uint256 amount, address investor, uint256 tokenAllocationRate, uint256 investTimestamp, uint256 positionId
     );
 
     /**
@@ -51,16 +52,18 @@ interface ILegionCapitalRaise {
      * @dev Logs refund details during the refund period
      * @param amount Amount of capital refunded
      * @param investor Address of the investor receiving the refund
+     * @param positionId Unique identifier for the investor's position
      */
-    event CapitalRefunded(uint256 amount, address investor);
+    event CapitalRefunded(uint256 amount, address investor, uint256 positionId);
 
     /**
      * @notice Emitted when capital is refunded after capital raise cancellation
      * @dev Logs refund details post-cancellation
      * @param amount Amount of capital refunded
      * @param investor Address of the investor receiving the refund
+     * @param positionId Unique identifier for the investor's position
      */
-    event CapitalRefundedAfterCancel(uint256 amount, address investor);
+    event CapitalRefundedAfterCancel(uint256 amount, address investor, uint256 positionId);
 
     /**
      * @notice Emitted when capital is successfully withdrawn by the Project
@@ -102,10 +105,9 @@ interface ILegionCapitalRaise {
 
     /**
      * @notice Emitted when the capital raise has ended
-     * @dev Logs the end timestamp of the capital raise
-     * @param endTime Unix timestamp (in seconds) when the capital raise ended
+     * @dev Indicates the end of the capital raise period
      */
-    event CapitalRaiseEnded(uint256 endTime);
+    event CapitalRaiseEnded();
 
     /// @notice Struct defining initialization parameters for the pre-liquid capital raise
     struct CapitalRaiseInitializationParams {
@@ -130,6 +132,15 @@ interface ILegionCapitalRaise {
         /// @notice Address of the referrer fee receiver
         /// @dev Destination for referrer fees
         address referrerFeeReceiver;
+        /// @notice Name of the pre-liquid sale soulbound token
+        /// @dev Name of the SBT representing the sale
+        string saleName;
+        /// @notice Symbol of the pre-liquid sale soulbound token
+        /// @dev Symbol of the SBT representing the sale
+        string saleSymbol;
+        /// @notice Base URI for the pre-liquid sale soulbound token
+        /// @dev URI prefix for the SBT metadata
+        string saleBaseURI;
     }
 
     /// @notice Struct containing the runtime configuration of the pre-liquid capital raise
@@ -202,15 +213,12 @@ interface ILegionCapitalRaise {
         /// @notice Token allocation rate as percentage of total supply (18 decimals)
         /// @dev Cached allocation rate
         uint256 cachedTokenAllocationRate;
+        /// @notice Flag indicating if investor has claimed excess capital
+        /// @dev Excess claim status
+        bool hasClaimedExcess;
         /// @notice Flag indicating if investor has refunded
         /// @dev Refund status
         bool hasRefunded;
-        /// @notice Flag indicating if investor has settled tokens
-        /// @dev Settlement status
-        bool hasSettled;
-        /// @notice Address of the investor's vesting contract
-        /// @dev Vesting contract address
-        address vestingAddress;
     }
 
     /// @notice Enum defining possible actions during the capital raise
@@ -268,7 +276,7 @@ interface ILegionCapitalRaise {
      * @notice Cancels the pre-liquid capital raise
      * @dev Must be restricted to Project; handles cancellation logic
      */
-    function cancelRaise() external;
+    function cancelSale() external;
 
     /**
      * @notice Withdraws invested capital if the capital raise is canceled
@@ -296,7 +304,7 @@ interface ILegionCapitalRaise {
      * @notice Ends the pre-liquid capital raise manually
      * @dev Must set capital raise end times and status
      */
-    function endRaise() external;
+    function endSale() external;
 
     /**
      * @notice Publishes the total capital raised
@@ -315,27 +323,27 @@ interface ILegionCapitalRaise {
      * @notice Pauses the pre-liquid capital raise
      * @dev Must halt capital raise operations
      */
-    function pauseRaise() external;
+    function pauseSale() external;
 
     /**
      * @notice Unpauses the pre-liquid capital raise
      * @dev Must resume capital raise operations
      */
-    function unpauseRaise() external;
+    function unpauseSale() external;
 
     /**
      * @notice Retrieves the current capital raise configuration
      * @dev Must return the CapitalRaiseConfig struct
      * @return CapitalRaiseConfig memory Struct containing capital raise configuration
      */
-    function raiseConfiguration() external view returns (CapitalRaiseConfig memory);
+    function saleConfiguration() external view returns (CapitalRaiseConfig memory);
 
     /**
      * @notice Retrieves the current capital raise status
      * @dev Must return the CapitalRaiseStatus struct
      * @return CapitalRaiseStatus memory Struct containing capital raise status
      */
-    function raiseStatusDetails() external view returns (CapitalRaiseStatus memory);
+    function saleStatusDetails() external view returns (CapitalRaiseStatus memory);
 
     /**
      * @notice Retrieves an investor's position details

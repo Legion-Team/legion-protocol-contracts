@@ -12,9 +12,6 @@ pragma solidity 0.8.29;
 //    \:\  \    \:\ \/__/     \:\/:/  /    \:\__\       \:\/:/  /       |::/  /
 //     \:\__\    \:\__\        \::/  /      \/__/        \::/  /        /:/  /
 //      \/__/     \/__/         \/__/                     \/__/         \/__/
-//
-// If you find a bug, please contact security[at]legion.cc
-// We will pay a fair bounty for any issue that puts users' funds at risk.
 
 import { LibClone } from "@solady/src/utils/LibClone.sol";
 
@@ -101,15 +98,15 @@ contract LegionVestingFactory is ILegionVestingFactory {
         external
         returns (address payable linearEpochVestingInstance)
     {
-        // Deploy a LegionLinearVesting instance
+        // Deploy a LegionLinearEpochVesting instance
         linearEpochVestingInstance = payable(i_linearEpochVestingTemplate.clone());
 
-        // Emit NewLinearVestingCreated
+        // Emit NewLinearEpochVestingCreated
         emit NewLinearEpochVestingCreated(
             beneficiary, startTimestamp, durationSeconds, cliffDurationSeconds, epochDurationSeconds, numberOfEpochs
         );
 
-        // Initialize the LegionLinearVesting with the provided configuration
+        // Initialize the LegionLinearEpochVesting with the provided configuration
         LegionLinearEpochVesting(linearEpochVestingInstance).initialize(
             beneficiary, startTimestamp, durationSeconds, cliffDurationSeconds, epochDurationSeconds, numberOfEpochs
         );

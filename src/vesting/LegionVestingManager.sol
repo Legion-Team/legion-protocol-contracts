@@ -12,9 +12,6 @@ pragma solidity 0.8.29;
 //    \:\  \    \:\ \/__/     \:\/:/  /    \:\__\       \:\/:/  /       |::/  /
 //     \:\__\    \:\__\        \::/  /      \/__/        \::/  /        /:/  /
 //      \/__/     \/__/         \/__/                     \/__/         \/__/
-//
-// If you find a bug, please contact security[at]legion.cc
-// We will pay a fair bounty for any issue that puts users' funds at risk.
 
 import { Constants } from "../utils/Constants.sol";
 import { Errors } from "../utils/Errors.sol";
@@ -153,7 +150,7 @@ abstract contract LegionVestingManager is ILegionVestingManager {
      * @dev Internal virtual function checking vesting parameters for correctness
      * @param investorVestingConfig Calldata struct with vesting schedule configuration
      */
-    function _verifyValidLinearVestingConfig(LegionInvestorVestingConfig calldata investorVestingConfig)
+    function _verifyValidVestingConfig(LegionInvestorVestingConfig calldata investorVestingConfig)
         internal
         view
         virtual

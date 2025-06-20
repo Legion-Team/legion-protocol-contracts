@@ -12,9 +12,6 @@ pragma solidity 0.8.29;
 //    \:\  \    \:\ \/__/     \:\/:/  /    \:\__\       \:\/:/  /       |::/  /
 //     \:\__\    \:\__\        \::/  /      \/__/        \::/  /        /:/  /
 //      \/__/     \/__/         \/__/                     \/__/         \/__/
-//
-// If you find a bug, please contact security[at]legion.cc
-// We will pay a fair bounty for any issue that puts users' funds at risk.
 
 import { VestingWalletUpgradeable } from "@openzeppelin/contracts-upgradeable/finance/VestingWalletUpgradeable.sol";
 
@@ -98,7 +95,7 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
         external
         initializer
     {
-        // Initialize the LegionLinearVesting clone
+        // Initialize the LegionLinearEpochVesting clone
         __VestingWallet_init(_beneficiary, _startTimestamp, _durationSeconds);
 
         // Set the cliff end timestamp, based on the cliff duration
@@ -116,7 +113,7 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
     //////////////////////////////////////////////////////////////////////////*/
 
     /* @notice Returns the timestamp when the cliff period ends
-     * @dev Indicates when tokens become releasable
+     * @dev Indicates when the vesting cliff ends
      * @return uint256 Unix timestamp (seconds) of the cliff end
      */
     function cliffEndTimestamp() external view returns (uint256) {

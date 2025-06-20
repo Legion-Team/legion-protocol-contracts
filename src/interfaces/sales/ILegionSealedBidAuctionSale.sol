@@ -12,20 +12,17 @@ pragma solidity 0.8.29;
 //    \:\  \    \:\ \/__/     \:\/:/  /    \:\__\       \:\/:/  /       |::/  /
 //     \:\__\    \:\__\        \::/  /      \/__/        \::/  /        /:/  /
 //      \/__/     \/__/         \/__/                     \/__/         \/__/
-//
-// If you find a bug, please contact security[at]legion.cc
-// We will pay a fair bounty for any issue that puts users' funds at risk.
 
 import { ECIES, Point } from "../../lib/ECIES.sol";
-import { ILegionSale } from "./ILegionSale.sol";
+import { ILegionAbstractSale } from "./ILegionAbstractSale.sol";
 
 /**
  * @title ILegionSealedBidAuctionSale
  * @author Legion
  * @notice Interface for managing sealed bid auctions of ERC20 tokens post-TGE in the Legion Protocol
- * @dev Extends ILegionSale with sealed bid auction-specific functionality and encryption features
+ * @dev Extends ILegionAbstractSale with sealed bid auction-specific functionality and encryption features
  */
-interface ILegionSealedBidAuctionSale is ILegionSale {
+interface ILegionSealedBidAuctionSale is ILegionAbstractSale {
     /// @notice Struct defining initialization parameters for the sealed bid auction sale
     struct SealedBidAuctionSaleInitializationParams {
         /// @notice Public key used to encrypt sealed bids
@@ -63,10 +60,10 @@ interface ILegionSealedBidAuctionSale is ILegionSale {
      * @param encryptedAmountOut Encrypted bid amount of tokens from the investor
      * @param salt Unique salt used in encryption (typically investor address)
      * @param investor Address of the investor
-     * @param investTimestamp Unix timestamp (seconds) of the investment
+     * @param positionId Unique identifier for the investment position
      */
     event CapitalInvested(
-        uint256 amount, uint256 encryptedAmountOut, uint256 salt, address investor, uint256 investTimestamp
+        uint256 amount, uint256 encryptedAmountOut, uint256 salt, address investor, uint256 positionId
     );
 
     /**
