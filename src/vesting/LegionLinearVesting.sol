@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 //       ___       ___           ___                       ___           ___
 //      /\__\     /\  \         /\  \          ___        /\  \         /\__\
@@ -30,7 +30,7 @@ contract LegionLinearVesting is VestingWalletUpgradeable {
 
     /// @notice Unix timestamp (seconds) when the cliff period ends
     /// @dev Private variable preventing token release until this timestamp
-    uint256 private s_cliffEndTimestamp;
+    uint64 private s_cliffEndTimestamp;
 
     /*//////////////////////////////////////////////////////////////////////////
                                    MODIFIERS
@@ -94,7 +94,7 @@ contract LegionLinearVesting is VestingWalletUpgradeable {
      * @dev Indicates when tokens become releasable
      * @return uint256 Unix timestamp (seconds) of the cliff end
      */
-    function cliffEndTimestamp() external view returns (uint256) {
+    function cliffEndTimestamp() external view returns (uint64) {
         return s_cliffEndTimestamp;
     }
 

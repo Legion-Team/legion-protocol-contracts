@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 //       ___       ___           ___                       ___           ___
 //      /\__\     /\  \         /\  \          ___        /\  \         /\__\
@@ -133,7 +133,7 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
         uint256 amount,
         uint256 investAmount,
         uint256 tokenAllocationRate,
-        bytes memory investSignature
+        bytes calldata investSignature
     )
         external
         whenNotPaused
@@ -175,7 +175,7 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
         _verifyValidPosition(investSignature, positionId, CapitalRaiseAction.INVEST);
 
         // Emit successfully CapitalInvested
-        emit CapitalInvested(amount, msg.sender, tokenAllocationRate, block.timestamp, positionId);
+        emit CapitalInvested(amount, msg.sender, positionId);
 
         // Transfer the invested capital to the contract
         SafeTransferLib.safeTransferFrom(s_capitalRaiseConfig.bidToken, msg.sender, address(this), amount);
@@ -365,7 +365,7 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
         uint256 amount,
         uint256 investAmount,
         uint256 tokenAllocationRate,
-        bytes memory claimExcessSignature
+        bytes calldata claimExcessSignature
     )
         external
         whenNotPaused
@@ -407,7 +407,7 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
         _verifyValidPosition(claimExcessSignature, positionId, CapitalRaiseAction.WITHDRAW_EXCESS_CAPITAL);
 
         // Emit successfully ExcessCapitalWithdrawn
-        emit ExcessCapitalWithdrawn(amount, msg.sender, tokenAllocationRate, block.timestamp, positionId);
+        emit ExcessCapitalWithdrawn(amount, msg.sender, positionId);
 
         // Transfer the excess capital to the investor
         SafeTransferLib.safeTransfer(s_capitalRaiseConfig.bidToken, msg.sender, amount);
@@ -428,10 +428,10 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
         s_capitalRaiseStatus.hasEnded = true;
 
         // Set the `endTime` of the capital raise
-        s_capitalRaiseStatus.endTime = block.timestamp;
+        s_capitalRaiseStatus.endTime = uint64(block.timestamp);
 
         // Set the `refundEndTime` of the capital raise
-        s_capitalRaiseStatus.refundEndTime = block.timestamp + s_capitalRaiseConfig.refundPeriodSeconds;
+        s_capitalRaiseStatus.refundEndTime = uint64(block.timestamp) + s_capitalRaiseConfig.refundPeriodSeconds;
 
         // Emit successfully CapitalRaiseEnded
         emit CapitalRaiseEnded();
@@ -765,7 +765,7 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
      * @notice Ensures a signature has not been used
      * @param signature Signature to verify
      */
-    function _verifySignatureNotUsed(bytes memory signature) private view {
+    function _verifySignatureNotUsed(bytes calldata signature) private view {
         // Check if the signature is used
         if (s_usedSignatures[msg.sender][signature]) revert Errors.LegionSale__SignatureAlreadyUsed(signature);
     }
@@ -832,7 +832,7 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
      * @param actionType Type of capital raise action being performed
      */
     function _verifyValidPosition(
-        bytes memory signature,
+        bytes calldata signature,
         uint256 positionId,
         CapitalRaiseAction actionType
     )

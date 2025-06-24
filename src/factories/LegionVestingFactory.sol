@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 //       ___       ___           ___                       ___           ___
 //      /\__\     /\  \         /\  \          ___        /\  \         /\__\
@@ -92,8 +92,8 @@ contract LegionVestingFactory is ILegionVestingFactory {
         uint64 startTimestamp,
         uint64 durationSeconds,
         uint64 cliffDurationSeconds,
-        uint256 epochDurationSeconds,
-        uint256 numberOfEpochs
+        uint64 epochDurationSeconds,
+        uint64 numberOfEpochs
     )
         external
         returns (address payable linearEpochVestingInstance)

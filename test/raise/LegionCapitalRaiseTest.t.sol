@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { ERC721 } from "@solady/src/tokens/ERC721.sol";
@@ -623,7 +623,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Expect
         vm.expectEmit();
-        emit ILegionCapitalRaise.CapitalInvested(10_000 * 1e6, investor1, 5_000_000_000_000_000, 1, 1);
+        emit ILegionCapitalRaise.CapitalInvested(10_000 * 1e6, investor1, 1);
 
         // Act
         vm.prank(investor1);
@@ -1570,9 +1570,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Expect
         vm.expectEmit();
-        emit ILegionCapitalRaise.ExcessCapitalWithdrawn(
-            1000 * 1e6, investor1, 4_000_000_000_000_000, (block.timestamp), 1
-        );
+        emit ILegionCapitalRaise.ExcessCapitalWithdrawn(1000 * 1e6, investor1, 1);
 
         // Act
         vm.prank(investor1);

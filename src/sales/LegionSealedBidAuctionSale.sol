@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 //       ___       ___           ___                       ___           ___
 //      /\__\     /\  \         /\  \          ___        /\  \         /\__\
@@ -65,7 +65,7 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
         (s_sealedBidAuctionSaleConfig.publicKey) = sealedBidAuctionSaleInitParams.publicKey;
 
         // Calculate and set startTime, endTime and refundEndTime
-        s_saleConfig.startTime = block.timestamp;
+        s_saleConfig.startTime = uint64(block.timestamp);
         s_saleConfig.endTime = s_saleConfig.startTime + saleInitParams.salePeriodSeconds;
         s_saleConfig.refundEndTime = s_saleConfig.endTime + saleInitParams.refundPeriodSeconds;
     }
@@ -81,7 +81,7 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
      * @param sealedBid Encoded sealed bid data (encrypted amount out, salt, public key)
      * @param signature Legion signature for investor verification
      */
-    function invest(uint256 amount, bytes calldata sealedBid, bytes memory signature) external whenNotPaused {
+    function invest(uint256 amount, bytes calldata sealedBid, bytes calldata signature) external whenNotPaused {
         // Check if the investor has already invested
         // If not, create a new investor position
         uint256 positionId = _getInvestorPositionId(msg.sender) == 0

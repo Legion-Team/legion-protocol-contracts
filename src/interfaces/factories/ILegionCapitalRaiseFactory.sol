@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 //       ___       ___           ___                       ___           ___
 //      /\__\     /\  \         /\  \          ___        /\  \         /\__\
@@ -19,12 +19,10 @@ import { ILegionCapitalRaise } from "../raise/ILegionCapitalRaise.sol";
  * @title ILegionCapitalRaiseFactory
  * @author Legion
  * @notice Interface for deploying and managing Legion capital raise contract instances
- * @dev Defines events and functions for creating new capital raise contracts
  */
 interface ILegionCapitalRaiseFactory {
     /**
      * @notice Emitted when a new capital raise contract is deployed and initialized
-     * @dev Provides details about the new capital raise instance and its configuration
      * @param capitalRaiseInstance Address of the newly deployed capital raise contract
      * @param capitalRaiseInitParams Struct containing capital raise initialization parameters
      */
@@ -34,7 +32,6 @@ interface ILegionCapitalRaiseFactory {
 
     /**
      * @notice Deploys a new LegionCapitalRaise contract instance
-     * @dev Must be implemented to create and initialize a new capital raise contract
      * @param capitalRaiseInitParams Calldata struct containing capital raise initialization parameters
      * @return capitalRaiseInstance Address of the newly deployed LegionCapitalRaise instance
      */

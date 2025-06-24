@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 //       ___       ___           ___                       ___           ___
 //      /\__\     /\  \         /\  \          ___        /\  \         /\__\
@@ -313,19 +313,17 @@ abstract contract LegionAbstractSale is
         // Mark that the excess capital has been returned
         s_investorPositions[positionId].hasClaimedExcess = true;
 
-        if (amount != 0) {
-            // Decrement the total invested capital for the investor
-            s_investorPositions[positionId].investedCapital -= amount;
+        // Decrement the total invested capital for the investor
+        s_investorPositions[positionId].investedCapital -= amount;
 
-            // Decrement total capital invested from all investors
-            s_saleStatus.totalCapitalInvested -= amount;
+        // Decrement total capital invested from all investors
+        s_saleStatus.totalCapitalInvested -= amount;
 
-            // Emit ExcessCapitalWithdrawn
-            emit ExcessCapitalWithdrawn(amount, msg.sender, positionId);
+        // Emit ExcessCapitalWithdrawn
+        emit ExcessCapitalWithdrawn(amount, msg.sender, positionId);
 
-            // Transfer the excess capital back to the investor
-            SafeTransferLib.safeTransfer(s_addressConfig.bidToken, msg.sender, amount);
-        }
+        // Transfer the excess capital back to the investor
+        SafeTransferLib.safeTransfer(s_addressConfig.bidToken, msg.sender, amount);
     }
 
     /**
@@ -555,13 +553,13 @@ abstract contract LegionAbstractSale is
      * @param from The address of the current owner
      * @param to The address of the new owner
      * @param positionId The ID of the position
-     * @param signature The signature authorizing the transfer
+     * @param transferSignature The signature authorizing the transfer
      */
     function transferInvestorPositionWithAuthorization(
         address from,
         address to,
         uint256 positionId,
-        bytes calldata signature
+        bytes calldata transferSignature
     )
         external
         virtual
@@ -578,7 +576,7 @@ abstract contract LegionAbstractSale is
         _verifyTokensNotSupplied();
 
         // Verify the signature for transferring the position
-        _verifyTransferSignature(from, to, positionId, s_addressConfig.legionSigner, signature);
+        _verifyTransferSignature(from, to, positionId, s_addressConfig.legionSigner, transferSignature);
 
         // Verify that the position can be transferred
         _verifyCanTransferInvestorPosition(positionId);
@@ -642,6 +640,9 @@ abstract contract LegionAbstractSale is
         // Get the investor vesting address
         address investorVestingAddress = s_investorPositions[positionId].vestingAddress;
 
+        // Get the ask token address
+        address askTokenAddress = s_addressConfig.askToken;
+
         // Return the investor vesting status
         investorVestingAddress != address(0)
             ? vestingStatus = LegionInvestorVestingStatus(
@@ -649,9 +650,9 @@ abstract contract LegionAbstractSale is
                 ILegionVesting(investorVestingAddress).end(),
                 ILegionVesting(investorVestingAddress).cliffEndTimestamp(),
                 ILegionVesting(investorVestingAddress).duration(),
-                ILegionVesting(investorVestingAddress).released(s_addressConfig.askToken),
-                ILegionVesting(investorVestingAddress).releasable(s_addressConfig.askToken),
-                ILegionVesting(investorVestingAddress).vestedAmount(s_addressConfig.askToken, uint64(block.timestamp))
+                ILegionVesting(investorVestingAddress).released(askTokenAddress),
+                ILegionVesting(investorVestingAddress).releasable(askTokenAddress),
+                ILegionVesting(investorVestingAddress).vestedAmount(askTokenAddress, uint64(block.timestamp))
             )
             : vestingStatus;
     }
@@ -800,7 +801,8 @@ abstract contract LegionAbstractSale is
         _verifyPositionExists(positionId);
 
         // Generate the merkle leaf
-        bytes32 leaf = keccak256(bytes.concat(keccak256(abi.encode(_investor, _amount, investorVestingConfig))));
+        bytes32 leaf =
+            keccak256(bytes.concat(keccak256(abi.encode(_investor, _amount, positionId, investorVestingConfig))));
 
         // Load the investor position
         InvestorPosition memory position = s_investorPositions[positionId];
@@ -1003,7 +1005,7 @@ abstract contract LegionAbstractSale is
      * @dev Virtual function validating signature authenticity
      * @param _signature Signature to verify
      */
-    function _verifyInvestSignature(bytes memory _signature) internal view virtual {
+    function _verifyInvestSignature(bytes calldata _signature) internal view virtual {
         bytes32 _data = keccak256(abi.encodePacked(msg.sender, address(this), block.chainid)).toEthSignedMessageHash();
         if (_data.recover(_signature) != s_addressConfig.legionSigner) {
             revert Errors.LegionSale__InvalidSignature(_signature);

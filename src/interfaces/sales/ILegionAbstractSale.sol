@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 //       ___       ___           ___                       ___           ___
 //      /\__\     /\  \         /\  \          ___        /\  \         /\__/
@@ -19,29 +19,28 @@ import { ILegionVestingManager } from "../../interfaces/vesting/ILegionVestingMa
  * @title ILegionAbstractSale
  * @author Legion
  * @notice Interface for managing token sales within the Legion Protocol
- * @dev Defines core sale functionality, events, and structs for sale contracts
  */
 interface ILegionAbstractSale {
     /// @notice Struct defining initialization parameters for a Legion sale
     struct LegionSaleInitializationParams {
         /// @notice Duration of the sale period in seconds
         /// @dev Time window during which investments are accepted
-        uint256 salePeriodSeconds;
+        uint64 salePeriodSeconds;
         /// @notice Duration of the refund period in seconds
         /// @dev Time window for refund requests post-sale
-        uint256 refundPeriodSeconds;
+        uint64 refundPeriodSeconds;
         /// @notice Legion's fee on capital raised in basis points (BPS)
         /// @dev Fee percentage applied to raised capital (1 BPS = 0.01%)
-        uint256 legionFeeOnCapitalRaisedBps;
+        uint16 legionFeeOnCapitalRaisedBps;
         /// @notice Legion's fee on tokens sold in basis points (BPS)
         /// @dev Fee percentage applied to sold tokens
-        uint256 legionFeeOnTokensSoldBps;
+        uint16 legionFeeOnTokensSoldBps;
         /// @notice Referrer's fee on capital raised in basis points (BPS)
         /// @dev Fee percentage for referrer on raised capital
-        uint256 referrerFeeOnCapitalRaisedBps;
+        uint16 referrerFeeOnCapitalRaisedBps;
         /// @notice Referrer's fee on tokens sold in basis points (BPS)
         /// @dev Fee percentage for referrer on sold tokens
-        uint256 referrerFeeOnTokensSoldBps;
+        uint16 referrerFeeOnTokensSoldBps;
         /// @notice Minimum investment amount in bid token
         /// @dev Threshold for individual investments
         uint256 minimumInvestAmount;
@@ -75,25 +74,25 @@ interface ILegionAbstractSale {
     struct LegionSaleConfiguration {
         /// @notice Unix timestamp (seconds) when the sale starts
         /// @dev Set at initialization
-        uint256 startTime;
+        uint64 startTime;
         /// @notice Unix timestamp (seconds) when the sale ends
         /// @dev Set when sale concludes
-        uint256 endTime;
+        uint64 endTime;
         /// @notice Unix timestamp (seconds) when the refund period ends
         /// @dev Calculated as endTime + refundPeriodSeconds
-        uint256 refundEndTime;
+        uint64 refundEndTime;
         /// @notice Legion's fee on capital raised in basis points (BPS)
         /// @dev Fee percentage on capital
-        uint256 legionFeeOnCapitalRaisedBps;
+        uint16 legionFeeOnCapitalRaisedBps;
         /// @notice Legion's fee on tokens sold in basis points (BPS)
         /// @dev Fee percentage on tokens
-        uint256 legionFeeOnTokensSoldBps;
+        uint16 legionFeeOnTokensSoldBps;
         /// @notice Referrer's fee on capital raised in basis points (BPS)
         /// @dev Referrer fee on capital
-        uint256 referrerFeeOnCapitalRaisedBps;
+        uint16 referrerFeeOnCapitalRaisedBps;
         /// @notice Referrer's fee on tokens sold in basis points (BPS)
         /// @dev Referrer fee on tokens
-        uint256 referrerFeeOnTokensSoldBps;
+        uint16 referrerFeeOnTokensSoldBps;
         /// @notice Minimum investment amount in bid token
         /// @dev Minimum threshold for investments
         uint256 minimumInvestAmount;
@@ -179,14 +178,12 @@ interface ILegionAbstractSale {
 
     /**
      * @notice Emitted when capital is withdrawn by the project owner
-     * @dev Logs withdrawal details for project capital
-     * @param amountToWithdraw Amount of capital withdrawn
+     * @param amount Amount of capital withdrawn
      */
-    event CapitalWithdrawn(uint256 amountToWithdraw);
+    event CapitalWithdrawn(uint256 amount);
 
     /**
      * @notice Emitted when capital is refunded to an investor
-     * @dev Logs refund details during refund period
      * @param amount Amount of capital refunded
      * @param investor Address of the investor receiving refund
      * @param positionId ID of the investor's position
@@ -195,7 +192,6 @@ interface ILegionAbstractSale {
 
     /**
      * @notice Emitted when capital is refunded after sale cancellation
-     * @dev Logs refund details post-cancellation
      * @param amount Amount of capital refunded
      * @param investor Address of the investor receiving refund
      */
@@ -203,7 +199,6 @@ interface ILegionAbstractSale {
 
     /**
      * @notice Emitted when excess capital is claimed by an investor post-sale
-     * @dev Logs excess capital withdrawal details
      * @param amount Amount of excess capital withdrawn
      * @param investor Address of the investor claiming excess
      * @param positionId ID of the investor's position
@@ -212,14 +207,12 @@ interface ILegionAbstractSale {
 
     /**
      * @notice Emitted when accepted capital Merkle root is published by Legion
-     * @dev Logs verification data for accepted capital
      * @param merkleRoot Merkle root for accepted capital verification
      */
     event AcceptedCapitalSet(bytes32 merkleRoot);
 
     /**
      * @notice Emitted during an emergency withdrawal by Legion
-     * @dev Logs details of emergency token withdrawal
      * @param receiver Address receiving withdrawn tokens
      * @param token Address of the token withdrawn
      * @param amount Amount of tokens withdrawn
@@ -228,7 +221,6 @@ interface ILegionAbstractSale {
 
     /**
      * @notice Emitted when Legion addresses are synced from the registry
-     * @dev Logs updated addresses for configuration
      * @param legionBouncer Updated Legion bouncer address
      * @param legionSigner Updated Legion signer address
      * @param legionFeeReceiver Updated Legion fee receiver address
@@ -240,13 +232,11 @@ interface ILegionAbstractSale {
 
     /**
      * @notice Emitted when a sale is canceled
-     * @dev Indicates the sale has been terminated
      */
     event SaleCanceled();
 
     /**
      * @notice Emitted when tokens are supplied for distribution by the project
-     * @dev Logs token supply and fee details
      * @param amount Amount of tokens supplied
      * @param legionFee Fee amount collected by Legion
      * @param referrerFee Fee amount collected by referrer
@@ -255,7 +245,6 @@ interface ILegionAbstractSale {
 
     /**
      * @notice Emitted when an investor successfully claims their token allocation
-     * @dev Logs vested and immediate distribution amounts
      * @param amountToBeVested Amount of tokens sent to vesting contract
      * @param amountOnClaim Amount of tokens distributed immediately
      * @param investor Address of the claiming investor
@@ -265,19 +254,16 @@ interface ILegionAbstractSale {
 
     /**
      * @notice Requests a refund from the sale during the refund period
-     * @dev Must return invested capital if within refund window
      */
     function refund() external;
 
     /**
      * @notice Withdraws raised capital from the sale contract
-     * @dev Must be restricted to Project admin; handles capital withdrawal
      */
     function withdrawRaisedCapital() external;
 
     /**
      * @notice Claims investor token allocation
-     * @dev Must handle vesting and immediate distribution; requires Merkle proof
      * @param amount Total amount of tokens to claim
      * @param investorVestingConfig Vesting configuration for the investor
      * @param proof Merkle proof for claim verification
@@ -291,7 +277,6 @@ interface ILegionAbstractSale {
 
     /**
      * @notice Withdraws excess invested capital back to the investor
-     * @dev Must verify eligibility with Merkle proof and update state
      * @param amount Amount of excess capital to withdraw
      * @param proof Merkle proof for excess capital verification
      */
@@ -299,13 +284,11 @@ interface ILegionAbstractSale {
 
     /**
      * @notice Releases vested tokens to the investor
-     * @dev Must interact with vesting contract to release tokens
      */
     function releaseVestedTokens() external;
 
     /**
      * @notice Supplies tokens for distribution post-sale
-     * @dev Must be restricted to Project admin; handles token and fee transfers
      * @param amount Amount of tokens to supply
      * @param legionFee Fee amount for Legion
      * @param referrerFee Fee amount for referrer
@@ -314,26 +297,22 @@ interface ILegionAbstractSale {
 
     /**
      * @notice Publishes Merkle root for accepted capital
-     * @dev Must be restricted to Legion admin; sets verification data
      * @param merkleRoot Merkle root for accepted capital verification
      */
     function setAcceptedCapital(bytes32 merkleRoot) external;
 
     /**
      * @notice Cancels an ongoing sale
-     * @dev Must be restricted to Project admin; terminates sale
      */
     function cancelSale() external;
 
     /**
      * @notice Withdraws invested capital if the sale is canceled
-     * @dev Must return capital to investors post-cancellation
      */
     function withdrawInvestedCapitalIfCanceled() external;
 
     /**
      * @notice Performs an emergency withdrawal of tokens
-     * @dev Must be restricted to Legion admin; used for safety measures
      * @param receiver Address to receive withdrawn tokens
      * @param token Address of the token to withdraw
      * @param amount Amount of tokens to withdraw
@@ -342,47 +321,40 @@ interface ILegionAbstractSale {
 
     /**
      * @notice Syncs active Legion addresses from the registry
-     * @dev Must update configuration with latest addresses
      */
     function syncLegionAddresses() external;
 
     /**
      * @notice Pauses the sale
-     * @dev Must halt sale operations; restricted to Legion
      */
     function pauseSale() external;
 
     /**
      * @notice Unpauses the sale
-     * @dev Must resume sale operations; restricted to Legion
      */
     function unpauseSale() external;
 
     /**
      * @notice Retrieves the current sale configuration
-     * @dev Must return the LegionSaleConfiguration struct
      * @return LegionSaleConfiguration memory Struct containing sale configuration
      */
     function saleConfiguration() external view returns (LegionSaleConfiguration memory);
 
     /**
      * @notice Retrieves the current sale status
-     * @dev Must return the LegionSaleStatus struct
      * @return LegionSaleStatus memory Struct containing sale status
      */
     function saleStatusDetails() external view returns (LegionSaleStatus memory);
 
     /**
      * @notice Retrieves an investor's position details
-     * @dev Must return the InvestorPosition struct for the specified address
-     * @param investorAddress Address of the investor
+     * @param investor Address of the investor
      * @return InvestorPosition memory Struct containing investor position details
      */
-    function investorPositionDetails(address investorAddress) external view returns (InvestorPosition memory);
+    function investorPositionDetails(address investor) external view returns (InvestorPosition memory);
 
     /**
      * @notice Retrieves an investor's vesting status
-     * @dev Must return vesting details if applicable
      * @param investor Address of the investor
      * @return ILegionVestingManager.LegionInvestorVestingStatus memory Struct containing vesting status
      */

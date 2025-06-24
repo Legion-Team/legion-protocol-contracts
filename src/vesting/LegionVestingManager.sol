@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 //       ___       ___           ___                       ___           ___
 //      /\__\     /\  \         /\  \          ___        /\  \         /\__\
@@ -67,9 +67,9 @@ abstract contract LegionVestingManager is ILegionVestingManager {
             vestingInstance = _createLinearVesting(
                 msg.sender,
                 s_vestingConfig.vestingFactory,
-                uint64(investorVestingConfig.vestingStartTime),
-                uint64(investorVestingConfig.vestingDurationSeconds),
-                uint64(investorVestingConfig.vestingCliffDurationSeconds)
+                investorVestingConfig.vestingStartTime,
+                investorVestingConfig.vestingDurationSeconds,
+                investorVestingConfig.vestingCliffDurationSeconds
             );
         }
 
@@ -78,9 +78,9 @@ abstract contract LegionVestingManager is ILegionVestingManager {
             vestingInstance = _createLinearEpochVesting(
                 msg.sender,
                 s_vestingConfig.vestingFactory,
-                uint64(investorVestingConfig.vestingStartTime),
-                uint64(investorVestingConfig.vestingDurationSeconds),
-                uint64(investorVestingConfig.vestingCliffDurationSeconds),
+                investorVestingConfig.vestingStartTime,
+                investorVestingConfig.vestingDurationSeconds,
+                investorVestingConfig.vestingCliffDurationSeconds,
                 investorVestingConfig.epochDurationSeconds,
                 investorVestingConfig.numberOfEpochs
             );
@@ -132,8 +132,8 @@ abstract contract LegionVestingManager is ILegionVestingManager {
         uint64 startTimestamp,
         uint64 durationSeconds,
         uint64 cliffDurationSeconds,
-        uint256 epochDurationSeconds,
-        uint256 numberOfEpochs
+        uint64 epochDurationSeconds,
+        uint64 numberOfEpochs
     )
         internal
         virtual

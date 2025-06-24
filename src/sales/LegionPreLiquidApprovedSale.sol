@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 //       ___       ___           ___                       ___           ___
 //      /\__\     /\  \         /\  \          ___        /\  \         /\__\
@@ -141,7 +141,7 @@ contract LegionPreLiquidApprovedSale is
         uint256 amount,
         uint256 investAmount,
         uint256 tokenAllocationRate,
-        bytes memory investSignature
+        bytes calldata investSignature
     )
         external
         whenNotPaused
@@ -183,7 +183,7 @@ contract LegionPreLiquidApprovedSale is
         _verifyValidPosition(investSignature, positionId, SaleAction.INVEST);
 
         // Emit successfully CapitalInvested
-        emit CapitalInvested(amount, msg.sender, tokenAllocationRate, positionId);
+        emit CapitalInvested(amount, msg.sender, positionId);
 
         // Transfer the invested capital to the contract
         SafeTransferLib.safeTransferFrom(s_saleConfig.bidToken, msg.sender, address(this), amount);
@@ -408,8 +408,8 @@ contract LegionPreLiquidApprovedSale is
         uint256 investAmount,
         uint256 tokenAllocationRate,
         LegionVestingManager.LegionInvestorVestingConfig calldata investorVestingConfig,
-        bytes memory claimSignature,
-        bytes memory vestingSignature
+        bytes calldata claimSignature,
+        bytes calldata vestingSignature
     )
         external
         whenNotPaused
@@ -436,7 +436,7 @@ contract LegionPreLiquidApprovedSale is
         _verifyValidPosition(claimSignature, positionId, SaleAction.CLAIM_TOKEN_ALLOCATION);
 
         // Verify that the investor vesting terms are valid
-        _verifyValidVestingPosition(vestingSignature, investorVestingConfig);
+        _verifyValidVestingPosition(vestingSignature, positionId, investorVestingConfig);
 
         // Verify that the signature has not been used
         _verifySignatureNotUsed(claimSignature);
@@ -560,7 +560,7 @@ contract LegionPreLiquidApprovedSale is
         uint256 amount,
         uint256 investAmount,
         uint256 tokenAllocationRate,
-        bytes memory withdrawSignature
+        bytes calldata withdrawSignature
     )
         external
         whenNotPaused
@@ -580,20 +580,17 @@ contract LegionPreLiquidApprovedSale is
         // Verify that the investor is eligible to get excess capital back
         _verifyCanClaimExcessCapital(positionId);
 
-        // Load the investor position
-        InvestorPosition storage position = s_investorPositions[positionId];
+        // Mark the signature as used
+        s_usedSignatures[msg.sender][withdrawSignature] = true;
+
+        // Mark that the excess capital has been returned
+        s_investorPositions[positionId].hasClaimedExcess = true;
 
         // Decrement total capital invested from investors
         s_saleStatus.totalCapitalInvested -= amount;
 
         // Decrement total investor capital for the investor
-        position.investedCapital -= amount;
-
-        // Mark that the excess capital has been returned
-        position.hasClaimedExcess = true;
-
-        // Mark the signature as used
-        s_usedSignatures[msg.sender][withdrawSignature] = true;
+        s_investorPositions[positionId].investedCapital -= amount;
 
         // Update the investor position
         _updateInvestorPosition(investAmount, tokenAllocationRate);
@@ -602,7 +599,7 @@ contract LegionPreLiquidApprovedSale is
         _verifyValidPosition(withdrawSignature, positionId, SaleAction.WITHDRAW_EXCESS_CAPITAL);
 
         // Emit successfully ExcessCapitalWithdrawn
-        emit ExcessCapitalWithdrawn(amount, msg.sender, tokenAllocationRate, positionId);
+        emit ExcessCapitalWithdrawn(amount, msg.sender, positionId);
 
         // Transfer the excess capital to the investor
         SafeTransferLib.safeTransfer(s_saleConfig.bidToken, msg.sender, amount);
@@ -644,10 +641,10 @@ contract LegionPreLiquidApprovedSale is
         s_saleStatus.hasEnded = true;
 
         // Set the `endTime` of the sale
-        s_saleStatus.endTime = block.timestamp;
+        s_saleStatus.endTime = uint64(block.timestamp);
 
         // Set the `refundEndTime` of the sale
-        s_saleStatus.refundEndTime = block.timestamp + s_saleConfig.refundPeriodSeconds;
+        s_saleStatus.refundEndTime = uint64(block.timestamp) + s_saleConfig.refundPeriodSeconds;
 
         // Emit successfully SaleEnded
         emit SaleEnded();
@@ -719,13 +716,13 @@ contract LegionPreLiquidApprovedSale is
      * @param from The address of the current owner
      * @param to The address of the new owner
      * @param positionId The ID of the position
-     * @param signature The signature authorizing the transfer
+     * @param transferSignature The signature authorizing the transfer
      */
     function transferInvestorPositionWithAuthorization(
         address from,
         address to,
         uint256 positionId,
-        bytes calldata signature
+        bytes calldata transferSignature
     )
         external
         virtual
@@ -745,7 +742,7 @@ contract LegionPreLiquidApprovedSale is
         _verifyTokensNotSupplied();
 
         // Verify the signature for transferring the position
-        _verifyTransferSignature(from, to, positionId, s_saleConfig.legionSigner, signature);
+        _verifyTransferSignature(from, to, positionId, s_saleConfig.legionSigner, transferSignature);
 
         // Verify that the position can be transferred
         _verifyCanTransferInvestorPosition(positionId);
@@ -834,6 +831,9 @@ contract LegionPreLiquidApprovedSale is
         // Get the investor position details
         address investorVestingAddress = s_investorPositions[positionId].vestingAddress;
 
+        // Get the ask token address
+        address askTokenAddress = s_saleStatus.askToken;
+
         // Return the investor vesting status
         investorVestingAddress != address(0)
             ? vestingStatus = LegionInvestorVestingStatus(
@@ -841,9 +841,9 @@ contract LegionPreLiquidApprovedSale is
                 ILegionVesting(investorVestingAddress).end(),
                 ILegionVesting(investorVestingAddress).cliffEndTimestamp(),
                 ILegionVesting(investorVestingAddress).duration(),
-                ILegionVesting(investorVestingAddress).released(s_saleStatus.askToken),
-                ILegionVesting(investorVestingAddress).releasable(s_saleStatus.askToken),
-                ILegionVesting(investorVestingAddress).vestedAmount(s_saleStatus.askToken, uint64(block.timestamp))
+                ILegionVesting(investorVestingAddress).released(askTokenAddress),
+                ILegionVesting(investorVestingAddress).releasable(askTokenAddress),
+                ILegionVesting(investorVestingAddress).vestedAmount(askTokenAddress, uint64(block.timestamp))
             )
             : vestingStatus;
     }
@@ -976,15 +976,17 @@ contract LegionPreLiquidApprovedSale is
      * @param investorVestingConfig Vesting configuration to verify
      */
     function _verifyValidVestingPosition(
-        bytes memory vestingSignature,
+        bytes calldata vestingSignature,
+        uint256 positionId,
         LegionVestingManager.LegionInvestorVestingConfig calldata investorVestingConfig
     )
         private
         view
     {
         // Construct the signed data
-        bytes32 _data = keccak256(abi.encode(msg.sender, address(this), block.chainid, investorVestingConfig))
-            .toEthSignedMessageHash();
+        bytes32 _data = keccak256(
+            abi.encode(msg.sender, address(this), block.chainid, positionId, investorVestingConfig)
+        ).toEthSignedMessageHash();
 
         // Verify the signature
         if (_data.recover(vestingSignature) != s_saleConfig.legionSigner) {
@@ -1103,7 +1105,7 @@ contract LegionPreLiquidApprovedSale is
      * @dev Prevents replay attacks by checking usage
      * @param signature Signature to verify
      */
-    function _verifySignatureNotUsed(bytes memory signature) private view {
+    function _verifySignatureNotUsed(bytes calldata signature) private view {
         // Check if the signature is used
         if (s_usedSignatures[msg.sender][signature]) revert Errors.LegionSale__SignatureAlreadyUsed(signature);
     }
@@ -1169,7 +1171,7 @@ contract LegionPreLiquidApprovedSale is
      * @param positionId ID of the investor's position
      * @param actionType Type of sale action being performed
      */
-    function _verifyValidPosition(bytes memory signature, uint256 positionId, SaleAction actionType) private view {
+    function _verifyValidPosition(bytes calldata signature, uint256 positionId, SaleAction actionType) private view {
         // Load the investor position
         InvestorPosition memory position = s_investorPositions[positionId];
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 //       ___       ___           ___                       ___           ___
 //      /\__\     /\  \         /\  \          ___        /\  \         /\__\
@@ -186,8 +186,8 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
     function claimTokenAllocation(
         uint256 claimAmount,
         LegionVestingManager.LegionInvestorVestingConfig calldata investorVestingConfig,
-        bytes memory claimSignature,
-        bytes memory vestingSignature
+        bytes calldata claimSignature,
+        bytes calldata vestingSignature
     )
         external
         whenNotPaused
@@ -394,7 +394,7 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
      * @param investorVestingConfig Vesting configuration to verify
      */
     function _verifyValidVestingPosition(
-        bytes memory vestingSignature,
+        bytes calldata vestingSignature,
         LegionVestingManager.LegionInvestorVestingConfig calldata investorVestingConfig
     )
         private
@@ -473,7 +473,7 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
      * @param claimAmount Maximum capital allowed per SAFT
      * @param signature Signature to verify
      */
-    function _verifyValidPosition(uint256 claimAmount, bytes memory signature) internal view {
+    function _verifyValidPosition(uint256 claimAmount, bytes calldata signature) internal view {
         // Construct the signed data
         bytes32 _data = keccak256(abi.encodePacked(msg.sender, address(this), block.chainid, uint256(claimAmount)))
             .toEthSignedMessageHash();

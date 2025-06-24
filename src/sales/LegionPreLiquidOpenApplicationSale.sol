@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 //       ___       ___           ___                       ___           ___
 //      /\__\     /\  \         /\  \          ___        /\  \         /\__\
@@ -53,7 +53,7 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
         _setLegionSaleConfig(saleInitParams);
 
         // Set the sale start time
-        s_saleConfig.startTime = block.timestamp;
+        s_saleConfig.startTime = uint64(block.timestamp);
 
         /// Set the refund period duration in seconds
         s_preLiquidSaleConfig.refundPeriodSeconds = saleInitParams.refundPeriodSeconds;
@@ -69,7 +69,7 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
      * @param amount Amount of capital to invest
      * @param signature Legion signature for investor verification
      */
-    function invest(uint256 amount, bytes memory signature) external whenNotPaused {
+    function invest(uint256 amount, bytes calldata signature) external whenNotPaused {
         // Check if the investor has already invested
         // If not, create a new investor position
         uint256 positionId = _getInvestorPositionId(msg.sender) == 0
@@ -122,10 +122,10 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
         s_preLiquidSaleConfig.hasEnded = true;
 
         // Set the `endTime` of the sale
-        s_saleConfig.endTime = block.timestamp;
+        s_saleConfig.endTime = uint64(block.timestamp);
 
         // Set the `refundEndTime` of the sale
-        s_saleConfig.refundEndTime = block.timestamp + s_preLiquidSaleConfig.refundPeriodSeconds;
+        s_saleConfig.refundEndTime = uint64(block.timestamp) + s_preLiquidSaleConfig.refundPeriodSeconds;
 
         // Emit SaleEnded successfully
         emit SaleEnded();

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 //       ___       ___           ___                       ___           ___
 //      /\__\     /\  \         /\  \          ___        /\  \         /\__\
@@ -64,8 +64,8 @@ contract LegionFixedPriceSaleFactory is ILegionFixedPriceSaleFactory, Ownable {
      * @return fixedPriceSaleInstance Address of the newly deployed and initialized LegionFixedPriceSale instance
      */
     function createFixedPriceSale(
-        ILegionAbstractSale.LegionSaleInitializationParams memory saleInitParams,
-        ILegionFixedPriceSale.FixedPriceSaleInitializationParams memory fixedPriceSaleInitParams
+        ILegionAbstractSale.LegionSaleInitializationParams calldata saleInitParams,
+        ILegionFixedPriceSale.FixedPriceSaleInitializationParams calldata fixedPriceSaleInitParams
     )
         external
         onlyOwner

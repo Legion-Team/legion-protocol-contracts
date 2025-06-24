@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { ERC721 } from "@solady/src/tokens/ERC721.sol";
@@ -250,7 +250,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
      */
     function prepareInvestorLinearVestingConfig() public {
         investorLinearVestingConfig = ILegionVestingManager.LegionInvestorVestingConfig(
-            ILegionVestingManager.VestingType.LEGION_LINEAR, (1_209_603 + 2 weeks + 2), 31_536_000, 3600, 0, 0, 1e17
+            (1_209_603 + 2 weeks + 2), 31_536_000, 3600, ILegionVestingManager.VestingType.LEGION_LINEAR, 0, 0, 1e17
         );
     }
 
@@ -260,10 +260,10 @@ contract LegionPreLiquidApprovedSaleTest is Test {
      */
     function prepareInvestorLinearEpochVestingConfig() public {
         investorLinearEpochVestingConfig = ILegionVestingManager.LegionInvestorVestingConfig(
-            ILegionVestingManager.VestingType.LEGION_LINEAR_EPOCH,
             (1_209_603 + 2 weeks + 2),
             31_536_000,
             3600,
+            ILegionVestingManager.VestingType.LEGION_LINEAR_EPOCH,
             2_628_000,
             12,
             1e17
@@ -339,11 +339,13 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         ).toEthSignedMessageHash();
 
         bytes32 digest1Vesting = keccak256(
-            abi.encode(investor1, legionPreLiquidSaleInstance, block.chainid, investorLinearVestingConfig)
+            abi.encode(investor1, legionPreLiquidSaleInstance, block.chainid, uint256(1), investorLinearVestingConfig)
         ).toEthSignedMessageHash();
 
         bytes32 digest2VestingEpoch = keccak256(
-            abi.encode(investor2, legionPreLiquidSaleInstance, block.chainid, investorLinearEpochVestingConfig)
+            abi.encode(
+                investor2, legionPreLiquidSaleInstance, block.chainid, uint256(2), investorLinearEpochVestingConfig
+            )
         ).toEthSignedMessageHash();
 
         bytes32 digest2 = keccak256(
@@ -762,7 +764,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
 
         // Expect
         vm.expectEmit();
-        emit ILegionPreLiquidApprovedSale.CapitalInvested(10_000 * 1e6, investor1, 5_000_000_000_000_000, 1);
+        emit ILegionPreLiquidApprovedSale.CapitalInvested(10_000 * 1e6, investor1, 1);
 
         // Act
         vm.prank(investor1);
@@ -2137,7 +2139,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
 
         // Expect
         vm.expectEmit();
-        emit ILegionPreLiquidApprovedSale.ExcessCapitalWithdrawn(1000 * 1e6, investor1, 4_000_000_000_000_000, 1);
+        emit ILegionPreLiquidApprovedSale.ExcessCapitalWithdrawn(1000 * 1e6, investor1, 1);
 
         // Act
         vm.prank(investor1);
@@ -2384,6 +2386,11 @@ contract LegionPreLiquidApprovedSaleTest is Test {
 
         vm.warp(block.timestamp + 1);
 
+        vm.prank(investor1);
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).invest(
+            10_000 * 1e6, 10_000 * 1e6, 5_000_000_000_000_000, signatureInv1
+        );
+
         vm.prank(investor2);
         ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).invest(
             10_000 * 1e6, 10_000 * 1e6, 5_000_000_000_000_000, signatureInv2
@@ -2482,10 +2489,10 @@ contract LegionPreLiquidApprovedSaleTest is Test {
             uint256(10_000 * 1e6),
             uint256(5_000_000_000_000_000),
             ILegionVestingManager.LegionInvestorVestingConfig(
-                ILegionVestingManager.VestingType.LEGION_LINEAR,
-                Constants.MAX_VESTING_LOCKUP_SECONDS + block.timestamp + 1,
+                Constants.MAX_VESTING_LOCKUP_SECONDS + uint64(block.timestamp) + 1,
                 520 weeks + 1,
                 520 weeks + 2,
+                ILegionVestingManager.VestingType.LEGION_LINEAR,
                 0,
                 0,
                 1e18 + 1
@@ -2545,10 +2552,10 @@ contract LegionPreLiquidApprovedSaleTest is Test {
             uint256(10_000 * 1e6),
             uint256(5_000_000_000_000_000),
             ILegionVestingManager.LegionInvestorVestingConfig(
-                ILegionVestingManager.VestingType.LEGION_LINEAR_EPOCH,
                 0,
                 520 weeks - 1,
                 520 weeks - 2,
+                ILegionVestingManager.VestingType.LEGION_LINEAR_EPOCH,
                 520 weeks + 1,
                 100,
                 1e17
