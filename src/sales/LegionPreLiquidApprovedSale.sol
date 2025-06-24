@@ -283,6 +283,12 @@ contract LegionPreLiquidApprovedSale is
         // Verify that tokens can be supplied for distribution
         _verifyCanSupplyTokens(amount);
 
+        // Flag that ask tokens have been supplied
+        s_saleStatus.tokensSupplied = true;
+
+        // Cache Legion Sale Configuration
+        PreLiquidSaleConfig memory saleConfig = s_saleConfig;
+
         // Calculate the expected Legion Fee amount
         uint256 expectedLegionFeeAmount =
             (s_saleConfig.legionFeeOnTokensSoldBps * amount) / Constants.BASIS_POINTS_DENOMINATOR;
@@ -301,26 +307,24 @@ contract LegionPreLiquidApprovedSale is
             revert Errors.LegionSale__InvalidFeeAmount(referrerFee, expectedReferrerFeeAmount);
         }
 
-        // Flag that ask tokens have been supplied
-        s_saleStatus.tokensSupplied = true;
-
         // Emit successfully TokensSuppliedForDistribution
         emit TokensSuppliedForDistribution(amount, legionFee, referrerFee);
 
+        // Cache the sale status
+        PreLiquidSaleStatus memory saleStatus = s_saleStatus;
+
         // Transfer the allocated amount of tokens for distribution
-        SafeTransferLib.safeTransferFrom(s_saleStatus.askToken, msg.sender, address(this), amount);
+        SafeTransferLib.safeTransferFrom(saleStatus.askToken, msg.sender, address(this), amount);
 
         // Transfer the Legion fee to the Legion fee receiver address
         if (legionFee != 0) {
-            SafeTransferLib.safeTransferFrom(
-                s_saleStatus.askToken, msg.sender, s_saleConfig.legionFeeReceiver, legionFee
-            );
+            SafeTransferLib.safeTransferFrom(saleStatus.askToken, msg.sender, saleConfig.legionFeeReceiver, legionFee);
         }
 
         // Transfer the Referrer fee to the Referer fee receiver address
         if (referrerFee != 0) {
             SafeTransferLib.safeTransferFrom(
-                s_saleStatus.askToken, msg.sender, s_saleConfig.referrerFeeReceiver, referrerFee
+                saleStatus.askToken, msg.sender, saleConfig.referrerFeeReceiver, referrerFee
             );
         }
     }
@@ -357,33 +361,37 @@ contract LegionPreLiquidApprovedSale is
         // Verify that the project can withdraw capital
         _verifyCanWithdrawCapital();
 
+        // Cache value in memory
+        uint256 _totalCapitalRaised = s_saleStatus.totalCapitalRaised;
+
         // Account for the capital withdrawn
-        s_saleStatus.totalCapitalWithdrawn = s_saleStatus.totalCapitalRaised;
+        s_saleStatus.totalCapitalWithdrawn = _totalCapitalRaised;
+
+        // Cache the sale configuration
+        PreLiquidSaleConfig memory saleConfig = s_saleConfig;
 
         // Calculate Legion Fee
-        uint256 legionFee = (s_saleConfig.legionFeeOnCapitalRaisedBps * s_saleStatus.totalCapitalWithdrawn)
-            / Constants.BASIS_POINTS_DENOMINATOR;
+        uint256 legionFee =
+            (saleConfig.legionFeeOnCapitalRaisedBps * _totalCapitalRaised) / Constants.BASIS_POINTS_DENOMINATOR;
 
         // Calculate Referrer Fee
-        uint256 referrerFee = (s_saleConfig.referrerFeeOnCapitalRaisedBps * s_saleStatus.totalCapitalWithdrawn)
-            / Constants.BASIS_POINTS_DENOMINATOR;
+        uint256 referrerFee =
+            (saleConfig.referrerFeeOnCapitalRaisedBps * _totalCapitalRaised) / Constants.BASIS_POINTS_DENOMINATOR;
 
         // Emit successfully CapitalWithdrawn
-        emit CapitalWithdrawn(s_saleStatus.totalCapitalWithdrawn);
+        emit CapitalWithdrawn(_totalCapitalRaised);
 
         // Transfer the amount to the Project's address
-        SafeTransferLib.safeTransfer(
-            s_saleConfig.bidToken, msg.sender, (s_saleStatus.totalCapitalWithdrawn - legionFee - referrerFee)
-        );
+        SafeTransferLib.safeTransfer(saleConfig.bidToken, msg.sender, (_totalCapitalRaised - legionFee - referrerFee));
 
         // Transfer the Legion fee to the Legion fee receiver address
         if (legionFee != 0) {
-            SafeTransferLib.safeTransfer(s_saleConfig.bidToken, s_saleConfig.legionFeeReceiver, legionFee);
+            SafeTransferLib.safeTransfer(saleConfig.bidToken, saleConfig.legionFeeReceiver, legionFee);
         }
 
         // Transfer the Referrer fee to the Referrer fee receiver address
         if (referrerFee != 0) {
-            SafeTransferLib.safeTransfer(s_saleConfig.bidToken, s_saleConfig.referrerFeeReceiver, referrerFee);
+            SafeTransferLib.safeTransfer(saleConfig.bidToken, saleConfig.referrerFeeReceiver, referrerFee);
         }
     }
 
@@ -442,8 +450,11 @@ contract LegionPreLiquidApprovedSale is
         // Mark that the token amount has been settled
         position.hasSettled = true;
 
+        // Cache the sale status
+        PreLiquidSaleStatus memory saleStatus = s_saleStatus;
+
         // Calculate the total token amount to be claimed
-        uint256 totalAmount = s_saleStatus.askTokenTotalSupply * position.cachedTokenAllocationRate
+        uint256 totalAmount = saleStatus.askTokenTotalSupply * position.cachedTokenAllocationRate
             / Constants.TOKEN_ALLOCATION_RATE_DENOMINATOR;
 
         // Calculate the amount to be distributed on claim
@@ -465,12 +476,12 @@ contract LegionPreLiquidApprovedSale is
             position.vestingAddress = vestingAddress;
 
             // Transfer the allocated amount of tokens for distribution to the vesting contract
-            SafeTransferLib.safeTransfer(s_saleStatus.askToken, vestingAddress, amountToBeVested);
+            SafeTransferLib.safeTransfer(saleStatus.askToken, vestingAddress, amountToBeVested);
         }
 
         if (amountToDistributeOnClaim != 0) {
             // Transfer the allocated amount of tokens for distribution on claim
-            SafeTransferLib.safeTransfer(s_saleStatus.askToken, msg.sender, amountToDistributeOnClaim);
+            SafeTransferLib.safeTransfer(saleStatus.askToken, msg.sender, amountToDistributeOnClaim);
         }
     }
 
@@ -608,14 +619,14 @@ contract LegionPreLiquidApprovedSale is
         // Verify that the position exists
         _verifyPositionExists(positionId);
 
-        // Get the investor position details
-        InvestorPosition memory position = s_investorPositions[positionId];
+        // Get the investor vesting address
+        address investorVestingAddress = s_investorPositions[positionId].vestingAddress;
 
         // Revert in case there's no vesting for the investor
-        if (position.vestingAddress == address(0)) revert Errors.LegionSale__ZeroAddressProvided();
+        if (investorVestingAddress == address(0)) revert Errors.LegionSale__ZeroAddressProvided();
 
         // Release tokens to the investor account
-        ILegionVesting(position.vestingAddress).release(s_saleStatus.askToken);
+        ILegionVesting(investorVestingAddress).release(s_saleStatus.askToken);
     }
 
     /**
@@ -932,12 +943,15 @@ contract LegionPreLiquidApprovedSale is
      * @param positionId The ID of the position to transfer or burn
      */
     function _burnOrTransferInvestorPosition(address from, address to, uint256 positionId) private {
+        // Get the position ID of the receiver
+        uint256 positionIdTo = s_investorPositionIds[to];
+
         // If the receiver already has a position, burn the transferred position
         // and update the existing position
-        if (s_investorPositionIds[to] != 0) {
+        if (positionIdTo != 0) {
             // Load the investor positions
             InvestorPosition memory positionToBurn = s_investorPositions[positionId];
-            InvestorPosition storage positionToUpdate = s_investorPositions[s_investorPositionIds[to]];
+            InvestorPosition storage positionToUpdate = s_investorPositions[positionIdTo];
 
             // Update the existing position with the transferred values
             positionToUpdate.investedCapital += positionToBurn.investedCapital;
@@ -1008,15 +1022,18 @@ contract LegionPreLiquidApprovedSale is
      * @param _amount Amount of tokens to supply
      */
     function _verifyCanSupplyTokens(uint256 _amount) private view {
+        // Cache the total amount of tokens allocated for distribution
+        uint256 totalTokensAllocated = s_saleStatus.totalTokensAllocated;
+
         // Revert if Legion has not set the total amount of tokens allocated for distribution
-        if (s_saleStatus.totalTokensAllocated == 0) revert Errors.LegionSale__TokensNotAllocated();
+        if (totalTokensAllocated == 0) revert Errors.LegionSale__TokensNotAllocated();
 
         // Revert if tokens have already been supplied
         if (s_saleStatus.tokensSupplied) revert Errors.LegionSale__TokensAlreadySupplied();
 
         // Revert if the amount of tokens supplied is different than the amount set by Legion
-        if (_amount != s_saleStatus.totalTokensAllocated) {
-            revert Errors.LegionSale__InvalidTokenAmountSupplied(_amount, s_saleStatus.totalTokensAllocated);
+        if (_amount != totalTokensAllocated) {
+            revert Errors.LegionSale__InvalidTokenAmountSupplied(_amount, totalTokensAllocated);
         }
     }
 
@@ -1096,8 +1113,12 @@ contract LegionPreLiquidApprovedSale is
      * @dev Ensures capital state allows withdrawal
      */
     function _verifyCanWithdrawCapital() private view {
-        if (s_saleStatus.totalCapitalWithdrawn > 0) revert Errors.LegionSale__CapitalAlreadyWithdrawn();
-        if (s_saleStatus.totalCapitalRaised == 0) revert Errors.LegionSale__CapitalNotRaised();
+        // Load the sale status
+        PreLiquidSaleStatus memory saleStatus = s_saleStatus;
+        // Check if capital has not been withdrawn
+        if (saleStatus.totalCapitalWithdrawn > 0) revert Errors.LegionSale__CapitalAlreadyWithdrawn();
+        // Check if capital raised has been published
+        if (saleStatus.totalCapitalRaised == 0) revert Errors.LegionSale__CapitalNotRaised();
     }
 
     /**
@@ -1105,8 +1126,10 @@ contract LegionPreLiquidApprovedSale is
      * @dev Reverts if refund period is still active
      */
     function _verifyRefundPeriodIsOver() private view {
-        if (s_saleStatus.refundEndTime > 0 && block.timestamp < s_saleStatus.refundEndTime) {
-            revert Errors.LegionSale__RefundPeriodIsNotOver(block.timestamp, s_saleStatus.refundEndTime);
+        // Cache the refund end time from the sale configuration
+        uint256 refundEndTime = s_saleStatus.refundEndTime;
+        if (refundEndTime > 0 && block.timestamp < refundEndTime) {
+            revert Errors.LegionSale__RefundPeriodIsNotOver(block.timestamp, refundEndTime);
         }
     }
 
@@ -1115,8 +1138,10 @@ contract LegionPreLiquidApprovedSale is
      * @dev Reverts if refund period has ended
      */
     function _verifyRefundPeriodIsNotOver() private view {
-        if (s_saleStatus.refundEndTime > 0 && block.timestamp >= s_saleStatus.refundEndTime) {
-            revert Errors.LegionSale__RefundPeriodIsOver(block.timestamp, s_saleStatus.refundEndTime);
+        // Cache the refund end time from the sale configuration
+        uint256 refundEndTime = s_saleStatus.refundEndTime;
+        if (refundEndTime > 0 && block.timestamp >= refundEndTime) {
+            revert Errors.LegionSale__RefundPeriodIsOver(block.timestamp, refundEndTime);
         }
     }
 

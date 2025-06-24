@@ -239,30 +239,36 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
         // Cache value in memory
         uint256 _totalCapitalRaised = s_saleStatus.totalCapitalRaised;
 
+        // Cache Legion Sale Address Configuration
+        LegionSaleAddressConfiguration memory addressConfig = s_addressConfig;
+
+        // Cache Legion Sale Configuration
+        LegionSaleConfiguration memory saleConfig = s_saleConfig;
+
         // Calculate Legion Fee
         uint256 _legionFee =
-            (s_saleConfig.legionFeeOnCapitalRaisedBps * _totalCapitalRaised) / Constants.BASIS_POINTS_DENOMINATOR;
+            (saleConfig.legionFeeOnCapitalRaisedBps * _totalCapitalRaised) / Constants.BASIS_POINTS_DENOMINATOR;
 
         // Calculate Referrer Fee
         uint256 _referrerFee =
-            (s_saleConfig.referrerFeeOnCapitalRaisedBps * _totalCapitalRaised) / Constants.BASIS_POINTS_DENOMINATOR;
+            (saleConfig.referrerFeeOnCapitalRaisedBps * _totalCapitalRaised) / Constants.BASIS_POINTS_DENOMINATOR;
 
         // Emit successfully CapitalWithdrawn
         emit CapitalWithdrawn(_totalCapitalRaised);
 
         // Transfer the raised capital to the project owner
         SafeTransferLib.safeTransfer(
-            s_addressConfig.bidToken, msg.sender, (_totalCapitalRaised - _legionFee - _referrerFee)
+            addressConfig.bidToken, msg.sender, (_totalCapitalRaised - _legionFee - _referrerFee)
         );
 
         // Transfer the Legion fee to the Legion fee receiver address
         if (_legionFee != 0) {
-            SafeTransferLib.safeTransfer(s_addressConfig.bidToken, s_addressConfig.legionFeeReceiver, _legionFee);
+            SafeTransferLib.safeTransfer(addressConfig.bidToken, addressConfig.legionFeeReceiver, _legionFee);
         }
 
         // Transfer the Referrer fee to the Referrer fee receiver address
         if (_referrerFee != 0) {
-            SafeTransferLib.safeTransfer(s_addressConfig.bidToken, s_addressConfig.referrerFeeReceiver, _referrerFee);
+            SafeTransferLib.safeTransfer(addressConfig.bidToken, addressConfig.referrerFeeReceiver, _referrerFee);
         }
     }
 
@@ -326,8 +332,11 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
      * @dev Overrides parent to check refundEndTime; reverts if not over
      */
     function _verifyRefundPeriodIsOver() internal view override {
-        if (s_saleConfig.refundEndTime > 0 && block.timestamp < s_saleConfig.refundEndTime) {
-            revert Errors.LegionSale__RefundPeriodIsNotOver(block.timestamp, s_saleConfig.refundEndTime);
+        // Cache the refund end time from the sale configuration
+        uint256 refundEndTime = s_saleConfig.refundEndTime;
+
+        if (refundEndTime > 0 && block.timestamp < refundEndTime) {
+            revert Errors.LegionSale__RefundPeriodIsNotOver(block.timestamp, refundEndTime);
         }
     }
 
@@ -336,8 +345,11 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
      * @dev Overrides parent to check refundEndTime; reverts if over
      */
     function _verifyRefundPeriodIsNotOver() internal view override {
-        if (s_saleConfig.refundEndTime > 0 && block.timestamp >= s_saleConfig.refundEndTime) {
-            revert Errors.LegionSale__RefundPeriodIsOver(block.timestamp, s_saleConfig.refundEndTime);
+        // Cache the refund end time from the sale configuration
+        uint256 refundEndTime = s_saleConfig.refundEndTime;
+
+        if (refundEndTime > 0 && block.timestamp >= refundEndTime) {
+            revert Errors.LegionSale__RefundPeriodIsOver(block.timestamp, refundEndTime);
         }
     }
 
@@ -346,8 +358,11 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
      * @dev Overrides parent to check withdrawal status and capital raised
      */
     function _verifyCanWithdrawCapital() internal view override {
-        if (s_saleStatus.capitalWithdrawn) revert Errors.LegionSale__CapitalAlreadyWithdrawn();
-        if (s_saleStatus.totalCapitalRaised == 0) revert Errors.LegionSale__CapitalRaisedNotPublished();
+        // Load the sale status
+        LegionSaleStatus memory saleStatus = s_saleStatus;
+
+        if (saleStatus.capitalWithdrawn) revert Errors.LegionSale__CapitalAlreadyWithdrawn();
+        if (saleStatus.totalCapitalRaised == 0) revert Errors.LegionSale__CapitalRaisedNotPublished();
     }
 
     /*//////////////////////////////////////////////////////////////////////////

@@ -115,13 +115,19 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
         // Verify that tokens can be supplied for distribution
         _verifyCanSupplyTokens(amount);
 
+        // Flag that ask tokens have been supplied
+        s_tokenDistributorConfig.tokensSupplied = true;
+
+        // Load the token distributor configuration
+        TokenDistributorConfig memory tokenDistributorConfig = s_tokenDistributorConfig;
+
         // Calculate the expected Legion Fee amount
         uint256 expectedLegionFeeAmount =
-            (s_tokenDistributorConfig.legionFeeOnTokensSoldBps * amount) / Constants.BASIS_POINTS_DENOMINATOR;
+            (tokenDistributorConfig.legionFeeOnTokensSoldBps * amount) / Constants.BASIS_POINTS_DENOMINATOR;
 
         // Calculate the expected Referrer Fee amount
         uint256 expectedReferrerFeeAmount =
-            (s_tokenDistributorConfig.referrerFeeOnTokensSoldBps * amount) / Constants.BASIS_POINTS_DENOMINATOR;
+            (tokenDistributorConfig.referrerFeeOnTokensSoldBps * amount) / Constants.BASIS_POINTS_DENOMINATOR;
 
         // Verify Legion Fee amount
         if (legionFee != expectedLegionFeeAmount) {
@@ -133,26 +139,23 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
             revert Errors.LegionSale__InvalidFeeAmount(referrerFee, expectedReferrerFeeAmount);
         }
 
-        // Flag that ask tokens have been supplied
-        s_tokenDistributorConfig.tokensSupplied = true;
-
         // Emit successfully TokensSuppliedForDistribution
         emit TokensSuppliedForDistribution(amount, legionFee, referrerFee);
 
         // Transfer the allocated amount of tokens for distribution to the contract
-        SafeTransferLib.safeTransferFrom(s_tokenDistributorConfig.askToken, msg.sender, address(this), amount);
+        SafeTransferLib.safeTransferFrom(tokenDistributorConfig.askToken, msg.sender, address(this), amount);
 
         // Transfer the Legion fee to the Legion fee receiver address
         if (legionFee != 0) {
             SafeTransferLib.safeTransferFrom(
-                s_tokenDistributorConfig.askToken, msg.sender, s_tokenDistributorConfig.legionFeeReceiver, legionFee
+                tokenDistributorConfig.askToken, msg.sender, tokenDistributorConfig.legionFeeReceiver, legionFee
             );
         }
 
         // Transfer the Referrer fee to the Referrer fee receiver address
         if (referrerFee != 0) {
             SafeTransferLib.safeTransferFrom(
-                s_tokenDistributorConfig.askToken, msg.sender, s_tokenDistributorConfig.referrerFeeReceiver, referrerFee
+                tokenDistributorConfig.askToken, msg.sender, tokenDistributorConfig.referrerFeeReceiver, referrerFee
             );
         }
     }
@@ -210,6 +213,9 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
         // Update the total amount claimed
         s_tokenDistributorConfig.totalAmountClaimed += claimAmount;
 
+        // Load the token distributor configuration
+        TokenDistributorConfig memory tokenDistributorConfig = s_tokenDistributorConfig;
+
         // Calculate the amount to be distributed on claim
         uint256 amountToDistributeOnClaim =
             claimAmount * investorVestingConfig.tokenAllocationOnTGERate / Constants.TOKEN_ALLOCATION_RATE_DENOMINATOR;
@@ -229,12 +235,12 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
             position.vestingAddress = vestingAddress;
 
             // Transfer the allocated amount of tokens for distribution to the vesting contract
-            SafeTransferLib.safeTransfer(s_tokenDistributorConfig.askToken, vestingAddress, amountToBeVested);
+            SafeTransferLib.safeTransfer(tokenDistributorConfig.askToken, vestingAddress, amountToBeVested);
         }
 
         if (amountToDistributeOnClaim != 0) {
             // Transfer the allocated amount of tokens for distribution on claim
-            SafeTransferLib.safeTransfer(s_tokenDistributorConfig.askToken, msg.sender, amountToDistributeOnClaim);
+            SafeTransferLib.safeTransfer(tokenDistributorConfig.askToken, msg.sender, amountToDistributeOnClaim);
         }
     }
 
@@ -243,14 +249,14 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
      * @dev Calls vesting contract to release tokens
      */
     function releaseVestedTokens() external whenNotPaused {
-        // Get the investor position details
-        InvestorPosition memory position = s_investorPositions[msg.sender];
+        // Get the investor vesting address
+        address investorVestingAddress = s_investorPositions[msg.sender].vestingAddress;
 
         // Revert in case there's no vesting for the investor
-        if (position.vestingAddress == address(0)) revert Errors.LegionSale__ZeroAddressProvided();
+        if (investorVestingAddress == address(0)) revert Errors.LegionSale__ZeroAddressProvided();
 
         // Release tokens to the investor account
-        ILegionVesting(position.vestingAddress).release(s_tokenDistributorConfig.askToken);
+        ILegionVesting(investorVestingAddress).release(s_tokenDistributorConfig.askToken);
     }
 
     /**
@@ -432,13 +438,16 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
      * @param _amount Amount of tokens to supply
      */
     function _verifyCanSupplyTokens(uint256 _amount) private view {
+        // Load the token distributor configuration
+        TokenDistributorConfig memory tokenDistributorConfig = s_tokenDistributorConfig;
+
         // Revert if tokens have already been supplied
-        if (s_tokenDistributorConfig.tokensSupplied) revert Errors.LegionSale__TokensAlreadySupplied();
+        if (tokenDistributorConfig.tokensSupplied) revert Errors.LegionSale__TokensAlreadySupplied();
 
         // Revert if the amount of tokens supplied is different than the amount set by Legion
-        if (_amount != s_tokenDistributorConfig.totalAmountToDistribute) {
+        if (_amount != tokenDistributorConfig.totalAmountToDistribute) {
             revert Errors.LegionSale__InvalidTokenAmountSupplied(
-                _amount, s_tokenDistributorConfig.totalAmountToDistribute
+                _amount, tokenDistributorConfig.totalAmountToDistribute
             );
         }
     }

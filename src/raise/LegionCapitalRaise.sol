@@ -255,40 +255,40 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
         // Verify that the project can withdraw capital
         _verifyCanWithdrawCapital();
 
+        // Cache value in memory
+        uint256 _totalCapitalRaised = s_capitalRaiseStatus.totalCapitalRaised;
+
         // Account for the capital withdrawn
-        s_capitalRaiseStatus.totalCapitalWithdrawn = s_capitalRaiseStatus.totalCapitalRaised;
+        s_capitalRaiseStatus.totalCapitalWithdrawn = _totalCapitalRaised;
+
+        // Cache the sale configuration
+        CapitalRaiseConfig memory capitalRaiseConfig = s_capitalRaiseConfig;
 
         // Calculate Legion Fee
-        uint256 legionFee = (
-            s_capitalRaiseConfig.legionFeeOnCapitalRaisedBps * s_capitalRaiseStatus.totalCapitalWithdrawn
-        ) / Constants.BASIS_POINTS_DENOMINATOR;
+        uint256 legionFee =
+            (capitalRaiseConfig.legionFeeOnCapitalRaisedBps * _totalCapitalRaised) / Constants.BASIS_POINTS_DENOMINATOR;
 
         // Calculate Referrer Fee
-        uint256 referrerFee = (
-            s_capitalRaiseConfig.referrerFeeOnCapitalRaisedBps * s_capitalRaiseStatus.totalCapitalWithdrawn
-        ) / Constants.BASIS_POINTS_DENOMINATOR;
+        uint256 referrerFee = (capitalRaiseConfig.referrerFeeOnCapitalRaisedBps * _totalCapitalRaised)
+            / Constants.BASIS_POINTS_DENOMINATOR;
 
         // Emit successfully CapitalWithdrawn
-        emit CapitalWithdrawn(s_capitalRaiseStatus.totalCapitalWithdrawn);
+        emit CapitalWithdrawn(_totalCapitalRaised);
 
         // Transfer the amount to the Project's address
         SafeTransferLib.safeTransfer(
-            s_capitalRaiseConfig.bidToken,
-            msg.sender,
-            (s_capitalRaiseStatus.totalCapitalWithdrawn - legionFee - referrerFee)
+            capitalRaiseConfig.bidToken, msg.sender, (_totalCapitalRaised - legionFee - referrerFee)
         );
 
         // Transfer the Legion fee to the Legion fee receiver address
         if (legionFee != 0) {
-            SafeTransferLib.safeTransfer(
-                s_capitalRaiseConfig.bidToken, s_capitalRaiseConfig.legionFeeReceiver, legionFee
-            );
+            SafeTransferLib.safeTransfer(capitalRaiseConfig.bidToken, capitalRaiseConfig.legionFeeReceiver, legionFee);
         }
 
         // Transfer the Referrer fee to the Referrer fee receiver address
         if (referrerFee != 0) {
             SafeTransferLib.safeTransfer(
-                s_capitalRaiseConfig.bidToken, s_capitalRaiseConfig.referrerFeeReceiver, referrerFee
+                capitalRaiseConfig.bidToken, capitalRaiseConfig.referrerFeeReceiver, referrerFee
             );
         }
     }
@@ -676,18 +676,21 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
 
     /**
      * @notice Burns or transfers an investor position based on conditions
-     * @dev Handles position transfer logic; burns if receiver already has a position and merges position values
+     * @dev Handles position transfer logic; burns if receiver already has a position
      * @param from The address of the current owner
      * @param to The address of the new owner
      * @param positionId The ID of the position to transfer or burn
      */
     function _burnOrTransferInvestorPosition(address from, address to, uint256 positionId) private {
+        // Get the position ID of the receiver
+        uint256 positionIdTo = s_investorPositionIds[to];
+
         // If the receiver already has a position, burn the transferred position
-        // and update the existing receiver's position
-        if (s_investorPositionIds[to] != 0) {
+        // and update the existing position
+        if (positionIdTo != 0) {
             // Load the investor positions
             InvestorPosition memory positionToBurn = s_investorPositions[positionId];
-            InvestorPosition storage positionToUpdate = s_investorPositions[s_investorPositionIds[to]];
+            InvestorPosition storage positionToUpdate = s_investorPositions[positionIdTo];
 
             // Update the existing position with the transferred values
             positionToUpdate.investedCapital += positionToBurn.investedCapital;
@@ -772,10 +775,12 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
      * @dev Ensures capital state allows withdrawal
      */
     function _verifyCanWithdrawCapital() internal view virtual {
+        // Load the sale status
+        CapitalRaiseStatus memory capitalRaiseStatus = s_capitalRaiseStatus;
         // Check if capital has not been withdrawn
-        if (s_capitalRaiseStatus.totalCapitalWithdrawn > 0) revert Errors.LegionSale__CapitalAlreadyWithdrawn();
+        if (capitalRaiseStatus.totalCapitalWithdrawn > 0) revert Errors.LegionSale__CapitalAlreadyWithdrawn();
         // Check if capital raised has been published
-        if (s_capitalRaiseStatus.totalCapitalRaised == 0) revert Errors.LegionSale__CapitalNotRaised();
+        if (capitalRaiseStatus.totalCapitalRaised == 0) revert Errors.LegionSale__CapitalNotRaised();
     }
 
     /**
@@ -783,8 +788,10 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
      * @dev Reverts if refund period is still active
      */
     function _verifyRefundPeriodIsOver() internal view {
-        if (s_capitalRaiseStatus.refundEndTime > 0 && block.timestamp < s_capitalRaiseStatus.refundEndTime) {
-            revert Errors.LegionSale__RefundPeriodIsNotOver(block.timestamp, s_capitalRaiseStatus.refundEndTime);
+        // Cache the refund end time from the sale configuration
+        uint256 refundEndTime = s_capitalRaiseStatus.refundEndTime;
+        if (refundEndTime > 0 && block.timestamp < refundEndTime) {
+            revert Errors.LegionSale__RefundPeriodIsNotOver(block.timestamp, refundEndTime);
         }
     }
 
@@ -793,8 +800,10 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
      * @dev Reverts if refund period has ended
      */
     function _verifyRefundPeriodIsNotOver() internal view {
-        if (s_capitalRaiseStatus.refundEndTime > 0 && block.timestamp >= s_capitalRaiseStatus.refundEndTime) {
-            revert Errors.LegionSale__RefundPeriodIsOver(block.timestamp, s_capitalRaiseStatus.refundEndTime);
+        // Cache the refund end time from the sale configuration
+        uint256 refundEndTime = s_capitalRaiseStatus.refundEndTime;
+        if (refundEndTime > 0 && block.timestamp >= refundEndTime) {
+            revert Errors.LegionSale__RefundPeriodIsOver(block.timestamp, refundEndTime);
         }
     }
 

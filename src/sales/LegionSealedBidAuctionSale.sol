@@ -244,9 +244,12 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
         // Verify that the private key has been published by Legion
         _verifyPrivateKeyIsPublished();
 
+        // Cache the sealed bid auction sale configuration
+        SealedBidAuctionSaleConfiguration memory sealedBidAuctionSaleConfig = s_sealedBidAuctionSaleConfig;
+
         // Decrypt the sealed bid
         return ECIES.decrypt(
-            encryptedAmountOut, s_sealedBidAuctionSaleConfig.publicKey, s_sealedBidAuctionSaleConfig.privateKey, salt
+            encryptedAmountOut, sealedBidAuctionSaleConfig.publicKey, sealedBidAuctionSaleConfig.privateKey, salt
         );
     }
 
@@ -278,11 +281,14 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
         // Verify that the _publicKey is a valid point for the encryption library
         if (!ECIES.isValid(_publicKey)) revert Errors.LegionSale__InvalidBidPublicKey();
 
+        // Cache the sealed bid auction sale configuration
+        SealedBidAuctionSaleConfiguration memory sealedBidAuctionSaleConfig = s_sealedBidAuctionSaleConfig;
+
         // Verify that the _publicKey is the one used for the entire auction
         if (
             keccak256(abi.encodePacked(_publicKey.x, _publicKey.y))
                 != keccak256(
-                    abi.encodePacked(s_sealedBidAuctionSaleConfig.publicKey.x, s_sealedBidAuctionSaleConfig.publicKey.y)
+                    abi.encodePacked(sealedBidAuctionSaleConfig.publicKey.x, sealedBidAuctionSaleConfig.publicKey.y)
                 )
         ) revert Errors.LegionSale__InvalidBidPublicKey();
     }
@@ -293,16 +299,19 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
      * @param _privateKey Private key provided for decryption
      */
     function _verifyValidPrivateKey(uint256 _privateKey) private view {
+        // Cache the sealed bid auction sale configuration
+        SealedBidAuctionSaleConfiguration memory sealedBidAuctionSaleConfig = s_sealedBidAuctionSaleConfig;
+
         // Verify that the private key has not already been published
-        if (s_sealedBidAuctionSaleConfig.privateKey != 0) {
+        if (sealedBidAuctionSaleConfig.privateKey != 0) {
             revert Errors.LegionSale__PrivateKeyAlreadyPublished();
         }
 
         // Verify that the private key is valid for the public key
         Point memory calcPubKey = ECIES.calcPubKey(Point(1, 2), _privateKey);
         if (
-            calcPubKey.x != s_sealedBidAuctionSaleConfig.publicKey.x
-                || calcPubKey.y != s_sealedBidAuctionSaleConfig.publicKey.y
+            calcPubKey.x != sealedBidAuctionSaleConfig.publicKey.x
+                || calcPubKey.y != sealedBidAuctionSaleConfig.publicKey.y
         ) revert Errors.LegionSale__InvalidBidPrivateKey();
     }
 
