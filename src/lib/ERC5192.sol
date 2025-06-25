@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 //       ___       ___           ___                       ___           ___
 //      /\__\     /\  \         /\  \          ___        /\  \         /\__\
@@ -29,6 +29,12 @@ abstract contract ERC5192 is IERC5192, ERC721 {
      * @param tokenId The identifier for the token that cannot be transferred
      */
     error ERC5192__LockedToken(uint256 tokenId);
+
+    /**
+     * @dev Thrown when attempting to transfer a token to itself
+     * @param tokenId The identifier for the token that cannot be transferred to itself
+     */
+    error ERC5192__TransferToSelf(uint256 tokenId);
 
     /// @dev Mapping from token ID to locked status
     mapping(uint256 => bool) internal _locked;
@@ -132,6 +138,11 @@ abstract contract ERC5192 is IERC5192, ERC721 {
         // If the token is locked, revert the transaction
         if (_locked[id]) {
             revert ERC5192__LockedToken(id);
+        }
+
+        // If the transfer is to self, revert the transaction
+        if (from == to) {
+            revert ERC5192__TransferToSelf(id);
         }
 
         super._beforeTokenTransfer(from, to, id);

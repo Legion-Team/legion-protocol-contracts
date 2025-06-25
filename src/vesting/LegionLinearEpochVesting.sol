@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 //       ___       ___           ___                       ___           ___
 //      /\__\     /\  \         /\  \          ___        /\  \         /\__\
@@ -30,19 +30,19 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
 
     /// @notice Unix timestamp (seconds) when the cliff period ends
     /// @dev Prevents token release until this timestamp is reached
-    uint256 private s_cliffEndTimestamp;
+    uint64 private s_cliffEndTimestamp;
 
     /// @notice Duration of each epoch in seconds
     /// @dev Defines the vesting interval
-    uint256 private s_epochDurationSeconds;
+    uint64 private s_epochDurationSeconds;
 
     /// @notice Total number of epochs in the vesting schedule
     /// @dev Determines the vesting granularity
-    uint256 private s_numberOfEpochs;
+    uint64 private s_numberOfEpochs;
 
     /// @notice The last epoch for which tokens were claimed
     /// @dev Tracks vesting progress
-    uint256 private s_lastClaimedEpoch;
+    uint64 private s_lastClaimedEpoch;
 
     /*//////////////////////////////////////////////////////////////////////////
                                    MODIFIERS
@@ -89,8 +89,8 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
         uint64 _startTimestamp,
         uint64 _durationSeconds,
         uint64 _cliffDurationSeconds,
-        uint256 _epochDurationSeconds,
-        uint256 _numberOfEpochs
+        uint64 _epochDurationSeconds,
+        uint64 _numberOfEpochs
     )
         external
         initializer
@@ -116,7 +116,7 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
      * @dev Indicates when the vesting cliff ends
      * @return uint256 Unix timestamp (seconds) of the cliff end
      */
-    function cliffEndTimestamp() external view returns (uint256) {
+    function cliffEndTimestamp() external view returns (uint64) {
         return s_cliffEndTimestamp;
     }
 
@@ -125,7 +125,7 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
      * @dev Defines the vesting interval for epoch-based releases
      * @return uint256 Duration of each epoch in seconds
      */
-    function epochDurationSeconds() external view returns (uint256) {
+    function epochDurationSeconds() external view returns (uint64) {
         return s_epochDurationSeconds;
     }
 
@@ -134,7 +134,7 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
      * @dev Determines the granularity of token releases
      * @return uint256 Total number of epochs in the vesting schedule
      */
-    function numberOfEpochs() external view returns (uint256) {
+    function numberOfEpochs() external view returns (uint64) {
         return s_numberOfEpochs;
     }
 
@@ -143,7 +143,7 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
      * @dev Tracks the progress of vesting claims
      * @return uint256 Last epoch number for which tokens were claimed
      */
-    function lastClaimedEpoch() external view returns (uint256) {
+    function lastClaimedEpoch() external view returns (uint64) {
         return s_lastClaimedEpoch;
     }
 
@@ -168,9 +168,9 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
      * @dev Calculates the epoch number starting from 0 before vesting begins
      * @return uint256 Current epoch number (0 if before start, 1+ otherwise)
      */
-    function getCurrentEpoch() public view returns (uint256) {
+    function getCurrentEpoch() public view returns (uint64) {
         if (block.timestamp < start()) return 0;
-        else return (block.timestamp - start()) / s_epochDurationSeconds + 1;
+        else return (uint64(block.timestamp - start())) / s_epochDurationSeconds + 1;
     }
 
     /**
@@ -179,9 +179,9 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
      * @param timestamp Unix timestamp (seconds) to evaluate
      * @return uint256 Epoch number at the given timestamp (0 if before start)
      */
-    function getCurrentEpochAtTimestamp(uint256 timestamp) public view returns (uint256) {
+    function getCurrentEpochAtTimestamp(uint256 timestamp) public view returns (uint64) {
         if (timestamp < start()) return 0;
-        else return (timestamp - start()) / s_epochDurationSeconds + 1;
+        else return (uint64(timestamp - start())) / s_epochDurationSeconds + 1;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -194,7 +194,7 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
      */
     function _updateLastClaimedEpoch() internal {
         // Get the current epoch
-        uint256 currentEpoch = getCurrentEpoch();
+        uint64 currentEpoch = getCurrentEpoch();
 
         // If all the epochs have elapsed, set the last claimed epoch to the total number of epochs
         if (currentEpoch >= s_numberOfEpochs + 1) {

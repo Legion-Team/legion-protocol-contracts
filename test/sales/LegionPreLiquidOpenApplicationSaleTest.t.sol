@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { ERC721 } from "@solady/src/tokens/ERC721.sol";
@@ -223,7 +223,7 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
      * @notice Merkle root for claimable tokens
      * @dev Precomputed root for verifying token claims
      */
-    bytes32 public claimTokensMerkleRoot = 0xf1497b122b0d3850e93c6e95a35163a5f7715ca75ec6a031abe96622b46a6ee2;
+    bytes32 public claimTokensMerkleRoot = 0x8d7c018c2099eaee9884eb772e1565b75cb717aa61d4caa276dd612273cdd649;
 
     /**
      * @notice Merkle root for accepted capital
@@ -470,7 +470,7 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
      */
     function prepareInvestorVestingConfig() public {
         investorVestingConfig = ILegionVestingManager.LegionInvestorVestingConfig(
-            ILegionVestingManager.VestingType.LEGION_LINEAR, 0, 31_536_000, 3600, 0, 0, 1e17
+            0, 31_536_000, 3600, ILegionVestingManager.VestingType.LEGION_LINEAR, 0, 0, 1e17
         );
     }
 
@@ -2490,8 +2490,8 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
         prepareInvestedCapitalFromAllInvestors();
 
         bytes32[] memory claimProofInvestor2 = new bytes32[](2);
-        claimProofInvestor2[0] = bytes32(0x4287a77f3e3d040f42dcb9539e336d83d166ff810eb9d5d74bc440a2bdac5dae);
-        claimProofInvestor2[1] = bytes32(0xda52deea919ca150a57325de782da41cffff19ec1bdf5d9747c1d6aa28b7639c);
+        claimProofInvestor2[0] = bytes32(0xff3d33a8fd9d2fd370071d27191d742338d3c1bdf0ed9e7074156278e31f492d);
+        claimProofInvestor2[1] = bytes32(0xe5fecd7e290c6f3102d02b9d4a89172fe2ebf2c44ef3c3699f4f1025adfe63cc);
 
         vm.prank(projectAdmin);
         ILegionPreLiquidOpenApplicationSale(legionSaleInstance).endSale();
@@ -2543,8 +2543,8 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
         prepareInvestedCapitalFromAllInvestors();
 
         bytes32[] memory claimProofInvestor2 = new bytes32[](2);
-        claimProofInvestor2[0] = bytes32(0x4287a77f3e3d040f42dcb9539e336d83d166ff810eb9d5d74bc440a2bdac5dae);
-        claimProofInvestor2[1] = bytes32(0xda52deea919ca150a57325de782da41cffff19ec1bdf5d9747c1d6aa28b7639c);
+        claimProofInvestor2[0] = bytes32(0xff3d33a8fd9d2fd370071d27191d742338d3c1bdf0ed9e7074156278e31f492d);
+        claimProofInvestor2[1] = bytes32(0xe5fecd7e290c6f3102d02b9d4a89172fe2ebf2c44ef3c3699f4f1025adfe63cc);
 
         vm.prank(legionBouncer);
         ILegionPreLiquidOpenApplicationSale(legionSaleInstance).endSale();
@@ -2583,8 +2583,8 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
         prepareInvestedCapitalFromAllInvestors();
 
         bytes32[] memory claimProofInvestor2 = new bytes32[](2);
-        claimProofInvestor2[0] = bytes32(0x4287a77f3e3d040f42dcb9539e336d83d166ff810eb9d5d74bc440a2bdac5dae);
-        claimProofInvestor2[1] = bytes32(0xda52deea919ca150a57325de782da41cffff19ec1bdf5d9747c1d6aa28b7639c);
+        claimProofInvestor2[0] = bytes32(0xff3d33a8fd9d2fd370071d27191d742338d3c1bdf0ed9e7074156278e31f492d);
+        claimProofInvestor2[1] = bytes32(0xe5fecd7e290c6f3102d02b9d4a89172fe2ebf2c44ef3c3699f4f1025adfe63cc);
 
         vm.prank(legionBouncer);
         ILegionPreLiquidOpenApplicationSale(legionSaleInstance).endSale();
@@ -2620,8 +2620,8 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
         prepareInvestedCapitalFromAllInvestors();
 
         bytes32[] memory claimProofInvestor2 = new bytes32[](2);
-        claimProofInvestor2[0] = bytes32(0x4287a77f3e3d040f42dcb9539e336d83d166ff810eb9d5d74bc440a2bdac5dae);
-        claimProofInvestor2[1] = bytes32(0xda52deea919ca150a57325de782da41cffff19ec1bdf5d9747c1d6aa28b7639c);
+        claimProofInvestor2[0] = bytes32(0xff3d33a8fd9d2fd370071d27191d742338d3c1bdf0ed9e7074156278e31f492d);
+        claimProofInvestor2[1] = bytes32(0xe5fecd7e290c6f3102d02b9d4a89172fe2ebf2c44ef3c3699f4f1025adfe63cc);
 
         vm.prank(legionBouncer);
         ILegionPreLiquidOpenApplicationSale(legionSaleInstance).endSale();
@@ -2663,8 +2663,8 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
         prepareInvestedCapitalFromAllInvestors();
 
         bytes32[] memory claimProofInvestor2 = new bytes32[](2);
-        claimProofInvestor2[0] = bytes32(0x4287a77f3e3d040f42dcb9539e336d83d166ff810eb9d5d74bc440a2bdac5dae);
-        claimProofInvestor2[1] = bytes32(0xda52deea919ca150a57325de782da41cffff19ec1bdf5d9747c1d6aa28b7639c);
+        claimProofInvestor2[0] = bytes32(0xff3d33a8fd9d2fd370071d27191d742338d3c1bdf0ed9e7074156278e31f492d);
+        claimProofInvestor2[1] = bytes32(0xe5fecd7e290c6f3102d02b9d4a89172fe2ebf2c44ef3c3699f4f1025adfe63cc);
 
         vm.prank(legionBouncer);
         ILegionPreLiquidOpenApplicationSale(legionSaleInstance).endSale();
@@ -2702,8 +2702,8 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
         prepareInvestedCapitalFromAllInvestors();
 
         bytes32[] memory claimProofInvestor2 = new bytes32[](2);
-        claimProofInvestor2[0] = bytes32(0x4287a77f3e3d040f42dcb9539e336d83d166ff810eb9d5d74bc440a2bdac5dae);
-        claimProofInvestor2[1] = bytes32(0xda52deea919ca150a57325de782da41cffff19ec1bdf5d9747c1d6aa28b7639c);
+        claimProofInvestor2[0] = bytes32(0xff3d33a8fd9d2fd370071d27191d742338d3c1bdf0ed9e7074156278e31f492d);
+        claimProofInvestor2[1] = bytes32(0xe5fecd7e290c6f3102d02b9d4a89172fe2ebf2c44ef3c3699f4f1025adfe63cc);
 
         vm.warp(refundEndTime() + 1);
 
@@ -2735,8 +2735,8 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
         prepareInvestedCapitalFromAllInvestors();
 
         bytes32[] memory claimProofInvestor2 = new bytes32[](2);
-        claimProofInvestor2[0] = bytes32(0x4287a77f3e3d040f42dcb9539e336d83d166ff810eb9d5d74bc440a2bdac5dae);
-        claimProofInvestor2[1] = bytes32(0xda52deea919ca150a57325de782da41cffff19ec1bdf5d9747c1d6aa28b7639c);
+        claimProofInvestor2[0] = bytes32(0xff3d33a8fd9d2fd370071d27191d742338d3c1bdf0ed9e7074156278e31f492d);
+        claimProofInvestor2[1] = bytes32(0xe5fecd7e290c6f3102d02b9d4a89172fe2ebf2c44ef3c3699f4f1025adfe63cc);
 
         vm.prank(projectAdmin);
         ILegionPreLiquidOpenApplicationSale(legionSaleInstance).endSale();
@@ -2795,8 +2795,8 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
         prepareInvestedCapitalFromAllInvestors();
 
         bytes32[] memory claimProofInvestor2 = new bytes32[](2);
-        claimProofInvestor2[0] = bytes32(0x4287a77f3e3d040f42dcb9539e336d83d166ff810eb9d5d74bc440a2bdac5dae);
-        claimProofInvestor2[1] = bytes32(0xda52deea919ca150a57325de782da41cffff19ec1bdf5d9747c1d6aa28b7639c);
+        claimProofInvestor2[0] = bytes32(0xff3d33a8fd9d2fd370071d27191d742338d3c1bdf0ed9e7074156278e31f492d);
+        claimProofInvestor2[1] = bytes32(0xe5fecd7e290c6f3102d02b9d4a89172fe2ebf2c44ef3c3699f4f1025adfe63cc);
 
         vm.prank(projectAdmin);
         ILegionPreLiquidOpenApplicationSale(legionSaleInstance).endSale();

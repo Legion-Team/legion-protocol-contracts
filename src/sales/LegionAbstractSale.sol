@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 //       ___       ___           ___                       ___           ___
 //      /\__\     /\  \         /\  \          ___        /\  \         /\__\
@@ -181,30 +181,36 @@ abstract contract LegionAbstractSale is
         // Cache value in memory
         uint256 _totalCapitalRaised = s_saleStatus.totalCapitalRaised;
 
+        // Cache Legion Sale Address Configuration
+        LegionSaleAddressConfiguration memory addressConfig = s_addressConfig;
+
+        // Cache Legion Sale Configuration
+        LegionSaleConfiguration memory saleConfig = s_saleConfig;
+
         // Calculate Legion Fee
         uint256 _legionFee =
-            (s_saleConfig.legionFeeOnCapitalRaisedBps * _totalCapitalRaised) / Constants.BASIS_POINTS_DENOMINATOR;
+            (saleConfig.legionFeeOnCapitalRaisedBps * _totalCapitalRaised) / Constants.BASIS_POINTS_DENOMINATOR;
 
         // Calculate Referrer Fee
         uint256 _referrerFee =
-            (s_saleConfig.referrerFeeOnCapitalRaisedBps * _totalCapitalRaised) / Constants.BASIS_POINTS_DENOMINATOR;
+            (saleConfig.referrerFeeOnCapitalRaisedBps * _totalCapitalRaised) / Constants.BASIS_POINTS_DENOMINATOR;
 
         // Emit CapitalWithdrawn
         emit CapitalWithdrawn(_totalCapitalRaised);
 
         // Transfer the raised capital to the project owner
         SafeTransferLib.safeTransfer(
-            s_addressConfig.bidToken, msg.sender, (_totalCapitalRaised - _legionFee - _referrerFee)
+            addressConfig.bidToken, msg.sender, (_totalCapitalRaised - _legionFee - _referrerFee)
         );
 
         // Transfer the Legion fee to the Legion fee receiver address
         if (_legionFee != 0) {
-            SafeTransferLib.safeTransfer(s_addressConfig.bidToken, s_addressConfig.legionFeeReceiver, _legionFee);
+            SafeTransferLib.safeTransfer(addressConfig.bidToken, addressConfig.legionFeeReceiver, _legionFee);
         }
 
         // Transfer the Referrer fee to the Referrer fee receiver address
         if (_referrerFee != 0) {
-            SafeTransferLib.safeTransfer(s_addressConfig.bidToken, s_addressConfig.referrerFeeReceiver, _referrerFee);
+            SafeTransferLib.safeTransfer(addressConfig.bidToken, addressConfig.referrerFeeReceiver, _referrerFee);
         }
     }
 
@@ -248,6 +254,9 @@ abstract contract LegionAbstractSale is
         // Load the investor position
         InvestorPosition storage position = s_investorPositions[positionId];
 
+        // Cache Legion Sale Address Configuration
+        LegionSaleAddressConfiguration memory addressConfig = s_addressConfig;
+
         // Mark that the token amount has been settled
         position.hasSettled = true;
 
@@ -270,12 +279,12 @@ abstract contract LegionAbstractSale is
             position.vestingAddress = vestingAddress;
 
             // Transfer the allocated amount of tokens for distribution to the vesting contract
-            SafeTransferLib.safeTransfer(s_addressConfig.askToken, vestingAddress, amountToBeVested);
+            SafeTransferLib.safeTransfer(addressConfig.askToken, vestingAddress, amountToBeVested);
         }
 
         if (amountToDistributeOnClaim != 0) {
             // Transfer the allocated amount of tokens for distribution on claim
-            SafeTransferLib.safeTransfer(s_addressConfig.askToken, msg.sender, amountToDistributeOnClaim);
+            SafeTransferLib.safeTransfer(addressConfig.askToken, msg.sender, amountToDistributeOnClaim);
         }
     }
 
@@ -304,19 +313,17 @@ abstract contract LegionAbstractSale is
         // Mark that the excess capital has been returned
         s_investorPositions[positionId].hasClaimedExcess = true;
 
-        if (amount != 0) {
-            // Decrement the total invested capital for the investor
-            s_investorPositions[positionId].investedCapital -= amount;
+        // Decrement the total invested capital for the investor
+        s_investorPositions[positionId].investedCapital -= amount;
 
-            // Decrement total capital invested from all investors
-            s_saleStatus.totalCapitalInvested -= amount;
+        // Decrement total capital invested from all investors
+        s_saleStatus.totalCapitalInvested -= amount;
 
-            // Emit ExcessCapitalWithdrawn
-            emit ExcessCapitalWithdrawn(amount, msg.sender, positionId);
+        // Emit ExcessCapitalWithdrawn
+        emit ExcessCapitalWithdrawn(amount, msg.sender, positionId);
 
-            // Transfer the excess capital back to the investor
-            SafeTransferLib.safeTransfer(s_addressConfig.bidToken, msg.sender, amount);
-        }
+        // Transfer the excess capital back to the investor
+        SafeTransferLib.safeTransfer(s_addressConfig.bidToken, msg.sender, amount);
     }
 
     /**
@@ -330,14 +337,14 @@ abstract contract LegionAbstractSale is
         // Verify that the position exists
         _verifyPositionExists(positionId);
 
-        // Get the investor position details
-        InvestorPosition memory position = s_investorPositions[positionId];
+        // Get the investor vesting address
+        address investorVestingAddress = s_investorPositions[positionId].vestingAddress;
 
         // Revert in case there's no vesting for the investor
-        if (position.vestingAddress == address(0)) revert Errors.LegionSale__ZeroAddressProvided();
+        if (investorVestingAddress == address(0)) revert Errors.LegionSale__ZeroAddressProvided();
 
         // Release tokens to the investor account
-        ILegionVesting(position.vestingAddress).release(s_addressConfig.askToken);
+        ILegionVesting(investorVestingAddress).release(s_addressConfig.askToken);
     }
 
     /**
@@ -369,16 +376,19 @@ abstract contract LegionAbstractSale is
         // Flag that tokens have been supplied
         s_saleStatus.tokensSupplied = true;
 
+        // Cache Legion Sale Configuration
+        LegionSaleConfiguration memory saleConfig = s_saleConfig;
+
         // Calculate the expected Legion Fee amount
         uint256 expectedLegionFeeAmount =
-            (s_saleConfig.legionFeeOnTokensSoldBps * amount) / Constants.BASIS_POINTS_DENOMINATOR;
+            (saleConfig.legionFeeOnTokensSoldBps * amount) / Constants.BASIS_POINTS_DENOMINATOR;
 
         // Calculate the expected Referrer Fee amount
         uint256 expectedReferrerFeeAmount =
-            (s_saleConfig.referrerFeeOnTokensSoldBps * amount) / Constants.BASIS_POINTS_DENOMINATOR;
+            (saleConfig.referrerFeeOnTokensSoldBps * amount) / Constants.BASIS_POINTS_DENOMINATOR;
 
         // Verify Legion Fee amount
-        if (legionFee != (expectedLegionFeeAmount)) {
+        if (legionFee != expectedLegionFeeAmount) {
             revert Errors.LegionSale__InvalidFeeAmount(legionFee, expectedLegionFeeAmount);
         }
 
@@ -390,20 +400,23 @@ abstract contract LegionAbstractSale is
         // Emit TokensSuppliedForDistribution
         emit TokensSuppliedForDistribution(amount, legionFee, referrerFee);
 
+        // Cache Legion Sale Address Configuration
+        LegionSaleAddressConfiguration memory addressConfig = s_addressConfig;
+
         // Transfer the allocated amount of tokens for distribution
-        SafeTransferLib.safeTransferFrom(s_addressConfig.askToken, msg.sender, address(this), amount);
+        SafeTransferLib.safeTransferFrom(addressConfig.askToken, msg.sender, address(this), amount);
 
         // Transfer the Legion fee to the Legion fee receiver address
         if (legionFee != 0) {
             SafeTransferLib.safeTransferFrom(
-                s_addressConfig.askToken, msg.sender, s_addressConfig.legionFeeReceiver, legionFee
+                addressConfig.askToken, msg.sender, addressConfig.legionFeeReceiver, legionFee
             );
         }
 
         // Transfer the Referrer fee to the Referrer fee receiver address
         if (referrerFee != 0) {
             SafeTransferLib.safeTransferFrom(
-                s_addressConfig.askToken, msg.sender, s_addressConfig.referrerFeeReceiver, referrerFee
+                addressConfig.askToken, msg.sender, addressConfig.referrerFeeReceiver, referrerFee
             );
         }
     }
@@ -540,13 +553,13 @@ abstract contract LegionAbstractSale is
      * @param from The address of the current owner
      * @param to The address of the new owner
      * @param positionId The ID of the position
-     * @param signature The signature authorizing the transfer
+     * @param transferSignature The signature authorizing the transfer
      */
     function transferInvestorPositionWithAuthorization(
         address from,
         address to,
         uint256 positionId,
-        bytes calldata signature
+        bytes calldata transferSignature
     )
         external
         virtual
@@ -563,7 +576,7 @@ abstract contract LegionAbstractSale is
         _verifyTokensNotSupplied();
 
         // Verify the signature for transferring the position
-        _verifyTransferSignature(from, to, positionId, s_addressConfig.legionSigner, signature);
+        _verifyTransferSignature(from, to, positionId, s_addressConfig.legionSigner, transferSignature);
 
         // Verify that the position can be transferred
         _verifyCanTransferInvestorPosition(positionId);
@@ -624,8 +637,11 @@ abstract contract LegionAbstractSale is
         // Verify that the position exists
         _verifyPositionExists(positionId);
 
-        // Get the investor position details
+        // Get the investor vesting address
         address investorVestingAddress = s_investorPositions[positionId].vestingAddress;
+
+        // Get the ask token address
+        address askTokenAddress = s_addressConfig.askToken;
 
         // Return the investor vesting status
         investorVestingAddress != address(0)
@@ -634,9 +650,9 @@ abstract contract LegionAbstractSale is
                 ILegionVesting(investorVestingAddress).end(),
                 ILegionVesting(investorVestingAddress).cliffEndTimestamp(),
                 ILegionVesting(investorVestingAddress).duration(),
-                ILegionVesting(investorVestingAddress).released(s_addressConfig.askToken),
-                ILegionVesting(investorVestingAddress).releasable(s_addressConfig.askToken),
-                ILegionVesting(investorVestingAddress).vestedAmount(s_addressConfig.askToken, uint64(block.timestamp))
+                ILegionVesting(investorVestingAddress).released(askTokenAddress),
+                ILegionVesting(investorVestingAddress).releasable(askTokenAddress),
+                ILegionVesting(investorVestingAddress).vestedAmount(askTokenAddress, uint64(block.timestamp))
             )
             : vestingStatus;
     }
@@ -736,12 +752,15 @@ abstract contract LegionAbstractSale is
      * @param positionId The ID of the position to transfer or burn
      */
     function _burnOrTransferInvestorPosition(address from, address to, uint256 positionId) private {
+        // Get the position ID of the receiver
+        uint256 positionIdTo = s_investorPositionIds[to];
+
         // If the receiver already has a position, burn the transferred position
         // and update the existing position
-        if (s_investorPositionIds[to] != 0) {
+        if (positionIdTo != 0) {
             // Load the investor positions
             InvestorPosition memory positionToBurn = s_investorPositions[positionId];
-            InvestorPosition storage positionToUpdate = s_investorPositions[s_investorPositionIds[to]];
+            InvestorPosition storage positionToUpdate = s_investorPositions[positionIdTo];
 
             // Update the existing position with the transferred values
             positionToUpdate.investedCapital += positionToBurn.investedCapital;
@@ -782,7 +801,8 @@ abstract contract LegionAbstractSale is
         _verifyPositionExists(positionId);
 
         // Generate the merkle leaf
-        bytes32 leaf = keccak256(bytes.concat(keccak256(abi.encode(_investor, _amount, investorVestingConfig))));
+        bytes32 leaf =
+            keccak256(bytes.concat(keccak256(abi.encode(_investor, _amount, positionId, investorVestingConfig))));
 
         // Load the investor position
         InvestorPosition memory position = s_investorPositions[positionId];
@@ -834,7 +854,7 @@ abstract contract LegionAbstractSale is
      * @dev Virtual function checking configuration constraints
      * @param saleInitParams Struct with initialization parameters
      */
-    function _verifyValidInitParams(LegionSaleInitializationParams memory saleInitParams) internal view virtual {
+    function _verifyValidInitParams(LegionSaleInitializationParams calldata saleInitParams) internal view virtual {
         // Check for zero addresses provided
         if (
             saleInitParams.bidToken == address(0) || saleInitParams.projectAdmin == address(0)
@@ -885,8 +905,11 @@ abstract contract LegionAbstractSale is
      * @dev Virtual function checking refund window
      */
     function _verifyRefundPeriodIsOver() internal view virtual {
-        if (block.timestamp < s_saleConfig.refundEndTime) {
-            revert Errors.LegionSale__RefundPeriodIsNotOver(block.timestamp, s_saleConfig.refundEndTime);
+        // Cache the refund end time from the sale configuration
+        uint256 refundEndTime = s_saleConfig.refundEndTime;
+
+        if (block.timestamp < refundEndTime) {
+            revert Errors.LegionSale__RefundPeriodIsNotOver(block.timestamp, refundEndTime);
         }
     }
 
@@ -895,8 +918,11 @@ abstract contract LegionAbstractSale is
      * @dev Virtual function checking refund window
      */
     function _verifyRefundPeriodIsNotOver() internal view virtual {
-        if (block.timestamp >= s_saleConfig.refundEndTime) {
-            revert Errors.LegionSale__RefundPeriodIsOver(block.timestamp, s_saleConfig.refundEndTime);
+        // Cache the refund end time from the sale configuration
+        uint256 refundEndTime = s_saleConfig.refundEndTime;
+
+        if (block.timestamp >= refundEndTime) {
+            revert Errors.LegionSale__RefundPeriodIsOver(block.timestamp, refundEndTime);
         }
     }
 
@@ -922,12 +948,15 @@ abstract contract LegionAbstractSale is
      * @param _amount Amount of tokens to supply
      */
     function _verifyCanSupplyTokens(uint256 _amount) internal view virtual {
+        // Cache the total amount of tokens allocated for distribution
+        uint256 totalTokensAllocated = s_saleStatus.totalTokensAllocated;
+
         // Revert if Legion has not set the total amount of tokens allocated for distribution
-        if (s_saleStatus.totalTokensAllocated == 0) revert Errors.LegionSale__TokensNotAllocated();
+        if (totalTokensAllocated == 0) revert Errors.LegionSale__TokensNotAllocated();
 
         // Revert if the amount of tokens supplied is different than the amount set by Legion
-        if (_amount != s_saleStatus.totalTokensAllocated) {
-            revert Errors.LegionSale__InvalidTokenAmountSupplied(_amount, s_saleStatus.totalTokensAllocated);
+        if (_amount != totalTokensAllocated) {
+            revert Errors.LegionSale__InvalidTokenAmountSupplied(_amount, totalTokensAllocated);
         }
     }
 
@@ -976,7 +1005,7 @@ abstract contract LegionAbstractSale is
      * @dev Virtual function validating signature authenticity
      * @param _signature Signature to verify
      */
-    function _verifyInvestSignature(bytes memory _signature) internal view virtual {
+    function _verifyInvestSignature(bytes calldata _signature) internal view virtual {
         bytes32 _data = keccak256(abi.encodePacked(msg.sender, address(this), block.chainid)).toEthSignedMessageHash();
         if (_data.recover(_signature) != s_addressConfig.legionSigner) {
             revert Errors.LegionSale__InvalidSignature(_signature);
@@ -988,8 +1017,11 @@ abstract contract LegionAbstractSale is
      * @dev Virtual function ensuring withdrawal eligibility
      */
     function _verifyCanWithdrawCapital() internal view virtual {
-        if (s_saleStatus.capitalWithdrawn) revert Errors.LegionSale__CapitalAlreadyWithdrawn();
-        if (s_saleStatus.totalCapitalRaised == 0) revert Errors.LegionSale__CapitalNotRaised();
+        // Load the sale status
+        LegionSaleStatus memory saleStatus = s_saleStatus;
+
+        if (saleStatus.capitalWithdrawn) revert Errors.LegionSale__CapitalAlreadyWithdrawn();
+        if (saleStatus.totalCapitalRaised == 0) revert Errors.LegionSale__CapitalNotRaised();
     }
 
     /**

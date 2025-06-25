@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 //       ___       ___           ___                       ___           ___
 //      /\__\     /\  \         /\  \          ___        /\  \         /\__\
@@ -63,7 +63,7 @@ contract LegionFixedPriceSale is LegionAbstractSale, ILegionFixedPriceSale {
         s_fixedPriceSaleConfig.tokenPrice = fixedPriceSaleInitParams.tokenPrice;
 
         // Calculate and set prefundStartTime and prefundEndTime
-        s_fixedPriceSaleConfig.prefundStartTime = block.timestamp;
+        s_fixedPriceSaleConfig.prefundStartTime = uint64(block.timestamp);
         s_fixedPriceSaleConfig.prefundEndTime =
             s_fixedPriceSaleConfig.prefundStartTime + fixedPriceSaleInitParams.prefundPeriodSeconds;
 
@@ -84,7 +84,7 @@ contract LegionFixedPriceSale is LegionAbstractSale, ILegionFixedPriceSale {
      * @param amount Amount of capital to invest
      * @param signature Legion signature for investor verification
      */
-    function invest(uint256 amount, bytes memory signature) external whenNotPaused {
+    function invest(uint256 amount, bytes calldata signature) external whenNotPaused {
         // Check if the investor has already invested
         // If not, create a new investor position
         uint256 positionId = _getInvestorPositionId(msg.sender) == 0

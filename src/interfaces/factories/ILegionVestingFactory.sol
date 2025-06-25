@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 //       ___       ___           ___                       ___           ___
 //      /\__\     /\  \         /\  \          ___        /\  \         /\__\
@@ -17,12 +17,10 @@ pragma solidity 0.8.29;
  * @title ILegionVestingFactory
  * @author Legion
  * @notice Interface for deploying and managing Legion vesting contract instances
- * @dev Defines events and functions for creating linear and epoch-based vesting contracts
  */
 interface ILegionVestingFactory {
     /**
      * @notice Emitted when a new linear vesting schedule contract is deployed for an investor
-     * @dev Provides details about the new linear vesting instance and its configuration
      * @param beneficiary Address of the beneficiary receiving the vested tokens
      * @param startTimestamp Unix timestamp (in seconds) when the vesting period begins
      * @param durationSeconds Total duration of the vesting period in seconds
@@ -34,7 +32,6 @@ interface ILegionVestingFactory {
 
     /**
      * @notice Emitted when a new linear epoch vesting schedule contract is deployed for an investor
-     * @dev Provides details about the new epoch-based vesting instance and its configuration
      * @param beneficiary Address of the beneficiary receiving the vested tokens
      * @param startTimestamp Unix timestamp (in seconds) when the vesting period begins
      * @param durationSeconds Total duration of the vesting period in seconds
@@ -47,13 +44,12 @@ interface ILegionVestingFactory {
         uint64 startTimestamp,
         uint64 durationSeconds,
         uint64 cliffDurationSeconds,
-        uint256 epochDurationSeconds,
-        uint256 numberOfEpochs
+        uint64 epochDurationSeconds,
+        uint64 numberOfEpochs
     );
 
     /**
      * @notice Deploys a new LegionLinearVesting contract instance
-     * @dev Must be implemented to create and initialize a new linear vesting contract
      * @param beneficiary Address of the beneficiary receiving the vested tokens
      * @param startTimestamp Unix timestamp (in seconds) when the vesting period begins
      * @param durationSeconds Total duration of the vesting period in seconds
@@ -71,7 +67,6 @@ interface ILegionVestingFactory {
 
     /**
      * @notice Deploys a new LegionLinearEpochVesting contract instance
-     * @dev Must be implemented to create and initialize a new epoch-based vesting contract
      * @param beneficiary Address that will receive the vested tokens
      * @param startTimestamp Unix timestamp (in seconds) when the vesting period begins
      * @param durationSeconds Total duration of the vesting period in seconds
@@ -85,8 +80,8 @@ interface ILegionVestingFactory {
         uint64 startTimestamp,
         uint64 durationSeconds,
         uint64 cliffDurationSeconds,
-        uint256 epochDurationSeconds,
-        uint256 numberOfEpochs
+        uint64 epochDurationSeconds,
+        uint64 numberOfEpochs
     )
         external
         returns (address payable linearEpochVestingInstance);

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 //       ___       ___           ___                       ___           ___
 //      /\__\     /\  \         /\  \          ___        /\  \         /\__\
@@ -182,7 +182,7 @@ abstract contract LegionPositionManager is ILegionPositionManager, ERC5192 {
         address _to,
         uint256 _positionId,
         address _signer,
-        bytes memory _signature
+        bytes calldata _signature
     )
         internal
         view

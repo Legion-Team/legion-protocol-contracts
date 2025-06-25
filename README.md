@@ -12,7 +12,7 @@ Get started with the Legion Protocol smart contracts by following these steps to
 
 ```bash
 # 1. Clone the repo
-$ git clone https://github.com/legion-protocol/legion-contracts.git
+$ git clone https://github.com/legion-protocol/legion-protocol-contracts.git
 
 # 2. Install dependencies
 $ forge install
@@ -43,7 +43,7 @@ Legion connects investors and contributors with promising crypto projects, enabl
 
 ## Overview
 
-Legion facilitates ERC20 token sales — Fixed Price, Sealed Bid Auction, and Pre-Liquid (Approved & Open Application) — using the [EIP-1167 Minimal Proxy Standard](https://eips.ethereum.org/EIPS/eip-1167) Clone Pattern for deployment and Merkle Proofs for eligibility verification.
+Legion facilitates ERC20 token sales — Fixed Price, Sealed Bid Auction, and Pre-Liquid (Approved & Open Application), ERC20 capital raises and ERC20 token distribution — using the [EIP-1167 Minimal Proxy Standard](https://eips.ethereum.org/EIPS/eip-1167) Clone Pattern for deployment and Merkle Proofs + Signatures for eligibility verification.
 
 ### Key Actors
 
@@ -53,7 +53,7 @@ Legion facilitates ERC20 token sales — Fixed Price, Sealed Bid Auction, and Pr
 
 ## Architecture
 
-Legion’s smart contracts leverage a clone pattern for deploying sale and vesting contracts, with standard Merkle Proofs verifying conditions like investor eligibility. They integrate with Legion’s backend, which processes off-chain calculations and publishes sale results based on emitted events.
+Legion’s smart contracts leverage a clone pattern for deploying sale and vesting contracts, with standard Merkle Proofs verifying conditions like investor eligibility. They integrate with Legion’s backend, which processes off-chain calculations and publishes sale results based on on-chain actions.
 
 ## System Limitations
 
@@ -75,73 +75,4 @@ Legion’s smart contracts are designed to work seamlessly with our backend for 
 We prioritize security in our smart contracts and operations.
 
 - **Security Policy**: See [SECURITY.md](SECURITY.md) for vulnerability reporting guidelines and our incident response plan.
-- **Bug Bounty**: Our bug bounty program rewards researchers for identifying vulnerabilities. Details, including eligibility and payout ranges, are in [BUG_BOUNTY.md](BUG_BOUNTY.md).
-
-## Smart Contracts
-
-Legion supports multiple sale types with shared lifecycle stages (e.g., Active Sale, Refund, Claim). Below are unique aspects of each contract:
-
-### Fixed Price Sale
-
-- **Purpose**: Post-TGE fixed-price token sales.
-- **Contract**: `LegionFixedPriceSale`
-- **Unique Stages**:
-  - **Prefund Stage**: Investors invest capital to prefund the sale.
-  - **Prefund Allocation Period**: Projects allocate based on reputation or other factors, facilitated by Legion’s backend.
-  - **Active Sale Period**: Main sale phase for capital investments.
-  - **Refund Period**: MiCA-compliant refund window; Legion publishes results, Projects supply tokens.
-  - **Claim Period**: Investors claim tokens into vesting contracts.
-
-### Sealed Bid Auction Sale
-
-- **Purpose**: Post-TGE sealed bid auctions with ECIES encryption.
-- **Contract**: `LegionSealedBidAuctionSale`
-- **Unique Feature**: Investors encrypt bids with a Legion-published public key; private key revealed post-sale for verification.
-- **Stages**:
-  - **Active Sale Period**: Investors invest visible `bidToken` amounts with encrypted `askToken` bids.
-  - **Refund Period**: MiCA-compliant refunds; Legion publishes results, Projects supply tokens.
-  - **Claim Period**: Investors claim tokens into vesting contracts.
-
-### Pre-Liquid Approved Sale
-
-- **Purpose**: Pre-TGE sales for whitelisted SAFT signers.
-- **Contract**: `LegionPreLiquidApprovedSale`
-- **Unique Feature**: Asynchronous; Projects can withdraw capital pre-TGE, locking configuration post-withdrawal.
-- **Stages**:
-  - **Active Investment Period**: Whitelisted investors invest capital.
-  - **Refund Period**: 14-day MiCA refund per investor.
-  - **Capital Withdrawal**: Projects withdraw post-refunded capital.
-  - **Claim Period**: Post-TGE token claiming after Legion publishes details.
-
-### Pre-Liquid Open Application Sale
-
-- **Purpose**: Pre-TGE sales with max deposit and Project acceptance.
-- **Contract**: `LegionPreLiquidOpenApplicationSale`
-- **Unique Feature**: Investors deposit max funds; Projects accept amounts, allowing excess withdrawal.
-- **Stages**:
-  - **Pre-Deposit Period**: Investors deposit max allocation.
-  - **Acceptance Period**: Projects approve amounts; excess withdrawable immediately or post-refunded.
-  - **Refund Period**: 14-day MiCA refund per investor.
-  - **Capital Withdrawal**: Projects withdraw post-refunded capital.
-  - **Claim Period**: Post-TGE token claiming.
-
-### Factories
-
-- **Fixed Price Sale Factory**: `LegionFixedPriceSaleFactory`
-- **Pre-Liquid Sale V1 Factory**: `LegionPreLiquidApprovedSaleFactory`
-- **Pre-Liquid Sale V2 Factory**: `LegionPreLiquidOpenApplicationSaleFactory`
-- **Sealed Bid Auction Sale Factory**: `LegionSealedBidAuctionSaleFactory`
-
-### Vesting Contracts
-
-- **Linear Vesting**: `LegionLinearVesting`
-  - Gradual token release over a duration.
-- **Linear Epoch Vesting**: `LegionLinearEpochVesting`
-  - Epoch-based token release.
-- **Vesting Factory**: `LegionVestingFactory`
-
-### Utilities
-
-- **Address Registry**: `LegionAddressRegistry`
-- **Legion Bouncer**: `LegionBouncer`
-  - Controls Legion admin access with `DEFAULT_ADMIN` and `BROADCASTER` roles.
+- **Bug Bounty**: Our bug bounty program rewards researchers for identifying vulnerabilities. Details, including eligibility and payout ranges, are in [SECURITY.md](SECURITY.md).

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
@@ -215,7 +215,7 @@ contract LegionTokenDistributorTest is Test {
      */
     function prepareInvestorLinearVestingConfig() public {
         investorLinearVestingConfig = ILegionVestingManager.LegionInvestorVestingConfig(
-            ILegionVestingManager.VestingType.LEGION_LINEAR, (1_209_603 + 2 weeks + 2), 31_536_000, 3600, 0, 0, 1e17
+            (1_209_603 + 2 weeks + 2), 31_536_000, 3600, ILegionVestingManager.VestingType.LEGION_LINEAR, 0, 0, 1e17
         );
     }
 
@@ -225,10 +225,10 @@ contract LegionTokenDistributorTest is Test {
      */
     function prepareInvestorLinearEpochVestingConfig() public {
         investorLinearEpochVestingConfig = ILegionVestingManager.LegionInvestorVestingConfig(
-            ILegionVestingManager.VestingType.LEGION_LINEAR_EPOCH,
             (1_209_603 + 2 weeks + 2),
             31_536_000,
             3600,
+            ILegionVestingManager.VestingType.LEGION_LINEAR_EPOCH,
             2_628_000,
             12,
             1e17
@@ -813,10 +813,10 @@ contract LegionTokenDistributorTest is Test {
         ILegionTokenDistributor(legionTokenDistributorInstance).claimTokenAllocation(
             uint256(5000 * 1e18),
             ILegionVestingManager.LegionInvestorVestingConfig(
-                ILegionVestingManager.VestingType.LEGION_LINEAR,
-                Constants.MAX_VESTING_LOCKUP_SECONDS + block.timestamp + 1,
+                Constants.MAX_VESTING_LOCKUP_SECONDS + uint64(block.timestamp) + 1,
                 520 weeks + 1,
                 520 weeks + 2,
+                ILegionVestingManager.VestingType.LEGION_LINEAR,
                 0,
                 0,
                 1e18 + 1
@@ -860,10 +860,10 @@ contract LegionTokenDistributorTest is Test {
         ILegionTokenDistributor(legionTokenDistributorInstance).claimTokenAllocation(
             uint256(5000 * 1e18),
             ILegionVestingManager.LegionInvestorVestingConfig(
-                ILegionVestingManager.VestingType.LEGION_LINEAR_EPOCH,
                 0,
                 520 weeks - 1,
                 520 weeks - 2,
+                ILegionVestingManager.VestingType.LEGION_LINEAR_EPOCH,
                 520 weeks + 1,
                 100,
                 1e17

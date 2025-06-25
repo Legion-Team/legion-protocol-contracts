@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 //       ___       ___           ___                       ___           ___
 //      /\__\     /\  \         /\  \          ___        /\  \         /\__\
@@ -66,8 +66,8 @@ contract LegionSealedBidAuctionSaleFactory is ILegionSealedBidAuctionSaleFactory
      * instance
      */
     function createSealedBidAuctionSale(
-        ILegionAbstractSale.LegionSaleInitializationParams memory saleInitParams,
-        ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams memory sealedBidAuctionSaleInitParams
+        ILegionAbstractSale.LegionSaleInitializationParams calldata saleInitParams,
+        ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams calldata sealedBidAuctionSaleInitParams
     )
         external
         onlyOwner
