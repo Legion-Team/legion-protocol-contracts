@@ -505,12 +505,12 @@ abstract contract LegionAbstractSale is
     }
 
     /// @inheritdoc ILegionAbstractSale
-    function saleStatusDetails() external view virtual returns (LegionSaleStatus memory) {
+    function saleStatus() external view virtual returns (LegionSaleStatus memory) {
         return s_saleStatus;
     }
 
     /// @inheritdoc ILegionAbstractSale
-    function investorPositionDetails(address investor) external view virtual returns (InvestorPosition memory) {
+    function investorPosition(address investor) external view virtual returns (InvestorPosition memory) {
         // Get the investor position ID
         uint256 positionId = _getInvestorPositionId(investor);
 
@@ -554,7 +554,7 @@ abstract contract LegionAbstractSale is
     }
 
     /// @inheritdoc ILegionAbstractSale
-    function cancelSale() public virtual onlyProject whenNotPaused {
+    function cancel() public virtual onlyProject whenNotPaused {
         // Allow the Project to cancel the sale at any time until results are published
         _verifySaleResultsNotPublished();
 
@@ -570,33 +570,33 @@ abstract contract LegionAbstractSale is
 
     /// @notice Sets the sale parameters during initialization
     /// @dev Virtual function to configure sale
-    /// @param saleInitParams Calldata struct with initialization parameters
-    function _setLegionSaleConfig(LegionSaleInitializationParams calldata saleInitParams)
+    /// @param _saleInitParams Calldata struct with initialization parameters
+    function _setLegionSaleConfig(LegionSaleInitializationParams calldata _saleInitParams)
         internal
         virtual
         onlyInitializing
     {
         // Verify if the sale common configuration is valid
-        _verifyValidInitParams(saleInitParams);
+        _verifyValidInitParams(_saleInitParams);
 
         // Set the sale configuration
-        s_saleConfig.legionFeeOnCapitalRaisedBps = saleInitParams.legionFeeOnCapitalRaisedBps;
-        s_saleConfig.legionFeeOnTokensSoldBps = saleInitParams.legionFeeOnTokensSoldBps;
-        s_saleConfig.referrerFeeOnCapitalRaisedBps = saleInitParams.referrerFeeOnCapitalRaisedBps;
-        s_saleConfig.referrerFeeOnTokensSoldBps = saleInitParams.referrerFeeOnTokensSoldBps;
-        s_saleConfig.minimumInvestAmount = saleInitParams.minimumInvestAmount;
+        s_saleConfig.legionFeeOnCapitalRaisedBps = _saleInitParams.legionFeeOnCapitalRaisedBps;
+        s_saleConfig.legionFeeOnTokensSoldBps = _saleInitParams.legionFeeOnTokensSoldBps;
+        s_saleConfig.referrerFeeOnCapitalRaisedBps = _saleInitParams.referrerFeeOnCapitalRaisedBps;
+        s_saleConfig.referrerFeeOnTokensSoldBps = _saleInitParams.referrerFeeOnTokensSoldBps;
+        s_saleConfig.minimumInvestAmount = _saleInitParams.minimumInvestAmount;
 
         // Set the address configuration
-        s_addressConfig.bidToken = saleInitParams.bidToken;
-        s_addressConfig.askToken = saleInitParams.askToken;
-        s_addressConfig.projectAdmin = saleInitParams.projectAdmin;
-        s_addressConfig.addressRegistry = saleInitParams.addressRegistry;
-        s_addressConfig.referrerFeeReceiver = saleInitParams.referrerFeeReceiver;
+        s_addressConfig.bidToken = _saleInitParams.bidToken;
+        s_addressConfig.askToken = _saleInitParams.askToken;
+        s_addressConfig.projectAdmin = _saleInitParams.projectAdmin;
+        s_addressConfig.addressRegistry = _saleInitParams.addressRegistry;
+        s_addressConfig.referrerFeeReceiver = _saleInitParams.referrerFeeReceiver;
 
         // Initialize pre-liquid sale soulbound token configuration
-        s_positionManagerConfig.name = saleInitParams.saleName;
-        s_positionManagerConfig.symbol = saleInitParams.saleSymbol;
-        s_positionManagerConfig.baseURI = saleInitParams.saleBaseURI;
+        s_positionManagerConfig.name = _saleInitParams.saleName;
+        s_positionManagerConfig.symbol = _saleInitParams.saleSymbol;
+        s_positionManagerConfig.baseURI = _saleInitParams.saleBaseURI;
 
         // Cache Legion addresses from `LegionAddressRegistry`
         _syncLegionAddresses();
@@ -625,43 +625,43 @@ abstract contract LegionAbstractSale is
     }
 
     /// @dev Burns or transfers an investor position based on receiver's existing position.
-    /// @param from The address of the current owner.
-    /// @param to The address of the new owner.
-    /// @param positionId The ID of the position to transfer or burn.
-    function _burnOrTransferInvestorPosition(address from, address to, uint256 positionId) private {
+    /// @param _from The address of the current owner.
+    /// @param _to The address of the new owner.
+    /// @param _positionId The ID of the position to transfer or burn.
+    function _burnOrTransferInvestorPosition(address _from, address _to, uint256 _positionId) private {
         // Get the position ID of the receiver
-        uint256 positionIdTo = s_investorPositionIds[to];
+        uint256 positionIdTo = s_investorPositionIds[_to];
 
         // If the receiver already has a position, burn the transferred position
         // and update the existing position
         if (positionIdTo != 0) {
             // Load the investor positions
-            InvestorPosition memory positionToBurn = s_investorPositions[positionId];
+            InvestorPosition memory positionToBurn = s_investorPositions[_positionId];
             InvestorPosition storage positionToUpdate = s_investorPositions[positionIdTo];
 
             // Update the existing position with the transferred values
             positionToUpdate.investedCapital += positionToBurn.investedCapital;
 
             // Delete the burned position
-            delete s_investorPositions[positionId];
+            delete s_investorPositions[_positionId];
 
             // Burn the investor position from the `from` address
-            _burnInvestorPosition(from);
+            _burnInvestorPosition(_from);
         } else {
             // Transfer the investor position to the new address
-            _transferInvestorPosition(from, to, positionId);
+            _transferInvestorPosition(_from, _to, _positionId);
         }
     }
 
     /// @dev Verifies investor eligibility to claim token allocation using Merkle proof.
     /// @param _investor The address of the investor.
     /// @param _amount The amount of tokens to claim.
-    /// @param investorVestingConfig The vesting configuration for the investor.
+    /// @param _investorVestingConfig The vesting configuration for the investor.
     /// @param _proof The Merkle proof for claim verification.
     function _verifyCanClaimTokenAllocation(
         address _investor,
         uint256 _amount,
-        LegionVestingManager.LegionInvestorVestingConfig calldata investorVestingConfig,
+        LegionVestingManager.LegionInvestorVestingConfig calldata _investorVestingConfig,
         bytes32[] calldata _proof
     )
         internal
@@ -676,7 +676,7 @@ abstract contract LegionAbstractSale is
 
         // Generate the merkle leaf
         bytes32 leaf =
-            keccak256(bytes.concat(keccak256(abi.encode(_investor, _amount, positionId, investorVestingConfig))));
+            keccak256(bytes.concat(keccak256(abi.encode(_investor, _amount, positionId, _investorVestingConfig))));
 
         // Load the investor position
         InvestorPosition memory position = s_investorPositions[positionId];
@@ -721,32 +721,32 @@ abstract contract LegionAbstractSale is
     }
 
     /// @dev Validates the sale initialization parameters.
-    /// @param saleInitParams The initialization parameters to validate.
-    function _verifyValidInitParams(LegionSaleInitializationParams calldata saleInitParams) internal view virtual {
+    /// @param _saleInitParams The initialization parameters to validate.
+    function _verifyValidInitParams(LegionSaleInitializationParams calldata _saleInitParams) internal view virtual {
         // Check for zero addresses provided
         if (
-            saleInitParams.bidToken == address(0) || saleInitParams.projectAdmin == address(0)
-                || saleInitParams.addressRegistry == address(0)
+            _saleInitParams.bidToken == address(0) || _saleInitParams.projectAdmin == address(0)
+                || _saleInitParams.addressRegistry == address(0)
         ) {
             revert Errors.LegionSale__ZeroAddressProvided();
         }
 
         // Check for zero values provided
         if (
-            saleInitParams.salePeriodSeconds == 0 || saleInitParams.refundPeriodSeconds == 0
-                || bytes(saleInitParams.saleName).length == 0 || bytes(saleInitParams.saleSymbol).length == 0
-                || bytes(saleInitParams.saleBaseURI).length == 0
+            _saleInitParams.salePeriodSeconds == 0 || _saleInitParams.refundPeriodSeconds == 0
+                || bytes(_saleInitParams.saleName).length == 0 || bytes(_saleInitParams.saleSymbol).length == 0
+                || bytes(_saleInitParams.saleBaseURI).length == 0
         ) {
             revert Errors.LegionSale__ZeroValueProvided();
         }
 
         // Check if sale and refund periods are longer than allowed
-        if (saleInitParams.salePeriodSeconds > 12 weeks || saleInitParams.refundPeriodSeconds > 2 weeks) {
+        if (_saleInitParams.salePeriodSeconds > 12 weeks || _saleInitParams.refundPeriodSeconds > 2 weeks) {
             revert Errors.LegionSale__InvalidPeriodConfig();
         }
 
         // Check if sale and refund periods are shorter than allowed
-        if (saleInitParams.salePeriodSeconds < 1 hours || saleInitParams.refundPeriodSeconds < 1 hours) {
+        if (_saleInitParams.salePeriodSeconds < 1 hours || _saleInitParams.refundPeriodSeconds < 1 hours) {
             revert Errors.LegionSale__InvalidPeriodConfig();
         }
     }
@@ -836,6 +836,7 @@ abstract contract LegionAbstractSale is
     /// @param _signature The signature to verify.
     function _verifyInvestSignature(bytes calldata _signature) internal view virtual {
         bytes32 _data = keccak256(abi.encodePacked(msg.sender, address(this), block.chainid)).toEthSignedMessageHash();
+
         if (_data.recover(_signature) != s_addressConfig.legionSigner) {
             revert Errors.LegionSale__InvalidSignature(_signature);
         }
@@ -844,35 +845,35 @@ abstract contract LegionAbstractSale is
     /// @dev Verifies conditions for withdrawing capital.
     function _verifyCanWithdrawCapital() internal view virtual {
         // Load the sale status
-        LegionSaleStatus memory saleStatus = s_saleStatus;
+        LegionSaleStatus memory _saleStatus = s_saleStatus;
 
-        if (saleStatus.capitalWithdrawn) revert Errors.LegionSale__CapitalAlreadyWithdrawn();
-        if (saleStatus.totalCapitalRaised == 0) revert Errors.LegionSale__CapitalNotRaised();
+        if (_saleStatus.capitalWithdrawn) revert Errors.LegionSale__CapitalAlreadyWithdrawn();
+        if (_saleStatus.totalCapitalRaised == 0) revert Errors.LegionSale__CapitalNotRaised();
     }
 
     /// @dev Verifies that the investor has not refunded.
-    /// @param positionId The ID of the investor's position.
-    function _verifyHasNotRefunded(uint256 positionId) internal view virtual {
-        if (s_investorPositions[positionId].hasRefunded) revert Errors.LegionSale__InvestorHasRefunded(msg.sender);
+    /// @param _positionId The ID of the investor's position.
+    function _verifyHasNotRefunded(uint256 _positionId) internal view virtual {
+        if (s_investorPositions[_positionId].hasRefunded) revert Errors.LegionSale__InvestorHasRefunded(msg.sender);
     }
 
     /// @dev Verifies that the investor has not claimed excess capital.
-    /// @param positionId The ID of the investor's position.
-    function _verifyHasNotClaimedExcess(uint256 positionId) internal view virtual {
-        if (s_investorPositions[positionId].hasClaimedExcess) {
+    /// @param _positionId The ID of the investor's position.
+    function _verifyHasNotClaimedExcess(uint256 _positionId) internal view virtual {
+        if (s_investorPositions[_positionId].hasClaimedExcess) {
             revert Errors.LegionSale__InvestorHasClaimedExcess(msg.sender);
         }
     }
 
     /// @dev Verifies conditions for transferring an investor position.
-    /// @param positionId The ID of the investor's position.
-    function _verifyCanTransferInvestorPosition(uint256 positionId) private view {
+    /// @param _positionId The ID of the investor's position.
+    function _verifyCanTransferInvestorPosition(uint256 _positionId) private view {
         // Load the investor position
-        InvestorPosition memory position = s_investorPositions[positionId];
+        InvestorPosition memory position = s_investorPositions[_positionId];
 
         // Verify that the position is not settled or refunded
         if (position.hasRefunded || position.hasSettled) {
-            revert Errors.LegionSale__UnableToTransferInvestorPosition(positionId);
+            revert Errors.LegionSale__UnableToTransferInvestorPosition(_positionId);
         }
     }
 }

@@ -148,28 +148,29 @@ contract LegionFixedPriceSale is LegionAbstractSale, ILegionFixedPriceSale {
     }
 
     /// @dev Validates the fixed-price sale initialization parameters.
-    /// @param fixedPriceSaleInitParams The fixed-price sale initialization parameters to validate.
-    function _verifyValidParams(FixedPriceSaleInitializationParams calldata fixedPriceSaleInitParams) private pure {
+    /// @param _fixedPriceSaleInitParams The fixed-price sale initialization parameters to validate.
+    function _verifyValidParams(FixedPriceSaleInitializationParams calldata _fixedPriceSaleInitParams) private pure {
         // Check for zero values provided
         if (
-            fixedPriceSaleInitParams.prefundPeriodSeconds == 0
-                || fixedPriceSaleInitParams.prefundAllocationPeriodSeconds == 0 || fixedPriceSaleInitParams.tokenPrice == 0
+            _fixedPriceSaleInitParams.prefundPeriodSeconds == 0
+                || _fixedPriceSaleInitParams.prefundAllocationPeriodSeconds == 0
+                || _fixedPriceSaleInitParams.tokenPrice == 0
         ) {
             revert Errors.LegionSale__ZeroValueProvided();
         }
 
         // Check if prefund and allocation periods are longer than allowed
         if (
-            fixedPriceSaleInitParams.prefundPeriodSeconds > 12 weeks
-                || fixedPriceSaleInitParams.prefundAllocationPeriodSeconds > 2 weeks
+            _fixedPriceSaleInitParams.prefundPeriodSeconds > 12 weeks
+                || _fixedPriceSaleInitParams.prefundAllocationPeriodSeconds > 2 weeks
         ) {
             revert Errors.LegionSale__InvalidPeriodConfig();
         }
 
         // Check if prefund and allocation periods are shorter than allowed
         if (
-            fixedPriceSaleInitParams.prefundPeriodSeconds < 1 hours
-                || fixedPriceSaleInitParams.prefundAllocationPeriodSeconds < 1 hours
+            _fixedPriceSaleInitParams.prefundPeriodSeconds < 1 hours
+                || _fixedPriceSaleInitParams.prefundAllocationPeriodSeconds < 1 hours
         ) {
             revert Errors.LegionSale__InvalidPeriodConfig();
         }

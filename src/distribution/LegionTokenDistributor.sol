@@ -227,8 +227,8 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
     }
 
     /// @inheritdoc ILegionTokenDistributor
-    function investorPositionDetails(address investorAddress) external view returns (InvestorPosition memory) {
-        return s_investorPositions[investorAddress];
+    function investorPosition(address investor) external view returns (InvestorPosition memory) {
+        return s_investorPositions[investor];
     }
 
     /// @inheritdoc ILegionTokenDistributor
@@ -257,22 +257,22 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
     }
 
     /// @dev Sets the distributor configuration during initialization
-    /// @param tokenDistributorInitParams The initialization parameters to configure the distributor.
-    function _setTokenDistributorConfig(TokenDistributorInitializationParams calldata tokenDistributorInitParams)
+    /// @param _tokenDistributorInitParams The initialization parameters to configure the distributor.
+    function _setTokenDistributorConfig(TokenDistributorInitializationParams calldata _tokenDistributorInitParams)
         private
         onlyInitializing
     {
         // Verify if the distributor configuration is valid
-        _verifyValidConfig(tokenDistributorInitParams);
+        _verifyValidConfig(_tokenDistributorInitParams);
 
         // Initialize distributor configuration
-        s_tokenDistributorConfig.totalAmountToDistribute = tokenDistributorInitParams.totalAmountToDistribute;
-        s_tokenDistributorConfig.legionFeeOnTokensSoldBps = tokenDistributorInitParams.legionFeeOnTokensSoldBps;
-        s_tokenDistributorConfig.referrerFeeOnTokensSoldBps = tokenDistributorInitParams.referrerFeeOnTokensSoldBps;
-        s_tokenDistributorConfig.referrerFeeReceiver = tokenDistributorInitParams.referrerFeeReceiver;
-        s_tokenDistributorConfig.askToken = tokenDistributorInitParams.askToken;
-        s_tokenDistributorConfig.addressRegistry = tokenDistributorInitParams.addressRegistry;
-        s_tokenDistributorConfig.projectAdmin = tokenDistributorInitParams.projectAdmin;
+        s_tokenDistributorConfig.totalAmountToDistribute = _tokenDistributorInitParams.totalAmountToDistribute;
+        s_tokenDistributorConfig.legionFeeOnTokensSoldBps = _tokenDistributorInitParams.legionFeeOnTokensSoldBps;
+        s_tokenDistributorConfig.referrerFeeOnTokensSoldBps = _tokenDistributorInitParams.referrerFeeOnTokensSoldBps;
+        s_tokenDistributorConfig.referrerFeeReceiver = _tokenDistributorInitParams.referrerFeeReceiver;
+        s_tokenDistributorConfig.askToken = _tokenDistributorInitParams.askToken;
+        s_tokenDistributorConfig.addressRegistry = _tokenDistributorInitParams.addressRegistry;
+        s_tokenDistributorConfig.projectAdmin = _tokenDistributorInitParams.projectAdmin;
 
         // Cache Legion addresses from `LegionAddressRegistry`
         _syncLegionAddresses();
@@ -300,22 +300,22 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
     }
 
     /// @dev Validates an investor's vesting position using signature verification.
-    /// @param vestingSignature The signature proving the vesting terms are authorized.
-    /// @param investorVestingConfig The vesting configuration to verify.
+    /// @param _vestingSignature The signature proving the vesting terms are authorized.
+    /// @param _investorVestingConfig The vesting configuration to verify.
     function _verifyValidVestingPosition(
-        bytes calldata vestingSignature,
-        LegionVestingManager.LegionInvestorVestingConfig calldata investorVestingConfig
+        bytes calldata _vestingSignature,
+        LegionVestingManager.LegionInvestorVestingConfig calldata _investorVestingConfig
     )
         private
         view
     {
         // Construct the signed data
-        bytes32 _data = keccak256(abi.encode(msg.sender, address(this), block.chainid, investorVestingConfig))
+        bytes32 _data = keccak256(abi.encode(msg.sender, address(this), block.chainid, _investorVestingConfig))
             .toEthSignedMessageHash();
 
         // Verify the signature
-        if (_data.recover(vestingSignature) != s_tokenDistributorConfig.legionSigner) {
-            revert Errors.LegionSale__InvalidSignature(vestingSignature);
+        if (_data.recover(_vestingSignature) != s_tokenDistributorConfig.legionSigner) {
+            revert Errors.LegionSale__InvalidSignature(_vestingSignature);
         }
     }
 
@@ -368,16 +368,16 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
     }
 
     /// @dev Validates an investor's position using signature verification.
-    /// @param claimAmount The amount of tokens the investor is claiming.
-    /// @param signature The signature to verify the claim authorization.
-    function _verifyValidPosition(uint256 claimAmount, bytes calldata signature) internal view {
+    /// @param _claimAmount The amount of tokens the investor is claiming.
+    /// @param _signature The signature to verify the claim authorization.
+    function _verifyValidPosition(uint256 _claimAmount, bytes calldata _signature) internal view {
         // Construct the signed data
-        bytes32 _data = keccak256(abi.encodePacked(msg.sender, address(this), block.chainid, uint256(claimAmount)))
-            .toEthSignedMessageHash();
+        bytes32 _data =
+            keccak256(abi.encodePacked(msg.sender, address(this), block.chainid, _claimAmount)).toEthSignedMessageHash();
 
         // Verify the signature
-        if (_data.recover(signature) != s_tokenDistributorConfig.legionSigner) {
-            revert Errors.LegionSale__InvalidSignature(signature);
+        if (_data.recover(_signature) != s_tokenDistributorConfig.legionSigner) {
+            revert Errors.LegionSale__InvalidSignature(_signature);
         }
     }
 }

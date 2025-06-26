@@ -148,9 +148,9 @@ interface ILegionTokenDistributor {
     function distributorConfiguration() external view returns (TokenDistributorConfig memory);
 
     /// @notice Retrieves an investor's position details.
-    /// @param investorAddress The address of the investor.
+    /// @param investor The address of the investor.
     /// @return The complete investor position struct.
-    function investorPositionDetails(address investorAddress) external view returns (InvestorPosition memory);
+    function investorPosition(address investor) external view returns (InvestorPosition memory);
 
     /// @notice Retrieves an investor's vesting status.
     /// @param investor The address of the investor.

@@ -254,7 +254,7 @@ contract LegionPreLiquidApprovedSaleFactoryTest is Test {
             LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).saleConfiguration();
 
         ILegionPreLiquidApprovedSale.PreLiquidSaleStatus memory _preLiquidSaleStatus =
-            LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).saleStatusDetails();
+            LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).saleStatus();
 
         // Expect
         assertEq(_preLiquidSaleConfig.refundPeriodSeconds, 2 weeks);

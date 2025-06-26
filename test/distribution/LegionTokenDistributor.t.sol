@@ -719,7 +719,7 @@ contract LegionTokenDistributorTest is Test {
         );
 
         ILegionTokenDistributor.InvestorPosition memory position =
-            LegionTokenDistributor(payable(legionTokenDistributorInstance)).investorPositionDetails(investor1);
+            LegionTokenDistributor(payable(legionTokenDistributorInstance)).investorPosition(investor1);
 
         ILegionVestingManager.LegionInvestorVestingStatus memory vestingStatus =
             LegionTokenDistributor(payable(legionTokenDistributorInstance)).investorVestingStatus(investor1);
@@ -760,7 +760,7 @@ contract LegionTokenDistributorTest is Test {
         );
 
         ILegionTokenDistributor.InvestorPosition memory position =
-            LegionTokenDistributor(payable(legionTokenDistributorInstance)).investorPositionDetails(investor2);
+            LegionTokenDistributor(payable(legionTokenDistributorInstance)).investorPosition(investor2);
 
         ILegionVestingManager.LegionInvestorVestingStatus memory vestingStatus =
             LegionTokenDistributor(payable(legionTokenDistributorInstance)).investorVestingStatus(investor2);

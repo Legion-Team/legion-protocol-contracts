@@ -186,7 +186,7 @@ interface ILegionCapitalRaise {
     function withdrawRaisedCapital() external;
 
     /// @notice Cancels the capital raise and handles capital return.
-    function cancelSale() external;
+    function cancel() external;
 
     /// @notice Allows investors to withdraw capital if the capital raise is canceled.
     function withdrawInvestedCapitalIfCanceled() external;
@@ -205,11 +205,11 @@ interface ILegionCapitalRaise {
         external;
 
     /// @notice Ends the capital raise manually.
-    function endSale() external;
+    function end() external;
 
     /// @notice Publishes the total capital raised amount.
     /// @param capitalRaised The total capital raised by the project.
-    function publishCapitalRaised(uint256 capitalRaised) external;
+    function publishRaisedCapital(uint256 capitalRaised) external;
 
     /// @notice Synchronizes Legion addresses from the address registry.
     function syncLegionAddresses() external;
@@ -226,10 +226,10 @@ interface ILegionCapitalRaise {
 
     /// @notice Returns the current capital raise status.
     /// @return The complete capital raise status struct.
-    function saleStatusDetails() external view returns (CapitalRaiseStatus memory);
+    function saleStatus() external view returns (CapitalRaiseStatus memory);
 
     /// @notice Returns an investor's position details.
-    /// @param investorAddress The address of the investor.
+    /// @param investor The address of the investor.
     /// @return The complete investor position struct.
-    function investorPositionDetails(address investorAddress) external view returns (InvestorPosition memory);
+    function investorPosition(address investor) external view returns (InvestorPosition memory);
 }

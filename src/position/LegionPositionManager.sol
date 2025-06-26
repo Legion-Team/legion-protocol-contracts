@@ -71,35 +71,35 @@ abstract contract LegionPositionManager is ILegionPositionManager, ERC5192 {
     }
 
     /// @inheritdoc ERC5192
-    function _afterTokenTransfer(address from, address to, uint256 id) internal override {
+    function _afterTokenTransfer(address _from, address _to, uint256 _id) internal override {
         // Check if this is not a new mint or burn
-        if (from != address(0) && to != address(0)) {
+        if (_from != address(0) && _to != address(0)) {
             // Delete the assigned position ID from the sender
-            delete s_investorPositionIds[from];
+            delete s_investorPositionIds[_from];
 
             // Assign the position ID to the new owner
-            s_investorPositionIds[to] = id;
+            s_investorPositionIds[_to] = _id;
         }
 
-        super._afterTokenTransfer(from, to, id);
+        super._afterTokenTransfer(_from, _to, _id);
     }
 
     /// @dev Internal function to transfer an investor position between addresses.
-    /// @param from The address of the current owner.
-    /// @param to The address of the new owner.
-    /// @param positionId The ID of the position to transfer.
-    function _transferInvestorPosition(address from, address to, uint256 positionId) internal virtual {
+    /// @param _from The address of the current owner.
+    /// @param _to The address of the new owner.
+    /// @param _positionId The ID of the position to transfer.
+    function _transferInvestorPosition(address _from, address _to, uint256 _positionId) internal virtual {
         // Unlock the position before transferring
-        _updateLockedStatus(positionId, false);
+        _updateLockedStatus(_positionId, false);
 
         // Transfer the position token
-        _transfer(from, to, positionId);
+        _transfer(_from, _to, _positionId);
     }
 
     /// @dev Internal function to create a new investor position.
-    /// @param investor The address of the investor.
+    /// @param _investor The address of the investor.
     /// @return positionId The ID of the newly created position.
-    function _createInvestorPosition(address investor) internal virtual returns (uint256 positionId) {
+    function _createInvestorPosition(address _investor) internal virtual returns (uint256 positionId) {
         // Increment the last position ID
         ++s_positionManagerConfig.lastPositionId;
 
@@ -107,35 +107,35 @@ abstract contract LegionPositionManager is ILegionPositionManager, ERC5192 {
         positionId = s_positionManagerConfig.lastPositionId;
 
         // Map the investor address to the new position ID
-        s_investorPositionIds[investor] = positionId;
+        s_investorPositionIds[_investor] = positionId;
 
         // Mint the position token to the investor
-        _mint(investor, positionId);
+        _mint(_investor, positionId);
     }
 
     /// @dev Internal function to burn an investor position.
-    /// @param investor The address of the investor whose position will be burned.
-    function _burnInvestorPosition(address investor) internal virtual {
-        uint256 positionId = s_investorPositionIds[investor];
+    /// @param _investor The address of the investor whose position will be burned.
+    function _burnInvestorPosition(address _investor) internal virtual {
+        uint256 positionId = s_investorPositionIds[_investor];
 
         // Burn the position token
         _burn(positionId);
 
         // Remove the mapping of the position ID to the investor address
-        delete s_investorPositionIds[investor];
+        delete s_investorPositionIds[_investor];
     }
 
     /// @dev Internal function to get the position ID of an investor.
-    /// @param investor The address of the investor.
+    /// @param _investor The address of the investor.
     /// @return The ID of the investor's position.
-    function _getInvestorPositionId(address investor) internal view virtual returns (uint256) {
-        return s_investorPositionIds[investor];
+    function _getInvestorPositionId(address _investor) internal view virtual returns (uint256) {
+        return s_investorPositionIds[_investor];
     }
 
     /// @dev Verifies that an investor's position exists.
-    /// @param positionId The ID of the investor's position.
-    function _verifyPositionExists(uint256 positionId) internal pure virtual {
-        if (positionId == 0) revert Errors.LegionSale__InvestorPositionDoesNotExist();
+    /// @param _positionId The ID of the investor's position.
+    function _verifyPositionExists(uint256 _positionId) internal pure virtual {
+        if (_positionId == 0) revert Errors.LegionSale__InvestorPositionDoesNotExist();
     }
 
     /// @dev Verifies that a transfer signature is valid and authorized.

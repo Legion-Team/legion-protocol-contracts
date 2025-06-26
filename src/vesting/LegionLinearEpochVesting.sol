@@ -153,12 +153,12 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
     }
 
     /// @dev Calculates the vested amount based on an epoch-based schedule.
-    /// @param totalAllocation The total amount of tokens allocated for vesting.
-    /// @param timestamp The Unix timestamp (seconds) to calculate vesting up to.
+    /// @param _totalAllocation The total amount of tokens allocated for vesting.
+    /// @param _timestamp The Unix timestamp (seconds) to calculate vesting up to.
     /// @return amountVested The amount of tokens vested by the given timestamp.
     function _vestingSchedule(
-        uint256 totalAllocation,
-        uint64 timestamp
+        uint256 _totalAllocation,
+        uint64 _timestamp
     )
         internal
         view
@@ -166,16 +166,16 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
         returns (uint256 amountVested)
     {
         // Get the current epoch
-        uint256 currentEpoch = getCurrentEpochAtTimestamp(timestamp);
+        uint256 currentEpoch = getCurrentEpochAtTimestamp(_timestamp);
 
         // If all epochs have elapsed, return the total allocation
         if (currentEpoch >= s_numberOfEpochs + 1) {
-            amountVested = totalAllocation;
+            amountVested = _totalAllocation;
         }
 
         // Otherwise, calculate the amount vested based on the current epoch
         if (currentEpoch > s_lastClaimedEpoch) {
-            amountVested = ((currentEpoch - 1 - s_lastClaimedEpoch) * totalAllocation) / s_numberOfEpochs;
+            amountVested = ((currentEpoch - 1 - s_lastClaimedEpoch) * _totalAllocation) / s_numberOfEpochs;
         }
     }
 }

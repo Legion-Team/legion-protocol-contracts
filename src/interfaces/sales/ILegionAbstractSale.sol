@@ -247,12 +247,12 @@ interface ILegionAbstractSale {
 
     /// @notice Returns the current sale status.
     /// @return The complete sale status struct.
-    function saleStatusDetails() external view returns (LegionSaleStatus memory);
+    function saleStatus() external view returns (LegionSaleStatus memory);
 
     /// @notice Returns an investor's position details.
     /// @param investor The address of the investor.
     /// @return The complete investor position struct.
-    function investorPositionDetails(address investor) external view returns (InvestorPosition memory);
+    function investorPosition(address investor) external view returns (InvestorPosition memory);
 
     /// @notice Returns an investor's vesting status.
     /// @param investor The address of the investor.
@@ -264,5 +264,5 @@ interface ILegionAbstractSale {
 
     /// @notice Cancels the ongoing sale.
     /// @dev Allows cancellation before results are published; only callable by the project admin.
-    function cancelSale() external;
+    function cancel() external;
 }

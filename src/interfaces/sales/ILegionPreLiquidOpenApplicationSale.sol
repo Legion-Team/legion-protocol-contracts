@@ -59,12 +59,12 @@ interface ILegionPreLiquidOpenApplicationSale is ILegionAbstractSale {
     function invest(uint256 amount, bytes calldata signature) external;
 
     /// @notice Ends the sale and sets the refund period.
-    function endSale() external;
+    function end() external;
 
     /// @notice Publishes the total capital raised and accepted capital Merkle root.
     /// @param capitalRaised The total capital raised by the project.
     /// @param acceptedMerkleRoot The Merkle root for verifying accepted capital.
-    function publishCapitalRaised(uint256 capitalRaised, bytes32 acceptedMerkleRoot) external;
+    function publishRaisedCapital(uint256 capitalRaised, bytes32 acceptedMerkleRoot) external;
 
     /// @notice Publishes sale results including token allocation details.
     /// @param claimMerkleRoot The Merkle root for verifying token claims.

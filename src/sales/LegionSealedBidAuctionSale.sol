@@ -180,9 +180,9 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
     }
 
     /// @inheritdoc ILegionAbstractSale
-    function cancelSale() public override(ILegionAbstractSale, LegionAbstractSale) onlyProject whenNotPaused {
+    function cancel() public override(ILegionAbstractSale, LegionAbstractSale) onlyProject whenNotPaused {
         // Call parent method
-        super.cancelSale();
+        super.cancel();
 
         // Verify that canceling is not locked
         _verifyCancelNotLocked();
@@ -203,13 +203,13 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
     }
 
     /// @dev Verifies the validity of sealed bid auction initialization parameters.
-    /// @param sealedBidAuctionSaleInitParams The auction-specific parameters to validate.
-    function _verifyValidParams(SealedBidAuctionSaleInitializationParams calldata sealedBidAuctionSaleInitParams)
+    /// @param _sealedBidAuctionSaleInitParams The auction-specific parameters to validate.
+    function _verifyValidParams(SealedBidAuctionSaleInitializationParams calldata _sealedBidAuctionSaleInitParams)
         private
         pure
     {
         // Check if the public key used for encryption is valid
-        if (!ECIES.isValid(sealedBidAuctionSaleInitParams.publicKey)) {
+        if (!ECIES.isValid(_sealedBidAuctionSaleInitParams.publicKey)) {
             revert Errors.LegionSale__InvalidBidPublicKey();
         }
     }

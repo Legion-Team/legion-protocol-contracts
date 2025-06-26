@@ -258,7 +258,7 @@ interface ILegionPreLiquidApprovedSale {
         external;
 
     /// @notice Cancels the sale and handles capital return.
-    function cancelSale() external;
+    function cancel() external;
 
     /// @notice Allows investors to withdraw capital if the sale is canceled.
     function withdrawInvestedCapitalIfCanceled() external;
@@ -280,11 +280,11 @@ interface ILegionPreLiquidApprovedSale {
     function releaseVestedTokens() external;
 
     /// @notice Ends the sale manually.
-    function endSale() external;
+    function end() external;
 
     /// @notice Publishes the total capital raised.
     /// @param capitalRaised The total capital raised by the project.
-    function publishCapitalRaised(uint256 capitalRaised) external;
+    function publishRaisedCapital(uint256 capitalRaised) external;
 
     /// @notice Synchronizes Legion addresses from the address registry.
     function syncLegionAddresses() external;
@@ -301,12 +301,12 @@ interface ILegionPreLiquidApprovedSale {
 
     /// @notice Returns the current sale status.
     /// @return The complete sale status struct.
-    function saleStatusDetails() external view returns (PreLiquidSaleStatus memory);
+    function saleStatus() external view returns (PreLiquidSaleStatus memory);
 
     /// @notice Returns an investor's position details.
     /// @param investor The address of the investor.
     /// @return The complete investor position struct.
-    function investorPositionDetails(address investor) external view returns (InvestorPosition memory);
+    function investorPosition(address investor) external view returns (InvestorPosition memory);
 
     /// @notice Returns an investor's vesting status.
     /// @param investor The address of the investor.

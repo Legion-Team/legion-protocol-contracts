@@ -254,20 +254,20 @@ contract LegionPreLiquidApprovedSale is
         emit TokensSuppliedForDistribution(amount, legionFee, referrerFee);
 
         // Cache the sale status
-        PreLiquidSaleStatus memory saleStatus = s_saleStatus;
+        PreLiquidSaleStatus memory _saleStatus = s_saleStatus;
 
         // Transfer the allocated amount of tokens for distribution
-        SafeTransferLib.safeTransferFrom(saleStatus.askToken, msg.sender, address(this), amount);
+        SafeTransferLib.safeTransferFrom(_saleStatus.askToken, msg.sender, address(this), amount);
 
         // Transfer the Legion fee to the Legion fee receiver address
         if (legionFee != 0) {
-            SafeTransferLib.safeTransferFrom(saleStatus.askToken, msg.sender, saleConfig.legionFeeReceiver, legionFee);
+            SafeTransferLib.safeTransferFrom(_saleStatus.askToken, msg.sender, saleConfig.legionFeeReceiver, legionFee);
         }
 
         // Transfer the Referrer fee to the referrer fee receiver address
         if (referrerFee != 0) {
             SafeTransferLib.safeTransferFrom(
-                saleStatus.askToken, msg.sender, saleConfig.referrerFeeReceiver, referrerFee
+                _saleStatus.askToken, msg.sender, saleConfig.referrerFeeReceiver, referrerFee
             );
         }
     }
@@ -377,10 +377,10 @@ contract LegionPreLiquidApprovedSale is
         position.hasSettled = true;
 
         // Cache the sale status
-        PreLiquidSaleStatus memory saleStatus = s_saleStatus;
+        PreLiquidSaleStatus memory _saleStatus = s_saleStatus;
 
         // Calculate the total token amount to be claimed
-        uint256 totalAmount = saleStatus.askTokenTotalSupply * position.cachedTokenAllocationRate
+        uint256 totalAmount = _saleStatus.askTokenTotalSupply * position.cachedTokenAllocationRate
             / Constants.TOKEN_ALLOCATION_RATE_DENOMINATOR;
 
         // Calculate the amount to be distributed on claim
@@ -402,17 +402,17 @@ contract LegionPreLiquidApprovedSale is
             position.vestingAddress = vestingAddress;
 
             // Transfer the allocated amount of tokens for distribution to the vesting contract
-            SafeTransferLib.safeTransfer(saleStatus.askToken, vestingAddress, amountToBeVested);
+            SafeTransferLib.safeTransfer(_saleStatus.askToken, vestingAddress, amountToBeVested);
         }
 
         if (amountToDistributeOnClaim != 0) {
             // Transfer the allocated amount of tokens for distribution on claim
-            SafeTransferLib.safeTransfer(saleStatus.askToken, msg.sender, amountToDistributeOnClaim);
+            SafeTransferLib.safeTransfer(_saleStatus.askToken, msg.sender, amountToDistributeOnClaim);
         }
     }
 
     /// @inheritdoc ILegionPreLiquidApprovedSale
-    function cancelSale() external onlyProject whenNotPaused {
+    function cancel() external onlyProject whenNotPaused {
         // Verify that the sale has not been canceled
         _verifySaleNotCanceled();
 
@@ -537,7 +537,7 @@ contract LegionPreLiquidApprovedSale is
     }
 
     /// @inheritdoc ILegionPreLiquidApprovedSale
-    function endSale() external onlyLegionOrProject whenNotPaused {
+    function end() external onlyLegionOrProject whenNotPaused {
         // Verify that the sale has not ended
         _verifySaleHasNotEnded();
 
@@ -558,7 +558,7 @@ contract LegionPreLiquidApprovedSale is
     }
 
     /// @inheritdoc ILegionPreLiquidApprovedSale
-    function publishCapitalRaised(uint256 capitalRaised) external onlyLegion whenNotPaused {
+    function publishRaisedCapital(uint256 capitalRaised) external onlyLegion whenNotPaused {
         // Verify that the sale is not canceled
         _verifySaleNotCanceled();
 
@@ -665,12 +665,12 @@ contract LegionPreLiquidApprovedSale is
     }
 
     /// @inheritdoc ILegionPreLiquidApprovedSale
-    function saleStatusDetails() external view returns (PreLiquidSaleStatus memory) {
+    function saleStatus() external view returns (PreLiquidSaleStatus memory) {
         return s_saleStatus;
     }
 
     /// @inheritdoc ILegionPreLiquidApprovedSale
-    function investorPositionDetails(address investor) external view returns (InvestorPosition memory) {
+    function investorPosition(address investor) external view returns (InvestorPosition memory) {
         // Get the investor position ID
         uint256 positionId = _getInvestorPositionId(investor);
 
@@ -713,29 +713,29 @@ contract LegionPreLiquidApprovedSale is
     }
 
     /// @dev Sets the sale parameters during initialization.
-    /// @param preLiquidSaleInitParams The initialization parameters for the sale.
-    function _setLegionSaleConfig(PreLiquidSaleInitializationParams calldata preLiquidSaleInitParams)
+    /// @param _preLiquidSaleInitParams The initialization parameters for the sale.
+    function _setLegionSaleConfig(PreLiquidSaleInitializationParams calldata _preLiquidSaleInitParams)
         private
         onlyInitializing
     {
         // Verify if the sale configuration is valid
-        _verifyValidConfig(preLiquidSaleInitParams);
+        _verifyValidConfig(_preLiquidSaleInitParams);
 
         // Initialize pre-liquid sale configuration
-        s_saleConfig.refundPeriodSeconds = preLiquidSaleInitParams.refundPeriodSeconds;
-        s_saleConfig.legionFeeOnCapitalRaisedBps = preLiquidSaleInitParams.legionFeeOnCapitalRaisedBps;
-        s_saleConfig.legionFeeOnTokensSoldBps = preLiquidSaleInitParams.legionFeeOnTokensSoldBps;
-        s_saleConfig.referrerFeeOnCapitalRaisedBps = preLiquidSaleInitParams.referrerFeeOnCapitalRaisedBps;
-        s_saleConfig.referrerFeeOnTokensSoldBps = preLiquidSaleInitParams.referrerFeeOnTokensSoldBps;
-        s_saleConfig.bidToken = preLiquidSaleInitParams.bidToken;
-        s_saleConfig.projectAdmin = preLiquidSaleInitParams.projectAdmin;
-        s_saleConfig.addressRegistry = preLiquidSaleInitParams.addressRegistry;
-        s_saleConfig.referrerFeeReceiver = preLiquidSaleInitParams.referrerFeeReceiver;
+        s_saleConfig.refundPeriodSeconds = _preLiquidSaleInitParams.refundPeriodSeconds;
+        s_saleConfig.legionFeeOnCapitalRaisedBps = _preLiquidSaleInitParams.legionFeeOnCapitalRaisedBps;
+        s_saleConfig.legionFeeOnTokensSoldBps = _preLiquidSaleInitParams.legionFeeOnTokensSoldBps;
+        s_saleConfig.referrerFeeOnCapitalRaisedBps = _preLiquidSaleInitParams.referrerFeeOnCapitalRaisedBps;
+        s_saleConfig.referrerFeeOnTokensSoldBps = _preLiquidSaleInitParams.referrerFeeOnTokensSoldBps;
+        s_saleConfig.bidToken = _preLiquidSaleInitParams.bidToken;
+        s_saleConfig.projectAdmin = _preLiquidSaleInitParams.projectAdmin;
+        s_saleConfig.addressRegistry = _preLiquidSaleInitParams.addressRegistry;
+        s_saleConfig.referrerFeeReceiver = _preLiquidSaleInitParams.referrerFeeReceiver;
 
         // Initialize pre-liquid sale soulbound token configuration
-        s_positionManagerConfig.name = preLiquidSaleInitParams.saleName;
-        s_positionManagerConfig.symbol = preLiquidSaleInitParams.saleSymbol;
-        s_positionManagerConfig.baseURI = preLiquidSaleInitParams.saleBaseURI;
+        s_positionManagerConfig.name = _preLiquidSaleInitParams.saleName;
+        s_positionManagerConfig.symbol = _preLiquidSaleInitParams.saleSymbol;
+        s_positionManagerConfig.baseURI = _preLiquidSaleInitParams.saleBaseURI;
 
         // Cache Legion addresses from `LegionAddressRegistry`
         _syncLegionAddresses();
@@ -763,9 +763,9 @@ contract LegionPreLiquidApprovedSale is
     }
 
     /// @dev Updates an investor's position with SAFT data.
-    /// @param investAmount The maximum capital allowed per SAFT.
-    /// @param tokenAllocationRate The token allocation percentage (18 decimals).
-    function _updateInvestorPosition(uint256 investAmount, uint256 tokenAllocationRate) private {
+    /// @param _investAmount The maximum capital allowed per SAFT.
+    /// @param _tokenAllocationRate The token allocation percentage (18 decimals).
+    function _updateInvestorPosition(uint256 _investAmount, uint256 _tokenAllocationRate) private {
         // Get the investor position ID
         uint256 positionId = _getInvestorPositionId(msg.sender);
 
@@ -776,29 +776,29 @@ contract LegionPreLiquidApprovedSale is
         InvestorPosition storage position = s_investorPositions[positionId];
 
         // Cache the SAFT amount the investor is allowed to invest
-        if (position.cachedInvestAmount != investAmount) {
-            position.cachedInvestAmount = investAmount;
+        if (position.cachedInvestAmount != _investAmount) {
+            position.cachedInvestAmount = _investAmount;
         }
 
         // Cache the token allocation rate in 18 decimals precision
-        if (position.cachedTokenAllocationRate != tokenAllocationRate) {
-            position.cachedTokenAllocationRate = tokenAllocationRate;
+        if (position.cachedTokenAllocationRate != _tokenAllocationRate) {
+            position.cachedTokenAllocationRate = _tokenAllocationRate;
         }
     }
 
     /// @dev Burns or transfers an investor position based on receiver's existing position.
-    /// @param from The address of the current owner.
-    /// @param to The address of the new owner.
-    /// @param positionId The ID of the position to transfer or burn.
-    function _burnOrTransferInvestorPosition(address from, address to, uint256 positionId) private {
+    /// @param _from The address of the current owner.
+    /// @param _to The address of the new owner.
+    /// @param _positionId The ID of the position to transfer or burn.
+    function _burnOrTransferInvestorPosition(address _from, address _to, uint256 _positionId) private {
         // Get the position ID of the receiver
-        uint256 positionIdTo = s_investorPositionIds[to];
+        uint256 positionIdTo = s_investorPositionIds[_to];
 
         // If the receiver already has a position, burn the transferred position
         // and update the existing position
         if (positionIdTo != 0) {
             // Load the investor positions
-            InvestorPosition memory positionToBurn = s_investorPositions[positionId];
+            InvestorPosition memory positionToBurn = s_investorPositions[_positionId];
             InvestorPosition storage positionToUpdate = s_investorPositions[positionIdTo];
 
             // Update the existing position with the transferred values
@@ -807,36 +807,36 @@ contract LegionPreLiquidApprovedSale is
             positionToUpdate.cachedInvestAmount += positionToBurn.cachedInvestAmount;
 
             // Delete the burned position
-            delete s_investorPositions[positionId];
+            delete s_investorPositions[_positionId];
 
             // Burn the investor position from the `from` address
-            _burnInvestorPosition(from);
+            _burnInvestorPosition(_from);
         } else {
             // Transfer the investor position to the new address
-            _transferInvestorPosition(from, to, positionId);
+            _transferInvestorPosition(_from, _to, _positionId);
         }
     }
 
     /// @dev Validates an investor's vesting position using signature verification.
-    /// @param vestingSignature The signature proving vesting terms.
-    /// @param positionId The position ID of the investor.
-    /// @param investorVestingConfig The vesting configuration to verify.
+    /// @param _vestingSignature The signature proving vesting terms.
+    /// @param _positionId The position ID of the investor.
+    /// @param _investorVestingConfig The vesting configuration to verify.
     function _verifyValidVestingPosition(
-        bytes calldata vestingSignature,
-        uint256 positionId,
-        LegionVestingManager.LegionInvestorVestingConfig calldata investorVestingConfig
+        bytes calldata _vestingSignature,
+        uint256 _positionId,
+        LegionVestingManager.LegionInvestorVestingConfig calldata _investorVestingConfig
     )
         private
         view
     {
         // Construct the signed data
         bytes32 _data = keccak256(
-            abi.encode(msg.sender, address(this), block.chainid, positionId, investorVestingConfig)
+            abi.encode(msg.sender, address(this), block.chainid, _positionId, _investorVestingConfig)
         ).toEthSignedMessageHash();
 
         // Verify the signature
-        if (_data.recover(vestingSignature) != s_saleConfig.legionSigner) {
-            revert Errors.LegionSale__InvalidSignature(vestingSignature);
+        if (_data.recover(_vestingSignature) != s_saleConfig.legionSigner) {
+            revert Errors.LegionSale__InvalidSignature(_vestingSignature);
         }
     }
 
@@ -923,26 +923,28 @@ contract LegionPreLiquidApprovedSale is
     }
 
     /// @dev Verifies that a signature has not been used before.
-    /// @param signature The signature to verify.
-    function _verifySignatureNotUsed(bytes calldata signature) private view {
+    /// @param _signature The signature to verify.
+    function _verifySignatureNotUsed(bytes calldata _signature) private view {
         // Check if the signature is used
-        if (s_usedSignatures[msg.sender][signature]) revert Errors.LegionSale__SignatureAlreadyUsed(signature);
+        if (s_usedSignatures[msg.sender][_signature]) revert Errors.LegionSale__SignatureAlreadyUsed(_signature);
     }
 
     /// @dev Verifies conditions for withdrawing capital.
     function _verifyCanWithdrawCapital() private view {
         // Load the sale status
-        PreLiquidSaleStatus memory saleStatus = s_saleStatus;
+        PreLiquidSaleStatus memory _saleStatus = s_saleStatus;
+
         // Check if capital has not been withdrawn
-        if (saleStatus.totalCapitalWithdrawn > 0) revert Errors.LegionSale__CapitalAlreadyWithdrawn();
+        if (_saleStatus.totalCapitalWithdrawn > 0) revert Errors.LegionSale__CapitalAlreadyWithdrawn();
         // Check if capital raised has been published
-        if (saleStatus.totalCapitalRaised == 0) revert Errors.LegionSale__CapitalNotRaised();
+        if (_saleStatus.totalCapitalRaised == 0) revert Errors.LegionSale__CapitalNotRaised();
     }
 
     /// @dev Verifies that the refund period has ended.
     function _verifyRefundPeriodIsOver() private view {
         // Cache the refund end time from the sale configuration
         uint256 refundEndTime = s_saleStatus.refundEndTime;
+
         if (refundEndTime > 0 && block.timestamp < refundEndTime) {
             revert Errors.LegionSale__RefundPeriodIsNotOver(block.timestamp, refundEndTime);
         }
@@ -952,15 +954,16 @@ contract LegionPreLiquidApprovedSale is
     function _verifyRefundPeriodIsNotOver() private view {
         // Cache the refund end time from the sale configuration
         uint256 refundEndTime = s_saleStatus.refundEndTime;
+
         if (refundEndTime > 0 && block.timestamp >= refundEndTime) {
             revert Errors.LegionSale__RefundPeriodIsOver(block.timestamp, refundEndTime);
         }
     }
 
     /// @dev Verifies that the investor has not refunded.
-    /// @param positionId The ID of the investor's position.
-    function _verifyHasNotRefunded(uint256 positionId) private view {
-        if (s_investorPositions[positionId].hasRefunded) revert Errors.LegionSale__InvestorHasRefunded(msg.sender);
+    /// @param _positionId The ID of the investor's position.
+    function _verifyHasNotRefunded(uint256 _positionId) private view {
+        if (s_investorPositions[_positionId].hasRefunded) revert Errors.LegionSale__InvestorHasRefunded(msg.sender);
     }
 
     /// @dev Verifies conditions for publishing capital raised.
@@ -969,12 +972,19 @@ contract LegionPreLiquidApprovedSale is
     }
 
     /// @dev Validates an investor's position using signature verification.
-    /// @param signature The signature to verify.
-    /// @param positionId The ID of the investor's position.
-    /// @param actionType The type of sale action being performed.
-    function _verifyValidPosition(bytes calldata signature, uint256 positionId, SaleAction actionType) private view {
+    /// @param _signature The signature to verify.
+    /// @param _positionId The ID of the investor's position.
+    /// @param _actionType The type of sale action being performed.
+    function _verifyValidPosition(
+        bytes calldata _signature,
+        uint256 _positionId,
+        SaleAction _actionType
+    )
+        private
+        view
+    {
         // Load the investor position
-        InvestorPosition memory position = s_investorPositions[positionId];
+        InvestorPosition memory position = s_investorPositions[_positionId];
 
         // Verify that the amount invested is equal to the SAFT amount
         if (position.investedCapital != position.cachedInvestAmount) {
@@ -989,13 +999,13 @@ contract LegionPreLiquidApprovedSale is
                 block.chainid,
                 uint256(position.cachedInvestAmount),
                 uint256(position.cachedTokenAllocationRate),
-                actionType
+                _actionType
             )
         ).toEthSignedMessageHash();
 
         // Verify the signature
-        if (_data.recover(signature) != s_saleConfig.legionSigner) {
-            revert Errors.LegionSale__InvalidSignature(signature);
+        if (_data.recover(_signature) != s_saleConfig.legionSigner) {
+            revert Errors.LegionSale__InvalidSignature(_signature);
         }
     }
 
@@ -1010,14 +1020,14 @@ contract LegionPreLiquidApprovedSale is
     }
 
     /// @dev Verifies conditions for transferring an investor position.
-    /// @param positionId The ID of the investor's position.
-    function _verifyCanTransferInvestorPosition(uint256 positionId) private view {
+    /// @param _positionId The ID of the investor's position.
+    function _verifyCanTransferInvestorPosition(uint256 _positionId) private view {
         // Load the investor position
-        InvestorPosition memory position = s_investorPositions[positionId];
+        InvestorPosition memory position = s_investorPositions[_positionId];
 
         // Verify that the position is not settled or refunded
         if (position.hasRefunded || position.hasSettled) {
-            revert Errors.LegionSale__UnableToTransferInvestorPosition(positionId);
+            revert Errors.LegionSale__UnableToTransferInvestorPosition(_positionId);
         }
     }
 }

@@ -458,7 +458,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
      */
     function refundEndTime() public view returns (uint256) {
         ILegionPreLiquidApprovedSale.PreLiquidSaleStatus memory _saleStatus =
-            LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).saleStatusDetails();
+            LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).saleStatus();
         return _saleStatus.refundEndTime;
     }
 
@@ -476,7 +476,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         ILegionPreLiquidApprovedSale.PreLiquidSaleConfig memory saleConfig =
             LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).saleConfiguration();
         ILegionPreLiquidApprovedSale.PreLiquidSaleStatus memory saleStatus =
-            LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).saleStatusDetails();
+            LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).saleStatus();
         ILegionVestingManager.LegionVestingConfig memory vestingConfig =
             LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).vestingConfiguration();
 
@@ -786,7 +786,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         vm.warp(1);
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancelSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
@@ -882,7 +882,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         vm.warp(1);
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleHasEnded.selector, 1));
@@ -944,7 +944,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancelSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
@@ -972,7 +972,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(legionBouncer);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -1065,7 +1065,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
 
         // Act
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancelSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancel();
     }
 
     /**
@@ -1086,12 +1086,12 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1 days);
 
         vm.prank(legionBouncer);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).publishCapitalRaised(10_000 * 1e6);
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).publishRaisedCapital(10_000 * 1e6);
 
         vm.prank(projectAdmin);
         ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).withdrawRaisedCapital();
@@ -1107,7 +1107,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
 
         // Act
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancelSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancel();
     }
 
     /**
@@ -1130,14 +1130,14 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         vm.warp(1 + 1 days);
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancelSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
 
         // Act
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancelSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancel();
     }
 
     /**
@@ -1165,7 +1165,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
 
         // Act
         vm.prank(nonProjectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancelSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancel();
     }
 
     /**
@@ -1186,7 +1186,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -1203,7 +1203,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
 
         // Act
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancelSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancel();
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -1228,7 +1228,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -1261,7 +1261,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancelSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
@@ -1325,7 +1325,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -1361,7 +1361,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -1371,7 +1371,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancelSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
@@ -1399,7 +1399,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -1439,7 +1439,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -1474,7 +1474,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -1511,7 +1511,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -1546,7 +1546,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -1581,7 +1581,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -1668,7 +1668,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         prepareCreateLegionPreLiquidSale();
 
         vm.prank(legionBouncer);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 1 days + 2 weeks);
 
@@ -1678,7 +1678,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).publishCapitalRaised(10_000 * 1e6);
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).publishRaisedCapital(10_000 * 1e6);
     }
 
     /**
@@ -1691,7 +1691,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         prepareCreateLegionPreLiquidSale();
 
         vm.prank(legionBouncer);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 1 days + 2 weeks);
 
@@ -1700,7 +1700,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
 
         // Act
         vm.prank(nonLegionAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).publishCapitalRaised(10_000 * 1e6);
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).publishRaisedCapital(10_000 * 1e6);
     }
 
     /**
@@ -1712,19 +1712,19 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         prepareCreateLegionPreLiquidSale();
 
         vm.prank(legionBouncer);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 1 days + 2 weeks);
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancelSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
 
         // Act
         vm.prank(legionBouncer);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).publishCapitalRaised(10_000 * 1e6);
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).publishRaisedCapital(10_000 * 1e6);
     }
 
     /**
@@ -1740,7 +1740,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).publishCapitalRaised(10_000 * 1e6);
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).publishRaisedCapital(10_000 * 1e6);
     }
 
     /**
@@ -1752,7 +1752,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         prepareCreateLegionPreLiquidSale();
 
         vm.prank(legionBouncer);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         // Expect
         vm.expectRevert(
@@ -1761,7 +1761,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).publishCapitalRaised(10_000 * 1e6);
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).publishRaisedCapital(10_000 * 1e6);
     }
 
     /**
@@ -1773,19 +1773,19 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         prepareCreateLegionPreLiquidSale();
 
         vm.prank(legionBouncer);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 1 days + 2 weeks);
 
         vm.prank(legionBouncer);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).publishCapitalRaised(10_000 * 1e6);
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).publishRaisedCapital(10_000 * 1e6);
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__CapitalRaisedAlreadyPublished.selector));
 
         // Act
         vm.prank(legionBouncer);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).publishCapitalRaised(10_000 * 1e6);
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).publishRaisedCapital(10_000 * 1e6);
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -1810,12 +1810,12 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(legionBouncer);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 1 days + 2 weeks);
 
         vm.prank(legionBouncer);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).publishCapitalRaised(10_000 * 1e6);
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).publishRaisedCapital(10_000 * 1e6);
 
         // Expect
         vm.expectEmit();
@@ -1875,7 +1875,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         vm.warp(block.timestamp + 1 days);
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancelSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
@@ -1905,7 +1905,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         vm.warp(block.timestamp + 1 days);
 
         vm.prank(legionBouncer);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         // Expect
         vm.expectRevert(
@@ -1939,12 +1939,12 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         vm.warp(block.timestamp + 1 days);
 
         vm.prank(legionBouncer);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 1 days + 2 weeks);
 
         vm.prank(legionBouncer);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).publishCapitalRaised(10_000 * 1e6);
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).publishRaisedCapital(10_000 * 1e6);
 
         vm.prank(projectAdmin);
         ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).withdrawRaisedCapital();
@@ -1977,7 +1977,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         vm.warp(block.timestamp + 1 days);
 
         vm.prank(legionBouncer);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 1 days + 2 weeks);
 
@@ -2013,7 +2013,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         vm.warp(block.timestamp + 1 days);
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancelSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancel();
 
         // Expect
         vm.expectEmit();
@@ -2071,7 +2071,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         vm.warp(block.timestamp + 1 days);
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancelSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
@@ -2101,7 +2101,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         vm.warp(block.timestamp + 1 days);
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancelSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancel();
 
         vm.prank(investor1);
         ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).withdrawInvestedCapitalIfCanceled();
@@ -2202,7 +2202,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         vm.warp(block.timestamp + 1 days + 2 weeks);
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancelSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
@@ -2332,7 +2332,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -2355,7 +2355,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         ILegionPreLiquidApprovedSale.InvestorPosition memory position =
-            LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPositionDetails(investor1);
+            LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPosition(investor1);
 
         ILegionVestingManager.LegionInvestorVestingStatus memory vestingStatus =
             LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorVestingStatus(investor1);
@@ -2397,7 +2397,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -2420,7 +2420,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         ILegionPreLiquidApprovedSale.InvestorPosition memory position =
-            LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPositionDetails(investor2);
+            LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPosition(investor2);
 
         ILegionVestingManager.LegionInvestorVestingStatus memory vestingStatus =
             LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorVestingStatus(investor2);
@@ -2457,7 +2457,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -2520,7 +2520,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -2583,7 +2583,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -2624,7 +2624,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         ILegionPreLiquidApprovedSale.InvestorPosition memory position =
-            LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPositionDetails(investor1);
+            LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPosition(investor1);
 
         assertEq(position.hasSettled, true);
         assertEq(MockERC20(askToken).balanceOf(position.vestingAddress), 2250 * 1e18);
@@ -2649,7 +2649,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -2693,7 +2693,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -2734,7 +2734,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -2787,7 +2787,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -2835,7 +2835,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -2884,7 +2884,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -2922,7 +2922,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -2960,7 +2960,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
 
         // Act
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
     }
 
     /**
@@ -2980,7 +2980,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
 
         // Act
         vm.prank(nonProjectOrLegionAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -3051,7 +3051,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -3063,10 +3063,10 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         assertEq(ERC721(legionPreLiquidSaleInstance).ownerOf(1), investor2);
 
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
-        LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPositionDetails(investor1);
+        LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPosition(investor1);
 
         assertEq(
-            LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPositionDetails(investor2)
+            LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPosition(investor2)
                 .investedCapital,
             10_000 * 1e6
         );
@@ -3095,7 +3095,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -3105,7 +3105,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
-        LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPositionDetails(investor1);
+        LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPosition(investor1);
 
         vm.expectRevert(abi.encodeWithSelector(ERC721.TokenDoesNotExist.selector));
         ERC721(legionPreLiquidSaleInstance).ownerOf(1);
@@ -3113,19 +3113,19 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         assertEq(ERC721(legionPreLiquidSaleInstance).ownerOf(2), investor2);
 
         assertEq(
-            LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPositionDetails(investor2)
+            LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPosition(investor2)
                 .investedCapital,
             20_000 * 1e6
         );
 
         assertEq(
-            LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPositionDetails(investor2)
+            LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPosition(investor2)
                 .cachedTokenAllocationRate,
             10_000_000_000_000_000
         );
 
         assertEq(
-            LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPositionDetails(investor2)
+            LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPosition(investor2)
                 .cachedInvestAmount,
             20_000 * 1e6
         );
@@ -3174,7 +3174,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancelSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
@@ -3202,7 +3202,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 1 days);
 
@@ -3234,7 +3234,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -3272,7 +3272,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -3305,7 +3305,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.prank(investor1);
         ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).refund();
@@ -3343,7 +3343,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -3357,10 +3357,10 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
 
         vm.prank(investor1);
-        LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPositionDetails(investor1);
+        LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPosition(investor1);
 
         assertEq(
-            LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPositionDetails(investor2)
+            LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPosition(investor2)
                 .investedCapital,
             10_000 * 1e6
         );
@@ -3393,7 +3393,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -3405,7 +3405,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
-        LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPositionDetails(investor1);
+        LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPosition(investor1);
 
         vm.expectRevert(abi.encodeWithSelector(ERC721.TokenDoesNotExist.selector));
         ERC721(legionPreLiquidSaleInstance).ownerOf(1);
@@ -3413,19 +3413,19 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         assertEq(ERC721(legionPreLiquidSaleInstance).ownerOf(2), investor2);
 
         assertEq(
-            LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPositionDetails(investor2)
+            LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPosition(investor2)
                 .investedCapital,
             20_000 * 1e6
         );
 
         assertEq(
-            LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPositionDetails(investor2)
+            LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPosition(investor2)
                 .cachedTokenAllocationRate,
             10_000_000_000_000_000
         );
 
         assertEq(
-            LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPositionDetails(investor2)
+            LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPosition(investor2)
                 .cachedInvestAmount,
             20_000 * 1e6
         );
@@ -3450,7 +3450,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -3483,7 +3483,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancelSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
@@ -3514,7 +3514,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 1 days);
 
@@ -3549,7 +3549,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -3590,7 +3590,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -3626,7 +3626,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).endSale();
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.prank(investor1);
         ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).refund();

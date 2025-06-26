@@ -86,7 +86,7 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
     }
 
     /// @inheritdoc ILegionPreLiquidOpenApplicationSale
-    function endSale() external onlyLegionOrProject whenNotPaused {
+    function end() external onlyLegionOrProject whenNotPaused {
         // Verify that the sale is not canceled
         _verifySaleNotCanceled();
 
@@ -107,7 +107,7 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
     }
 
     /// @inheritdoc ILegionPreLiquidOpenApplicationSale
-    function publishCapitalRaised(
+    function publishRaisedCapital(
         uint256 capitalRaised,
         bytes32 acceptedMerkleRoot
     )
@@ -239,7 +239,7 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
     }
 
     /// @inheritdoc ILegionAbstractSale
-    function cancelSale() public override(ILegionAbstractSale, LegionAbstractSale) onlyProject whenNotPaused {
+    function cancel() public override(ILegionAbstractSale, LegionAbstractSale) onlyProject whenNotPaused {
         // Verify sale has not already been canceled
         _verifySaleNotCanceled();
 

@@ -410,7 +410,7 @@ contract LegionFixedPriceSaleTest is Test {
      */
     function capitalRaised() public view returns (uint256 saleTotalCapitalRaised) {
         ILegionAbstractSale.LegionSaleStatus memory _saleStatusDetails =
-            LegionFixedPriceSale(payable(legionSaleInstance)).saleStatusDetails();
+            LegionFixedPriceSale(payable(legionSaleInstance)).saleStatus();
         return _saleStatusDetails.totalCapitalRaised;
     }
 
@@ -815,7 +815,7 @@ contract LegionFixedPriceSaleTest is Test {
         prepareInvestorSignatures();
 
         vm.prank(projectAdmin);
-        ILegionFixedPriceSale(legionSaleInstance).cancelSale();
+        ILegionFixedPriceSale(legionSaleInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
@@ -1018,7 +1018,7 @@ contract LegionFixedPriceSaleTest is Test {
         ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
 
         vm.prank(projectAdmin);
-        ILegionFixedPriceSale(legionSaleInstance).cancelSale();
+        ILegionFixedPriceSale(legionSaleInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
@@ -1092,7 +1092,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(projectAdmin);
-        ILegionFixedPriceSale(legionSaleInstance).cancelSale();
+        ILegionFixedPriceSale(legionSaleInstance).cancel();
     }
 
     /**
@@ -1104,14 +1104,14 @@ contract LegionFixedPriceSaleTest is Test {
         prepareCreateLegionFixedPriceSale();
 
         vm.prank(projectAdmin);
-        ILegionFixedPriceSale(legionSaleInstance).cancelSale();
+        ILegionFixedPriceSale(legionSaleInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
 
         // Act
         vm.prank(projectAdmin);
-        ILegionFixedPriceSale(legionSaleInstance).cancelSale();
+        ILegionFixedPriceSale(legionSaleInstance).cancel();
     }
 
     /**
@@ -1133,7 +1133,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(projectAdmin);
-        ILegionFixedPriceSale(legionSaleInstance).cancelSale();
+        ILegionFixedPriceSale(legionSaleInstance).cancel();
     }
 
     /**
@@ -1150,7 +1150,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(nonProjectAdmin);
-        ILegionFixedPriceSale(legionSaleInstance).cancelSale();
+        ILegionFixedPriceSale(legionSaleInstance).cancel();
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -1171,7 +1171,7 @@ contract LegionFixedPriceSaleTest is Test {
         ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
 
         vm.prank(projectAdmin);
-        ILegionFixedPriceSale(legionSaleInstance).cancelSale();
+        ILegionFixedPriceSale(legionSaleInstance).cancel();
 
         // Expect
         vm.expectEmit();
@@ -1215,7 +1215,7 @@ contract LegionFixedPriceSaleTest is Test {
         prepareCreateLegionFixedPriceSale();
 
         vm.prank(projectAdmin);
-        ILegionFixedPriceSale(legionSaleInstance).cancelSale();
+        ILegionFixedPriceSale(legionSaleInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
@@ -1239,7 +1239,7 @@ contract LegionFixedPriceSaleTest is Test {
         ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
 
         vm.prank(projectAdmin);
-        ILegionFixedPriceSale(legionSaleInstance).cancelSale();
+        ILegionFixedPriceSale(legionSaleInstance).cancel();
 
         vm.prank(investor1);
         ILegionFixedPriceSale(legionSaleInstance).withdrawInvestedCapitalIfCanceled();
@@ -1359,7 +1359,7 @@ contract LegionFixedPriceSaleTest is Test {
         prepareCreateLegionFixedPriceSale();
 
         vm.prank(projectAdmin);
-        ILegionFixedPriceSale(legionSaleInstance).cancelSale();
+        ILegionFixedPriceSale(legionSaleInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
@@ -1441,7 +1441,7 @@ contract LegionFixedPriceSaleTest is Test {
         prepareCreateLegionFixedPriceSale();
 
         vm.prank(projectAdmin);
-        ILegionFixedPriceSale(legionSaleInstance).cancelSale();
+        ILegionFixedPriceSale(legionSaleInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
@@ -1609,7 +1609,7 @@ contract LegionFixedPriceSaleTest is Test {
         prepareCreateLegionFixedPriceSale();
 
         vm.prank(projectAdmin);
-        ILegionFixedPriceSale(legionSaleInstance).cancelSale();
+        ILegionFixedPriceSale(legionSaleInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
@@ -1888,7 +1888,7 @@ contract LegionFixedPriceSaleTest is Test {
         vm.warp(refundEndTime() + 1);
 
         vm.prank(projectAdmin);
-        ILegionFixedPriceSale(legionSaleInstance).cancelSale();
+        ILegionFixedPriceSale(legionSaleInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
@@ -1995,7 +1995,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Assert
         ILegionAbstractSale.InvestorPosition memory _investorPosition =
-            LegionFixedPriceSale(payable(legionSaleInstance)).investorPositionDetails(investor2);
+            LegionFixedPriceSale(payable(legionSaleInstance)).investorPosition(investor2);
 
         assertEq(_investorPosition.hasClaimedExcess, true);
         assertEq(bidToken.balanceOf(investor2), 1000 * 1e6);
@@ -2018,7 +2018,7 @@ contract LegionFixedPriceSaleTest is Test {
         excessClaimProofInvestor2[1] = bytes32(0xcbe43c4b6aafb4df43acc0bebce3220a96e982592e3c306730bf73681c612708);
 
         vm.prank(projectAdmin);
-        ILegionFixedPriceSale(legionSaleInstance).cancelSale();
+        ILegionFixedPriceSale(legionSaleInstance).cancel();
 
         vm.warp(endTime() + 1);
 
@@ -2160,7 +2160,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Assert
         ILegionAbstractSale.InvestorPosition memory _investorPosition =
-            LegionFixedPriceSale(payable(legionSaleInstance)).investorPositionDetails(investor2);
+            LegionFixedPriceSale(payable(legionSaleInstance)).investorPosition(investor2);
 
         ILegionVestingManager.LegionInvestorVestingStatus memory vestingStatus =
             LegionFixedPriceSale(payable(legionSaleInstance)).investorVestingStatus(investor2);
@@ -2304,7 +2304,7 @@ contract LegionFixedPriceSaleTest is Test {
         claimProofInvestor2[1] = bytes32(0xe5fecd7e290c6f3102d02b9d4a89172fe2ebf2c44ef3c3699f4f1025adfe63cc);
 
         vm.prank(projectAdmin);
-        ILegionFixedPriceSale(legionSaleInstance).cancelSale();
+        ILegionFixedPriceSale(legionSaleInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
@@ -2506,10 +2506,9 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
-        LegionFixedPriceSale(payable(legionSaleInstance)).investorPositionDetails(investor1);
+        LegionFixedPriceSale(payable(legionSaleInstance)).investorPosition(investor1);
         assertEq(
-            LegionFixedPriceSale(payable(legionSaleInstance)).investorPositionDetails(investor2).investedCapital,
-            1000 * 1e6
+            LegionFixedPriceSale(payable(legionSaleInstance)).investorPosition(investor2).investedCapital, 1000 * 1e6
         );
         assertEq(ERC721(legionSaleInstance).ownerOf(1), investor2);
     }
@@ -2540,7 +2539,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
-        LegionFixedPriceSale(payable(legionSaleInstance)).investorPositionDetails(investor1);
+        LegionFixedPriceSale(payable(legionSaleInstance)).investorPosition(investor1);
 
         vm.expectRevert(abi.encodeWithSelector(ERC721.TokenDoesNotExist.selector));
         ERC721(legionSaleInstance).ownerOf(1);
@@ -2548,8 +2547,7 @@ contract LegionFixedPriceSaleTest is Test {
         assertEq(ERC721(legionSaleInstance).ownerOf(2), investor2);
 
         assertEq(
-            LegionFixedPriceSale(payable(legionSaleInstance)).investorPositionDetails(investor2).investedCapital,
-            2000 * 1e6
+            LegionFixedPriceSale(payable(legionSaleInstance)).investorPosition(investor2).investedCapital, 2000 * 1e6
         );
     }
 
@@ -2592,7 +2590,7 @@ contract LegionFixedPriceSaleTest is Test {
         ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
 
         vm.prank(projectAdmin);
-        ILegionFixedPriceSale(legionSaleInstance).cancelSale();
+        ILegionFixedPriceSale(legionSaleInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
@@ -2751,11 +2749,10 @@ contract LegionFixedPriceSaleTest is Test {
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
 
         vm.prank(investor1);
-        LegionFixedPriceSale(payable(legionSaleInstance)).investorPositionDetails(investor1);
+        LegionFixedPriceSale(payable(legionSaleInstance)).investorPosition(investor1);
 
         assertEq(
-            LegionFixedPriceSale(payable(legionSaleInstance)).investorPositionDetails(investor2).investedCapital,
-            1000 * 1e6
+            LegionFixedPriceSale(payable(legionSaleInstance)).investorPosition(investor2).investedCapital, 1000 * 1e6
         );
         assertEq(ERC721(legionSaleInstance).ownerOf(1), investor2);
     }
@@ -2790,7 +2787,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
-        LegionFixedPriceSale(payable(legionSaleInstance)).investorPositionDetails(investor1);
+        LegionFixedPriceSale(payable(legionSaleInstance)).investorPosition(investor1);
 
         vm.expectRevert(abi.encodeWithSelector(ERC721.TokenDoesNotExist.selector));
         ERC721(legionSaleInstance).ownerOf(1);
@@ -2798,8 +2795,7 @@ contract LegionFixedPriceSaleTest is Test {
         assertEq(ERC721(legionSaleInstance).ownerOf(2), investor2);
 
         assertEq(
-            LegionFixedPriceSale(payable(legionSaleInstance)).investorPositionDetails(investor2).investedCapital,
-            2000 * 1e6
+            LegionFixedPriceSale(payable(legionSaleInstance)).investorPosition(investor2).investedCapital, 2000 * 1e6
         );
     }
 
@@ -2848,7 +2844,7 @@ contract LegionFixedPriceSaleTest is Test {
         ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
 
         vm.prank(projectAdmin);
-        ILegionFixedPriceSale(legionSaleInstance).cancelSale();
+        ILegionFixedPriceSale(legionSaleInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
