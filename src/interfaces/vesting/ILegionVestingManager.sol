@@ -16,86 +16,60 @@ pragma solidity 0.8.30;
 /**
  * @title ILegionVestingManager
  * @author Legion
- * @notice Interface for managing vesting creation and deployment in the Legion Protocol
- * @dev Defines vesting types and structs for vesting configuration and status tracking
+ * @notice Interface for the LegionVestingManager contract.
  */
 interface ILegionVestingManager {
-    /**
-     * @notice Enum defining supported vesting types in the Legion Protocol
-     */
+    /// @dev Enum defining supported vesting types in the Legion Protocol.
     enum VestingType {
-        /// @notice Linear vesting with a cliff period
+        // Linear vesting with a cliff period.
         LEGION_LINEAR,
-        /// @notice Linear vesting with epoch-based releases and a cliff period
+        // Linear vesting with epoch-based releases and a cliff period.
         LEGION_LINEAR_EPOCH
     }
 
-    /**
-     * @notice Struct containing the vesting configuration for a sale
-     */
+    /// @dev Struct containing the vesting configuration for a sale.
     struct LegionVestingConfig {
-        /// @notice Address of Legion's Vesting Factory contract
-        /// @dev Used to create vesting instances for investors
+        // Address of Legion's Vesting Factory contract.
         address vestingFactory;
     }
 
-    /**
-     * @notice Struct representing an investor's vesting status
-     */
+    /// @dev Struct representing an investor's vesting status.
     struct LegionInvestorVestingStatus {
-        /// @notice Unix timestamp (seconds) when vesting starts
-        /// @dev Marks the beginning of the vesting schedule
+        // Unix timestamp (seconds) when vesting starts.
         uint64 start;
-        /// @notice Unix timestamp (seconds) when vesting ends
-        /// @dev Marks the end of the vesting schedule
+        // Unix timestamp (seconds) when vesting ends.
         uint64 end;
-        /// @notice Unix timestamp (seconds) when the cliff period ends
-        /// @dev Indicates when tokens become releasable
+        // Unix timestamp (seconds) when the cliff period ends.
         uint64 cliffEnd;
-        /// @notice Duration of the vesting schedule in seconds
-        /// @dev Total time over which tokens vest
+        // Duration of the vesting schedule in seconds.
         uint64 duration;
-        /// @notice Amount of tokens already released to the investor
-        /// @dev Tracks tokens transferred to the beneficiary
+        // Amount of tokens already released to the investor.
         uint256 released;
-        /// @notice Amount of tokens currently available for release
-        /// @dev Represents tokens vested but not yet claimed
+        // Amount of tokens currently available for release.
         uint256 releasable;
-        /// @notice Amount of tokens vested up to the current timestamp
-        /// @dev Total vested amount, including released and releasable
+        // Amount of tokens vested up to the current timestamp.
         uint256 vestedAmount;
     }
 
-    /**
-     * @notice Struct defining an investor's vesting configuration
-     */
+    /// @dev Struct defining an investor's vesting configuration.
     struct LegionInvestorVestingConfig {
-        /// @notice Unix timestamp (seconds) when vesting starts
-        /// @dev Sets the starting point of the vesting period
+        // Unix timestamp (seconds) when vesting starts.
         uint64 vestingStartTime;
-        /// @notice Duration of the vesting schedule in seconds
-        /// @dev Total time over which tokens vest
+        // Duration of the vesting schedule in seconds.
         uint64 vestingDurationSeconds;
-        /// @notice Duration of the cliff period in seconds
-        /// @dev Time before which no tokens can be released
+        // Duration of the cliff period in seconds.
         uint64 vestingCliffDurationSeconds;
-        /// @notice Type of vesting schedule for the investor
-        /// @dev References VestingType enum (LEGION_LINEAR or LEGION_LINEAR_EPOCH)
+        // Type of vesting schedule for the investor.
         ILegionVestingManager.VestingType vestingType;
-        /// @notice Duration of each epoch in seconds (for epoch vesting)
-        /// @dev Defines the interval for token releases in LEGION_LINEAR_EPOCH
+        // Duration of each epoch in seconds (for epoch vesting).
         uint64 epochDurationSeconds;
-        /// @notice Total number of epochs (for epoch vesting)
-        /// @dev Determines the granularity of releases in LEGION_LINEAR_EPOCH
+        // Total number of epochs (for epoch vesting).
         uint64 numberOfEpochs;
-        /// @notice Token allocation released at TGE (18 decimals precision)
-        /// @dev Percentage of tokens (in wei) released immediately after TGE
+        // Token allocation released at TGE (18 decimals precision).
         uint64 tokenAllocationOnTGERate;
     }
 
-    /**
-     * @notice Retrieves the current vesting configuration
-     * @return ILegionVestingManager.LegionVestingConfig memory Struct containing vesting configuration
-     */
+    /// @notice Returns the current vesting configuration.
+    /// @return The complete vesting configuration struct.
     function vestingConfiguration() external view returns (ILegionVestingManager.LegionVestingConfig memory);
 }

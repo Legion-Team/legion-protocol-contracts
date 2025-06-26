@@ -18,152 +18,110 @@ import { ILegionVestingManager } from "../../interfaces/vesting/ILegionVestingMa
 /**
  * @title ILegionPreLiquidApprovedSale
  * @author Legion
- * @notice Interface for managing pre-liquid approved sales of ERC20 tokens before TGE in the Legion Protocol
+ * @notice Interface for the LegionPreLiquidApprovedSale contract.
  */
 interface ILegionPreLiquidApprovedSale {
-    /// @notice Struct defining initialization parameters for the pre-liquid sale
+    /// @dev Struct defining initialization parameters for the pre-liquid sale
     struct PreLiquidSaleInitializationParams {
-        /// @notice Address of the token used for raising capital
-        /// @dev Bid token address
+        // Address of the token used for raising capital
         address bidToken;
-        /// @notice Admin address of the project raising capital
-        /// @dev Project admin address
+        // Admin address of the project raising capital
         address projectAdmin;
-        /// @notice Address of Legion's Address Registry contract
-        /// @dev Source of Legion-related addresses
+        // Address of Legion's Address Registry contract
         address addressRegistry;
-        /// @notice Address of the referrer fee receiver
-        /// @dev Destination for referrer fees
+        // Address of the referrer fee receiver
         address referrerFeeReceiver;
-        /// @notice Duration of the refund period in seconds
-        /// @dev Time window for investors to request refunds
+        // Duration of the refund period in seconds
         uint64 refundPeriodSeconds;
-        /// @notice Legion's fee on capital raised in basis points (BPS)
-        /// @dev Percentage fee applied to raised capital
+        // Legion's fee on capital raised in basis points (BPS)
         uint16 legionFeeOnCapitalRaisedBps;
-        /// @notice Legion's fee on tokens sold in basis points (BPS)
-        /// @dev Percentage fee applied to sold tokens
+        // Legion's fee on tokens sold in basis points (BPS)
         uint16 legionFeeOnTokensSoldBps;
-        /// @notice Referrer's fee on capital raised in basis points (BPS)
-        /// @dev Percentage fee for referrer on raised capital
+        // Referrer's fee on capital raised in basis points (BPS)
         uint16 referrerFeeOnCapitalRaisedBps;
-        /// @notice Referrer's fee on tokens sold in basis points (BPS)
-        /// @dev Percentage fee for referrer on sold tokens
+        // Referrer's fee on tokens sold in basis points (BPS)
         uint16 referrerFeeOnTokensSoldBps;
-        /// @notice Name of the pre-liquid sale soulbound token
-        /// @dev Name of the SBT representing the sale
+        // Name of the pre-liquid sale soulbound token
         string saleName;
-        /// @notice Symbol of the pre-liquid sale soulbound token
-        /// @dev Symbol of the SBT representing the sale
+        // Symbol of the pre-liquid sale soulbound token
         string saleSymbol;
-        /// @notice Base URI for the pre-liquid sale soulbound token
-        /// @dev URI prefix for the SBT metadata
+        // Base URI for the pre-liquid sale soulbound token
         string saleBaseURI;
     }
 
-    /// @notice Struct containing the runtime configuration of the pre-liquid sale
+    /// @dev Struct containing the runtime configuration of the pre-liquid sale
     struct PreLiquidSaleConfig {
-        /// @notice Address of the token used for raising capital
-        /// @dev Bid token address
+        // Address of the token used for raising capital
         address bidToken;
-        /// @notice Admin address of the project raising capital
-        /// @dev Project admin address
+        // Admin address of the project raising capital
         address projectAdmin;
-        /// @notice Address of Legion's Address Registry contract
-        /// @dev Registry address
+        // Address of Legion's Address Registry contract
         address addressRegistry;
-        /// @notice Address of the Legion Bouncer contract
-        /// @dev Access control address
+        // Address of the Legion Bouncer contract
         address legionBouncer;
-        /// @notice Signer address of Legion
-        /// @dev Address for signature verification
+        // Signer address of Legion
         address legionSigner;
-        /// @notice Address of Legion's fee receiver
-        /// @dev Destination for Legion fees
+        // Address of Legion's fee receiver
         address legionFeeReceiver;
-        /// @notice Address of the referrer fee receiver
-        /// @dev Destination for referrer fees
+        // Address of the referrer fee receiver
         address referrerFeeReceiver;
-        /// @notice Duration of the refund period in seconds
-        /// @dev Time window for refunds
+        // Duration of the refund period in seconds
         uint64 refundPeriodSeconds;
-        /// @notice Legion's fee on capital raised in basis points (BPS)
-        /// @dev Fee percentage on capital
+        // Legion's fee on capital raised in basis points (BPS)
         uint16 legionFeeOnCapitalRaisedBps;
-        /// @notice Legion's fee on tokens sold in basis points (BPS)
-        /// @dev Fee percentage on tokens
+        // Legion's fee on tokens sold in basis points (BPS)
         uint16 legionFeeOnTokensSoldBps;
-        /// @notice Referrer's fee on capital raised in basis points (BPS)
-        /// @dev Referrer fee on capital
+        // Referrer's fee on capital raised in basis points (BPS)
         uint16 referrerFeeOnCapitalRaisedBps;
-        /// @notice Referrer's fee on tokens sold in basis points (BPS)
-        /// @dev Referrer fee on tokens
+        // Referrer's fee on tokens sold in basis points (BPS)
         uint16 referrerFeeOnTokensSoldBps;
     }
 
-    /// @notice Struct tracking the current status of the pre-liquid sale
+    /// @dev Struct tracking the current status of the pre-liquid sale
     struct PreLiquidSaleStatus {
-        /// @notice Address of the token being sold to investors
-        /// @dev Ask token address
+        // Address of the token being sold to investors
         address askToken;
-        /// @notice Total supply of the ask token
-        /// @dev Total token supply
+        // Total supply of the ask token
         uint256 askTokenTotalSupply;
-        /// @notice Total capital invested by investors
-        /// @dev Aggregate investment amount
+        // Total capital invested by investors
         uint256 totalCapitalInvested;
-        /// @notice Total capital raised from the sale
-        /// @dev Final raised amount
+        // Total capital raised from the sale
         uint256 totalCapitalRaised;
-        /// @notice Total amount of tokens allocated to investors
-        /// @dev Allocation for distribution
+        // Total amount of tokens allocated to investors
         uint256 totalTokensAllocated;
-        /// @notice Total capital withdrawn by the Project
-        /// @dev Amount withdrawn by project
+        // Total capital withdrawn by the Project
         uint256 totalCapitalWithdrawn;
-        /// @notice End time of the sale
-        /// @dev Unix timestamp of sale end
+        // End time of the sale
         uint64 endTime;
-        /// @notice Refund end time of the sale
-        /// @dev Unix timestamp of refund period end
+        // Refund end time of the sale
         uint64 refundEndTime;
-        /// @notice Indicates if the sale has been canceled
-        /// @dev Cancellation status
+        // Indicates if the sale has been canceled
         bool isCanceled;
-        /// @notice Indicates if ask tokens have been supplied
-        /// @dev Supply status
+        // Indicates if ask tokens have been supplied
         bool tokensSupplied;
-        /// @notice Indicates if the sale has ended
-        /// @dev End status
+        // Indicates if the sale has ended
         bool hasEnded;
     }
 
-    /// @notice Struct representing an investor's position in the sale
+    /// @dev Struct representing an investor's position in the sale
     struct InvestorPosition {
-        /// @notice Address of the investor's vesting contract
-        /// @dev Vesting contract address
+        // Address of the investor's vesting contract
         address vestingAddress;
-        /// @notice Total capital invested by the investor
-        /// @dev Invested amount in bid tokens
+        // Total capital invested by the investor
         uint256 investedCapital;
-        /// @notice Amount of capital allowed per SAFT
-        /// @dev Cached SAFT investment limit
+        // Amount of capital allowed per SAFT
         uint256 cachedInvestAmount;
-        /// @notice Token allocation rate as percentage of total supply (18 decimals)
-        /// @dev Cached allocation rate
+        // Token allocation rate as percentage of total supply (18 decimals)
         uint256 cachedTokenAllocationRate;
-        /// @notice Flag indicating if investor has claimed excess capital
-        /// @dev Excess claim status
+        // Flag indicating if investor has claimed excess capital
         bool hasClaimedExcess;
-        /// @notice Flag indicating if investor has refunded
-        /// @dev Refund status
+        // Flag indicating if investor has refunded
         bool hasRefunded;
-        /// @notice Flag indicating if investor has settled tokens
-        /// @dev Settlement status
+        // Flag indicating if investor has settled tokens
         bool hasSettled;
     }
 
-    /// @notice Enum defining possible actions during the sale
+    /// @dev Enum defining possible actions during the sale
     enum SaleAction {
         INVEST, // Investing capital
         WITHDRAW_EXCESS_CAPITAL, // Withdrawing excess capital
@@ -171,117 +129,87 @@ interface ILegionPreLiquidApprovedSale {
 
     }
 
-    /**
-     * @notice Emitted when capital is successfully invested in the pre-liquid sale
-     * @param amount Amount of capital invested (in bid tokens)
-     * @param investor Address of the investor
-     * @param positionId ID of the investor's position
-     */
+    /// @notice Emitted when capital is successfully invested in the pre-liquid sale.
+    /// @param amount The amount of capital invested (in bid tokens).
+    /// @param investor The address of the investor.
+    /// @param positionId The ID of the investor's position.
     event CapitalInvested(uint256 amount, address investor, uint256 positionId);
 
-    /**
-     * @notice Emitted when excess capital is successfully withdrawn by an investor
-     * @param amount Amount of excess capital withdrawn
-     * @param investor Address of the investor
-     * @param positionId ID of the investor's position
-     */
+    /// @notice Emitted when excess capital is successfully withdrawn by an investor.
+    /// @param amount The amount of excess capital withdrawn.
+    /// @param investor The address of the investor.
+    /// @param positionId The ID of the investor's position.
     event ExcessCapitalWithdrawn(uint256 amount, address investor, uint256 positionId);
 
-    /**
-     * @notice Emitted when capital is successfully refunded to an investor
-     * @param amount Amount of capital refunded
-     * @param investor Address of the investor receiving the refund
-     * @param positionId ID of the investor's position
-     */
+    /// @notice Emitted when capital is successfully refunded to an investor.
+    /// @param amount The amount of capital refunded.
+    /// @param investor The address of the investor receiving the refund.
+    /// @param positionId The ID of the investor's position.
     event CapitalRefunded(uint256 amount, address investor, uint256 positionId);
 
-    /**
-     * @notice Emitted when capital is refunded after sale cancellation
-     * @param amount Amount of capital refunded
-     * @param investor Address of the investor receiving the refund
-     * @param positionId ID of the investor's position
-     */
+    /// @notice Emitted when capital is refunded after sale cancellation.
+    /// @param amount The amount of capital refunded.
+    /// @param investor The address of the investor receiving the refund.
+    /// @param positionId The ID of the investor's position.
     event CapitalRefundedAfterCancel(uint256 amount, address investor, uint256 positionId);
 
-    /**
-     * @notice Emitted when capital is successfully withdrawn by the Project
-     * @param amount Total amount of capital withdrawn
-     */
+    /// @notice Emitted when capital is successfully withdrawn by the project.
+    /// @param amount The total amount of capital withdrawn.
     event CapitalWithdrawn(uint256 amount);
 
-    /**
-     * @notice Emitted when the total capital raised is published by Legion
-     * @param capitalRaised Total capital raised by the project
-     */
+    /// @notice Emitted when the total capital raised is published by Legion.
+    /// @param capitalRaised The total capital raised by the project.
     event CapitalRaisedPublished(uint256 capitalRaised);
 
-    /**
-     * @notice Emitted during an emergency withdrawal by Legion
-     * @param receiver Address receiving the withdrawn tokens
-     * @param token Address of the token withdrawn
-     * @param amount Amount of tokens withdrawn
-     */
+    /// @notice Emitted during an emergency withdrawal by Legion.
+    /// @param receiver The address receiving the withdrawn tokens.
+    /// @param token The address of the token withdrawn.
+    /// @param amount The amount of tokens withdrawn.
     event EmergencyWithdraw(address receiver, address token, uint256 amount);
 
-    /**
-     * @notice Emitted when Legion addresses are successfully synced
-     * @param legionBouncer Updated Legion bouncer address
-     * @param legionSigner Updated Legion signer address
-     * @param legionFeeReceiver Updated Legion fee receiver address
-     * @param vestingFactory Updated vesting factory address
-     */
+    /// @notice Emitted when Legion addresses are successfully synced.
+    /// @param legionBouncer The updated Legion bouncer address.
+    /// @param legionSigner The updated Legion signer address.
+    /// @param legionFeeReceiver The updated Legion fee receiver address.
+    /// @param vestingFactory The updated vesting factory address.
     event LegionAddressesSynced(
         address legionBouncer, address legionSigner, address legionFeeReceiver, address vestingFactory
     );
 
-    /**
-     * @notice Emitted when the sale is successfully canceled
-     */
+    /// @notice Emitted when the sale is successfully canceled.
     event SaleCanceled();
 
-    /**
-     * @notice Emitted when token details are published post-TGE by Legion
-     * @param tokenAddress Address of the token distributed
-     * @param totalSupply Total supply of the distributed token
-     * @param allocatedTokenAmount Amount of tokens allocated for investors
-     */
+    /// @notice Emitted when token details are published after TGE by Legion.
+    /// @param tokenAddress The address of the token distributed.
+    /// @param totalSupply The total supply of the distributed token.
+    /// @param allocatedTokenAmount The amount of tokens allocated for investors.
     event TgeDetailsPublished(address tokenAddress, uint256 totalSupply, uint256 allocatedTokenAmount);
 
-    /**
-     * @notice Emitted when an investor successfully claims their token allocation
-     * @param amountToBeVested Amount of tokens sent to vesting contract
-     * @param amountOnClaim Amount of tokens distributed immediately
-     * @param investor Address of the claiming investor
-     * @param positionId ID of the investor's position
-     */
+    /// @notice Emitted when an investor successfully claims their token allocation.
+    /// @param amountToBeVested The amount of tokens sent to vesting contract.
+    /// @param amountOnClaim The amount of tokens distributed immediately.
+    /// @param investor The address of the claiming investor.
+    /// @param positionId The ID of the investor's position.
     event TokenAllocationClaimed(uint256 amountToBeVested, uint256 amountOnClaim, address investor, uint256 positionId);
 
-    /**
-     * @notice Emitted when tokens are supplied for distribution by the Project
-     * @param amount Amount of tokens supplied
-     * @param legionFee Fee amount collected by Legion
-     * @param referrerFee Fee amount collected by the referrer
-     */
+    /// @notice Emitted when tokens are supplied for distribution by the project.
+    /// @param amount The amount of tokens supplied.
+    /// @param legionFee The fee amount collected by Legion.
+    /// @param referrerFee The fee amount collected by the referrer.
     event TokensSuppliedForDistribution(uint256 amount, uint256 legionFee, uint256 referrerFee);
 
-    /**
-     * @notice Emitted when the sale has ended
-     */
+    /// @notice Emitted when the sale has ended.
     event SaleEnded();
 
-    /**
-     * @notice Initializes the pre-liquid sale with parameters
-     * @param preLiquidSaleInitParams Calldata struct with initialization parameters
-     */
+    /// @notice Initializes the pre-liquid approved sale contract with parameters.
+    /// @param preLiquidSaleInitParams The pre-liquid approved sale initialization parameters.
     function initialize(PreLiquidSaleInitializationParams calldata preLiquidSaleInitParams) external;
 
-    /**
-     * @notice Allows investment into the pre-liquid sale
-     * @param amount Amount of capital to invest
-     * @param investAmount Maximum allowed investment per SAFT
-     * @param tokenAllocationRate Token allocation percentage (18 decimals)
-     * @param investSignature Signature verifying investor eligibility
-     */
+    /// @notice Allows an investor to invest capital in the pre-liquid approved sale.
+    /// @param amount The amount of capital to invest.
+    /// @param investAmount The maximum capital allowed.
+    /// @param tokenAllocationRate The token allocation percentage (18 decimals).
+    /// @param investSignature The signature verifying investor eligibility.
     function invest(
         uint256 amount,
         uint256 investAmount,
@@ -290,53 +218,36 @@ interface ILegionPreLiquidApprovedSale {
     )
         external;
 
-    /**
-     * @notice Processes a refund request during the refund period
-     */
+    /// @notice Processes a refund for an investor during the refund period.
     function refund() external;
 
-    /**
-     * @notice Publishes token details after TGE
-     * @param _askToken Address of the token to distribute
-     * @param _askTokenTotalSupply Total supply of the token
-     * @param _totalTokensAllocated Total tokens allocated for investors
-     */
-    function publishTgeDetails(
-        address _askToken,
-        uint256 _askTokenTotalSupply,
-        uint256 _totalTokensAllocated
-    )
-        external;
+    /// @notice Publishes token details after Token Generation Event (TGE).
+    /// @param askToken The address of the token to be distributed.
+    /// @param askTokenTotalSupply The total supply of the ask token.
+    /// @param totalTokensAllocated The total tokens allocated for investors.
+    function publishTgeDetails(address askToken, uint256 askTokenTotalSupply, uint256 totalTokensAllocated) external;
 
-    /**
-     * @notice Supplies tokens for distribution post-TGE
-     * @param amount Amount of tokens to supply
-     * @param legionFee Fee amount for Legion
-     * @param referrerFee Fee amount for referrer
-     */
+    /// @notice Supplies tokens for distribution after TGE.
+    /// @param amount The amount of tokens to supply.
+    /// @param legionFee The fee amount for Legion.
+    /// @param referrerFee The fee amount for the referrer.
     function supplyTokens(uint256 amount, uint256 legionFee, uint256 referrerFee) external;
 
-    /**
-     * @notice Performs an emergency withdrawal of tokens
-     * @param receiver Address to receive tokens
-     * @param token Address of the token to withdraw
-     * @param amount Amount of tokens to withdraw
-     */
+    /// @notice Withdraws tokens in emergency situations.
+    /// @param receiver The address to receive withdrawn tokens.
+    /// @param token The address of the token to withdraw.
+    /// @param amount The amount of tokens to withdraw.
     function emergencyWithdraw(address receiver, address token, uint256 amount) external;
 
-    /**
-     * @notice Withdraws raised capital to the Project
-     */
+    /// @notice Withdraws raised capital to the project admin.
     function withdrawRaisedCapital() external;
 
-    /**
-     * @notice Allows investors to claim their token allocation
-     * @param investAmount Maximum allowed investment per SAFT
-     * @param tokenAllocationRate Token allocation percentage (18 decimals)
-     * @param investorVestingConfig Vesting configuration for the investor
-     * @param claimSignature Signature verifying claiming eligibility
-     * @param vestingSignature Signature verifying vesting terms
-     */
+    /// @notice Allows investors to claim their token allocation.
+    /// @param investAmount The maximum capital allowed per SAFT.
+    /// @param tokenAllocationRate The token allocation percentage (18 decimals).
+    /// @param investorVestingConfig The vesting configuration for the investor.
+    /// @param claimSignature The signature verifying investment eligibility.
+    /// @param vestingSignature The signature verifying vesting terms.
     function claimTokenAllocation(
         uint256 investAmount,
         uint256 tokenAllocationRate,
@@ -346,23 +257,17 @@ interface ILegionPreLiquidApprovedSale {
     )
         external;
 
-    /**
-     * @notice Cancels the pre-liquid sale
-     */
+    /// @notice Cancels the sale and handles capital return.
     function cancelSale() external;
 
-    /**
-     * @notice Withdraws invested capital if the sale is canceled
-     */
+    /// @notice Allows investors to withdraw capital if the sale is canceled.
     function withdrawInvestedCapitalIfCanceled() external;
 
-    /**
-     * @notice Withdraws excess invested capital back to investors
-     * @param amount Amount of excess capital to withdraw
-     * @param investAmount Maximum allowed investment per SAFT
-     * @param tokenAllocationRate Token allocation percentage (18 decimals)
-     * @param withdrawSignature Signature verifying eligibility
-     */
+    /// @notice Withdraws excess invested capital back to investors.
+    /// @param amount The amount of excess capital to withdraw.
+    /// @param investAmount The maximum capital allowed.
+    /// @param tokenAllocationRate The token allocation percentage (18 decimals).
+    /// @param withdrawSignature The signature verifying eligibility.
     function withdrawExcessInvestedCapital(
         uint256 amount,
         uint256 investAmount,
@@ -371,61 +276,41 @@ interface ILegionPreLiquidApprovedSale {
     )
         external;
 
-    /**
-     * @notice Releases vested tokens to the investor
-     */
+    /// @notice Releases vested tokens to the investor.
     function releaseVestedTokens() external;
 
-    /**
-     * @notice Ends the pre-liquid sale manually
-     */
+    /// @notice Ends the sale manually.
     function endSale() external;
 
-    /**
-     * @notice Publishes the total capital raised
-     * @param capitalRaised Total capital raised by the project
-     */
+    /// @notice Publishes the total capital raised.
+    /// @param capitalRaised The total capital raised by the project.
     function publishCapitalRaised(uint256 capitalRaised) external;
 
-    /**
-     * @notice Syncs Legion addresses from the address registry
-     */
+    /// @notice Synchronizes Legion addresses from the address registry.
     function syncLegionAddresses() external;
 
-    /**
-     * @notice Pauses the pre-liquid sale
-     */
-    function pauseSale() external;
+    /// @notice Pauses all sale operations.
+    function pause() external;
 
-    /**
-     * @notice Unpauses the pre-liquid sale
-     */
-    function unpauseSale() external;
+    /// @notice Resumes all sale operations.
+    function unpause() external;
 
-    /**
-     * @notice Retrieves the current sale configuration
-     * @return PreLiquidSaleConfig memory Struct containing sale configuration
-     */
+    /// @notice Returns the current sale configuration.
+    /// @return The complete sale configuration struct.
     function saleConfiguration() external view returns (PreLiquidSaleConfig memory);
 
-    /**
-     * @notice Retrieves the current sale status
-     * @return PreLiquidSaleStatus memory Struct containing sale status
-     */
+    /// @notice Returns the current sale status.
+    /// @return The complete sale status struct.
     function saleStatusDetails() external view returns (PreLiquidSaleStatus memory);
 
-    /**
-     * @notice Retrieves an investor's position details
-     * @param investorAddress Address of the investor
-     * @return InvestorPosition memory Struct containing investor position details
-     */
-    function investorPositionDetails(address investorAddress) external view returns (InvestorPosition memory);
+    /// @notice Returns an investor's position details.
+    /// @param investor The address of the investor.
+    /// @return The complete investor position struct.
+    function investorPositionDetails(address investor) external view returns (InvestorPosition memory);
 
-    /**
-     * @notice Retrieves an investor's vesting status
-     * @param investor Address of the investor
-     * @return ILegionVestingManager.LegionInvestorVestingStatus memory Struct containing vesting status
-     */
+    /// @notice Returns an investor's vesting status.
+    /// @param investor The address of the investor.
+    /// @return vestingStatus The complete vesting status including timestamps, amounts, and release information.
     function investorVestingStatus(address investor)
         external
         view

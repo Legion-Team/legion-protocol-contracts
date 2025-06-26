@@ -25,46 +25,24 @@ import { LegionSealedBidAuctionSale } from "../sales/LegionSealedBidAuctionSale.
 /**
  * @title Legion Sealed Bid Auction Sale Factory
  * @author Legion
- * @notice A factory contract for deploying proxy instances of Legion sealed bid auction sales
- * @dev Utilizes the clone pattern to create new instances of LegionSealedBidAuctionSale contracts
+ * @notice Deploys proxy instances of Legion sealed bid auction sale contracts using the clone pattern.
+ * @dev Creates gas-efficient clones of a single implementation contract for each sealed bid auction sale.
  */
 contract LegionSealedBidAuctionSaleFactory is ILegionSealedBidAuctionSaleFactory, Ownable {
     using LibClone for address;
 
-    /*//////////////////////////////////////////////////////////////////////////
-                                 STATE VARIABLES
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /// @notice Address of the LegionSealedBidAuctionSale implementation contract used as template
-    /// @dev Immutable reference to the base implementation deployed during construction
+    /// @notice The address of the LegionSealedBidAuctionSale implementation contract used as a template.
+    /// @dev Immutable reference to the base implementation deployed during construction.
     address public immutable i_sealedBidAuctionTemplate = address(new LegionSealedBidAuctionSale());
 
-    /*//////////////////////////////////////////////////////////////////////////
-                                   CONSTRUCTOR
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /**
-     * @notice Initializes the LegionSealedBidAuctionSaleFactory with an owner
-     * @dev Sets up ownership during contract deployment
-     * @param newOwner Address to be set as the initial owner of the factory
-     */
+    /// @notice Constructor for the LegionSealedBidAuctionSaleFactory contract.
+    /// @dev Initializes ownership during contract deployment.
+    /// @param newOwner The address to be set as the initial owner of the factory.
     constructor(address newOwner) {
         _initializeOwner(newOwner);
     }
 
-    /*//////////////////////////////////////////////////////////////////////////
-                              EXTERNAL FUNCTIONS
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /**
-     * @notice Deploys a new LegionSealedBidAuctionSale contract instance
-     * @dev Clones the template contract and initializes it with provided parameters; restricted to owner
-     * @param saleInitParams Struct containing Legion sale initialization parameters
-     * @param sealedBidAuctionSaleInitParams Struct containing sealed bid auction sale specific initialization
-     * parameters
-     * @return sealedBidAuctionInstance Address of the newly deployed and initialized LegionSealedBidAuctionSale
-     * instance
-     */
+    /// @inheritdoc ILegionSealedBidAuctionSaleFactory
     function createSealedBidAuctionSale(
         ILegionAbstractSale.LegionSaleInitializationParams calldata saleInitParams,
         ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams calldata sealedBidAuctionSaleInitParams

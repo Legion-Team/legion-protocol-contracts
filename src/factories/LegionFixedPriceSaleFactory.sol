@@ -25,44 +25,24 @@ import { LegionFixedPriceSale } from "../sales/LegionFixedPriceSale.sol";
 /**
  * @title Legion Fixed Price Sale Factory
  * @author Legion
- * @notice A factory contract for deploying proxy instances of Legion fixed price sales
- * @dev Uses the clone pattern to create new instances of LegionFixedPriceSale contracts
+ * @notice Deploys proxy instances of Legion fixed price sale contracts using the clone pattern.
+ * @dev Creates gas-efficient clones of a single implementation contract for each fixed price sale.
  */
 contract LegionFixedPriceSaleFactory is ILegionFixedPriceSaleFactory, Ownable {
     using LibClone for address;
 
-    /*//////////////////////////////////////////////////////////////////////////
-                                 STATE VARIABLES
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /// @notice Address of the LegionFixedPriceSale implementation contract used as template
-    /// @dev Immutable reference to the base implementation deployed during construction
+    /// @notice The address of the LegionFixedPriceSale implementation contract used as a template.
+    /// @dev Immutable reference to the base implementation deployed during construction.
     address public immutable i_fixedPriceSaleTemplate = address(new LegionFixedPriceSale());
 
-    /*//////////////////////////////////////////////////////////////////////////
-                                   CONSTRUCTOR
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /**
-     * @notice Initializes the LegionFixedPriceSaleFactory with an owner
-     * @dev Sets up ownership during contract deployment
-     * @param newOwner Address to be set as the initial owner of the factory
-     */
+    /// @notice Constructor for the LegionFixedPriceSaleFactory contract.
+    /// @dev Initializes ownership during contract deployment.
+    /// @param newOwner The address to be set as the initial owner of the factory.
     constructor(address newOwner) {
         _initializeOwner(newOwner);
     }
 
-    /*//////////////////////////////////////////////////////////////////////////
-                              EXTERNAL FUNCTIONS
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /**
-     * @notice Deploys a new LegionFixedPriceSale contract instance
-     * @dev Clones the template contract and initializes it with provided parameters; restricted to owner
-     * @param saleInitParams Struct containing Legion sale initialization parameters
-     * @param fixedPriceSaleInitParams Struct containing fixed price sale specific initialization parameters
-     * @return fixedPriceSaleInstance Address of the newly deployed and initialized LegionFixedPriceSale instance
-     */
+    /// @inheritdoc ILegionFixedPriceSaleFactory
     function createFixedPriceSale(
         ILegionAbstractSale.LegionSaleInitializationParams calldata saleInitParams,
         ILegionFixedPriceSale.FixedPriceSaleInitializationParams calldata fixedPriceSaleInitParams

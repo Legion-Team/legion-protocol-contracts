@@ -535,7 +535,7 @@ contract LegionCapitalRaiseTest is Test {
      * @notice Tests successful pausing of the capital raise by Legion admin
      * @dev Expects Paused event emission when paused by legionBouncer
      */
-    function test_pauseRaise_successfullyPauseTheSale() public {
+    function test_pause_successfullyPauseTheSale() public {
         // Arrange
         prepareCreateLegionCapitalRaise();
 
@@ -545,14 +545,14 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).pauseSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).pause();
     }
 
     /**
      * @notice Tests that pausing the capital raise by a non-Legion admin reverts
      * @dev Expects LegionSale__NotCalledByLegion revert when called by nonLegionAdmin
      */
-    function testFuzz_pauseRaise_revertsIfCalledByNonLegionAdmin(address nonLegionAdmin) public {
+    function testFuzz_pause_revertsIfCalledByNonLegionAdmin(address nonLegionAdmin) public {
         // Arrange
         vm.assume(nonLegionAdmin != legionBouncer);
         prepareCreateLegionCapitalRaise();
@@ -562,19 +562,19 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(nonLegionAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).pauseSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).pause();
     }
 
     /**
      * @notice Tests successful unpausing of the capital raise by Legion admin
      * @dev Expects Unpaused event emission after pausing and unpausing
      */
-    function test_unpauseRaise_successfullyUnpauseTheSale() public {
+    function test_unpause_successfullyUnpauseTheSale() public {
         // Arrange
         prepareCreateLegionCapitalRaise();
 
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).pauseSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).pause();
 
         // Expect
         vm.expectEmit();
@@ -582,27 +582,27 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).unpauseSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).unpause();
     }
 
     /**
      * @notice Tests that unpausing the capital raise by a non-Legion admin reverts
      * @dev Expects LegionSale__NotCalledByLegion revert when called by nonLegionAdmin
      */
-    function testFuzz_unpauseRaise_revertsIfNotCalledByLegionAdmin(address nonLegionAdmin) public {
+    function testFuzz_unpause_revertsIfNotCalledByLegionAdmin(address nonLegionAdmin) public {
         // Arrange
         vm.assume(nonLegionAdmin != legionBouncer);
         prepareCreateLegionCapitalRaise();
 
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).pauseSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).pause();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NotCalledByLegion.selector));
 
         // Act
         vm.prank(nonLegionAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).unpauseSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).unpause();
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -2035,7 +2035,7 @@ contract LegionCapitalRaiseTest is Test {
         vm.warp(block.timestamp + 2 weeks + 1);
 
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).pauseSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).pause();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
@@ -2310,7 +2310,7 @@ contract LegionCapitalRaiseTest is Test {
         vm.warp(block.timestamp + 2 weeks + 1);
 
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).pauseSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).pause();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));

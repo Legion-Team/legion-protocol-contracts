@@ -18,23 +18,20 @@ import { ILegionTokenDistributor } from "../distribution/ILegionTokenDistributor
 /**
  * @title ILegionTokenDistributorFactory
  * @author Legion
- * @notice Interface for deploying and managing Legion token distributor instances
+ * @notice Interface for the LegionTokenDistributorFactory contract.
+ * @dev Provides factory functionality for deploying and initializing token distributor contracts.
  */
 interface ILegionTokenDistributorFactory {
-    /**
-     * @notice Emitted when a new token distributor contract is deployed and initialized
-     * @param distributorInstance Address of the newly deployed token distributor contract
-     * @param distributorInitParams Struct containing Legion Token Distributor initialization parameters
-     */
+    /// @notice Emitted when a new token distributor contract is deployed and initialized.
+    /// @param distributorInstance The address of the newly deployed token distributor contract.
+    /// @param distributorInitParams The Legion Token Distributor initialization parameters used.
     event NewTokenDistributorCreated(
         address distributorInstance, ILegionTokenDistributor.TokenDistributorInitializationParams distributorInitParams
     );
 
-    /**
-     * @notice Deploys a new LegionTokenDistributor contract instance
-     * @param distributorInitParams Struct containing Legion Token Distributor initialization parameters
-     * @return distributorInstance Address of the newly deployed LegionTokenDistributor instance
-     */
+    /// @notice Deploys a new LegionTokenDistributor contract instance.
+    /// @param distributorInitParams The Legion Token Distributor initialization parameters.
+    /// @return distributorInstance The address of the newly deployed LegionTokenDistributor instance.
     function createTokenDistributor(
         ILegionTokenDistributor.TokenDistributorInitializationParams calldata distributorInitParams
     )

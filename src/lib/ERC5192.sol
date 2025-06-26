@@ -20,42 +20,33 @@ import { IERC5192 } from "../interfaces/lib/IERC5192.sol";
 /**
  * @title ERC-5192: Minimal Soulbound NFTs Implementation
  * @author Legion
- * @notice A contract for managing Soulbound Tokens (SBTs) according to the ERC5192 standard
- * @dev Abstract contract implementing IERC5192; handles SBT locking and unlocking
+ * @notice Implements Soulbound Tokens (SBTs) according to the ERC-5192 standard.
+ * @dev Abstract contract that extends ERC721 with locking functionality to create non-transferable tokens.
  */
 abstract contract ERC5192 is IERC5192, ERC721 {
-    /**
-     * @dev Thrown when attempting to transfer a locked token
-     * @param tokenId The identifier for the token that cannot be transferred
-     */
+    /// @dev Thrown when attempting to transfer a locked token.
+    /// @param tokenId The identifier for the token that cannot be transferred.
     error ERC5192__LockedToken(uint256 tokenId);
 
-    /**
-     * @dev Thrown when attempting to transfer a token to itself
-     * @param tokenId The identifier for the token that cannot be transferred to itself
-     */
+    /// @dev Thrown when attempting to transfer a token to itself.
+    /// @param tokenId The identifier for the token that cannot be transferred to itself.
     error ERC5192__TransferToSelf(uint256 tokenId);
 
-    /// @dev Mapping from token ID to locked status
+    /// @dev Mapping from token ID to locked status.
     mapping(uint256 => bool) internal _locked;
 
-    /**
-     * @notice Returns the locking status of a Soulbound Token
-     * @dev SBTs assigned to zero address are considered invalid, and queries about them do throw
-     * @param tokenId The identifier for an SBT
-     * @return True if the token is locked, false otherwise
-     */
+    /// @notice Returns the locking status of a Soulbound Token.
+    /// @dev SBTs assigned to the zero address are considered invalid, and queries about them will revert.
+    /// @param tokenId The identifier for an SBT.
+    /// @return True if the token is locked, false otherwise.
     function locked(uint256 tokenId) external view virtual override returns (bool) {
         if (!_exists(tokenId)) revert TokenDoesNotExist();
         return _locked[tokenId];
     }
 
-    /**
-     * @dev Update the locked status of a token
-     * @param tokenId The identifier for a token
-     * @param status The new locked status of the token
-     * @notice This function emits the Locked or Unlocked event depending on the status
-     */
+    /// @dev Updates the locked status of a token and emits the appropriate event.
+    /// @param tokenId The identifier for a token.
+    /// @param status The new locked status of the token.
     function _updateLockedStatus(uint256 tokenId, bool status) internal virtual {
         _locked[tokenId] = status;
         if (status) {
@@ -65,9 +56,7 @@ abstract contract ERC5192 is IERC5192, ERC721 {
         }
     }
 
-    /**
-     * @inheritdoc ERC721
-     */
+    /// @inheritdoc ERC721
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool result) {
         /// @solidity memory-safe-assembly
         assembly {
@@ -77,24 +66,16 @@ abstract contract ERC5192 is IERC5192, ERC721 {
         }
     }
 
-    /**
-     * @inheritdoc ERC721
-     */
+    /// @inheritdoc ERC721
     function name() public view virtual override returns (string memory) { }
 
-    /**
-     * @inheritdoc ERC721
-     */
+    /// @inheritdoc ERC721
     function symbol() public view virtual override returns (string memory) { }
 
-    /**
-     * @inheritdoc ERC721
-     */
+    /// @inheritdoc ERC721
     function tokenURI(uint256 id) public view virtual override returns (string memory) { }
 
-    /**
-     * @inheritdoc ERC721
-     */
+    /// @inheritdoc ERC721
     function _mint(address to, uint256 id) internal virtual override {
         super._mint(to, id);
 
@@ -105,9 +86,7 @@ abstract contract ERC5192 is IERC5192, ERC721 {
         emit Locked(id);
     }
 
-    /**
-     * @inheritdoc ERC721
-     */
+    /// @inheritdoc ERC721
     function _mintAndSetExtraDataUnchecked(address to, uint256 id, uint96 value) internal virtual override {
         super._mintAndSetExtraDataUnchecked(to, id, value);
 
@@ -118,9 +97,7 @@ abstract contract ERC5192 is IERC5192, ERC721 {
         emit Locked(id);
     }
 
-    /**
-     * @inheritdoc ERC721
-     */
+    /// @inheritdoc ERC721
     function _burn(uint256 id) internal virtual override {
         // Set the locked status to false
         _locked[id] = false;
@@ -131,9 +108,7 @@ abstract contract ERC5192 is IERC5192, ERC721 {
         emit Unlocked(id);
     }
 
-    /**
-     * @inheritdoc ERC721
-     */
+    /// @inheritdoc ERC721
     function _beforeTokenTransfer(address from, address to, uint256 id) internal virtual override {
         // If the token is locked, revert the transaction
         if (_locked[id]) {
@@ -148,9 +123,7 @@ abstract contract ERC5192 is IERC5192, ERC721 {
         super._beforeTokenTransfer(from, to, id);
     }
 
-    /**
-     * @inheritdoc ERC721
-     */
+    /// @inheritdoc ERC721
     function _afterTokenTransfer(address from, address to, uint256 id) internal virtual override {
         // Update the locked status of the token to true
         _updateLockedStatus(id, true);

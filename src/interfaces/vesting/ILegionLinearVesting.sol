@@ -18,6 +18,6 @@ import { ILegionVesting } from "./ILegionVesting.sol";
 /**
  * @title ILegionLinearVesting
  * @author Legion
- * @notice Interface for a linear vesting contract in the Legion Protocol
+ * @notice Interface for the LegionLinearVesting contract.
  */
 interface ILegionLinearVesting is ILegionVesting { }

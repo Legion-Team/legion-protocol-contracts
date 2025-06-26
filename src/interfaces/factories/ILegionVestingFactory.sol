@@ -16,29 +16,26 @@ pragma solidity 0.8.30;
 /**
  * @title ILegionVestingFactory
  * @author Legion
- * @notice Interface for deploying and managing Legion vesting contract instances
+ * @notice Interface for the LegionVestingFactory contract.
+ * @dev Provides factory functionality for deploying and initializing vesting contracts with different schedules.
  */
 interface ILegionVestingFactory {
-    /**
-     * @notice Emitted when a new linear vesting schedule contract is deployed for an investor
-     * @param beneficiary Address of the beneficiary receiving the vested tokens
-     * @param startTimestamp Unix timestamp (in seconds) when the vesting period begins
-     * @param durationSeconds Total duration of the vesting period in seconds
-     * @param cliffDurationSeconds Duration of the cliff period in seconds
-     */
+    /// @notice Emitted when a new linear vesting schedule contract is deployed for an investor.
+    /// @param beneficiary The address of the beneficiary receiving the vested tokens.
+    /// @param startTimestamp The Unix timestamp (in seconds) when the vesting period begins.
+    /// @param durationSeconds The total duration of the vesting period in seconds.
+    /// @param cliffDurationSeconds The duration of the cliff period in seconds.
     event NewLinearVestingCreated(
         address beneficiary, uint64 startTimestamp, uint64 durationSeconds, uint64 cliffDurationSeconds
     );
 
-    /**
-     * @notice Emitted when a new linear epoch vesting schedule contract is deployed for an investor
-     * @param beneficiary Address of the beneficiary receiving the vested tokens
-     * @param startTimestamp Unix timestamp (in seconds) when the vesting period begins
-     * @param durationSeconds Total duration of the vesting period in seconds
-     * @param cliffDurationSeconds Duration of the cliff period in seconds
-     * @param epochDurationSeconds Duration of each epoch in seconds
-     * @param numberOfEpochs Total number of epochs in the vesting schedule
-     */
+    /// @notice Emitted when a new linear epoch vesting schedule contract is deployed for an investor.
+    /// @param beneficiary The address of the beneficiary receiving the vested tokens.
+    /// @param startTimestamp The Unix timestamp (in seconds) when the vesting period begins.
+    /// @param durationSeconds The total duration of the vesting period in seconds.
+    /// @param cliffDurationSeconds The duration of the cliff period in seconds.
+    /// @param epochDurationSeconds The duration of each epoch in seconds.
+    /// @param numberOfEpochs The total number of epochs in the vesting schedule.
     event NewLinearEpochVestingCreated(
         address beneficiary,
         uint64 startTimestamp,
@@ -48,14 +45,12 @@ interface ILegionVestingFactory {
         uint64 numberOfEpochs
     );
 
-    /**
-     * @notice Deploys a new LegionLinearVesting contract instance
-     * @param beneficiary Address of the beneficiary receiving the vested tokens
-     * @param startTimestamp Unix timestamp (in seconds) when the vesting period begins
-     * @param durationSeconds Total duration of the vesting period in seconds
-     * @param cliffDurationSeconds Duration of the cliff period in seconds
-     * @return linearVestingInstance Address of the newly deployed LegionLinearVesting instance
-     */
+    /// @notice Creates a new linear vesting contract instance.
+    /// @param beneficiary The address that will receive the vested tokens.
+    /// @param startTimestamp The Unix timestamp when the vesting period begins.
+    /// @param durationSeconds The total duration of the vesting period in seconds.
+    /// @param cliffDurationSeconds The duration of the cliff period in seconds.
+    /// @return linearVestingInstance The address of the newly deployed and initialized LegionLinearVesting instance.
     function createLinearVesting(
         address beneficiary,
         uint64 startTimestamp,
@@ -65,16 +60,15 @@ interface ILegionVestingFactory {
         external
         returns (address payable linearVestingInstance);
 
-    /**
-     * @notice Deploys a new LegionLinearEpochVesting contract instance
-     * @param beneficiary Address that will receive the vested tokens
-     * @param startTimestamp Unix timestamp (in seconds) when the vesting period begins
-     * @param durationSeconds Total duration of the vesting period in seconds
-     * @param cliffDurationSeconds Duration of the cliff period in seconds
-     * @param epochDurationSeconds Duration of each epoch in seconds
-     * @param numberOfEpochs Total number of epochs in the vesting schedule
-     * @return linearEpochVestingInstance Address of the newly deployed LegionLinearEpochVesting instance
-     */
+    /// @notice Creates a new linear epoch vesting contract instance.
+    /// @param beneficiary The address that will receive the vested tokens.
+    /// @param startTimestamp The Unix timestamp when the vesting period begins.
+    /// @param durationSeconds The total duration of the vesting period in seconds.
+    /// @param cliffDurationSeconds The duration of the cliff period in seconds.
+    /// @param epochDurationSeconds The duration of each epoch in seconds.
+    /// @param numberOfEpochs The total number of epochs in the vesting schedule.
+    /// @return linearEpochVestingInstance The address of the newly deployed and initialized LegionLinearEpochVesting
+    /// instance.
     function createLinearEpochVesting(
         address beneficiary,
         uint64 startTimestamp,

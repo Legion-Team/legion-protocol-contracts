@@ -24,43 +24,24 @@ import { LegionTokenDistributor } from "../distribution/LegionTokenDistributor.s
 /**
  * @title Legion Token Distributor Factory
  * @author Legion
- * @notice A factory contract for deploying proxy instances of Legion token distributor contracts
- * @dev Uses the clone pattern to create new instances of LegionTokenDistributor contracts
+ * @notice Deploys proxy instances of Legion token distributor contracts using the clone pattern.
+ * @dev Creates gas-efficient clones of a single implementation contract for each token distributor.
  */
 contract LegionTokenDistributorFactory is ILegionTokenDistributorFactory, Ownable {
     using LibClone for address;
 
-    /*//////////////////////////////////////////////////////////////////////////
-                                 STATE VARIABLES
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /// @notice Address of the LegionTokenDistributor implementation contract used as template
-    /// @dev Immutable reference to the base implementation deployed during construction
+    /// @notice The address of the LegionTokenDistributor implementation contract used as a template.
+    /// @dev Immutable reference to the base implementation deployed during construction.
     address public immutable i_tokenDistributorTemplate = address(new LegionTokenDistributor());
 
-    /*//////////////////////////////////////////////////////////////////////////
-                                   CONSTRUCTOR
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /**
-     * @notice Initializes the LegionTokenDistributorFactory with an owner
-     * @dev Sets up ownership during contract deployment
-     * @param newOwner Address to be set as the initial owner of the factory
-     */
+    /// @notice Constructor for the LegionTokenDistributorFactory contract.
+    /// @dev Initializes ownership during contract deployment.
+    /// @param newOwner The address to be set as the initial owner of the factory.
     constructor(address newOwner) {
         _initializeOwner(newOwner);
     }
 
-    /*//////////////////////////////////////////////////////////////////////////
-                              EXTERNAL FUNCTIONS
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /**
-     * @notice Deploys a new LegionTokenDistributor contract instance
-     * @dev Clones the template contract and initializes it with provided parameters; restricted to owner
-     * @param distributorInitParams Struct containing Legion Token Distributor initialization parameters
-     * @return distributorInstance Address of the newly deployed LegionTokenDistributor instance
-     */
+    /// @inheritdoc ILegionTokenDistributorFactory
     function createTokenDistributor(
         ILegionTokenDistributor.TokenDistributorInitializationParams calldata distributorInitParams
     )

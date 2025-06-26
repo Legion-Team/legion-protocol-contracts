@@ -25,44 +25,24 @@ import { LegionPreLiquidOpenApplicationSale } from "../sales/LegionPreLiquidOpen
 /**
  * @title Legion Pre-Liquid Open Application Sale Factory
  * @author Legion
- * @notice A factory contract for deploying proxy instances of Legion pre-liquid open application sales
- * @dev Utilizes the clone pattern to create new instances of LegionPreLiquidOpenApplicationSale contracts
+ * @notice Deploys proxy instances of Legion pre-liquid open application sale contracts using the clone pattern.
+ * @dev Creates gas-efficient clones of a single implementation contract for each pre-liquid open application sale.
  */
 contract LegionPreLiquidOpenApplicationSaleFactory is ILegionPreLiquidOpenApplicationSaleFactory, Ownable {
     using LibClone for address;
 
-    /*//////////////////////////////////////////////////////////////////////////
-                                 STATE VARIABLES
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /// @notice Address of the LegionPreLiquidOpenApplicationSale implementation contract used as template
-    /// @dev Immutable reference to the base implementation deployed during construction
+    /// @notice The address of the LegionPreLiquidOpenApplicationSale implementation contract used as a template.
+    /// @dev Immutable reference to the base implementation deployed during construction.
     address public immutable i_preLiquidOpenApplicationSaleTemplate = address(new LegionPreLiquidOpenApplicationSale());
 
-    /*//////////////////////////////////////////////////////////////////////////
-                                   CONSTRUCTOR
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /**
-     * @notice Initializes the LegionPreLiquidOpenApplicationSaleFactory with an owner
-     * @dev Sets up ownership during contract deployment
-     * @param newOwner Address to be set as the initial owner of the factory
-     */
+    /// @notice Constructor for the LegionPreLiquidOpenApplicationSaleFactory contract.
+    /// @dev Initializes ownership during contract deployment.
+    /// @param newOwner The address to be set as the initial owner of the factory.
     constructor(address newOwner) {
         _initializeOwner(newOwner);
     }
 
-    /*//////////////////////////////////////////////////////////////////////////
-                              EXTERNAL FUNCTIONS
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /**
-     * @notice Deploys a new LegionPreLiquidOpenApplicationSale contract instance
-     * @dev Clones the template contract and initializes it with provided parameters; restricted to owner
-     * @param saleInitParams Struct containing Legion sale initialization parameters
-     * @return preLiquidOpenApplicationSaleInstance Address of the newly deployed and initialized
-     * LegionPreLiquidOpenApplicationSale instance
-     */
+    /// @inheritdoc ILegionPreLiquidOpenApplicationSaleFactory
     function createPreLiquidOpenApplicationSale(
         ILegionAbstractSale.LegionSaleInitializationParams memory saleInitParams
     )

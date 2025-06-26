@@ -16,40 +16,32 @@ pragma solidity 0.8.30;
 /**
  * @title ILegionPositionManager
  * @author Legion
- * @notice Interface for managing investor positions during sales in the Legion Protocol
+ * @notice Interface for the LegionPositionManager contract.
  */
 interface ILegionPositionManager {
-    /// @notice Struct to hold the configuration parameters for the Legion Position Manager
+    /// @dev Struct to hold the configuration parameters for the Legion Position Manager.
     struct LegionPositionManagerConfig {
-        /// @notice The name of the sale
-        /// @dev This is the name of the sale for which positions are being managed
+        // The name of the sale for which positions are being managed.
         string name;
-        /// @notice The symbol of the sale
-        /// @dev This is the symbol associated with the sale for which positions are being managed
+        // The symbol associated with the sale for which positions are being managed.
         string symbol;
-        /// @notice The base URI for the positions
-        /// @dev This is the base URI used to construct the metadata URI for each position
+        // The base URI used to construct the metadata URI for each position.
         string baseURI;
-        /// @notice The id of the last position created
-        /// @dev This is used to track the last position ID created in the system
+        // The ID of the last position created, used to track position creation.
         uint256 lastPositionId;
     }
 
-    /**
-     * @notice Transfers an investor position from one address to another
-     * @param from The address of the current owner
-     * @param to The address of the new owner
-     * @param positionId The ID of the position
-     */
+    /// @notice Transfers an investor position from one address to another.
+    /// @param from The address of the current owner.
+    /// @param to The address of the new owner.
+    /// @param positionId The ID of the position to transfer.
     function transferInvestorPosition(address from, address to, uint256 positionId) external;
 
-    /**
-     * @notice Transfers an investor position with authorization
-     * @param from The address of the current owner
-     * @param to The address of the new owner
-     * @param positionId The ID of the position
-     * @param signature The signature authorizing the transfer
-     */
+    /// @notice Transfers an investor position with cryptographic authorization.
+    /// @param from The address of the current owner.
+    /// @param to The address of the new owner.
+    /// @param positionId The ID of the position to transfer.
+    /// @param signature The cryptographic signature authorizing the transfer.
     function transferInvestorPositionWithAuthorization(
         address from,
         address to,

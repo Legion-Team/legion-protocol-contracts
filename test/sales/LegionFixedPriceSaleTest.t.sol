@@ -631,7 +631,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        ILegionFixedPriceSale(legionSaleInstance).pauseSale();
+        ILegionFixedPriceSale(legionSaleInstance).pause();
     }
 
     /**
@@ -648,7 +648,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(nonLegionAdmin);
-        ILegionFixedPriceSale(legionSaleInstance).pauseSale();
+        ILegionFixedPriceSale(legionSaleInstance).pause();
     }
 
     /**
@@ -660,7 +660,7 @@ contract LegionFixedPriceSaleTest is Test {
         prepareCreateLegionFixedPriceSale();
 
         vm.prank(legionBouncer);
-        ILegionFixedPriceSale(legionSaleInstance).pauseSale();
+        ILegionFixedPriceSale(legionSaleInstance).pause();
 
         // Expect
         vm.expectEmit();
@@ -668,7 +668,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        ILegionFixedPriceSale(legionSaleInstance).unpauseSale();
+        ILegionFixedPriceSale(legionSaleInstance).unpause();
     }
 
     /**
@@ -681,14 +681,14 @@ contract LegionFixedPriceSaleTest is Test {
         prepareCreateLegionFixedPriceSale();
 
         vm.prank(legionBouncer);
-        ILegionFixedPriceSale(legionSaleInstance).pauseSale();
+        ILegionFixedPriceSale(legionSaleInstance).pause();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NotCalledByLegion.selector));
 
         /// Act
         vm.prank(nonLegionAdmin);
-        ILegionFixedPriceSale(legionSaleInstance).unpauseSale();
+        ILegionFixedPriceSale(legionSaleInstance).unpause();
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -2681,7 +2681,7 @@ contract LegionFixedPriceSaleTest is Test {
         vm.warp(refundEndTime() + 1);
 
         vm.prank(legionBouncer);
-        ILegionFixedPriceSale(legionSaleInstance).pauseSale();
+        ILegionFixedPriceSale(legionSaleInstance).pause();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
@@ -2946,7 +2946,7 @@ contract LegionFixedPriceSaleTest is Test {
         vm.warp(refundEndTime() + 1);
 
         vm.prank(legionBouncer);
-        ILegionFixedPriceSale(legionSaleInstance).pauseSale();
+        ILegionFixedPriceSale(legionSaleInstance).pause();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));

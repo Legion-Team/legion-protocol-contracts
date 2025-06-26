@@ -825,7 +825,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).pauseSale();
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).pause();
     }
 
     /**
@@ -837,7 +837,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         prepareCreateLegionSealedBidAuction();
 
         vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).pauseSale();
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).pause();
 
         // Expect
         vm.expectEmit();
@@ -845,7 +845,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).unpauseSale();
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).unpause();
     }
 
     /**
@@ -862,7 +862,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         // Act
         vm.prank(nonLegionAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).pauseSale();
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).pause();
     }
 
     /**
@@ -875,14 +875,14 @@ contract LegionSealedBidAuctionSaleTest is Test {
         prepareCreateLegionSealedBidAuction();
 
         vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).pauseSale();
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).pause();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NotCalledByLegion.selector));
 
         // Act
         vm.prank(nonLegionAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).unpauseSale();
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).unpause();
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -3281,7 +3281,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.warp(refundEndTime() + 1);
 
         vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).pauseSale();
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).pause();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
@@ -3577,7 +3577,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.warp(refundEndTime() + 1);
 
         vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).pauseSale();
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).pause();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
