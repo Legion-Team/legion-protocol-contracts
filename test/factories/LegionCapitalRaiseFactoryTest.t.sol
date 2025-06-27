@@ -147,7 +147,7 @@ contract LegionCapitalRaiseFactoryTest is Test {
         ILegionCapitalRaise.CapitalRaiseConfig memory raiseConfig =
             LegionCapitalRaise(payable(legionCapitalRaiseInstance)).saleConfiguration();
         ILegionCapitalRaise.CapitalRaiseStatus memory raiseStatus =
-            LegionCapitalRaise(payable(legionCapitalRaiseInstance)).saleStatusDetails();
+            LegionCapitalRaise(payable(legionCapitalRaiseInstance)).saleStatus();
 
         // Expect
         assertEq(raiseConfig.refundPeriodSeconds, 2 weeks);

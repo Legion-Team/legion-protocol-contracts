@@ -18,147 +18,111 @@ import { ILegionVestingManager } from "../../interfaces/vesting/ILegionVestingMa
 /**
  * @title ILegionTokenDistributor
  * @author Legion
- * @notice Interface for managing token distribution of ERC20 tokens sold through the Legion Protocol
+ * @notice Interface for the LegionTokenDistributor contract.
  */
 interface ILegionTokenDistributor {
-    /// @notice Struct for initializing the Token Distributor
+    /// @dev Struct for initializing the Token Distributor.
     struct TokenDistributorInitializationParams {
-        /// @notice Legion's fee on tokens sold in basis points (BPS)
-        /// @dev Fee percentage applied to sold tokens
+        // Legion's fee on tokens sold in basis points (BPS).
         uint16 legionFeeOnTokensSoldBps;
-        /// @notice Referrer's fee on tokens sold in basis points (BPS)
-        /// @dev Fee percentage for referrer on sold tokens
+        // Referrer's fee on tokens sold in basis points (BPS).
         uint16 referrerFeeOnTokensSoldBps;
-        /// @notice Address of the referrer fee receiver
-        /// @dev Destination for referrer fees
+        // Address of the referrer fee receiver.
         address referrerFeeReceiver;
-        /// @notice Address of the token being sold to investors
-        /// @dev Ask token address
+        // Address of the token being sold to investors.
         address askToken;
-        /// @notice Address of Legion's Address Registry contract
-        /// @dev Registry address
+        // Address of Legion's Address Registry contract.
         address addressRegistry;
-        /// @notice Admin address of the project raising capital
-        /// @dev Project admin address
+        // Admin address of the project raising capital.
         address projectAdmin;
-        /// @notice The total amount of tokens to be distributed
-        /// @dev Total tokens available for distribution
+        // The total amount of tokens to be distributed.
         uint256 totalAmountToDistribute;
     }
 
-    /// @notice Struct for storing the configuration of the Token Distributor
+    /// @dev Struct for storing the configuration of the Token Distributor.
     struct TokenDistributorConfig {
-        /// @notice Legion's fee on tokens sold in basis points (BPS)
-        /// @dev Fee percentage applied to sold tokens
+        // Legion's fee on tokens sold in basis points (BPS).
         uint16 legionFeeOnTokensSoldBps;
-        /// @notice Referrer's fee on tokens sold in basis points (BPS)
-        /// @dev Fee percentage for referrer on sold tokens
+        // Referrer's fee on tokens sold in basis points (BPS).
         uint16 referrerFeeOnTokensSoldBps;
-        /// @notice Indicates if tokens have been supplied by the project
-        /// @dev Supply status
+        // Indicates if tokens have been supplied by the project.
         bool tokensSupplied;
-        /// @notice The total amount of tokens to be distributed
-        /// @dev Total tokens available for distribution
+        // The total amount of tokens to be distributed.
         uint256 totalAmountToDistribute;
-        /// @notice The total amount of tokens already claimed
-        /// @dev Total tokens already distributed
+        // The total amount of tokens already claimed.
         uint256 totalAmountClaimed;
-        /// @notice Address of the token being sold to investors
-        /// @dev Ask token address
+        // Address of the token being sold to investors.
         address askToken;
-        /// @notice Admin address of the project raising capital
-        /// @dev Project admin address
+        // Admin address of the project raising capital.
         address projectAdmin;
-        /// @notice Address of the Legion Bouncer contract
-        /// @dev Access control address
+        // Address of the Legion Bouncer contract.
         address legionBouncer;
-        /// @notice Address of Legion's Fee Receiver contract
-        /// @dev Destination for Legion fees
+        // Address of Legion's Fee Receiver contract.
         address legionFeeReceiver;
-        /// @notice Address of the referrer fee receiver
-        /// @dev Destination for referrer fees
+        // Address of the referrer fee receiver.
         address referrerFeeReceiver;
-        /// @notice Signer address of Legion
-        /// @dev Address for signature verification
+        // Signer address of Legion.
         address legionSigner;
-        /// @notice Address of Legion's Address Registry contract
-        /// @dev Registry address
+        // Address of Legion's Address Registry contract.
         address addressRegistry;
     }
 
+    /// @dev Struct representing an investor's position in the distribution.
     struct InvestorPosition {
-        /// @notice Flag indicating if investor has settled tokens
-        /// @dev Settlement status
+        // Flag indicating if investor has settled tokens.
         bool hasSettled;
-        /// @notice Address of the investor's vesting contract
-        /// @dev Vesting contract address
+        // Address of the investor's vesting contract.
         address vestingAddress;
     }
 
-    /**
-     * @notice Emitted during an emergency withdrawal by Legion
-     * @param receiver Address receiving the withdrawn tokens
-     * @param token Address of the token withdrawn
-     * @param amount Amount of tokens withdrawn
-     */
+    /// @notice Emitted during an emergency withdrawal by Legion.
+    /// @param receiver The address receiving the withdrawn tokens.
+    /// @param token The address of the token withdrawn.
+    /// @param amount The amount of tokens withdrawn.
     event EmergencyWithdraw(address receiver, address token, uint256 amount);
 
-    /**
-     * @notice Emitted when Legion addresses are successfully synced
-     * @param legionBouncer Updated Legion bouncer address
-     * @param legionSigner Updated Legion signer address
-     * @param legionFeeReceiver Updated Legion fee receiver address
-     * @param vestingFactory Updated vesting factory address
-     */
+    /// @notice Emitted when Legion addresses are successfully synced.
+    /// @param legionBouncer The updated Legion bouncer address.
+    /// @param legionSigner The updated Legion signer address.
+    /// @param legionFeeReceiver The updated Legion fee receiver address.
+    /// @param vestingFactory The updated vesting factory address.
     event LegionAddressesSynced(
         address legionBouncer, address legionSigner, address legionFeeReceiver, address vestingFactory
     );
 
-    /**
-     * @notice Emitted when an investor successfully claims their token allocation
-     * @param amountToBeVested Amount of tokens sent to vesting contract
-     * @param amountOnClaim Amount of tokens distributed immediately
-     * @param investor Address of the claiming investor
-     */
+    /// @notice Emitted when an investor successfully claims their token allocation.
+    /// @param amountToBeVested The amount of tokens sent to vesting contract.
+    /// @param amountOnClaim The amount of tokens distributed immediately.
+    /// @param investor The address of the claiming investor.
     event TokenAllocationClaimed(uint256 amountToBeVested, uint256 amountOnClaim, address investor);
 
-    /**
-     * @notice Emitted when tokens are supplied for distribution by the Project
-     * @param amount Amount of tokens supplied
-     * @param legionFee Fee amount collected by Legion
-     * @param referrerFee Fee amount collected by the referrer
-     */
+    /// @notice Emitted when tokens are supplied for distribution by the project.
+    /// @param amount The amount of tokens supplied.
+    /// @param legionFee The fee amount collected by Legion.
+    /// @param referrerFee The fee amount collected by the referrer.
     event TokensSuppliedForDistribution(uint256 amount, uint256 legionFee, uint256 referrerFee);
 
-    /**
-     * @notice Initializes the token distributor with parameters
-     * @param tokenDistributorInitParams Calldata struct with initialization parameters
-     */
+    /// @notice Initializes the token distributor with parameters.
+    /// @param tokenDistributorInitParams The initialization parameters for the distributor.
     function initialize(TokenDistributorInitializationParams calldata tokenDistributorInitParams) external;
 
-    /**
-     * @notice Supplies tokens for distribution post-TGE
-     * @param amount Amount of tokens to supply
-     * @param legionFee Fee amount for Legion
-     * @param referrerFee Fee amount for referrer
-     */
+    /// @notice Supplies tokens for distribution after TGE.
+    /// @param amount The amount of tokens to supply.
+    /// @param legionFee The fee amount for Legion.
+    /// @param referrerFee The fee amount for referrer.
     function supplyTokens(uint256 amount, uint256 legionFee, uint256 referrerFee) external;
 
-    /**
-     * @notice Performs an emergency withdrawal of tokens
-     * @param receiver Address to receive tokens
-     * @param token Address of the token to withdraw
-     * @param amount Amount of tokens to withdraw
-     */
+    /// @notice Performs an emergency withdrawal of tokens.
+    /// @param receiver The address to receive tokens.
+    /// @param token The address of the token to withdraw.
+    /// @param amount The amount of tokens to withdraw.
     function emergencyWithdraw(address receiver, address token, uint256 amount) external;
 
-    /**
-     * @notice Allows investors to claim their token allocation
-     * @param claimAmount Maximum capital allowed per SAFT
-     * @param investorVestingConfig Vesting configuration for the investor
-     * @param claimSignature Signature verifying investment eligibility
-     * @param vestingSignature Signature verifying vesting terms
-     */
+    /// @notice Allows investors to claim their token allocation.
+    /// @param claimAmount The amount of tokens to claim.
+    /// @param investorVestingConfig The vesting configuration for the investor.
+    /// @param claimSignature The signature verifying investment eligibility.
+    /// @param vestingSignature The signature verifying vesting terms.
     function claimTokenAllocation(
         uint256 claimAmount,
         ILegionVestingManager.LegionInvestorVestingConfig calldata investorVestingConfig,
@@ -167,44 +131,30 @@ interface ILegionTokenDistributor {
     )
         external;
 
-    /**
-     * @notice Releases vested tokens to the investor
-     */
+    /// @notice Releases vested tokens to the investor.
     function releaseVestedTokens() external;
 
-    /**
-     * @notice Syncs Legion addresses from the address registry
-     */
+    /// @notice Synchronizes Legion addresses from the address registry.
     function syncLegionAddresses() external;
 
-    /**
-     * @notice Pauses the distribution
-     */
-    function pauseDistribution() external;
+    /// @notice Pauses the distribution.
+    function pause() external;
 
-    /**
-     * @notice Unpauses the distribution
-     */
-    function unpauseDistribution() external;
+    /// @notice Resumes the distribution.
+    function unpause() external;
 
-    /**
-     * @notice Retrieves the current distributor configuration
-     * @return TokenDistributorConfig memory Struct containing distributor configuration
-     */
+    /// @notice Retrieves the current distributor configuration.
+    /// @return The complete distributor configuration struct.
     function distributorConfiguration() external view returns (TokenDistributorConfig memory);
 
-    /**
-     * @notice Retrieves an investor's position details
-     * @param investorAddress Address of the investor
-     * @return InvestorPosition memory Struct containing investor position details
-     */
-    function investorPositionDetails(address investorAddress) external view returns (InvestorPosition memory);
+    /// @notice Retrieves an investor's position details.
+    /// @param investor The address of the investor.
+    /// @return The complete investor position struct.
+    function investorPosition(address investor) external view returns (InvestorPosition memory);
 
-    /**
-     * @notice Retrieves an investor's vesting status
-     * @param investor Address of the investor
-     * @return ILegionVestingManager.LegionInvestorVestingStatus memory Struct containing vesting status
-     */
+    /// @notice Retrieves an investor's vesting status.
+    /// @param investor The address of the investor.
+    /// @return The complete vesting status struct.
     function investorVestingStatus(address investor)
         external
         view

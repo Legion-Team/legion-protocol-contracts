@@ -336,7 +336,7 @@ contract LegionCapitalRaiseTest is Test {
      */
     function refundEndTime() public view returns (uint256) {
         ILegionCapitalRaise.CapitalRaiseStatus memory _capitalRaiseStatus =
-            LegionCapitalRaise(payable(legionCapitalRaiseInstance)).saleStatusDetails();
+            LegionCapitalRaise(payable(legionCapitalRaiseInstance)).saleStatus();
         return _capitalRaiseStatus.refundEndTime;
     }
 
@@ -354,7 +354,7 @@ contract LegionCapitalRaiseTest is Test {
         ILegionCapitalRaise.CapitalRaiseConfig memory raiseConfig =
             LegionCapitalRaise(payable(legionCapitalRaiseInstance)).saleConfiguration();
         ILegionCapitalRaise.CapitalRaiseStatus memory raiseStatus =
-            LegionCapitalRaise(payable(legionCapitalRaiseInstance)).saleStatusDetails();
+            LegionCapitalRaise(payable(legionCapitalRaiseInstance)).saleStatus();
 
         // Expect
         assertEq(raiseConfig.refundPeriodSeconds, 2 weeks);
@@ -535,7 +535,7 @@ contract LegionCapitalRaiseTest is Test {
      * @notice Tests successful pausing of the capital raise by Legion admin
      * @dev Expects Paused event emission when paused by legionBouncer
      */
-    function test_pauseRaise_successfullyPauseTheSale() public {
+    function test_pause_successfullyPauseTheSale() public {
         // Arrange
         prepareCreateLegionCapitalRaise();
 
@@ -545,14 +545,14 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).pauseSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).pause();
     }
 
     /**
      * @notice Tests that pausing the capital raise by a non-Legion admin reverts
      * @dev Expects LegionSale__NotCalledByLegion revert when called by nonLegionAdmin
      */
-    function testFuzz_pauseRaise_revertsIfCalledByNonLegionAdmin(address nonLegionAdmin) public {
+    function testFuzz_pause_revertsIfCalledByNonLegionAdmin(address nonLegionAdmin) public {
         // Arrange
         vm.assume(nonLegionAdmin != legionBouncer);
         prepareCreateLegionCapitalRaise();
@@ -562,19 +562,19 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(nonLegionAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).pauseSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).pause();
     }
 
     /**
      * @notice Tests successful unpausing of the capital raise by Legion admin
      * @dev Expects Unpaused event emission after pausing and unpausing
      */
-    function test_unpauseRaise_successfullyUnpauseTheSale() public {
+    function test_unpause_successfullyUnpauseTheSale() public {
         // Arrange
         prepareCreateLegionCapitalRaise();
 
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).pauseSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).pause();
 
         // Expect
         vm.expectEmit();
@@ -582,27 +582,27 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).unpauseSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).unpause();
     }
 
     /**
      * @notice Tests that unpausing the capital raise by a non-Legion admin reverts
      * @dev Expects LegionSale__NotCalledByLegion revert when called by nonLegionAdmin
      */
-    function testFuzz_unpauseRaise_revertsIfNotCalledByLegionAdmin(address nonLegionAdmin) public {
+    function testFuzz_unpause_revertsIfNotCalledByLegionAdmin(address nonLegionAdmin) public {
         // Arrange
         vm.assume(nonLegionAdmin != legionBouncer);
         prepareCreateLegionCapitalRaise();
 
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).pauseSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).pause();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NotCalledByLegion.selector));
 
         // Act
         vm.prank(nonLegionAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).unpauseSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).unpause();
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -632,7 +632,7 @@ contract LegionCapitalRaiseTest is Test {
         );
 
         ILegionCapitalRaise.InvestorPosition memory position =
-            ILegionCapitalRaise(payable(legionCapitalRaiseInstance)).investorPositionDetails(investor1);
+            ILegionCapitalRaise(payable(legionCapitalRaiseInstance)).investorPosition(investor1);
 
         assertEq(position.investedCapital, 10_000 * 1e6);
     }
@@ -650,7 +650,7 @@ contract LegionCapitalRaiseTest is Test {
         vm.warp(1);
 
         vm.prank(projectAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).cancelSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
@@ -746,7 +746,7 @@ contract LegionCapitalRaiseTest is Test {
         vm.warp(1);
 
         vm.prank(projectAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).endSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).end();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleHasEnded.selector, 1));
@@ -808,7 +808,7 @@ contract LegionCapitalRaiseTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).cancelSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
@@ -836,7 +836,7 @@ contract LegionCapitalRaiseTest is Test {
         );
 
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).endSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -929,7 +929,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(projectAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).cancelSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).cancel();
     }
 
     /**
@@ -950,12 +950,12 @@ contract LegionCapitalRaiseTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).endSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1 days);
 
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).publishCapitalRaised(10_000 * 1e6);
+        ILegionCapitalRaise(legionCapitalRaiseInstance).publishRaisedCapital(10_000 * 1e6);
 
         vm.prank(projectAdmin);
         ILegionCapitalRaise(legionCapitalRaiseInstance).withdrawRaisedCapital();
@@ -971,7 +971,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(projectAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).cancelSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).cancel();
     }
 
     /**
@@ -994,14 +994,14 @@ contract LegionCapitalRaiseTest is Test {
         vm.warp(1 + 1 days);
 
         vm.prank(projectAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).cancelSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
 
         // Act
         vm.prank(projectAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).cancelSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).cancel();
     }
 
     /**
@@ -1029,7 +1029,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(nonProjectAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).cancelSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).cancel();
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -1099,7 +1099,7 @@ contract LegionCapitalRaiseTest is Test {
         prepareCreateLegionCapitalRaise();
 
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).endSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).end();
 
         vm.warp(block.timestamp + 1 days + 2 weeks);
 
@@ -1109,7 +1109,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).publishCapitalRaised(10_000 * 1e6);
+        ILegionCapitalRaise(legionCapitalRaiseInstance).publishRaisedCapital(10_000 * 1e6);
     }
 
     /**
@@ -1122,7 +1122,7 @@ contract LegionCapitalRaiseTest is Test {
         prepareCreateLegionCapitalRaise();
 
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).endSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).end();
 
         vm.warp(block.timestamp + 1 days + 2 weeks);
 
@@ -1131,7 +1131,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(nonLegionAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).publishCapitalRaised(10_000 * 1e6);
+        ILegionCapitalRaise(legionCapitalRaiseInstance).publishRaisedCapital(10_000 * 1e6);
     }
 
     /**
@@ -1143,19 +1143,19 @@ contract LegionCapitalRaiseTest is Test {
         prepareCreateLegionCapitalRaise();
 
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).endSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).end();
 
         vm.warp(block.timestamp + 1 days + 2 weeks);
 
         vm.prank(projectAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).cancelSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
 
         // Act
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).publishCapitalRaised(10_000 * 1e6);
+        ILegionCapitalRaise(legionCapitalRaiseInstance).publishRaisedCapital(10_000 * 1e6);
     }
 
     /**
@@ -1171,7 +1171,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).publishCapitalRaised(10_000 * 1e6);
+        ILegionCapitalRaise(legionCapitalRaiseInstance).publishRaisedCapital(10_000 * 1e6);
     }
 
     /**
@@ -1183,7 +1183,7 @@ contract LegionCapitalRaiseTest is Test {
         prepareCreateLegionCapitalRaise();
 
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).endSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).end();
 
         // Expect
         vm.expectRevert(
@@ -1192,7 +1192,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).publishCapitalRaised(10_000 * 1e6);
+        ILegionCapitalRaise(legionCapitalRaiseInstance).publishRaisedCapital(10_000 * 1e6);
     }
 
     /**
@@ -1204,19 +1204,19 @@ contract LegionCapitalRaiseTest is Test {
         prepareCreateLegionCapitalRaise();
 
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).endSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).end();
 
         vm.warp(block.timestamp + 1 days + 2 weeks);
 
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).publishCapitalRaised(10_000 * 1e6);
+        ILegionCapitalRaise(legionCapitalRaiseInstance).publishRaisedCapital(10_000 * 1e6);
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__CapitalRaisedAlreadyPublished.selector));
 
         // Act
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).publishCapitalRaised(10_000 * 1e6);
+        ILegionCapitalRaise(legionCapitalRaiseInstance).publishRaisedCapital(10_000 * 1e6);
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -1241,12 +1241,12 @@ contract LegionCapitalRaiseTest is Test {
         );
 
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).endSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).end();
 
         vm.warp(block.timestamp + 1 days + 2 weeks);
 
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).publishCapitalRaised(10_000 * 1e6);
+        ILegionCapitalRaise(legionCapitalRaiseInstance).publishRaisedCapital(10_000 * 1e6);
 
         // Expect
         vm.expectEmit();
@@ -1306,7 +1306,7 @@ contract LegionCapitalRaiseTest is Test {
         vm.warp(block.timestamp + 1 days);
 
         vm.prank(projectAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).cancelSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
@@ -1336,7 +1336,7 @@ contract LegionCapitalRaiseTest is Test {
         vm.warp(block.timestamp + 1 days);
 
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).endSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).end();
 
         // Expect
         vm.expectRevert(
@@ -1370,12 +1370,12 @@ contract LegionCapitalRaiseTest is Test {
         vm.warp(block.timestamp + 1 days);
 
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).endSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).end();
 
         vm.warp(block.timestamp + 1 days + 2 weeks);
 
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).publishCapitalRaised(10_000 * 1e6);
+        ILegionCapitalRaise(legionCapitalRaiseInstance).publishRaisedCapital(10_000 * 1e6);
 
         vm.prank(projectAdmin);
         ILegionCapitalRaise(legionCapitalRaiseInstance).withdrawRaisedCapital();
@@ -1408,7 +1408,7 @@ contract LegionCapitalRaiseTest is Test {
         vm.warp(block.timestamp + 1 days);
 
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).endSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).end();
 
         vm.warp(block.timestamp + 1 days + 2 weeks);
 
@@ -1444,7 +1444,7 @@ contract LegionCapitalRaiseTest is Test {
         vm.warp(block.timestamp + 1 days);
 
         vm.prank(projectAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).cancelSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).cancel();
 
         // Expect
         vm.expectEmit();
@@ -1502,7 +1502,7 @@ contract LegionCapitalRaiseTest is Test {
         vm.warp(block.timestamp + 1 days);
 
         vm.prank(projectAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).cancelSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
@@ -1532,7 +1532,7 @@ contract LegionCapitalRaiseTest is Test {
         vm.warp(block.timestamp + 1 days);
 
         vm.prank(projectAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).cancelSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).cancel();
 
         vm.prank(investor1);
         ILegionCapitalRaise(legionCapitalRaiseInstance).withdrawInvestedCapitalIfCanceled();
@@ -1633,7 +1633,7 @@ contract LegionCapitalRaiseTest is Test {
         vm.warp(block.timestamp + 1 days + 2 weeks);
 
         vm.prank(projectAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).cancelSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
@@ -1762,7 +1762,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(projectAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).endSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).end();
     }
 
     /**
@@ -1782,7 +1782,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(nonProjectOrLegionAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).endSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).end();
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -1851,7 +1851,7 @@ contract LegionCapitalRaiseTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).endSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -1861,9 +1861,9 @@ contract LegionCapitalRaiseTest is Test {
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
-        LegionCapitalRaise(payable(legionCapitalRaiseInstance)).investorPositionDetails(investor1);
+        LegionCapitalRaise(payable(legionCapitalRaiseInstance)).investorPosition(investor1);
         assertEq(
-            LegionCapitalRaise(payable(legionCapitalRaiseInstance)).investorPositionDetails(investor2).investedCapital,
+            LegionCapitalRaise(payable(legionCapitalRaiseInstance)).investorPosition(investor2).investedCapital,
             10_000 * 1e6
         );
         assertEq(ERC721(legionCapitalRaiseInstance).ownerOf(1), investor2);
@@ -1892,7 +1892,7 @@ contract LegionCapitalRaiseTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).endSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -1902,7 +1902,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
-        LegionCapitalRaise(payable(legionCapitalRaiseInstance)).investorPositionDetails(investor1);
+        LegionCapitalRaise(payable(legionCapitalRaiseInstance)).investorPosition(investor1);
 
         vm.expectRevert(abi.encodeWithSelector(ERC721.TokenDoesNotExist.selector));
         ERC721(legionCapitalRaiseInstance).ownerOf(1);
@@ -1910,19 +1910,18 @@ contract LegionCapitalRaiseTest is Test {
         assertEq(ERC721(legionCapitalRaiseInstance).ownerOf(2), investor2);
 
         assertEq(
-            LegionCapitalRaise(payable(legionCapitalRaiseInstance)).investorPositionDetails(investor2).investedCapital,
+            LegionCapitalRaise(payable(legionCapitalRaiseInstance)).investorPosition(investor2).investedCapital,
             20_000 * 1e6
         );
 
         assertEq(
-            LegionCapitalRaise(payable(legionCapitalRaiseInstance)).investorPositionDetails(investor2)
+            LegionCapitalRaise(payable(legionCapitalRaiseInstance)).investorPosition(investor2)
                 .cachedTokenAllocationRate,
             10_000_000_000_000_000
         );
 
         assertEq(
-            LegionCapitalRaise(payable(legionCapitalRaiseInstance)).investorPositionDetails(investor2)
-                .cachedInvestAmount,
+            LegionCapitalRaise(payable(legionCapitalRaiseInstance)).investorPosition(investor2).cachedInvestAmount,
             20_000 * 1e6
         );
     }
@@ -1970,7 +1969,7 @@ contract LegionCapitalRaiseTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).cancelSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
@@ -1998,7 +1997,7 @@ contract LegionCapitalRaiseTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).endSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).end();
 
         vm.warp(block.timestamp + 1 days);
 
@@ -2030,12 +2029,12 @@ contract LegionCapitalRaiseTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).endSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).pauseSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).pause();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
@@ -2063,7 +2062,7 @@ contract LegionCapitalRaiseTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).endSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).end();
 
         vm.prank(investor1);
         ILegionCapitalRaise(legionCapitalRaiseInstance).refund();
@@ -2101,7 +2100,7 @@ contract LegionCapitalRaiseTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).endSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -2115,10 +2114,10 @@ contract LegionCapitalRaiseTest is Test {
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
 
         vm.prank(investor1);
-        LegionCapitalRaise(payable(legionCapitalRaiseInstance)).investorPositionDetails(investor1);
+        LegionCapitalRaise(payable(legionCapitalRaiseInstance)).investorPosition(investor1);
 
         assertEq(
-            LegionCapitalRaise(payable(legionCapitalRaiseInstance)).investorPositionDetails(investor2).investedCapital,
+            LegionCapitalRaise(payable(legionCapitalRaiseInstance)).investorPosition(investor2).investedCapital,
             10_000 * 1e6
         );
         assertEq(ERC721(legionCapitalRaiseInstance).ownerOf(1), investor2);
@@ -2150,7 +2149,7 @@ contract LegionCapitalRaiseTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).endSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -2162,7 +2161,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
-        LegionCapitalRaise(payable(legionCapitalRaiseInstance)).investorPositionDetails(investor1);
+        LegionCapitalRaise(payable(legionCapitalRaiseInstance)).investorPosition(investor1);
 
         vm.expectRevert(abi.encodeWithSelector(ERC721.TokenDoesNotExist.selector));
         ERC721(legionCapitalRaiseInstance).ownerOf(1);
@@ -2170,19 +2169,18 @@ contract LegionCapitalRaiseTest is Test {
         assertEq(ERC721(legionCapitalRaiseInstance).ownerOf(2), investor2);
 
         assertEq(
-            LegionCapitalRaise(payable(legionCapitalRaiseInstance)).investorPositionDetails(investor2).investedCapital,
+            LegionCapitalRaise(payable(legionCapitalRaiseInstance)).investorPosition(investor2).investedCapital,
             20_000 * 1e6
         );
 
         assertEq(
-            LegionCapitalRaise(payable(legionCapitalRaiseInstance)).investorPositionDetails(investor2)
+            LegionCapitalRaise(payable(legionCapitalRaiseInstance)).investorPosition(investor2)
                 .cachedTokenAllocationRate,
             10_000_000_000_000_000
         );
 
         assertEq(
-            LegionCapitalRaise(payable(legionCapitalRaiseInstance)).investorPositionDetails(investor2)
-                .cachedInvestAmount,
+            LegionCapitalRaise(payable(legionCapitalRaiseInstance)).investorPosition(investor2).cachedInvestAmount,
             20_000 * 1e6
         );
     }
@@ -2206,7 +2204,7 @@ contract LegionCapitalRaiseTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).endSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -2239,7 +2237,7 @@ contract LegionCapitalRaiseTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).cancelSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).cancel();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
@@ -2270,7 +2268,7 @@ contract LegionCapitalRaiseTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).endSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).end();
 
         vm.warp(block.timestamp + 1 days);
 
@@ -2305,12 +2303,12 @@ contract LegionCapitalRaiseTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).endSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
         vm.prank(legionBouncer);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).pauseSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).pause();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
@@ -2341,7 +2339,7 @@ contract LegionCapitalRaiseTest is Test {
         );
 
         vm.prank(projectAdmin);
-        ILegionCapitalRaise(legionCapitalRaiseInstance).endSale();
+        ILegionCapitalRaise(legionCapitalRaiseInstance).end();
 
         vm.prank(investor1);
         ILegionCapitalRaise(legionCapitalRaiseInstance).refund();

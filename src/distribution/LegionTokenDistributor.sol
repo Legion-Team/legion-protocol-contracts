@@ -31,68 +31,41 @@ import { LegionVestingManager } from "../vesting/LegionVestingManager.sol";
 /**
  * @title Legion Token Distributor
  * @author Legion
- * @notice Contract for managing token distribution of ERC20 tokens sold through the Legion Protocol
+ * @notice Manages the distribution of ERC20 tokens sold through the Legion Protocol.
+ * @dev Handles token allocation claims, vesting deployment, and emergency operations with signature verification.
  */
 contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager, Initializable, Pausable {
     using ECDSA for bytes32;
     using MessageHashUtils for bytes32;
 
-    /*//////////////////////////////////////////////////////////////////////////
-                                  STATE VARIABLES
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /// @notice Token distributor configuration
-    /// @dev Struct containing distributor configuration
+    /// @dev Token distributor configuration
     TokenDistributorConfig private s_tokenDistributorConfig;
 
-    /// @notice Mapping of investor addresses to their positions
-    /// @dev Investor data
+    /// @dev Mapping of investor addresses to their positions.
     mapping(address s_investorAddress => InvestorPosition s_investorPosition) private s_investorPositions;
 
-    /*//////////////////////////////////////////////////////////////////////////
-                                   MODIFIERS
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /**
-     * @notice Restricts function access to the Legion address only
-     * @dev Reverts if caller is not the configured Legion bouncer address
-     */
+    /// @notice Restricts function access to the Legion bouncer only.
+    /// @dev Reverts if the caller is not the configured Legion bouncer.
     modifier onlyLegion() {
         if (msg.sender != s_tokenDistributorConfig.legionBouncer) revert Errors.LegionSale__NotCalledByLegion();
         _;
     }
 
-    /**
-     * @notice Restricts function access to the Project admin only
-     * @dev Reverts if caller is not the configured project admin address
-     */
+    /// @notice Restricts function access to the project admin only.
+    /// @dev Reverts if the caller is not the configured project admin.
     modifier onlyProject() {
         if (msg.sender != s_tokenDistributorConfig.projectAdmin) revert Errors.LegionSale__NotCalledByProject();
         _;
     }
 
-    /*//////////////////////////////////////////////////////////////////////////
-                                   CONSTRUCTOR
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /**
-     * @notice Constructor for LegionTokenDistributor
-     * @dev Disables initializers to prevent uninitialized deployment
-     */
+    /// @notice Constructs the LegionTokenDistributor and disables initializers.
+    /// @dev Prevents the implementation contract from being initialized directly.
     constructor() {
         // Disable initialization
         _disableInitializers();
     }
 
-    /*//////////////////////////////////////////////////////////////////////////
-                                  INITIALIZER
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /**
-     * @notice Initializes the token distributor contract with parameters
-     * @dev Sets up distributor configuration
-     * @param tokenDistributorInitParams Calldata struct with token distributor initialization parameters
-     */
+    /// @inheritdoc ILegionTokenDistributor
     function initialize(TokenDistributorInitializationParams calldata tokenDistributorInitParams)
         external
         initializer
@@ -100,17 +73,7 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
         _setTokenDistributorConfig(tokenDistributorInitParams);
     }
 
-    /*//////////////////////////////////////////////////////////////////////////
-                              EXTERNAL FUNCTIONS
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /**
-     * @notice Supplies tokens for distribution post-TGE
-     * @dev Transfers tokens and fees; restricted to Project
-     * @param amount Amount of tokens to supply
-     * @param legionFee Fee amount for Legion
-     * @param referrerFee Fee amount for referrer
-     */
+    /// @inheritdoc ILegionTokenDistributor
     function supplyTokens(uint256 amount, uint256 legionFee, uint256 referrerFee) external onlyProject whenNotPaused {
         // Verify that tokens can be supplied for distribution
         _verifyCanSupplyTokens(amount);
@@ -160,13 +123,7 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
         }
     }
 
-    /**
-     * @notice Withdraws tokens in emergency situations
-     * @dev Restricted to Legion; used for safety measures
-     * @param receiver Address to receive withdrawn tokens
-     * @param token Address of the token to withdraw
-     * @param amount Amount of tokens to withdraw
-     */
+    /// @inheritdoc ILegionTokenDistributor
     function emergencyWithdraw(address receiver, address token, uint256 amount) external onlyLegion {
         // Emit successfully EmergencyWithdraw
         emit EmergencyWithdraw(receiver, token, amount);
@@ -175,14 +132,7 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
         SafeTransferLib.safeTransfer(token, receiver, amount);
     }
 
-    /**
-     * @notice Allows investors to claim their token allocation
-     * @dev Handles vesting and immediate distribution; requires signatures
-     * @param claimAmount The claim amount for the investor
-     * @param investorVestingConfig Vesting configuration for the investor
-     * @param claimSignature Signature verifying claim elegibility
-     * @param vestingSignature Signature verifying vesting terms
-     */
+    /// @inheritdoc ILegionTokenDistributor
     function claimTokenAllocation(
         uint256 claimAmount,
         LegionVestingManager.LegionInvestorVestingConfig calldata investorVestingConfig,
@@ -244,10 +194,7 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
         }
     }
 
-    /**
-     * @notice Releases vested tokens to the investor
-     * @dev Calls vesting contract to release tokens
-     */
+    /// @inheritdoc ILegionTokenDistributor
     function releaseVestedTokens() external whenNotPaused {
         // Get the investor vesting address
         address investorVestingAddress = s_investorPositions[msg.sender].vestingAddress;
@@ -259,57 +206,32 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
         ILegionVesting(investorVestingAddress).release(s_tokenDistributorConfig.askToken);
     }
 
-    /**
-     * @notice Syncs Legion addresses from the address registry
-     * @dev Updates configuration with latest addresses; restricted to Legion
-     */
+    /// @inheritdoc ILegionTokenDistributor
     function syncLegionAddresses() external onlyLegion {
         _syncLegionAddresses();
     }
 
-    /**
-     * @notice Pauses the distribution
-     * @dev Virtual function restricted to Legion; halts operations
-     */
-    function pauseDistribution() external onlyLegion {
-        // Pause the distribution
+    /// @inheritdoc ILegionTokenDistributor
+    function pause() external onlyLegion {
         _pause();
     }
 
-    /**
-     * @notice Unpauses the distribution
-     * @dev Virtual function restricted to Legion; resumes operations
-     */
-    function unpauseDistribution() external onlyLegion {
-        // Unpause the distribution
+    /// @inheritdoc ILegionTokenDistributor
+    function unpause() external onlyLegion {
         _unpause();
     }
 
-    /**
-     * @notice Returns the current distributor configuration
-     * @dev Provides read-only access to s_tokenDistributorConfig
-     * @return TokenDistributorConfig memory Struct containing distributor configuration
-     */
+    /// @inheritdoc ILegionTokenDistributor
     function distributorConfiguration() external view returns (TokenDistributorConfig memory) {
         return s_tokenDistributorConfig;
     }
 
-    /**
-     * @notice Returns an investor's position details
-     * @dev Provides read-only access to investor position
-     * @param investorAddress Address of the investor
-     * @return InvestorPosition memory Struct containing investor position details
-     */
-    function investorPositionDetails(address investorAddress) external view returns (InvestorPosition memory) {
-        return s_investorPositions[investorAddress];
+    /// @inheritdoc ILegionTokenDistributor
+    function investorPosition(address investor) external view returns (InvestorPosition memory) {
+        return s_investorPositions[investor];
     }
 
-    /**
-     * @notice Returns an investor's vesting status
-     * @dev Queries vesting contract if applicable
-     * @param investor Address of the investor
-     * @return vestingStatus LegionInvestorVestingStatus memory Struct containing vesting status details
-     */
+    /// @inheritdoc ILegionTokenDistributor
     function investorVestingStatus(address investor)
         external
         view
@@ -334,39 +256,29 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
             : vestingStatus;
     }
 
-    /*//////////////////////////////////////////////////////////////////////////
-                              PRIVATE FUNCTIONS
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /**
-     * @notice Sets the distributor parameters during initialization
-     * @dev Internal function to configure distributor;
-     * @param tokenDistributorInitParams Calldata struct with initialization parameters
-     */
-    function _setTokenDistributorConfig(TokenDistributorInitializationParams calldata tokenDistributorInitParams)
+    /// @dev Sets the distributor configuration during initialization
+    /// @param _tokenDistributorInitParams The initialization parameters to configure the distributor.
+    function _setTokenDistributorConfig(TokenDistributorInitializationParams calldata _tokenDistributorInitParams)
         private
         onlyInitializing
     {
         // Verify if the distributor configuration is valid
-        _verifyValidConfig(tokenDistributorInitParams);
+        _verifyValidConfig(_tokenDistributorInitParams);
 
         // Initialize distributor configuration
-        s_tokenDistributorConfig.totalAmountToDistribute = tokenDistributorInitParams.totalAmountToDistribute;
-        s_tokenDistributorConfig.legionFeeOnTokensSoldBps = tokenDistributorInitParams.legionFeeOnTokensSoldBps;
-        s_tokenDistributorConfig.referrerFeeOnTokensSoldBps = tokenDistributorInitParams.referrerFeeOnTokensSoldBps;
-        s_tokenDistributorConfig.referrerFeeReceiver = tokenDistributorInitParams.referrerFeeReceiver;
-        s_tokenDistributorConfig.askToken = tokenDistributorInitParams.askToken;
-        s_tokenDistributorConfig.addressRegistry = tokenDistributorInitParams.addressRegistry;
-        s_tokenDistributorConfig.projectAdmin = tokenDistributorInitParams.projectAdmin;
+        s_tokenDistributorConfig.totalAmountToDistribute = _tokenDistributorInitParams.totalAmountToDistribute;
+        s_tokenDistributorConfig.legionFeeOnTokensSoldBps = _tokenDistributorInitParams.legionFeeOnTokensSoldBps;
+        s_tokenDistributorConfig.referrerFeeOnTokensSoldBps = _tokenDistributorInitParams.referrerFeeOnTokensSoldBps;
+        s_tokenDistributorConfig.referrerFeeReceiver = _tokenDistributorInitParams.referrerFeeReceiver;
+        s_tokenDistributorConfig.askToken = _tokenDistributorInitParams.askToken;
+        s_tokenDistributorConfig.addressRegistry = _tokenDistributorInitParams.addressRegistry;
+        s_tokenDistributorConfig.projectAdmin = _tokenDistributorInitParams.projectAdmin;
 
         // Cache Legion addresses from `LegionAddressRegistry`
         _syncLegionAddresses();
     }
 
-    /**
-     * @notice Syncs Legion addresses from the registry
-     * @dev Updates configuration with latest addresses; virtual for overrides
-     */
+    /// @dev Synchronizes Legion addresses from the address registry.
     function _syncLegionAddresses() private {
         // Cache Legion addresses from `LegionAddressRegistry`
         s_tokenDistributorConfig.legionBouncer = ILegionAddressRegistry(s_tokenDistributorConfig.addressRegistry)
@@ -387,34 +299,28 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
         );
     }
 
-    /**
-     * @notice Validates an investor's vesting position
-     * @dev Verifies vesting signature and configuration
-     * @param vestingSignature Signature proving vesting terms
-     * @param investorVestingConfig Vesting configuration to verify
-     */
+    /// @dev Validates an investor's vesting position using signature verification.
+    /// @param _vestingSignature The signature proving the vesting terms are authorized.
+    /// @param _investorVestingConfig The vesting configuration to verify.
     function _verifyValidVestingPosition(
-        bytes calldata vestingSignature,
-        LegionVestingManager.LegionInvestorVestingConfig calldata investorVestingConfig
+        bytes calldata _vestingSignature,
+        LegionVestingManager.LegionInvestorVestingConfig calldata _investorVestingConfig
     )
         private
         view
     {
         // Construct the signed data
-        bytes32 _data = keccak256(abi.encode(msg.sender, address(this), block.chainid, investorVestingConfig))
+        bytes32 _data = keccak256(abi.encode(msg.sender, address(this), block.chainid, _investorVestingConfig))
             .toEthSignedMessageHash();
 
         // Verify the signature
-        if (_data.recover(vestingSignature) != s_tokenDistributorConfig.legionSigner) {
-            revert Errors.LegionSale__InvalidSignature(vestingSignature);
+        if (_data.recover(_vestingSignature) != s_tokenDistributorConfig.legionSigner) {
+            revert Errors.LegionSale__InvalidSignature(_vestingSignature);
         }
     }
 
-    /**
-     * @notice Validates the distributor configuration parameters
-     * @dev Checks for invalid values and addresses
-     * @param _tokenDistributorInitParams Calldata struct with initialization parameters
-     */
+    /// @dev Validates the distributor configuration parameters during initialization.
+    /// @param _tokenDistributorInitParams The initialization parameters to validate.
     function _verifyValidConfig(TokenDistributorInitializationParams calldata _tokenDistributorInitParams)
         private
         pure
@@ -432,11 +338,8 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
         }
     }
 
-    /**
-     * @notice Verifies conditions for supplying tokens
-     * @dev Ensures allocation and supply state are valid
-     * @param _amount Amount of tokens to supply
-     */
+    /// @dev Verifies that tokens can be supplied for distribution.
+    /// @param _amount The amount of tokens to be supplied.
     function _verifyCanSupplyTokens(uint256 _amount) private view {
         // Load the token distributor configuration
         TokenDistributorConfig memory tokenDistributorConfig = s_tokenDistributorConfig;
@@ -452,10 +355,7 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
         }
     }
 
-    /**
-     * @notice Verifies conditions for claiming token allocation
-     * @dev Checks supply and settlement status
-     */
+    /// @dev Verifies that an investor can claim their token allocation.
     function _verifyCanClaimTokenAllocation() internal view {
         // Load the investor position
         InvestorPosition memory position = s_investorPositions[msg.sender];
@@ -467,20 +367,17 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
         if (position.hasSettled) revert Errors.LegionSale__AlreadySettled(msg.sender);
     }
 
-    /**
-     * @notice Validates an investor's position
-     * @dev Verifies investment amount and signature
-     * @param claimAmount Maximum capital allowed per SAFT
-     * @param signature Signature to verify
-     */
-    function _verifyValidPosition(uint256 claimAmount, bytes calldata signature) internal view {
+    /// @dev Validates an investor's position using signature verification.
+    /// @param _claimAmount The amount of tokens the investor is claiming.
+    /// @param _signature The signature to verify the claim authorization.
+    function _verifyValidPosition(uint256 _claimAmount, bytes calldata _signature) internal view {
         // Construct the signed data
-        bytes32 _data = keccak256(abi.encodePacked(msg.sender, address(this), block.chainid, uint256(claimAmount)))
-            .toEthSignedMessageHash();
+        bytes32 _data =
+            keccak256(abi.encodePacked(msg.sender, address(this), block.chainid, _claimAmount)).toEthSignedMessageHash();
 
         // Verify the signature
-        if (_data.recover(signature) != s_tokenDistributorConfig.legionSigner) {
-            revert Errors.LegionSale__InvalidSignature(signature);
+        if (_data.recover(_signature) != s_tokenDistributorConfig.legionSigner) {
+            revert Errors.LegionSale__InvalidSignature(_signature);
         }
     }
 }

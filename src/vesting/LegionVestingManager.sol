@@ -22,177 +22,153 @@ import { ILegionVestingManager } from "../interfaces/vesting/ILegionVestingManag
 /**
  * @title Legion Vesting Manager
  * @author Legion
- * @notice A contract for managing vesting creation and deployment in the Legion Protocol
- * @dev Abstract contract implementing ILegionVestingManager; handles vesting type logic
+ * @notice Manages vesting creation and deployment in the Legion Protocol.
+ * @dev Abstract contract implementing ILegionVestingManager with vesting type logic and factory interactions.
  */
 abstract contract LegionVestingManager is ILegionVestingManager {
-    /*//////////////////////////////////////////////////////////////////////////
-                                 STATE VARIABLES
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /// @notice Struct containing the vesting configuration for the sale
-    /// @dev Stores factory address and other vesting settings
+    /// @dev Struct containing the vesting configuration for the sale.
     LegionVestingConfig internal s_vestingConfig;
 
-    /*//////////////////////////////////////////////////////////////////////////
-                              EXTERNAL FUNCTIONS
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /**
-     * @notice Returns the current vesting configuration
-     * @dev Virtual function providing read-only access to vestingConfig
-     * @return LegionVestingConfig memory Struct containing vesting configuration
-     */
+    /// @inheritdoc ILegionVestingManager
     function vestingConfiguration() external view virtual returns (LegionVestingConfig memory) {
         return s_vestingConfig;
     }
 
-    /*//////////////////////////////////////////////////////////////////////////
-                              INTERNAL FUNCTIONS
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /**
-     * @notice Creates a vesting schedule contract for an investor based on configuration
-     * @dev Internal virtual function deploying either linear or epoch-based vesting
-     * @param investorVestingConfig Calldata struct with vesting schedule configuration
-     * @return vestingInstance Address of the deployed vesting contract instance (payable)
-     */
-    function _createVesting(LegionInvestorVestingConfig calldata investorVestingConfig)
+    /// @dev Creates a vesting schedule contract for an investor based on configuration.
+    /// @param _investorVestingConfig The vesting schedule configuration for the investor.
+    /// @return vestingInstance The address of the deployed vesting contract instance.
+    function _createVesting(LegionInvestorVestingConfig calldata _investorVestingConfig)
         internal
         virtual
         returns (address payable vestingInstance)
     {
         // Deploy a linear vesting schedule instance
-        if (investorVestingConfig.vestingType == VestingType.LEGION_LINEAR) {
+        if (_investorVestingConfig.vestingType == VestingType.LEGION_LINEAR) {
             vestingInstance = _createLinearVesting(
                 msg.sender,
                 s_vestingConfig.vestingFactory,
-                investorVestingConfig.vestingStartTime,
-                investorVestingConfig.vestingDurationSeconds,
-                investorVestingConfig.vestingCliffDurationSeconds
+                _investorVestingConfig.vestingStartTime,
+                _investorVestingConfig.vestingDurationSeconds,
+                _investorVestingConfig.vestingCliffDurationSeconds
             );
         }
 
         // Deploy a linear epoch vesting schedule instance
-        if (investorVestingConfig.vestingType == VestingType.LEGION_LINEAR_EPOCH) {
+        if (_investorVestingConfig.vestingType == VestingType.LEGION_LINEAR_EPOCH) {
             vestingInstance = _createLinearEpochVesting(
                 msg.sender,
                 s_vestingConfig.vestingFactory,
-                investorVestingConfig.vestingStartTime,
-                investorVestingConfig.vestingDurationSeconds,
-                investorVestingConfig.vestingCliffDurationSeconds,
-                investorVestingConfig.epochDurationSeconds,
-                investorVestingConfig.numberOfEpochs
+                _investorVestingConfig.vestingStartTime,
+                _investorVestingConfig.vestingDurationSeconds,
+                _investorVestingConfig.vestingCliffDurationSeconds,
+                _investorVestingConfig.epochDurationSeconds,
+                _investorVestingConfig.numberOfEpochs
             );
         }
     }
 
-    /**
-     * @notice Creates a linear vesting schedule contract
-     * @dev Internal virtual function deploying a linear vesting instance via factory
-     * @param beneficiary Address to receive the vested tokens
-     * @param vestingFactory Address of the vesting factory contract
-     * @param startTimestamp Unix timestamp (seconds) when vesting starts
-     * @param durationSeconds Duration of the vesting period in seconds
-     * @param cliffDurationSeconds Duration of the cliff period in seconds
-     * @return vestingInstance Address of the deployed linear vesting contract (payable)
-     */
+    /// @dev Creates a linear vesting schedule contract.
+    /// @param _beneficiary The address to receive the vested tokens.
+    /// @param _vestingFactory The address of the vesting factory contract.
+    /// @param _startTimestamp The Unix timestamp (seconds) when vesting starts.
+    /// @param _durationSeconds The duration of the vesting period in seconds.
+    /// @param _cliffDurationSeconds The duration of the cliff period in seconds.
+    /// @return vestingInstance The address of the deployed linear vesting contract.
     function _createLinearVesting(
-        address beneficiary,
-        address vestingFactory,
-        uint64 startTimestamp,
-        uint64 durationSeconds,
-        uint64 cliffDurationSeconds
+        address _beneficiary,
+        address _vestingFactory,
+        uint64 _startTimestamp,
+        uint64 _durationSeconds,
+        uint64 _cliffDurationSeconds
     )
         internal
         virtual
         returns (address payable vestingInstance)
     {
         // Deploy a linear vesting schedule instance
-        vestingInstance = ILegionVestingFactory(vestingFactory).createLinearVesting(
-            beneficiary, startTimestamp, durationSeconds, cliffDurationSeconds
+        vestingInstance = ILegionVestingFactory(_vestingFactory).createLinearVesting(
+            _beneficiary, _startTimestamp, _durationSeconds, _cliffDurationSeconds
         );
     }
 
-    /**
-     * @notice Creates a linear epoch-based vesting schedule contract
-     * @dev Internal virtual function deploying an epoch vesting instance via factory
-     * @param beneficiary Address to receive the vested tokens
-     * @param vestingFactory Address of the vesting factory contract
-     * @param startTimestamp Unix timestamp (seconds) when vesting starts
-     * @param durationSeconds Duration of the vesting period in seconds
-     * @param cliffDurationSeconds Duration of the cliff period in seconds
-     * @param epochDurationSeconds Duration of each epoch in seconds
-     * @param numberOfEpochs Total number of epochs in the vesting schedule
-     * @return vestingInstance Address of the deployed epoch vesting contract (payable)
-     */
+    /// @dev Creates a linear epoch-based vesting schedule contract.
+    /// @param _beneficiary The address to receive the vested tokens.
+    /// @param _vestingFactory The address of the vesting factory contract.
+    /// @param _startTimestamp The Unix timestamp (seconds) when vesting starts.
+    /// @param _durationSeconds The duration of the vesting period in seconds.
+    /// @param _cliffDurationSeconds The duration of the cliff period in seconds.
+    /// @param _epochDurationSeconds The duration of each epoch in seconds.
+    /// @param _numberOfEpochs The total number of epochs in the vesting schedule.
+    /// @return vestingInstance The address of the deployed epoch vesting contract.
     function _createLinearEpochVesting(
-        address beneficiary,
-        address vestingFactory,
-        uint64 startTimestamp,
-        uint64 durationSeconds,
-        uint64 cliffDurationSeconds,
-        uint64 epochDurationSeconds,
-        uint64 numberOfEpochs
+        address _beneficiary,
+        address _vestingFactory,
+        uint64 _startTimestamp,
+        uint64 _durationSeconds,
+        uint64 _cliffDurationSeconds,
+        uint64 _epochDurationSeconds,
+        uint64 _numberOfEpochs
     )
         internal
         virtual
         returns (address payable vestingInstance)
     {
         // Deploy a linear epoch vesting schedule instance
-        vestingInstance = ILegionVestingFactory(vestingFactory).createLinearEpochVesting(
-            beneficiary, startTimestamp, durationSeconds, cliffDurationSeconds, epochDurationSeconds, numberOfEpochs
+        vestingInstance = ILegionVestingFactory(_vestingFactory).createLinearEpochVesting(
+            _beneficiary,
+            _startTimestamp,
+            _durationSeconds,
+            _cliffDurationSeconds,
+            _epochDurationSeconds,
+            _numberOfEpochs
         );
     }
 
-    /**
-     * @notice Verifies the validity of a vesting configuration
-     * @dev Internal virtual function checking vesting parameters for correctness
-     * @param investorVestingConfig Calldata struct with vesting schedule configuration
-     */
-    function _verifyValidVestingConfig(LegionInvestorVestingConfig calldata investorVestingConfig)
+    /// @dev Verifies the validity of a vesting configuration.
+    /// @param _investorVestingConfig The vesting schedule configuration to validate.
+    function _verifyValidVestingConfig(LegionInvestorVestingConfig calldata _investorVestingConfig)
         internal
         view
         virtual
     {
-        /// Check if vesting duration is no more than 10 years, if vesting cliff duration is not more than vesting
-        /// duration or the token allocation on TGE rate is no more than 100%
+        // Check if vesting duration is no more than 10 years, if vesting cliff duration is not more than vesting
+        // duration, or the token allocation on TGE rate is no more than 100%
         if (
-            investorVestingConfig.vestingStartTime > (Constants.MAX_VESTING_LOCKUP_SECONDS + block.timestamp)
-                || investorVestingConfig.vestingDurationSeconds > Constants.MAX_VESTING_DURATION_SECONDS
-                || investorVestingConfig.vestingCliffDurationSeconds > investorVestingConfig.vestingDurationSeconds
-                || investorVestingConfig.tokenAllocationOnTGERate > Constants.TOKEN_ALLOCATION_RATE_DENOMINATOR
+            _investorVestingConfig.vestingStartTime > (Constants.MAX_VESTING_LOCKUP_SECONDS + block.timestamp)
+                || _investorVestingConfig.vestingDurationSeconds > Constants.MAX_VESTING_DURATION_SECONDS
+                || _investorVestingConfig.vestingCliffDurationSeconds > _investorVestingConfig.vestingDurationSeconds
+                || _investorVestingConfig.tokenAllocationOnTGERate > Constants.TOKEN_ALLOCATION_RATE_DENOMINATOR
         ) {
             revert Errors.LegionVesting__InvalidVestingConfig(
-                uint8(investorVestingConfig.vestingType),
-                investorVestingConfig.vestingStartTime,
-                investorVestingConfig.vestingDurationSeconds,
-                investorVestingConfig.vestingCliffDurationSeconds,
-                investorVestingConfig.epochDurationSeconds,
-                investorVestingConfig.numberOfEpochs,
-                investorVestingConfig.tokenAllocationOnTGERate
+                uint8(_investorVestingConfig.vestingType),
+                _investorVestingConfig.vestingStartTime,
+                _investorVestingConfig.vestingDurationSeconds,
+                _investorVestingConfig.vestingCliffDurationSeconds,
+                _investorVestingConfig.epochDurationSeconds,
+                _investorVestingConfig.numberOfEpochs,
+                _investorVestingConfig.tokenAllocationOnTGERate
             );
         }
 
-        /// Check if vesting type is LEGION_LINEAR_EPOCH
-        if (investorVestingConfig.vestingType == VestingType.LEGION_LINEAR_EPOCH) {
-            /// Check if the number of epochs multiplied by the epoch duration is not more than 10 years
-            /// Check if the number of epochs multiplied by the epoch duration is equal to the vesting duration
+        // Check if vesting type is LEGION_LINEAR_EPOCH
+        if (_investorVestingConfig.vestingType == VestingType.LEGION_LINEAR_EPOCH) {
+            // Check if the number of epochs multiplied by the epoch duration is not more than 10 years
+            // Check if the number of epochs multiplied by the epoch duration is equal to the vesting duration
             if (
-                (investorVestingConfig.numberOfEpochs * investorVestingConfig.epochDurationSeconds)
+                (_investorVestingConfig.numberOfEpochs * _investorVestingConfig.epochDurationSeconds)
                     > Constants.MAX_VESTING_DURATION_SECONDS
-                    || (investorVestingConfig.numberOfEpochs * investorVestingConfig.epochDurationSeconds)
-                        != investorVestingConfig.vestingDurationSeconds
-                    || investorVestingConfig.epochDurationSeconds > Constants.MAX_EPOCH_DURATION_SECONDS
+                    || (_investorVestingConfig.numberOfEpochs * _investorVestingConfig.epochDurationSeconds)
+                        != _investorVestingConfig.vestingDurationSeconds
+                    || _investorVestingConfig.epochDurationSeconds > Constants.MAX_EPOCH_DURATION_SECONDS
             ) {
                 revert Errors.LegionVesting__InvalidVestingConfig(
-                    uint8(investorVestingConfig.vestingType),
-                    investorVestingConfig.vestingStartTime,
-                    investorVestingConfig.vestingDurationSeconds,
-                    investorVestingConfig.vestingCliffDurationSeconds,
-                    investorVestingConfig.epochDurationSeconds,
-                    investorVestingConfig.numberOfEpochs,
-                    investorVestingConfig.tokenAllocationOnTGERate
+                    uint8(_investorVestingConfig.vestingType),
+                    _investorVestingConfig.vestingStartTime,
+                    _investorVestingConfig.vestingDurationSeconds,
+                    _investorVestingConfig.vestingCliffDurationSeconds,
+                    _investorVestingConfig.epochDurationSeconds,
+                    _investorVestingConfig.numberOfEpochs,
+                    _investorVestingConfig.tokenAllocationOnTGERate
                 );
             }
         }

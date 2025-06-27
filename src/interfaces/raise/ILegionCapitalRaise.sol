@@ -16,213 +16,155 @@ pragma solidity 0.8.30;
 /**
  * @title ILegionCapitalRaise
  * @author Legion
- * @notice Interface for managing raising capital for sales of ERC20 tokens before TGE in the Legion Protocol
- * @dev Defines events, structs, and functions for pre-liquid capital raise operations including investment, refunds,
- * and withdrawals
+ * @notice Interface for the LegionCapitalRaise contract.
  */
 interface ILegionCapitalRaise {
-    /// @notice Struct defining initialization parameters for the pre-liquid capital raise
+    /// @dev Struct defining initialization parameters for the pre-liquid capital raise
     struct CapitalRaiseInitializationParams {
-        /// @notice Duration of the refund period in seconds
-        /// @dev Time window for investors to request refunds
+        // Duration of the refund period in seconds
         uint64 refundPeriodSeconds;
-        /// @notice Legion's fee on capital raised in basis points (BPS)
-        /// @dev Percentage fee applied to raised capital
+        // Legion's fee on capital raised in basis points (BPS)
         uint16 legionFeeOnCapitalRaisedBps;
-        /// @notice Referrer's fee on capital raised in basis points (BPS)
-        /// @dev Percentage fee for referrer on raised capital
+        // Referrer's fee on capital raised in basis points (BPS)
         uint16 referrerFeeOnCapitalRaisedBps;
-        /// @notice Address of the token used for raising capital
-        /// @dev Bid token address
+        // Address of the token used for raising capital
         address bidToken;
-        /// @notice Admin address of the project raising capital
-        /// @dev Project admin address
+        // Admin address of the project raising capital
         address projectAdmin;
-        /// @notice Address of Legion's Address Registry contract
-        /// @dev Source of Legion-related addresses
+        // Address of Legion's Address Registry contract
         address addressRegistry;
-        /// @notice Address of the referrer fee receiver
-        /// @dev Destination for referrer fees
+        // Address of the referrer fee receiver
         address referrerFeeReceiver;
-        /// @notice Name of the pre-liquid sale soulbound token
-        /// @dev Name of the SBT representing the sale
+        // Name of the pre-liquid sale soulbound token
         string saleName;
-        /// @notice Symbol of the pre-liquid sale soulbound token
-        /// @dev Symbol of the SBT representing the sale
+        // Symbol of the pre-liquid sale soulbound token
         string saleSymbol;
-        /// @notice Base URI for the pre-liquid sale soulbound token
-        /// @dev URI prefix for the SBT metadata
+        // Base URI for the pre-liquid sale soulbound token
         string saleBaseURI;
     }
 
-    /// @notice Struct containing the runtime configuration of the pre-liquid capital raise
+    /// @dev Struct containing the runtime configuration of the pre-liquid capital raise
     struct CapitalRaiseConfig {
-        /// @notice Duration of the refund period in seconds
-        /// @dev Time window for refunds
+        // Duration of the refund period in seconds
         uint64 refundPeriodSeconds;
-        /// @notice Legion's fee on capital raised in basis points (BPS)
-        /// @dev Fee percentage on capital
+        // Legion's fee on capital raised in basis points (BPS)
         uint16 legionFeeOnCapitalRaisedBps;
-        /// @notice Referrer's fee on capital raised in basis points (BPS)
-        /// @dev Referrer fee on capital
+        // Referrer's fee on capital raised in basis points (BPS)
         uint16 referrerFeeOnCapitalRaisedBps;
-        /// @notice Address of the token used for raising capital
-        /// @dev Bid token address
+        // Address of the token used for raising capital
         address bidToken;
-        /// @notice Admin address of the project raising capital
-        /// @dev Project admin address
+        // Admin address of the project raising capital
         address projectAdmin;
-        /// @notice Address of Legion's Address Registry contract
-        /// @dev Registry address
+        // Address of Legion's Address Registry contract
         address addressRegistry;
-        /// @notice Address of the Legion Bouncer contract
-        /// @dev Access control address
+        // Address of the Legion Bouncer contract
         address legionBouncer;
-        /// @notice Signer address of Legion
-        /// @dev Address for signature verification
+        // Signer address of Legion
         address legionSigner;
-        /// @notice Address of Legion's fee receiver
-        /// @dev Destination for Legion fees
+        // Address of Legion's fee receiver
         address legionFeeReceiver;
-        /// @notice Address of the referrer fee receiver
-        /// @dev Destination for referrer fees
+        // Address of the referrer fee receiver
         address referrerFeeReceiver;
     }
 
-    /// @notice Struct tracking the current status of the pre-liquid capital raise
+    /// @dev Struct tracking the current status of the pre-liquid capital raise
     struct CapitalRaiseStatus {
-        /// @notice End time of the capital raise
-        /// @dev Unix timestamp of capital raise end
+        // End time of the capital raise
         uint64 endTime;
-        /// @notice Refund end time of the capital raise
-        /// @dev Unix timestamp of refund period end
+        // Refund end time of the capital raise
         uint64 refundEndTime;
-        /// @notice Indicates if the capital raise has been canceled
-        /// @dev Cancellation status
+        // Indicates if the capital raise has been canceled
         bool isCanceled;
-        /// @notice Indicates if the capital raise has ended
-        /// @dev End status
+        // Indicates if the capital raise has ended
         bool hasEnded;
-        /// @notice Total capital invested by investors
-        /// @dev Aggregate investment amount
+        // Total capital invested by investors
         uint256 totalCapitalInvested;
-        /// @notice Total capital raised from the capital raise
-        /// @dev Final raised amount
+        // Total capital raised from the capital raise
         uint256 totalCapitalRaised;
-        /// @notice Total capital withdrawn by the Project
-        /// @dev Amount withdrawn by project
+        // Total capital withdrawn by the Project
         uint256 totalCapitalWithdrawn;
     }
 
-    /// @notice Struct representing an investor's position in the capital raise
+    /// @dev Struct representing an investor's position in the capital raise
     struct InvestorPosition {
-        /// @notice Flag indicating if investor has claimed excess capital
-        /// @dev Excess claim status
+        // Flag indicating if investor has claimed excess capital
         bool hasClaimedExcess;
-        /// @notice Flag indicating if investor has refunded
-        /// @dev Refund status
+        // Flag indicating if investor has refunded
         bool hasRefunded;
-        /// @notice Total capital invested by the investor
-        /// @dev Invested amount in bid tokens
+        // Total capital invested by the investor
         uint256 investedCapital;
-        /// @notice Amount of capital allowed per SAFT
-        /// @dev Cached SAFT investment limit
+        // Amount of capital allowed per SAFT
         uint256 cachedInvestAmount;
-        /// @notice Token allocation rate as percentage of total supply (18 decimals)
-        /// @dev Cached allocation rate
+        // Token allocation rate as percentage of total supply (18 decimals)
         uint256 cachedTokenAllocationRate;
     }
 
-    /// @notice Enum defining possible actions during the capital raise
+    /// @dev Enum defining possible actions during the capital raise
     enum CapitalRaiseAction {
         INVEST, // Investing capital
         WITHDRAW_EXCESS_CAPITAL // Withdrawing excess capital
 
     }
 
-    /**
-     * @notice Emitted when capital is successfully invested in the pre-liquid capital raise
-     * @param amount Amount of capital invested (in bid tokens)
-     * @param investor Address of the investor
-     * @param positionId Unique identifier for the investor's position
-     */
+    /// @notice Emitted when capital is successfully invested in the pre-liquid capital raise.
+    /// @param amount The amount of capital invested (in bid tokens).
+    /// @param investor The address of the investor.
+    /// @param positionId The unique identifier for the investor's position.
     event CapitalInvested(uint256 amount, address investor, uint256 positionId);
 
-    /**
-     * @notice Emitted when excess capital is successfully withdrawn by an investor
-     * @param amount Amount of excess capital withdrawn
-     * @param investor Address of the investor
-     * @param positionId Unique identifier for the investor's position
-     */
+    /// @notice Emitted when excess capital is successfully withdrawn by an investor.
+    /// @param amount The amount of excess capital withdrawn.
+    /// @param investor The address of the investor.
+    /// @param positionId The unique identifier for the investor's position.
     event ExcessCapitalWithdrawn(uint256 amount, address investor, uint256 positionId);
 
-    /**
-     * @notice Emitted when capital is successfully refunded to an investor
-     * @param amount Amount of capital refunded
-     * @param investor Address of the investor receiving the refund
-     * @param positionId Unique identifier for the investor's position
-     */
+    /// @notice Emitted when capital is successfully refunded to an investor.
+    /// @param amount The amount of capital refunded.
+    /// @param investor The address of the investor receiving the refund.
+    /// @param positionId The unique identifier for the investor's position.
     event CapitalRefunded(uint256 amount, address investor, uint256 positionId);
 
-    /**
-     * @notice Emitted when capital is refunded after capital raise cancellation
-     * @param amount Amount of capital refunded
-     * @param investor Address of the investor receiving the refund
-     * @param positionId Unique identifier for the investor's position
-     */
+    /// @notice Emitted when capital is refunded after capital raise cancellation.
+    /// @param amount The amount of capital refunded.
+    /// @param investor The address of the investor receiving the refund.
+    /// @param positionId The unique identifier for the investor's position.
     event CapitalRefundedAfterCancel(uint256 amount, address investor, uint256 positionId);
 
-    /**
-     * @notice Emitted when capital is successfully withdrawn by the Project
-     * @param amount Total amount of capital withdrawn
-     */
+    /// @notice Emitted when capital is successfully withdrawn by the project.
+    /// @param amount The total amount of capital withdrawn.
     event CapitalWithdrawn(uint256 amount);
 
-    /**
-     * @notice Emitted when the total capital raised is published by Legion
-     * @param capitalRaised Total capital raised by the project
-     */
+    /// @notice Emitted when the total capital raised is published by Legion.
+    /// @param capitalRaised The total capital raised by the project.
     event CapitalRaisedPublished(uint256 capitalRaised);
 
-    /**
-     * @notice Emitted during an emergency withdrawal by Legion
-     * @param receiver Address receiving the withdrawn tokens
-     * @param token Address of the token withdrawn
-     * @param amount Amount of tokens withdrawn
-     */
+    /// @notice Emitted during an emergency withdrawal by Legion.
+    /// @param receiver The address receiving the withdrawn tokens.
+    /// @param token The address of the token withdrawn.
+    /// @param amount The amount of tokens withdrawn.
     event EmergencyWithdraw(address receiver, address token, uint256 amount);
 
-    /**
-     * @notice Emitted when Legion addresses are successfully synced
-     * @param legionBouncer Updated Legion bouncer address
-     * @param legionSigner Updated Legion signer address
-     * @param legionFeeReceiver Updated Legion fee receiver address
-     */
+    /// @notice Emitted when Legion addresses are successfully synced.
+    /// @param legionBouncer The updated Legion bouncer address.
+    /// @param legionSigner The updated Legion signer address.
+    /// @param legionFeeReceiver The updated Legion fee receiver address.
     event LegionAddressesSynced(address legionBouncer, address legionSigner, address legionFeeReceiver);
 
-    /**
-     * @notice Emitted when the capital raise is successfully canceled
-     */
+    /// @notice Emitted when the capital raise is successfully canceled.
     event CapitalRaiseCanceled();
 
-    /**
-     * @notice Emitted when the capital raise has ended
-     */
+    /// @notice Emitted when the capital raise has ended.
     event CapitalRaiseEnded();
 
-    /**
-     * @notice Initializes the pre-liquid capital raise with parameters
-     * @param preLiquidSaleInitParams Calldata struct with initialization parameters
-     */
-    function initialize(CapitalRaiseInitializationParams calldata preLiquidSaleInitParams) external;
+    /// @notice Initializes the capital raise contract with configuration parameters.
+    /// @param capitalRaiseInitParams The initialization parameters for the capital raise.
+    function initialize(CapitalRaiseInitializationParams calldata capitalRaiseInitParams) external;
 
-    /**
-     * @notice Allows investment into the pre-liquid capital raise
-     * @param amount Amount of capital to invest
-     * @param investAmount Maximum allowed investment per SAFT
-     * @param tokenAllocationRate Token allocation percentage (18 decimals)
-     * @param investSignature Signature verifying investor eligibility
-     */
+    /// @notice Allows an investor to contribute capital to the capital raise.
+    /// @param amount The amount of capital to invest.
+    /// @param investAmount The maximum capital allowed for this investor.
+    /// @param tokenAllocationRate The token allocation percentage (18 decimals precision).
+    /// @param investSignature The signature verifying investor eligibility and terms.
     function invest(
         uint256 amount,
         uint256 investAmount,
@@ -231,91 +173,63 @@ interface ILegionCapitalRaise {
     )
         external;
 
-    /**
-     * @notice Processes a refund request during the refund period
-     */
+    /// @notice Processes a refund for an investor during the refund period.
     function refund() external;
 
-    /**
-     * @notice Performs an emergency withdrawal of tokens
-     * @param receiver Address to receive tokens
-     * @param token Address of the token to withdraw
-     * @param amount Amount of tokens to withdraw
-     */
+    /// @notice Withdraws tokens in emergency situations.
+    /// @param receiver The address to receive the withdrawn tokens.
+    /// @param token The address of the token to withdraw.
+    /// @param amount The amount of tokens to withdraw.
     function emergencyWithdraw(address receiver, address token, uint256 amount) external;
 
-    /**
-     * @notice Withdraws raised capital to the Project
-     */
+    /// @notice Withdraws raised capital to the project admin.
     function withdrawRaisedCapital() external;
 
-    /**
-     * @notice Cancels the pre-liquid capital raise
-     */
-    function cancelSale() external;
+    /// @notice Cancels the capital raise and handles capital return.
+    function cancel() external;
 
-    /**
-     * @notice Withdraws invested capital if the capital raise is canceled
-     */
+    /// @notice Allows investors to withdraw capital if the capital raise is canceled.
     function withdrawInvestedCapitalIfCanceled() external;
 
-    /**
-     * @notice Withdraws excess invested capital back to investors
-     * @param amount Amount of excess capital to withdraw
-     * @param investAmount Maximum allowed investment per SAFT
-     * @param tokenAllocationRate Token allocation percentage (18 decimals)
-     * @param withdrawSignature Signature verifying eligibility
-     */
+    /// @notice Withdraws excess invested capital back to investors.
+    /// @param amount The amount of excess capital to withdraw.
+    /// @param investAmount The maximum capital allowed for this investor.
+    /// @param tokenAllocationRate The token allocation percentage (18 decimals precision).
+    /// @param claimExcessSignature The signature verifying eligibility to claim excess capital.
     function withdrawExcessInvestedCapital(
         uint256 amount,
         uint256 investAmount,
         uint256 tokenAllocationRate,
-        bytes calldata withdrawSignature
+        bytes calldata claimExcessSignature
     )
         external;
 
-    /**
-     * @notice Ends the pre-liquid capital raise manually
-     */
-    function endSale() external;
+    /// @notice Ends the capital raise manually.
+    function end() external;
 
-    /**
-     * @notice Publishes the total capital raised
-     * @param capitalRaised Total capital raised by the project
-     */
-    function publishCapitalRaised(uint256 capitalRaised) external;
+    /// @notice Publishes the total capital raised amount.
+    /// @param capitalRaised The total capital raised by the project.
+    function publishRaisedCapital(uint256 capitalRaised) external;
 
-    /**
-     * @notice Syncs Legion addresses from the address registry
-     */
+    /// @notice Synchronizes Legion addresses from the address registry.
     function syncLegionAddresses() external;
 
-    /**
-     * @notice Pauses the pre-liquid capital raise
-     */
-    function pauseSale() external;
+    /// @notice Pauses all capital raise operations.
+    function pause() external;
 
-    /**
-     * @notice Unpauses the pre-liquid capital raise
-     */
-    function unpauseSale() external;
+    /// @notice Resumes all capital raise operations.
+    function unpause() external;
 
-    /**
-     * @notice Retrieves the current capital raise configuration
-     * @return CapitalRaiseConfig memory Struct containing capital raise configuration
-     */
+    /// @notice Returns the current capital raise configuration.
+    /// @return The complete capital raise configuration struct.
     function saleConfiguration() external view returns (CapitalRaiseConfig memory);
 
-    /**
-     * @notice Retrieves the current capital raise status
-     * @return CapitalRaiseStatus memory Struct containing capital raise status
-     */
-    function saleStatusDetails() external view returns (CapitalRaiseStatus memory);
+    /// @notice Returns the current capital raise status.
+    /// @return The complete capital raise status struct.
+    function saleStatus() external view returns (CapitalRaiseStatus memory);
 
-    /**
-     * @notice Retrieves an investor's position details
-     * @param investorAddress Address of the investor
-     * @return InvestorPosition memory Struct containing investor position details
-     */
-    function investorPositionDetails(address investorAddress) external view returns (InvestorPosition memory);
+    /// @notice Returns an investor's position details.
+    /// @param investor The address of the investor.
+    /// @return The complete investor position struct.
+    function investorPosition(address investor) external view returns (InvestorPosition memory);
 }

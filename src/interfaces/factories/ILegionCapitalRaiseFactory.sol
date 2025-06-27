@@ -18,23 +18,19 @@ import { ILegionCapitalRaise } from "../raise/ILegionCapitalRaise.sol";
 /**
  * @title ILegionCapitalRaiseFactory
  * @author Legion
- * @notice Interface for deploying and managing Legion capital raise contract instances
+ * @notice Interface for the LegionCapitalRaiseFactory contract.
  */
 interface ILegionCapitalRaiseFactory {
-    /**
-     * @notice Emitted when a new capital raise contract is deployed and initialized
-     * @param capitalRaiseInstance Address of the newly deployed capital raise contract
-     * @param capitalRaiseInitParams Struct containing capital raise initialization parameters
-     */
+    /// @notice Emitted when a new capital raise contract is deployed and initialized
+    /// @param capitalRaiseInstance Address of the newly deployed capital raise contract
+    /// @param capitalRaiseInitParams Struct containing capital raise initialization parameters
     event NewCapitalRaiseCreated(
         address capitalRaiseInstance, ILegionCapitalRaise.CapitalRaiseInitializationParams capitalRaiseInitParams
     );
 
-    /**
-     * @notice Deploys a new LegionCapitalRaise contract instance
-     * @param capitalRaiseInitParams Calldata struct containing capital raise initialization parameters
-     * @return capitalRaiseInstance Address of the newly deployed LegionCapitalRaise instance
-     */
+    /// @notice Deploys a new LegionCapitalRaise contract instance.
+    /// @param capitalRaiseInitParams The initialization parameters for the capital raise campaign.
+    /// @return capitalRaiseInstance The address of the newly deployed and initialized LegionCapitalRaise instance.
     function createCapitalRaise(ILegionCapitalRaise.CapitalRaiseInitializationParams calldata capitalRaiseInitParams)
         external
         returns (address payable capitalRaiseInstance);

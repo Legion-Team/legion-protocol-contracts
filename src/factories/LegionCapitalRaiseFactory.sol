@@ -24,43 +24,24 @@ import { LegionCapitalRaise } from "../raise/LegionCapitalRaise.sol";
 /**
  * @title Legion Capital Raise Factory
  * @author Legion
- * @notice A factory contract for deploying proxy instances of Legion capital raise contracts
- * @dev Utilizes the clone pattern to create new instances of LegionCapitalRaise contracts
+ * @notice Deploys proxy instances of Legion capital raise contracts using the clone pattern.
+ * @dev Creates gas-efficient clones of a single implementation contract for each capital raise campaign.
  */
 contract LegionCapitalRaiseFactory is ILegionCapitalRaiseFactory, Ownable {
     using LibClone for address;
 
-    /*//////////////////////////////////////////////////////////////////////////
-                                 STATE VARIABLES
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /// @notice Address of the LegionCapitalRaise implementation contract used as template
-    /// @dev Immutable reference to the base implementation deployed during construction
+    /// @notice The address of the LegionCapitalRaise implementation contract used as a template.
+    /// @dev Immutable reference to the base implementation deployed during construction.
     address public immutable i_capitalRaiseTemplate = address(new LegionCapitalRaise());
 
-    /*//////////////////////////////////////////////////////////////////////////
-                                   CONSTRUCTOR
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /**
-     * @notice Initializes the LegionCapitalRaiseFactory with an owner
-     * @dev Sets up ownership during contract deployment
-     * @param newOwner Address to be set as the initial owner of the factory
-     */
+    /// @notice Constructor for the LegionCapitalRaiseFactory contract.
+    /// @dev Initializes ownership during contract deployment.
+    /// @param newOwner The address to be set as the initial owner of the factory.
     constructor(address newOwner) {
         _initializeOwner(newOwner);
     }
 
-    /*//////////////////////////////////////////////////////////////////////////
-                              EXTERNAL FUNCTIONS
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /**
-     * @notice Deploys a new LegionCapitalRaise contract instance
-     * @dev Clones the template contract and initializes it with provided parameters; restricted to owner
-     * @param capitalRaiseInitParams Calldata struct containing capital raise initialization parameters
-     * @return capitalRaiseInstance Address of the newly deployed and initialized LegionCapitalRaise instance
-     */
+    /// @inheritdoc ILegionCapitalRaiseFactory
     function createCapitalRaise(LegionCapitalRaise.CapitalRaiseInitializationParams calldata capitalRaiseInitParams)
         external
         onlyOwner

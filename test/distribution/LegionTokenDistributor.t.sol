@@ -449,7 +449,7 @@ contract LegionTokenDistributorTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        ILegionTokenDistributor(legionTokenDistributorInstance).pauseDistribution();
+        ILegionTokenDistributor(legionTokenDistributorInstance).pause();
     }
 
     /**
@@ -466,7 +466,7 @@ contract LegionTokenDistributorTest is Test {
 
         // Act
         vm.prank(nonLegionAdmin);
-        ILegionTokenDistributor(legionTokenDistributorInstance).pauseDistribution();
+        ILegionTokenDistributor(legionTokenDistributorInstance).pause();
     }
 
     /**
@@ -478,7 +478,7 @@ contract LegionTokenDistributorTest is Test {
         prepareCreateLegionTokenDistributor();
 
         vm.prank(legionBouncer);
-        ILegionTokenDistributor(legionTokenDistributorInstance).pauseDistribution();
+        ILegionTokenDistributor(legionTokenDistributorInstance).pause();
 
         // Expect
         vm.expectEmit();
@@ -486,7 +486,7 @@ contract LegionTokenDistributorTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        ILegionTokenDistributor(legionTokenDistributorInstance).unpauseDistribution();
+        ILegionTokenDistributor(legionTokenDistributorInstance).unpause();
     }
 
     /**
@@ -499,14 +499,14 @@ contract LegionTokenDistributorTest is Test {
         prepareCreateLegionTokenDistributor();
 
         vm.prank(legionBouncer);
-        ILegionTokenDistributor(legionTokenDistributorInstance).pauseDistribution();
+        ILegionTokenDistributor(legionTokenDistributorInstance).pause();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NotCalledByLegion.selector));
 
         // Act
         vm.prank(nonLegionAdmin);
-        ILegionTokenDistributor(legionTokenDistributorInstance).unpauseDistribution();
+        ILegionTokenDistributor(legionTokenDistributorInstance).unpause();
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -719,7 +719,7 @@ contract LegionTokenDistributorTest is Test {
         );
 
         ILegionTokenDistributor.InvestorPosition memory position =
-            LegionTokenDistributor(payable(legionTokenDistributorInstance)).investorPositionDetails(investor1);
+            LegionTokenDistributor(payable(legionTokenDistributorInstance)).investorPosition(investor1);
 
         ILegionVestingManager.LegionInvestorVestingStatus memory vestingStatus =
             LegionTokenDistributor(payable(legionTokenDistributorInstance)).investorVestingStatus(investor1);
@@ -760,7 +760,7 @@ contract LegionTokenDistributorTest is Test {
         );
 
         ILegionTokenDistributor.InvestorPosition memory position =
-            LegionTokenDistributor(payable(legionTokenDistributorInstance)).investorPositionDetails(investor2);
+            LegionTokenDistributor(payable(legionTokenDistributorInstance)).investorPosition(investor2);
 
         ILegionVestingManager.LegionInvestorVestingStatus memory vestingStatus =
             LegionTokenDistributor(payable(legionTokenDistributorInstance)).investorVestingStatus(investor2);
