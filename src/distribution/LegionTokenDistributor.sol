@@ -102,7 +102,7 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
             revert Errors.LegionSale__InvalidFeeAmount(referrerFee, expectedReferrerFeeAmount);
         }
 
-        // Emit successfully TokensSuppliedForDistribution
+        // Emit TokensSuppliedForDistribution
         emit TokensSuppliedForDistribution(amount, legionFee, referrerFee);
 
         // Transfer the allocated amount of tokens for distribution to the contract
@@ -125,7 +125,7 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
 
     /// @inheritdoc ILegionTokenDistributor
     function emergencyWithdraw(address receiver, address token, uint256 amount) external onlyLegion {
-        // Emit successfully EmergencyWithdraw
+        // Emit EmergencyWithdraw
         emit EmergencyWithdraw(receiver, token, amount);
 
         // Transfer the amount to Legion's address
@@ -173,7 +173,7 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
         // Calculate the remaining amount to be vested
         uint256 amountToBeVested = claimAmount - amountToDistributeOnClaim;
 
-        // Emit successfully TokenAllocationClaimed
+        // Emit TokenAllocationClaimed
         emit TokenAllocationClaimed(amountToBeVested, amountToDistributeOnClaim, msg.sender);
 
         // Deploy vesting and distribute tokens only if there is anything to distribute
@@ -290,7 +290,7 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
         s_vestingConfig.vestingFactory = ILegionAddressRegistry(s_tokenDistributorConfig.addressRegistry)
             .getLegionAddress(Constants.LEGION_VESTING_FACTORY_ID);
 
-        // Emit successfully LegionAddressesSynced
+        // Emit LegionAddressesSynced
         emit LegionAddressesSynced(
             s_tokenDistributorConfig.legionBouncer,
             s_tokenDistributorConfig.legionSigner,

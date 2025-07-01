@@ -82,6 +82,70 @@ contract LegionPreLiquidApprovedSale is
         _;
     }
 
+    /// @notice Restricts interaction to when the sale is canceled.
+    /// @dev Reverts if the sale is not canceled.
+    modifier whenSaleCanceled() {
+        // Verify that the sale is canceled
+        _verifySaleIsCanceled();
+        _;
+    }
+
+    /// @notice Restricts interaction to when the sale is not canceled.
+    /// @dev Reverts if the sale is canceled.
+    modifier whenSaleNotCanceled() {
+        // Verify that the sale is not canceled
+        _verifySaleNotCanceled();
+        _;
+    }
+
+    /// @notice Restricts interaction to when the sale has ended.
+    /// @dev Reverts if the sale has not ended.
+    modifier whenSaleEnded() {
+        // Verify that the sale has ended
+        _verifySaleHasEnded();
+        _;
+    }
+
+    /// @notice Restricts interaction to when the sale is not ended
+    /// @dev Reverts if the sale has ended.
+    modifier whenSaleNotEnded() {
+        // Verify that the sale has not ended
+        _verifySaleHasNotEnded();
+        _;
+    }
+
+    /// @notice Restricts interaction to when the refund period is over.
+    /// @dev Reverts if the refund period is not over.
+    modifier whenRefundPeriodIsOver() {
+        // Verify that the refund period is over
+        _verifyRefundPeriodIsOver();
+        _;
+    }
+
+    /// @notice Restricts interaction to when the refund period is not over.
+    /// @dev Reverts if the refund period is over.
+    modifier whenRefundPeriodNotOver() {
+        // Verify that the refund period is not over
+        _verifyRefundPeriodIsNotOver();
+        _;
+    }
+
+    /// @notice Restricts interaction to when tokens have been supplied for distribution.
+    /// @dev Reverts if tokens have not been supplied.
+    modifier whenTokensSupplied() {
+        // Verify that tokens have been supplied to the sale
+        _verifyTokensSupplied();
+        _;
+    }
+
+    /// @notice Restricts interaction to when tokens have not been supplied for distribution.
+    /// @dev Reverts if tokens have been supplied.
+    modifier whenTokensNotSupplied() {
+        // Verify that no tokens have been supplied to the sale by the Project
+        _verifyTokensNotSupplied();
+        _;
+    }
+
     /// @notice Constructor for the LegionPreLiquidApprovedSale contract.
     /// @dev Prevents the implementation contract from being initialized directly.
     constructor() {
@@ -103,18 +167,14 @@ contract LegionPreLiquidApprovedSale is
     )
         external
         whenNotPaused
+        whenSaleNotCanceled
+        whenSaleNotEnded
     {
         // Check if the investor has already invested
         // If not, create a new investor position
         uint256 positionId = _getInvestorPositionId(msg.sender) == 0
             ? _createInvestorPosition(msg.sender)
             : s_investorPositionIds[msg.sender];
-
-        // Verify that the sale is not canceled
-        _verifySaleNotCanceled();
-
-        // Verify that the sale has not ended
-        _verifySaleHasNotEnded();
 
         // Verify that the investor has not refunded
         _verifyHasNotRefunded(positionId);
@@ -135,7 +195,7 @@ contract LegionPreLiquidApprovedSale is
         s_usedSignatures[msg.sender][investSignature] = true;
 
         // Update the investor position
-        _updateInvestorPosition(investAmount, tokenAllocationRate);
+        _updateInvestorPosition(investAmount, tokenAllocationRate, positionId);
 
         // Verify that the investor position is valid
         _verifyValidPosition(investSignature, positionId, SaleAction.INVEST);
@@ -148,18 +208,12 @@ contract LegionPreLiquidApprovedSale is
     }
 
     /// @inheritdoc ILegionPreLiquidApprovedSale
-    function refund() external whenNotPaused {
+    function refund() external whenNotPaused whenSaleNotCanceled whenRefundPeriodNotOver {
         // Get the investor position ID
         uint256 positionId = _getInvestorPositionId(msg.sender);
 
         // Verify that the position exists
         _verifyPositionExists(positionId);
-
-        // Verify that the sale is not canceled
-        _verifySaleNotCanceled();
-
-        // Verify that the refund period is not over
-        _verifyRefundPeriodIsNotOver();
 
         // Verify that the investor has not refunded
         _verifyHasNotRefunded(positionId);
@@ -195,16 +249,10 @@ contract LegionPreLiquidApprovedSale is
         external
         onlyLegion
         whenNotPaused
+        whenSaleNotCanceled
+        whenSaleEnded
+        whenRefundPeriodIsOver
     {
-        // Verify that the sale has not been canceled
-        _verifySaleNotCanceled();
-
-        // Verify that the sale has ended
-        _verifySaleHasEnded();
-
-        // Verify that the refund period is over
-        _verifyRefundPeriodIsOver();
-
         // Set the address of the token distributed to investors
         s_saleStatus.askToken = askToken;
 
@@ -219,10 +267,17 @@ contract LegionPreLiquidApprovedSale is
     }
 
     /// @inheritdoc ILegionPreLiquidApprovedSale
-    function supplyTokens(uint256 amount, uint256 legionFee, uint256 referrerFee) external onlyProject whenNotPaused {
-        // Verify that the sale is not canceled
-        _verifySaleNotCanceled();
-
+    function supplyTokens(
+        uint256 amount,
+        uint256 legionFee,
+        uint256 referrerFee
+    )
+        external
+        onlyProject
+        whenNotPaused
+        whenSaleNotCanceled
+        whenTokensNotSupplied
+    {
         // Verify that tokens can be supplied for distribution
         _verifyCanSupplyTokens(amount);
 
@@ -282,16 +337,14 @@ contract LegionPreLiquidApprovedSale is
     }
 
     /// @inheritdoc ILegionPreLiquidApprovedSale
-    function withdrawRaisedCapital() external onlyProject whenNotPaused {
-        // Verify that the sale is not canceled
-        _verifySaleNotCanceled();
-
-        // Verify that the sale has ended
-        _verifySaleHasEnded();
-
-        // Verify that the refund period is over
-        _verifyRefundPeriodIsOver();
-
+    function withdrawRaisedCapital()
+        external
+        onlyProject
+        whenNotPaused
+        whenSaleNotCanceled
+        whenSaleEnded
+        whenRefundPeriodIsOver
+    {
         // Verify that the project can withdraw capital
         _verifyCanWithdrawCapital();
 
@@ -339,6 +392,10 @@ contract LegionPreLiquidApprovedSale is
     )
         external
         whenNotPaused
+        whenSaleNotCanceled
+        whenSaleEnded
+        whenRefundPeriodIsOver
+        whenTokensSupplied
     {
         // Get the investor position ID
         uint256 positionId = _getInvestorPositionId(msg.sender);
@@ -346,17 +403,17 @@ contract LegionPreLiquidApprovedSale is
         // Verify that the position exists
         _verifyPositionExists(positionId);
 
-        // Verify that the sale has not been canceled
-        _verifySaleNotCanceled();
+        // Verify that the investor has not refunded
+        _verifyHasNotRefunded(positionId);
 
         // Verify that the vesting configuration is valid
         _verifyValidVestingConfig(investorVestingConfig);
 
         // Verify that the investor can claim the token allocation
-        _verifyCanClaimTokenAllocation();
+        _verifyCanClaimTokenAllocation(positionId);
 
         // Update the investor position
-        _updateInvestorPosition(investAmount, tokenAllocationRate);
+        _updateInvestorPosition(investAmount, tokenAllocationRate, positionId);
 
         // Verify that the investor position is valid
         _verifyValidPosition(claimSignature, positionId, SaleAction.CLAIM_TOKEN_ALLOCATION);
@@ -412,13 +469,7 @@ contract LegionPreLiquidApprovedSale is
     }
 
     /// @inheritdoc ILegionPreLiquidApprovedSale
-    function cancel() external onlyProject whenNotPaused {
-        // Verify that the sale has not been canceled
-        _verifySaleNotCanceled();
-
-        // Verify that no tokens have been supplied to the sale by the Project
-        _verifyTokensNotSupplied();
-
+    function cancel() external onlyProject whenNotPaused whenSaleNotCanceled whenTokensNotSupplied {
         // Cache the amount of funds to be returned to the capital raise
         // The project should return the total capital raised including the charged fees
         uint256 capitalToReturn = s_saleStatus.totalCapitalWithdrawn;
@@ -439,15 +490,15 @@ contract LegionPreLiquidApprovedSale is
     }
 
     /// @inheritdoc ILegionPreLiquidApprovedSale
-    function withdrawInvestedCapitalIfCanceled() external whenNotPaused {
+    function withdrawInvestedCapitalIfCanceled() external whenNotPaused whenSaleCanceled {
         // Get the investor position ID
         uint256 positionId = _getInvestorPositionId(msg.sender);
 
         // Verify that the position exists
         _verifyPositionExists(positionId);
 
-        // Verify that the sale has been canceled
-        _verifySaleIsCanceled();
+        // Verify that the investor has not refunded
+        _verifyHasNotRefunded(positionId);
 
         // Cache the amount to refund in memory
         uint256 amountToWithdraw = s_investorPositions[positionId].investedCapital;
@@ -477,15 +528,13 @@ contract LegionPreLiquidApprovedSale is
     )
         external
         whenNotPaused
+        whenSaleNotCanceled
     {
         // Get the investor position ID
         uint256 positionId = _getInvestorPositionId(msg.sender);
 
         // Verify that the position exists
         _verifyPositionExists(positionId);
-
-        // Verify that the sale is not canceled
-        _verifySaleNotCanceled();
 
         // Verify that the signature has not been used
         _verifySignatureNotUsed(withdrawSignature);
@@ -506,7 +555,7 @@ contract LegionPreLiquidApprovedSale is
         s_investorPositions[positionId].investedCapital -= amount;
 
         // Update the investor position
-        _updateInvestorPosition(investAmount, tokenAllocationRate);
+        _updateInvestorPosition(investAmount, tokenAllocationRate, positionId);
 
         // Verify that the investor position is valid
         _verifyValidPosition(withdrawSignature, positionId, SaleAction.WITHDRAW_EXCESS_CAPITAL);
@@ -537,13 +586,7 @@ contract LegionPreLiquidApprovedSale is
     }
 
     /// @inheritdoc ILegionPreLiquidApprovedSale
-    function end() external onlyLegionOrProject whenNotPaused {
-        // Verify that the sale has not ended
-        _verifySaleHasNotEnded();
-
-        // Verify that the sale has not been canceled
-        _verifySaleNotCanceled();
-
+    function end() external onlyLegionOrProject whenNotPaused whenSaleNotCanceled whenSaleNotEnded {
         // Update the `hasEnded` status to true
         s_saleStatus.hasEnded = true;
 
@@ -558,16 +601,14 @@ contract LegionPreLiquidApprovedSale is
     }
 
     /// @inheritdoc ILegionPreLiquidApprovedSale
-    function publishRaisedCapital(uint256 capitalRaised) external onlyLegion whenNotPaused {
-        // Verify that the sale is not canceled
-        _verifySaleNotCanceled();
-
-        // Verify that the sale has ended
-        _verifySaleHasEnded();
-
-        // Verify that the refund period is over
-        _verifyRefundPeriodIsOver();
-
+    function publishRaisedCapital(uint256 capitalRaised)
+        external
+        onlyLegion
+        whenNotPaused
+        whenSaleEnded
+        whenSaleNotCanceled
+        whenRefundPeriodIsOver
+    {
         // Verify that capital raised can be published.
         _verifyCanPublishCapitalRaised();
 
@@ -588,19 +629,11 @@ contract LegionPreLiquidApprovedSale is
         override
         onlyLegion
         whenNotPaused
+        whenSaleNotCanceled
+        whenSaleEnded
+        whenRefundPeriodIsOver
+        whenTokensNotSupplied
     {
-        // Verify that the sale is not canceled
-        _verifySaleNotCanceled();
-
-        // Verify that the sale has ended
-        _verifySaleHasEnded();
-
-        // Verify that the refund period is over
-        _verifyRefundPeriodIsOver();
-
-        // Verify that no tokens have been supplied to the sale by the Project
-        _verifyTokensNotSupplied();
-
         // Verify that the position can be transferred
         _verifyCanTransferInvestorPosition(positionId);
 
@@ -619,19 +652,11 @@ contract LegionPreLiquidApprovedSale is
         virtual
         override
         whenNotPaused
+        whenSaleNotCanceled
+        whenSaleEnded
+        whenRefundPeriodIsOver
+        whenTokensNotSupplied
     {
-        // Verify that the sale is not canceled
-        _verifySaleNotCanceled();
-
-        // Verify that the sale has ended
-        _verifySaleHasEnded();
-
-        // Verify that the refund period is over
-        _verifyRefundPeriodIsOver();
-
-        // Verify that no tokens have been supplied to the sale by the Project
-        _verifyTokensNotSupplied();
-
         // Verify the signature for transferring the position
         _verifyTransferSignature(from, to, positionId, s_saleConfig.legionSigner, transferSignature);
 
@@ -765,15 +790,16 @@ contract LegionPreLiquidApprovedSale is
     /// @dev Updates an investor's position with SAFT data.
     /// @param _investAmount The maximum capital allowed per SAFT.
     /// @param _tokenAllocationRate The token allocation percentage (18 decimals).
-    function _updateInvestorPosition(uint256 _investAmount, uint256 _tokenAllocationRate) private {
-        // Get the investor position ID
-        uint256 positionId = _getInvestorPositionId(msg.sender);
-
-        // Verify that the position exists
-        _verifyPositionExists(positionId);
-
+    /// @param _positionId The ID of the investor position.
+    function _updateInvestorPosition(
+        uint256 _investAmount,
+        uint256 _tokenAllocationRate,
+        uint256 _positionId
+    )
+        private
+    {
         // Load the investor position
-        InvestorPosition storage position = s_investorPositions[positionId];
+        InvestorPosition storage position = s_investorPositions[_positionId];
 
         // Cache the SAFT amount the investor is allowed to invest
         if (position.cachedInvestAmount != _investAmount) {
@@ -870,9 +896,6 @@ contract LegionPreLiquidApprovedSale is
         // Revert if Legion has not set the total amount of tokens allocated for distribution
         if (totalTokensAllocated == 0) revert Errors.LegionSale__TokensNotAllocated();
 
-        // Revert if tokens have already been supplied
-        if (s_saleStatus.tokensSupplied) revert Errors.LegionSale__TokensAlreadySupplied();
-
         // Revert if the amount of tokens supplied is different than the amount set by Legion
         if (_amount != totalTokensAllocated) {
             revert Errors.LegionSale__InvalidTokenAmountSupplied(_amount, totalTokensAllocated);
@@ -900,21 +923,18 @@ contract LegionPreLiquidApprovedSale is
     }
 
     /// @dev Verifies conditions for claiming token allocation.
-    function _verifyCanClaimTokenAllocation() private view {
-        // Get the investor position ID
-        uint256 positionId = _getInvestorPositionId(msg.sender);
-
-        // Verify that the position exists
-        _verifyPositionExists(positionId);
-
+    /// @param _positionId The ID of the investor's position.
+    function _verifyCanClaimTokenAllocation(uint256 _positionId) private view {
         // Load the investor position
-        InvestorPosition memory position = s_investorPositions[positionId];
-
-        // Check if the askToken has been supplied to the sale
-        if (!s_saleStatus.tokensSupplied) revert Errors.LegionSale__TokensNotSupplied();
+        InvestorPosition memory position = s_investorPositions[_positionId];
 
         // Check if the investor has already settled their allocation
         if (position.hasSettled) revert Errors.LegionSale__AlreadySettled(msg.sender);
+    }
+
+    /// @dev Verifies that tokens have been supplied to the sale.
+    function _verifyTokensSupplied() private view {
+        if (!s_saleStatus.tokensSupplied) revert Errors.LegionSale__TokensNotSupplied();
     }
 
     /// @dev Verifies that no tokens have been supplied.

@@ -621,7 +621,7 @@ contract LegionFixedPriceSaleTest is Test {
      * @notice Tests that the sale can be paused by the Legion admin
      * @dev Expects a Paused event emission when paused by legionBouncer
      */
-    function test_pauseSale_successfullyPauseTheSale() public {
+    function test_pause_successfullyPauseTheSale() public {
         // Arrange
         prepareCreateLegionFixedPriceSale();
 
@@ -638,7 +638,7 @@ contract LegionFixedPriceSaleTest is Test {
      * @notice Tests that pausing the sale by a non-Legion admin reverts
      * @dev Expects LegionSale__NotCalledByLegion revert when called by nonLegionAdmin
      */
-    function testFuzz_pauseSale_revertsIfCalledByNonLegionAdmin(address nonLegionAdmin) public {
+    function testFuzz_pause_revertsIfCalledByNonLegionAdmin(address nonLegionAdmin) public {
         // Arrange
         vm.assume(nonLegionAdmin != legionBouncer);
         prepareCreateLegionFixedPriceSale();
@@ -655,7 +655,7 @@ contract LegionFixedPriceSaleTest is Test {
      * @notice Tests that the sale can be unpaused by the Legion admin
      * @dev Expects an Unpaused event emission after pausing and unpausing
      */
-    function test_unpauseSale_successfullyUnpauseTheSale() public {
+    function test_unpause_successfullyUnpauseTheSale() public {
         // Arrange
         prepareCreateLegionFixedPriceSale();
 
@@ -675,7 +675,7 @@ contract LegionFixedPriceSaleTest is Test {
      * @notice Tests that unpausing the sale by a non-Legion admin reverts
      * @dev Expects LegionSale__NotCalledByLegion revert when called by nonLegionAdmin
      */
-    function testFuzz_unpauseSale_revertsIfNotCalledByLegionAdmin(address nonLegionAdmin) public {
+    function testFuzz_unpause_revertsIfNotCalledByLegionAdmin(address nonLegionAdmin) public {
         // Arrange
         vm.assume(nonLegionAdmin != legionBouncer);
         prepareCreateLegionFixedPriceSale();
@@ -1082,7 +1082,7 @@ contract LegionFixedPriceSaleTest is Test {
      * @notice Tests that canceling the sale by project admin before results are published succeeds
      * @dev Expects SaleCanceled event when called by projectAdmin before results publication
      */
-    function test_cancelSale_successfullyEmitsSaleCanceled() public {
+    function test_cancel_successfullyEmitsSaleCanceled() public {
         // Arrange
         prepareCreateLegionFixedPriceSale();
 
@@ -1099,7 +1099,7 @@ contract LegionFixedPriceSaleTest is Test {
      * @notice Tests that canceling an already canceled sale reverts
      * @dev Expects LegionSale__SaleIsCanceled revert when attempting to cancel twice
      */
-    function test_cancelSale_revertsIfSaleAlreadyCanceled() public {
+    function test_cancel_revertsIfSaleAlreadyCanceled() public {
         // Arrange
         prepareCreateLegionFixedPriceSale();
 
@@ -1118,7 +1118,7 @@ contract LegionFixedPriceSaleTest is Test {
      * @notice Tests that canceling after results are published reverts
      * @dev Expects LegionSale__SaleResultsAlreadyPublished revert after results are set
      */
-    function test_cancelSale_revertsIfResultsArePublished() public {
+    function test_cancel_revertsIfResultsArePublished() public {
         // Arrange
         prepareCreateLegionFixedPriceSale();
 
@@ -1140,7 +1140,7 @@ contract LegionFixedPriceSaleTest is Test {
      * @notice Tests that canceling by a non-project admin reverts
      * @dev Expects LegionSale__NotCalledByProject revert when called by investor1
      */
-    function testFuzz_cancelSale_revertsIfCalledByNonProjectAdmin(address nonProjectAdmin) public {
+    function testFuzz_cancel_revertsIfCalledByNonProjectAdmin(address nonProjectAdmin) public {
         // Arrange
         vm.assume(nonProjectAdmin != projectAdmin);
         prepareCreateLegionFixedPriceSale();

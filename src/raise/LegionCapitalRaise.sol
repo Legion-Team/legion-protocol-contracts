@@ -74,6 +74,54 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
         _;
     }
 
+    /// @notice Restricts function execution when the capital raise is canceled.
+    /// @dev Reverts if the capital raise has not been canceled.
+    modifier whenRaiseCanceled() {
+        // Verify that the capital raise has been canceled
+        _verifyCapitalRaiseIsCanceled();
+        _;
+    }
+
+    /// @notice Restricts function execution when the capital raise is not canceled.
+    /// @dev Reverts if the capital raise has been canceled.
+    modifier whenRaiseNotCanceled() {
+        // Verify that the capital raise has not been canceled
+        _verifyCapitalRaisedNotCanceled();
+        _;
+    }
+
+    /// @notice Restricts function execution when the capital raise has ended.
+    /// @dev Reverts if the capital raise has not ended.
+    modifier whenRaiseHasEnded() {
+        // Verify that the capital raise has ended
+        _verifyCapitalRaiseHasEnded();
+        _;
+    }
+
+    /// @notice Restricts function execution when the capital raise has not ended.
+    /// @dev Reverts if the capital raise has ended.
+    modifier whenRaiseNotEnded() {
+        // Verify that the capital raise has not ended
+        _verifyCapitalRaiseHasNotEnded();
+        _;
+    }
+
+    /// @notice Restricts interaction to when the refund period is over.
+    /// @dev Reverts if the refund period is not over.
+    modifier whenRefundPeriodIsOver() {
+        // Verify that the refund period is over
+        _verifyRefundPeriodIsOver();
+        _;
+    }
+
+    /// @notice Restricts interaction to when the refund period is not over.
+    /// @dev Reverts if the refund period is over.
+    modifier whenRefundPeriodNotOver() {
+        // Verify that the refund period is not over
+        _verifyRefundPeriodIsNotOver();
+        _;
+    }
+
     /// @notice Constructor for the LegionCapitalRaise contract.
     /// @dev Prevents the implementation contract from being initialized directly.
     constructor() {
@@ -95,18 +143,14 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
     )
         external
         whenNotPaused
+        whenRaiseNotCanceled
+        whenRaiseNotEnded
     {
         // Check if the investor has already invested
         // If not, create a new investor position
         uint256 positionId = _getInvestorPositionId(msg.sender) == 0
             ? _createInvestorPosition(msg.sender)
             : s_investorPositionIds[msg.sender];
-
-        // Verify that the capital raise is not canceled
-        _verifyCapitalRaisedNotCanceled();
-
-        // Verify that the capital raise has not ended
-        _verifyCapitalRaiseHasNotEnded();
 
         // Verify that the investor has not refunded
         _verifyHasNotRefunded(positionId);
@@ -132,7 +176,7 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
         // Verify that the investor position is valid
         _verifyValidPosition(investSignature, positionId, CapitalRaiseAction.INVEST);
 
-        // Emit successfully CapitalInvested
+        // Emit CapitalInvested
         emit CapitalInvested(amount, msg.sender, positionId);
 
         // Transfer the invested capital to the contract
@@ -140,18 +184,12 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
     }
 
     /// @inheritdoc ILegionCapitalRaise
-    function refund() external whenNotPaused {
+    function refund() external whenNotPaused whenRaiseNotCanceled whenRefundPeriodNotOver {
         // Get the investor position ID
         uint256 positionId = _getInvestorPositionId(msg.sender);
 
         // Verify that the position exists
         _verifyPositionExists(positionId);
-
-        // Verify that the capital raise is not canceled
-        _verifyCapitalRaisedNotCanceled();
-
-        // Verify that the refund period is not over
-        _verifyRefundPeriodIsNotOver();
 
         // Verify that the investor has not refunded
         _verifyHasNotRefunded(positionId);
@@ -171,7 +209,7 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
         // Decrement total capital invested from all investors
         s_capitalRaiseStatus.totalCapitalInvested -= amountToRefund;
 
-        // Emit successfully CapitalRefunded
+        // Emit CapitalRefunded
         emit CapitalRefunded(amountToRefund, msg.sender, positionId);
 
         // Transfer the refunded amount back to the investor
@@ -180,7 +218,7 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
 
     /// @inheritdoc ILegionCapitalRaise
     function emergencyWithdraw(address receiver, address token, uint256 amount) external onlyLegion {
-        // Emit successfully EmergencyWithdraw
+        // Emit EmergencyWithdraw
         emit EmergencyWithdraw(receiver, token, amount);
 
         // Transfer the amount to Legion's address
@@ -188,16 +226,14 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
     }
 
     /// @inheritdoc ILegionCapitalRaise
-    function withdrawRaisedCapital() external onlyProject whenNotPaused {
-        // Verify that the capital raise is not canceled
-        _verifyCapitalRaisedNotCanceled();
-
-        // Verify that the capital raise has ended
-        _verifyCapitalRaiseHasEnded();
-
-        // Verify that the refund period is over
-        _verifyRefundPeriodIsOver();
-
+    function withdrawRaisedCapital()
+        external
+        onlyProject
+        whenNotPaused
+        whenRaiseNotCanceled
+        whenRaiseHasEnded
+        whenRefundPeriodIsOver
+    {
         // Verify that the project can withdraw capital
         _verifyCanWithdrawCapital();
 
@@ -218,7 +254,7 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
         uint256 referrerFee = (capitalRaiseConfig.referrerFeeOnCapitalRaisedBps * _totalCapitalRaised)
             / Constants.BASIS_POINTS_DENOMINATOR;
 
-        // Emit successfully CapitalWithdrawn
+        // Emit CapitalWithdrawn
         emit CapitalWithdrawn(_totalCapitalRaised);
 
         // Transfer the amount to the Project's address
@@ -240,10 +276,7 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
     }
 
     /// @inheritdoc ILegionCapitalRaise
-    function cancel() external onlyProject whenNotPaused {
-        // Verify that the capital raise has not been canceled
-        _verifyCapitalRaisedNotCanceled();
-
+    function cancel() external onlyProject whenNotPaused whenRaiseNotCanceled {
         // Cache the amount of funds to be returned to the capital raise
         // The project should return the total capital raised including the charged fees
         uint256 capitalToReturn = s_capitalRaiseStatus.totalCapitalWithdrawn;
@@ -251,7 +284,7 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
         // Mark the capital raise as canceled
         s_capitalRaiseStatus.isCanceled = true;
 
-        // Emit successfully CapitalRaiseCanceled
+        // Emit CapitalRaiseCanceled
         emit CapitalRaiseCanceled();
 
         // In case there's capital to return, transfer the funds back to the contract
@@ -264,15 +297,12 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
     }
 
     /// @inheritdoc ILegionCapitalRaise
-    function withdrawInvestedCapitalIfCanceled() external whenNotPaused {
+    function withdrawInvestedCapitalIfCanceled() external whenNotPaused whenRaiseCanceled {
         // Get the investor position ID
         uint256 positionId = _getInvestorPositionId(msg.sender);
 
         // Verify that the position exists
         _verifyPositionExists(positionId);
-
-        // Verify that the capital raise has been canceled
-        _verifyCapitalRaiseIsCanceled();
 
         // Cache the amount to refund in memory
         uint256 amountToClaim = s_investorPositions[positionId].investedCapital;
@@ -286,7 +316,7 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
         // Decrement total capital invested from all investors
         s_capitalRaiseStatus.totalCapitalInvested -= amountToClaim;
 
-        // Emit successfully CapitalRefundedAfterCancel
+        // Emit CapitalRefundedAfterCancel
         emit CapitalRefundedAfterCancel(amountToClaim, msg.sender, positionId);
 
         // Transfer the refunded amount back to the investor
@@ -302,15 +332,13 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
     )
         external
         whenNotPaused
+        whenRaiseNotCanceled
     {
         // Get the investor position ID
         uint256 positionId = _getInvestorPositionId(msg.sender);
 
         // Verify that the position exists
         _verifyPositionExists(positionId);
-
-        // Verify that the capital raise has not been canceled
-        _verifyCapitalRaisedNotCanceled();
 
         // Verify that the signature has not been used
         _verifySignatureNotUsed(claimExcessSignature);
@@ -339,7 +367,7 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
         // Verify that the investor position is valid
         _verifyValidPosition(claimExcessSignature, positionId, CapitalRaiseAction.WITHDRAW_EXCESS_CAPITAL);
 
-        // Emit successfully ExcessCapitalWithdrawn
+        // Emit ExcessCapitalWithdrawn
         emit ExcessCapitalWithdrawn(amount, msg.sender, positionId);
 
         // Transfer the excess capital to the investor
@@ -347,14 +375,8 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
     }
 
     /// @inheritdoc ILegionCapitalRaise
-    function end() external onlyLegionOrProject whenNotPaused {
-        // Verify that the capital raise has not ended
-        _verifyCapitalRaiseHasNotEnded();
-
-        // Verify that the capital raise has not been canceled
-        _verifyCapitalRaisedNotCanceled();
-
-        // Update the `hasEnded` status to ture
+    function end() external onlyLegionOrProject whenNotPaused whenRaiseNotEnded whenRaiseNotCanceled {
+        // Update the `hasEnded` status to true
         s_capitalRaiseStatus.hasEnded = true;
 
         // Set the `endTime` of the capital raise
@@ -363,28 +385,26 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
         // Set the `refundEndTime` of the capital raise
         s_capitalRaiseStatus.refundEndTime = uint64(block.timestamp) + s_capitalRaiseConfig.refundPeriodSeconds;
 
-        // Emit successfully CapitalRaiseEnded
+        // Emit CapitalRaiseEnded
         emit CapitalRaiseEnded();
     }
 
     /// @inheritdoc ILegionCapitalRaise
-    function publishRaisedCapital(uint256 capitalRaised) external onlyLegion whenNotPaused {
-        // Verify that the capital raise is not canceled
-        _verifyCapitalRaisedNotCanceled();
-
-        // Verify that the capital raise has ended
-        _verifyCapitalRaiseHasEnded();
-
-        // Verify that the refund period is over
-        _verifyRefundPeriodIsOver();
-
+    function publishRaisedCapital(uint256 capitalRaised)
+        external
+        onlyLegion
+        whenNotPaused
+        whenRaiseNotCanceled
+        whenRaiseHasEnded
+        whenRefundPeriodIsOver
+    {
         // Verify that capital raised can be published.
         _verifyCanPublishCapitalRaised();
 
         // Set the total capital raised to be withdrawn by the project
         s_capitalRaiseStatus.totalCapitalRaised = capitalRaised;
 
-        // Emit successfully CapitalRaisedPublished
+        // Emit CapitalRaisedPublished
         emit CapitalRaisedPublished(capitalRaised);
     }
 
@@ -398,16 +418,10 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
         override
         onlyLegion
         whenNotPaused
+        whenRaiseNotCanceled
+        whenRaiseHasEnded
+        whenRefundPeriodIsOver
     {
-        // Verify that the capital raise is not canceled
-        _verifyCapitalRaisedNotCanceled();
-
-        // Verify that the capital raise has ended
-        _verifyCapitalRaiseHasEnded();
-
-        // Verify that the refund period is over
-        _verifyRefundPeriodIsOver();
-
         // Verify that the position can be transferred
         _verifyCanTransferInvestorPosition(positionId);
 
@@ -426,16 +440,10 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
         virtual
         override
         whenNotPaused
+        whenRaiseNotCanceled
+        whenRaiseHasEnded
+        whenRefundPeriodIsOver
     {
-        // Verify that the capital raise is not canceled
-        _verifyCapitalRaisedNotCanceled();
-
-        // Verify that the capital raise has ended
-        _verifyCapitalRaiseHasEnded();
-
-        // Verify that the refund period is over
-        _verifyRefundPeriodIsOver();
-
         // Verify the signature for transferring the position
         _verifyTransferSignature(from, to, positionId, s_capitalRaiseConfig.legionSigner, signature);
 
@@ -521,7 +529,7 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
         s_capitalRaiseConfig.legionFeeReceiver = ILegionAddressRegistry(s_capitalRaiseConfig.addressRegistry)
             .getLegionAddress(Constants.LEGION_FEE_RECEIVER_ID);
 
-        // Emit successfully LegionAddressesSynced
+        // Emit LegionAddressesSynced
         emit LegionAddressesSynced(
             s_capitalRaiseConfig.legionBouncer,
             s_capitalRaiseConfig.legionSigner,

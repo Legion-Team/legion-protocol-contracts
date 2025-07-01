@@ -63,7 +63,7 @@ contract LegionLinearVesting is VestingWalletUpgradeable {
         s_cliffEndTimestamp = startTimestamp + cliffDurationSeconds;
     }
 
-    //// @notice Returns the timestamp when the cliff period ends.
+    /// @notice Returns the timestamp when the cliff period ends.
     /// @dev Indicates when tokens become releasable.
     /// @return The Unix timestamp (seconds) of the cliff end.
     function cliffEndTimestamp() external view returns (uint64) {

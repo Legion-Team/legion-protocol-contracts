@@ -32,6 +32,13 @@ contract LegionFixedPriceSale is LegionAbstractSale, ILegionFixedPriceSale {
     /// @dev Struct containing the fixed-price sale configuration
     FixedPriceSaleConfiguration private s_fixedPriceSaleConfig;
 
+    /// @notice Restricts interaction to when the prefund allocation period is not active.
+    /// @dev Reverts if the current time is within the prefund allocation period.
+    modifier whenNotPrefundAllocationPeriod() {
+        _verifyNotPrefundAllocationPeriod();
+        _;
+    }
+
     /// @inheritdoc ILegionFixedPriceSale
     function initialize(
         LegionSaleInitializationParams calldata saleInitParams,
@@ -62,7 +69,16 @@ contract LegionFixedPriceSale is LegionAbstractSale, ILegionFixedPriceSale {
     }
 
     /// @inheritdoc ILegionFixedPriceSale
-    function invest(uint256 amount, bytes calldata signature) external whenNotPaused {
+    function invest(
+        uint256 amount,
+        bytes calldata signature
+    )
+        external
+        whenNotPaused
+        whenNotPrefundAllocationPeriod
+        whenSaleNotEnded
+        whenSaleNotCanceled
+    {
         // Check if the investor has already invested
         // If not, create a new investor position
         uint256 positionId = _getInvestorPositionId(msg.sender) == 0
@@ -71,15 +87,6 @@ contract LegionFixedPriceSale is LegionAbstractSale, ILegionFixedPriceSale {
 
         // Verify that the investor is allowed to invest capital
         _verifyInvestSignature(signature);
-
-        // Verify that investment is not during the prefund allocation period
-        _verifyNotPrefundAllocationPeriod();
-
-        // Verify that the sale has not ended
-        _verifySaleHasNotEnded();
-
-        // Verify that the sale is not canceled
-        _verifySaleNotCanceled();
 
         // Verify that the amount invested is more than the minimum required
         _verifyMinimumInvestAmount(amount);
@@ -115,13 +122,10 @@ contract LegionFixedPriceSale is LegionAbstractSale, ILegionFixedPriceSale {
     )
         external
         onlyLegion
+        whenNotPaused
+        whenSaleNotCanceled
+        whenRefundPeriodIsOver
     {
-        // Verify that the sale is not canceled
-        _verifySaleNotCanceled();
-
-        // Verify that the refund period is over
-        _verifyRefundPeriodIsOver();
-
         // Verify that sale results are not already published
         _verifyCanPublishSaleResults();
 

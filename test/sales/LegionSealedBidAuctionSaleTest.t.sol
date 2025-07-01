@@ -815,7 +815,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @notice Tests successful pausing of the sale by the Legion admin
      * @dev Verifies that the Paused event is emitted when paused by legionBouncer
      */
-    function test_pauseSale_successfullyPauseTheSale() public {
+    function test_pause_successfullyPauseTheSale() public {
         // Arrange
         prepareCreateLegionSealedBidAuction();
 
@@ -832,7 +832,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @notice Tests successful unpausing of the sale by the Legion admin
      * @dev Verifies that the Unpaused event is emitted after pausing and unpausing
      */
-    function test_unpauseSale_successfullyUnpauseTheSale() public {
+    function test_unpause_successfullyUnpauseTheSale() public {
         // Arrange
         prepareCreateLegionSealedBidAuction();
 
@@ -852,7 +852,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @notice Tests that pausing the sale by a non-Legion admin reverts
      * @dev Expects LegionSale__NotCalledByLegion revert when called by nonLegionAdmin
      */
-    function testFuzz_pauseSale_revertsIfCalledByNonLegionAdmin(address nonLegionAdmin) public {
+    function testFuzz_pause_revertsIfCalledByNonLegionAdmin(address nonLegionAdmin) public {
         // Arrange
         vm.assume(nonLegionAdmin != legionBouncer);
         prepareCreateLegionSealedBidAuction();
@@ -869,7 +869,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @notice Tests that unpausing the sale by a non-Legion admin reverts
      * @dev Expects LegionSale__NotCalledByLegion revert when called by nonLegionAdmin after pausing
      */
-    function testFuzz_unpauseSale_revertsIfNotCalledByLegionAdmin(address nonLegionAdmin) public {
+    function testFuzz_unpause_revertsIfNotCalledByLegionAdmin(address nonLegionAdmin) public {
         // Arrange
         vm.assume(nonLegionAdmin != legionBouncer);
         prepareCreateLegionSealedBidAuction();
@@ -1335,7 +1335,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @notice Tests successful cancellation of the sale by the project admin
      * @dev Verifies that the SaleCanceled event is emitted before results are published
      */
-    function test_cancelSale_successfullyEmitsSaleCanceled() public {
+    function test_cancel_successfullyEmitsSaleCanceled() public {
         // Arrange
         prepareCreateLegionSealedBidAuction();
 
@@ -1352,7 +1352,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @notice Tests that canceling an already canceled sale reverts
      * @dev Expects LegionSale__SaleIsCanceled revert after initial cancellation
      */
-    function test_cancelSale_revertsIfSaleAlreadyCanceled() public {
+    function test_cancel_revertsIfSaleAlreadyCanceled() public {
         // Arrange
         prepareCreateLegionSealedBidAuction();
 
@@ -1368,36 +1368,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
     }
 
     /**
-     * @notice Tests that canceling after results are published reverts
-     * @dev Expects LegionSale__SaleResultsAlreadyPublished revert after publishing results
-     */
-    function test_cancelSale_revertsIfResultsArePublished() public {
-        // Arrange
-        prepareCreateLegionSealedBidAuction();
-
-        vm.warp(refundEndTime() + 1);
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, acceptedCapitalMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
-        );
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleResultsAlreadyPublished.selector));
-
-        // Act
-        vm.prank(projectAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancel();
-    }
-
-    /**
      * @notice Tests that canceling by a non-project admin reverts
      * @dev Expects LegionSale__NotCalledByProject revert when called by investor1
      */
-    function testFuzz_cancelSale_revertsIfCalledByNonProjectAdmin(address nonProjectAdmin) public {
+    function testFuzz_cancel_revertsIfCalledByNonProjectAdmin(address nonProjectAdmin) public {
         // Arrange
         vm.assume(nonProjectAdmin != projectAdmin);
         prepareCreateLegionSealedBidAuction();
@@ -1414,7 +1388,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @notice Tests that canceling after cancel is locked reverts
      * @dev Expects LegionSale__CancelLocked revert after initializing publish sale results
      */
-    function test_cancelSale_revertsIfCancelIsLocked() public {
+    function test_cancel_revertsIfCancelIsLocked() public {
         // Arrange
         prepareCreateLegionSealedBidAuction();
 
