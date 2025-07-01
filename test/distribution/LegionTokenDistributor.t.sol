@@ -439,7 +439,7 @@ contract LegionTokenDistributorTest is Test {
      * @notice Tests successful pausing of the sale by Legion admin
      * @dev Expects Paused event emission when paused by legionBouncer
      */
-    function test_pauseSale_successfullyPauseTheSale() public {
+    function test_pause_successfullyPauseTheSale() public {
         // Arrange
         prepareCreateLegionTokenDistributor();
 
@@ -456,7 +456,7 @@ contract LegionTokenDistributorTest is Test {
      * @notice Tests that pausing the sale by a non-Legion admin reverts
      * @dev Expects LegionSale__NotCalledByLegion revert when called by nonLegionAdmin
      */
-    function testFuzz_pauseSale_revertsIfCalledByNonLegionAdmin(address nonLegionAdmin) public {
+    function testFuzz_pause_revertsIfCalledByNonLegionAdmin(address nonLegionAdmin) public {
         // Arrange
         vm.assume(nonLegionAdmin != legionBouncer);
         prepareCreateLegionTokenDistributor();
@@ -473,7 +473,7 @@ contract LegionTokenDistributorTest is Test {
      * @notice Tests successful unpausing of the sale by Legion admin
      * @dev Expects Unpaused event emission after pausing and unpausing
      */
-    function test_unpauseSale_successfullyUnpauseTheSale() public {
+    function test_unpause_successfullyUnpauseTheSale() public {
         // Arrange
         prepareCreateLegionTokenDistributor();
 
@@ -493,7 +493,7 @@ contract LegionTokenDistributorTest is Test {
      * @notice Tests that unpausing the sale by a non-Legion admin reverts
      * @dev Expects LegionSale__NotCalledByLegion revert when called by nonLegionAdmin
      */
-    function testFuzz_unpauseSale_revertsIfNotCalledByLegionAdmin(address nonLegionAdmin) public {
+    function testFuzz_unpause_revertsIfNotCalledByLegionAdmin(address nonLegionAdmin) public {
         // Arrange
         vm.assume(nonLegionAdmin != legionBouncer);
         prepareCreateLegionTokenDistributor();

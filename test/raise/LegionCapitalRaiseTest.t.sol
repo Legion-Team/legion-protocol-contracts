@@ -908,7 +908,7 @@ contract LegionCapitalRaiseTest is Test {
      * @notice Tests successful capital raise cancellation with no capital to return
      * @dev Expects SaleCanceled event emission when no capital remains
      */
-    function test_cancelSale_successfullyEmitsSaleCanceledWithNoCapitalToReturn() public {
+    function test_cancel_successfullyEmitsSaleCanceledWithNoCapitalToReturn() public {
         // Arrange
         prepareCreateLegionCapitalRaise();
         prepareMintAndApproveTokens();
@@ -936,7 +936,7 @@ contract LegionCapitalRaiseTest is Test {
      * @notice Tests successful capital raise cancellation with capital to return
      * @dev Expects SaleCanceled event emission after capital is withdrawn
      */
-    function test_cancelSale_successfullyEmitsSaleCanceledWithCapitalToReturn() public {
+    function test_cancel_successfullyEmitsSaleCanceledWithCapitalToReturn() public {
         // Arrange
         prepareCreateLegionCapitalRaise();
         prepareMintAndApproveTokens();
@@ -978,7 +978,7 @@ contract LegionCapitalRaiseTest is Test {
      * @notice Tests that canceling an already canceled capital raise reverts
      * @dev Expects LegionSale__SaleIsCanceled revert when capital raise is already canceled
      */
-    function test_cancelSale_revertsIfSaleIsAlreadyCanceled() public {
+    function test_cancel_revertsIfSaleIsAlreadyCanceled() public {
         // Arrange
         prepareCreateLegionCapitalRaise();
         prepareMintAndApproveTokens();
@@ -1008,7 +1008,7 @@ contract LegionCapitalRaiseTest is Test {
      * @notice Tests that canceling by a non-project admin reverts
      * @dev Expects LegionSale__NotCalledByProject revert when called by nonProjectAdmin
      */
-    function testFuzz_cancelSale_revertsIfCalledByNonProjectAdmin(address nonProjectAdmin) public {
+    function testFuzz_cancel_revertsIfCalledByNonProjectAdmin(address nonProjectAdmin) public {
         // Arrange
         vm.assume(nonProjectAdmin != projectAdmin);
         prepareCreateLegionCapitalRaise();
@@ -1094,7 +1094,7 @@ contract LegionCapitalRaiseTest is Test {
      * @dev Expects CapitalRaisedPublished event emission with correct amount after capital raise ends and refund period
      * expires
      */
-    function test_publishCapitalRaised_successfullyEmitsCapitalRaisedPublished() public {
+    function test_publishRaisedCapital_successfullyEmitsCapitalRaisedPublished() public {
         // Arrange
         prepareCreateLegionCapitalRaise();
 
@@ -1116,7 +1116,7 @@ contract LegionCapitalRaiseTest is Test {
      * @notice Test case: Attempt to publish capital raised by non-legion admin
      * @dev Expects LegionSale__NotCalledByLegion revert when called by an unauthorized address
      */
-    function testFuzz_publishCapitalRaised_revertsIfCalledByNonLegionAdmin(address nonLegionAdmin) public {
+    function testFuzz_publishRaisedCapital_revertsIfCalledByNonLegionAdmin(address nonLegionAdmin) public {
         // Arrange
         vm.assume(nonLegionAdmin != legionBouncer);
         prepareCreateLegionCapitalRaise();
@@ -1138,7 +1138,7 @@ contract LegionCapitalRaiseTest is Test {
      * @notice Test case: Attempt to publish capital if capital raise is canceled
      * @dev Expects LegionSale__SaleIsCanceled revert when attempting to publish after capital raise cancellation
      */
-    function test_publishCapitalRaised_revertsIfSaleIsCanceled() public {
+    function test_publishRaisedCapital_revertsIfSaleIsCanceled() public {
         // Arrange
         prepareCreateLegionCapitalRaise();
 
@@ -1162,7 +1162,7 @@ contract LegionCapitalRaiseTest is Test {
      * @notice Test case: Attempt to publish capital if capital raise has not ended
      * @dev Expects LegionSale__SaleHasNotEnded revert when capital raise is still active
      */
-    function test_publishCapitalRaised_revertsIfSaleHasNotEnded() public {
+    function test_publishRaisedCapital_revertsIfSaleHasNotEnded() public {
         // Arrange
         prepareCreateLegionCapitalRaise();
 
@@ -1178,7 +1178,7 @@ contract LegionCapitalRaiseTest is Test {
      * @notice Test case: Attempt to publish capital if refund period is not over
      * @dev Expects LegionSale__RefundPeriodIsNotOver revert when called before refund period expires
      */
-    function test_publishCapitalRaised_revertsIfRefundPeriodIsNotOver() public {
+    function test_publishRaisedCapital_revertsIfRefundPeriodIsNotOver() public {
         // Arrange
         prepareCreateLegionCapitalRaise();
 
@@ -1199,7 +1199,7 @@ contract LegionCapitalRaiseTest is Test {
      * @notice Test case: Attempt to publish capital raised if already published
      * @dev Expects LegionSale__CapitalRaisedAlreadyPublished revert when attempting to publish twice
      */
-    function test_publishCapitalRaised_revertsIfCapitalAlreadyPublished() public {
+    function test_publishRaisedCapital_revertsIfCapitalAlreadyPublished() public {
         // Arrange
         prepareCreateLegionCapitalRaise();
 
@@ -1749,7 +1749,7 @@ contract LegionCapitalRaiseTest is Test {
      * @notice Test case: Successfully end capital raise by project admin
      * @dev Expects SaleEnded event emission when project admin ends the capital raise
      */
-    function test_endSale_successfullyEndsSale() public {
+    function test_end_successfullyEndsSale() public {
         // Arrange
         prepareCreateLegionCapitalRaise();
         prepareMintAndApproveTokens();
@@ -1769,7 +1769,7 @@ contract LegionCapitalRaiseTest is Test {
      * @notice Test case: Attempt to end capital raise without project admin permissions
      * @dev Expects LegionSale__NotCalledByLegionOrProject revert when called by non-project admin
      */
-    function testFuzz_endSale_revertsIfCalledByNonProjectOrNonLegionAdmin(address nonProjectOrLegionAdmin) public {
+    function testFuzz_end_revertsIfCalledByNonProjectOrNonLegionAdmin(address nonProjectOrLegionAdmin) public {
         // Arrange
         vm.assume(nonProjectOrLegionAdmin != projectAdmin && nonProjectOrLegionAdmin != legionBouncer);
         prepareCreateLegionCapitalRaise();

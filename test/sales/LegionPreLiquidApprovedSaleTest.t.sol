@@ -676,7 +676,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
      * @notice Tests successful pausing of the sale by Legion admin
      * @dev Expects Paused event emission when paused by legionBouncer
      */
-    function test_pauseSale_successfullyPauseTheSale() public {
+    function test_pause_successfullyPauseTheSale() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
 
@@ -693,7 +693,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
      * @notice Tests that pausing the sale by a non-Legion admin reverts
      * @dev Expects LegionSale__NotCalledByLegion revert when called by nonLegionAdmin
      */
-    function testFuzz_pauseSale_revertsIfCalledByNonLegionAdmin(address nonLegionAdmin) public {
+    function testFuzz_pause_revertsIfCalledByNonLegionAdmin(address nonLegionAdmin) public {
         // Arrange
         vm.assume(nonLegionAdmin != legionBouncer);
         prepareCreateLegionPreLiquidSale();
@@ -710,7 +710,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
      * @notice Tests successful unpausing of the sale by Legion admin
      * @dev Expects Unpaused event emission after pausing and unpausing
      */
-    function test_unpauseSale_successfullyUnpauseTheSale() public {
+    function test_unpause_successfullyUnpauseTheSale() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
 
@@ -730,7 +730,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
      * @notice Tests that unpausing the sale by a non-Legion admin reverts
      * @dev Expects LegionSale__NotCalledByLegion revert when called by nonLegionAdmin
      */
-    function testFuzz_unpauseSale_revertsIfNotCalledByLegionAdmin(address nonLegionAdmin) public {
+    function testFuzz_unpause_revertsIfNotCalledByLegionAdmin(address nonLegionAdmin) public {
         // Arrange
         vm.assume(nonLegionAdmin != legionBouncer);
         prepareCreateLegionPreLiquidSale();
@@ -1044,7 +1044,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
      * @notice Tests successful sale cancellation with no capital to return
      * @dev Expects SaleCanceled event emission when no capital remains
      */
-    function test_cancelSale_successfullyEmitsSaleCanceledWithNoCapitalToReturn() public {
+    function test_cancel_successfullyEmitsSaleCanceledWithNoCapitalToReturn() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
         prepareMintAndApproveTokens();
@@ -1072,7 +1072,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
      * @notice Tests successful sale cancellation with capital to return
      * @dev Expects SaleCanceled event emission after capital is withdrawn
      */
-    function test_cancelSale_successfullyEmitsSaleCanceledWithCapitalToReturn() public {
+    function test_cancel_successfullyEmitsSaleCanceledWithCapitalToReturn() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
         prepareMintAndApproveTokens();
@@ -1114,7 +1114,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
      * @notice Tests that canceling an already canceled sale reverts
      * @dev Expects LegionSale__SaleIsCanceled revert when sale is already canceled
      */
-    function test_cancelSale_revertsIfSaleIsAlreadyCanceled() public {
+    function test_cancel_revertsIfSaleIsAlreadyCanceled() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
         prepareMintAndApproveTokens();
@@ -1144,7 +1144,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
      * @notice Tests that canceling by a non-project admin reverts
      * @dev Expects LegionSale__NotCalledByProject revert when called by nonProjectAdmin
      */
-    function testFuzz_cancelSale_revertsIfCalledByNonProjectAdmin(address nonProjectAdmin) public {
+    function testFuzz_cancel_revertsIfCalledByNonProjectAdmin(address nonProjectAdmin) public {
         // Arrange
         vm.assume(nonProjectAdmin != projectAdmin);
         prepareCreateLegionPreLiquidSale();
@@ -1172,7 +1172,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
      * @notice Tests that canceling after tokens are supplied reverts
      * @dev Expects LegionSale__TokensAlreadySupplied revert when tokens are supplied
      */
-    function test_cancelSale_revertsIfAskTokensHaveBeenSupplied() public {
+    function test_cancel_revertsIfAskTokensHaveBeenSupplied() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
         prepareMintAndApproveTokens();
@@ -1663,7 +1663,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
      * @notice Test case: Successfully publish capital raised and accepted capital merkle root
      * @dev Expects CapitalRaisedPublished event emission with correct amount after sale ends and refund period expires
      */
-    function test_publishCapitalRaised_successfullyEmitsCapitalRaisedPublished() public {
+    function test_publishRaisedCapital_successfullyEmitsCapitalRaisedPublished() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
 
@@ -1685,7 +1685,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
      * @notice Test case: Attempt to publish capital raised by non-legion admin
      * @dev Expects LegionSale__NotCalledByLegion revert when called by an unauthorized address
      */
-    function testFuzz_publishCapitalRaised_revertsIfCalledByNonLegionAdmin(address nonLegionAdmin) public {
+    function testFuzz_publishRaisedCapital_revertsIfCalledByNonLegionAdmin(address nonLegionAdmin) public {
         // Arrange
         vm.assume(nonLegionAdmin != legionBouncer);
         prepareCreateLegionPreLiquidSale();
@@ -1707,7 +1707,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
      * @notice Test case: Attempt to publish capital if sale is canceled
      * @dev Expects LegionSale__SaleIsCanceled revert when attempting to publish after sale cancellation
      */
-    function test_publishCapitalRaised_revertsIfSaleIsCanceled() public {
+    function test_publishRaisedCapital_revertsIfSaleIsCanceled() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
 
@@ -1731,7 +1731,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
      * @notice Test case: Attempt to publish capital if sale has not ended
      * @dev Expects LegionSale__SaleHasNotEnded revert when sale is still active
      */
-    function test_publishCapitalRaised_revertsIfSaleHasNotEnded() public {
+    function test_publishRaisedCapital_revertsIfSaleHasNotEnded() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
 
@@ -1747,7 +1747,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
      * @notice Test case: Attempt to publish capital if refund period is not over
      * @dev Expects LegionSale__RefundPeriodIsNotOver revert when called before refund period expires
      */
-    function test_publishCapitalRaised_revertsIfRefundPeriodIsNotOver() public {
+    function test_publishRaisedCapital_revertsIfRefundPeriodIsNotOver() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
 
@@ -1768,7 +1768,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
      * @notice Test case: Attempt to publish capital raised if already published
      * @dev Expects LegionSale__CapitalRaisedAlreadyPublished revert when attempting to publish twice
      */
-    function test_publishCapitalRaised_revertsIfCapitalAlreadyPublished() public {
+    function test_publishRaisedCapital_revertsIfCapitalAlreadyPublished() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
 
@@ -2947,7 +2947,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
      * @notice Test case: Successfully end sale by project admin
      * @dev Expects SaleEnded event emission when project admin ends the sale
      */
-    function test_endSale_successfullyEndsSale() public {
+    function test_end_successfullyEndsSale() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
         prepareMintAndApproveTokens();
@@ -2967,7 +2967,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
      * @notice Test case: Attempt to end sale without project admin permissions
      * @dev Expects LegionSale__NotCalledByLegionOrProject revert when called by non-project admin
      */
-    function testFuzz_endSale_revertsIfCalledByNonProjectOrNonLegionAdmin(address nonProjectOrLegionAdmin) public {
+    function testFuzz_end_revertsIfCalledByNonProjectOrNonLegionAdmin(address nonProjectOrLegionAdmin) public {
         // Arrange
         vm.assume(nonProjectOrLegionAdmin != projectAdmin && nonProjectOrLegionAdmin != legionBouncer);
         prepareCreateLegionPreLiquidSale();

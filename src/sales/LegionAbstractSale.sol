@@ -82,6 +82,78 @@ abstract contract LegionAbstractSale is
         _;
     }
 
+    /// @notice Restricts interaction to when the sale is canceled.
+    /// @dev Reverts if the sale is not canceled.
+    modifier whenSaleCanceled() {
+        // Verify that the sale is canceled
+        _verifySaleIsCanceled();
+        _;
+    }
+
+    /// @notice Restricts interaction to when the sale is not canceled.
+    /// @dev Reverts if the sale is canceled.
+    modifier whenSaleNotCanceled() {
+        // Verify that the sale is not canceled
+        _verifySaleNotCanceled();
+        _;
+    }
+
+    /// @notice Restricts interaction to when the sale is not ended
+    /// @dev Reverts if the sale has ended.
+    modifier whenSaleNotEnded() {
+        // Verify that the sale has not ended
+        _verifySaleHasNotEnded();
+        _;
+    }
+
+    /// @notice Restricts interaction to when the refund period is over.
+    /// @dev Reverts if the refund period is not over.
+    modifier whenRefundPeriodIsOver() {
+        // Verify that the refund period is over
+        _verifyRefundPeriodIsOver();
+        _;
+    }
+
+    /// @notice Restricts interaction to when the refund period is not over.
+    /// @dev Reverts if the refund period is over.
+    modifier whenRefundPeriodNotOver() {
+        // Verify that the refund period is not over
+        _verifyRefundPeriodIsNotOver();
+        _;
+    }
+
+    /// @notice Restricts interaction to when tokens have not been supplied for distribution.
+    /// @dev Reverts if tokens have been supplied.
+    modifier whenTokensNotSupplied() {
+        // Verify that no tokens have been supplied to the sale by the Project
+        _verifyTokensNotSupplied();
+        _;
+    }
+
+    /// @notice Restricts interaction to when tokens have been supplied for distribution.
+    /// @dev Reverts if tokens have not been supplied.
+    modifier whenTokensSupplied() {
+        // Verify that tokens have been supplied to the sale by the Project
+        _verifyTokensSupplied();
+        _;
+    }
+
+    /// @notice Restricts interaction to when the sale results have been published.
+    /// @dev Reverts if sale results have not been published.
+    modifier whenSaleResultsArePublished() {
+        // Verify that sale results have been published
+        _verifySaleResultsArePublished();
+        _;
+    }
+
+    /// @notice Restricts interaction to when the sale results have not been published.
+    /// @dev Reverts if sale results have been published.
+    modifier whenSaleResultsNotPublished() {
+        // Verify that sale results have not been published
+        _verifySaleResultsNotPublished();
+        _;
+    }
+
     /// @notice Constructor for the LegionAbstractSale contract.
     /// @dev Prevents the implementation contract from being initialized directly.
     constructor() {
@@ -90,18 +162,12 @@ abstract contract LegionAbstractSale is
     }
 
     /// @inheritdoc ILegionAbstractSale
-    function refund() external virtual whenNotPaused {
+    function refund() external virtual whenNotPaused whenRefundPeriodNotOver whenSaleNotCanceled {
         // Get the investor position ID
         uint256 positionId = _getInvestorPositionId(msg.sender);
 
         // Verify that the position exists
         _verifyPositionExists(positionId);
-
-        // Verify that the refund period is not over
-        _verifyRefundPeriodIsNotOver();
-
-        // Verify that the sale is not canceled
-        _verifySaleNotCanceled();
 
         // Verify that the investor has not refunded
         _verifyHasNotRefunded(positionId);
@@ -126,21 +192,18 @@ abstract contract LegionAbstractSale is
     }
 
     /// @inheritdoc ILegionAbstractSale
-    function withdrawRaisedCapital() external virtual onlyProject whenNotPaused {
-        // Verify that the refund period is over
-        _verifyRefundPeriodIsOver();
-
-        // Verify that the sale is not canceled
-        _verifySaleNotCanceled();
-
-        // Verify that sale results have been published
-        _verifySaleResultsArePublished();
-
+    function withdrawRaisedCapital()
+        external
+        virtual
+        onlyProject
+        whenNotPaused
+        whenRefundPeriodIsOver
+        whenSaleNotCanceled
+        whenSaleResultsArePublished
+        whenTokensSupplied
+    {
         // Verify that the project can withdraw capital
         _verifyCanWithdrawCapital();
-
-        // Verify that tokens have been supplied for distribution
-        _verifyTokensSupplied();
 
         // Flag that the capital has been withdrawn
         s_saleStatus.capitalWithdrawn = true;
@@ -190,6 +253,9 @@ abstract contract LegionAbstractSale is
         external
         virtual
         whenNotPaused
+        whenSaleNotCanceled
+        whenRefundPeriodIsOver
+        whenSaleResultsArePublished
     {
         // Get the investor position ID
         uint256 positionId = _getInvestorPositionId(msg.sender);
@@ -197,17 +263,11 @@ abstract contract LegionAbstractSale is
         // Verify that the position exists
         _verifyPositionExists(positionId);
 
-        // Verify that the sale is not canceled
-        _verifySaleNotCanceled();
+        // Verify that the investor has not refunded
+        _verifyHasNotRefunded(positionId);
 
         // Verify that the vesting configuration is valid
         _verifyValidVestingConfig(investorVestingConfig);
-
-        // Verify that the refund period is over
-        _verifyRefundPeriodIsOver();
-
-        // Verify that sales results have been published
-        _verifySaleResultsArePublished();
 
         // Verify that the investor is eligible to claim the requested amount
         _verifyCanClaimTokenAllocation(msg.sender, amount, investorVestingConfig, proof);
@@ -250,15 +310,20 @@ abstract contract LegionAbstractSale is
     }
 
     /// @inheritdoc ILegionAbstractSale
-    function withdrawExcessInvestedCapital(uint256 amount, bytes32[] calldata proof) external virtual whenNotPaused {
+    function withdrawExcessInvestedCapital(
+        uint256 amount,
+        bytes32[] calldata proof
+    )
+        external
+        virtual
+        whenNotPaused
+        whenSaleNotCanceled
+    {
         // Get the investor position ID
         uint256 positionId = _getInvestorPositionId(msg.sender);
 
         // Verify that the position exists
         _verifyPositionExists(positionId);
-
-        // Verify that the sale is not canceled
-        _verifySaleNotCanceled();
 
         // Verify that the investor has not refunded
         _verifyHasNotRefunded(positionId);
@@ -310,15 +375,11 @@ abstract contract LegionAbstractSale is
         virtual
         onlyProject
         whenNotPaused
+        whenSaleNotCanceled
+        whenTokensNotSupplied
     {
-        // Verify that the sale is not canceled
-        _verifySaleNotCanceled();
-
         // Verify that tokens can be supplied for distribution
         _verifyCanSupplyTokens(amount);
-
-        // Verify that tokens have not been supplied
-        _verifyTokensNotSupplied();
 
         // Flag that tokens have been supplied
         s_saleStatus.tokensSupplied = true;
@@ -369,13 +430,7 @@ abstract contract LegionAbstractSale is
     }
 
     /// @inheritdoc ILegionAbstractSale
-    function setAcceptedCapital(bytes32 merkleRoot) external virtual onlyLegion {
-        // Verify that the sale is not canceled
-        _verifySaleNotCanceled();
-
-        // Verify that the sale has not ended
-        _verifySaleHasNotEnded();
-
+    function setAcceptedCapital(bytes32 merkleRoot) external virtual onlyLegion whenSaleNotCanceled whenSaleNotEnded {
         // Set the merkle root for accepted capital
         s_saleStatus.acceptedCapitalMerkleRoot = merkleRoot;
 
@@ -384,15 +439,15 @@ abstract contract LegionAbstractSale is
     }
 
     /// @inheritdoc ILegionAbstractSale
-    function withdrawInvestedCapitalIfCanceled() external virtual whenNotPaused {
+    function withdrawInvestedCapitalIfCanceled() external virtual whenNotPaused whenSaleCanceled {
         // Get the investor position ID
         uint256 positionId = _getInvestorPositionId(msg.sender);
 
         // Verify that the position exists
         _verifyPositionExists(positionId);
 
-        // Verify that the sale has been canceled
-        _verifySaleIsCanceled();
+        // Verify that the investor has not refunded
+        _verifyHasNotRefunded(positionId);
 
         // Cache the amount to refund in memory
         uint256 amountToWithdraw = s_investorPositions[positionId].investedCapital;
@@ -451,16 +506,10 @@ abstract contract LegionAbstractSale is
         override
         onlyLegion
         whenNotPaused
+        whenSaleNotCanceled
+        whenRefundPeriodIsOver
+        whenTokensNotSupplied
     {
-        // Verify that the sale is not canceled
-        _verifySaleNotCanceled();
-
-        // Verify that the refund period is over
-        _verifyRefundPeriodIsOver();
-
-        // Verify that no tokens have been supplied to the sale by the Project
-        _verifyTokensNotSupplied();
-
         // Verify that the position can be transferred
         _verifyCanTransferInvestorPosition(positionId);
 
@@ -479,16 +528,10 @@ abstract contract LegionAbstractSale is
         virtual
         override
         whenNotPaused
+        whenSaleNotCanceled
+        whenRefundPeriodIsOver
+        whenTokensNotSupplied
     {
-        // Verify that the sale is not canceled
-        _verifySaleNotCanceled();
-
-        // Verify that the refund period is over
-        _verifyRefundPeriodIsOver();
-
-        // Verify that no tokens have been supplied to the sale by the Project
-        _verifyTokensNotSupplied();
-
         // Verify the signature for transferring the position
         _verifyTransferSignature(from, to, positionId, s_addressConfig.legionSigner, transferSignature);
 
@@ -554,13 +597,7 @@ abstract contract LegionAbstractSale is
     }
 
     /// @inheritdoc ILegionAbstractSale
-    function cancel() public virtual onlyProject whenNotPaused {
-        // Allow the Project to cancel the sale at any time until results are published
-        _verifySaleResultsNotPublished();
-
-        // Verify sale has not been canceled
-        _verifySaleNotCanceled();
-
+    function cancel() public virtual onlyProject whenNotPaused whenSaleResultsNotPublished whenSaleNotCanceled {
         // Mark the sale as canceled
         s_saleStatus.isCanceled = true;
 

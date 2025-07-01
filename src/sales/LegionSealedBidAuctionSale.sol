@@ -34,6 +34,22 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
     /// @dev Struct containing the sealed bid auction sale configuration
     SealedBidAuctionSaleConfiguration private s_sealedBidAuctionSaleConfig;
 
+    /// @notice Restricts interaction to when the sale cancelation is locked.
+    /// @dev Reverts if canceling is not locked.
+    modifier whenCancelLocked() {
+        // Verify that canceling is locked
+        _verifyCancelLocked();
+        _;
+    }
+
+    /// @notice Restricts interaction to when the sale cancelation is not locked.
+    /// @dev Reverts if canceling is locked.
+    modifier whenCancelNotLocked() {
+        // Verify that canceling is not locked
+        _verifyCancelNotLocked();
+        _;
+    }
+
     /// @inheritdoc ILegionSealedBidAuctionSale
     function initialize(
         LegionSaleInitializationParams calldata saleInitParams,
@@ -58,7 +74,16 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
     }
 
     /// @inheritdoc ILegionSealedBidAuctionSale
-    function invest(uint256 amount, bytes calldata sealedBid, bytes calldata signature) external whenNotPaused {
+    function invest(
+        uint256 amount,
+        bytes calldata sealedBid,
+        bytes calldata signature
+    )
+        external
+        whenNotPaused
+        whenSaleNotEnded
+        whenSaleNotCanceled
+    {
         // Check if the investor has already invested
         // If not, create a new investor position
         uint256 positionId = _getInvestorPositionId(msg.sender) == 0
@@ -77,12 +102,6 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
 
         // Verify that the provided public key is valid
         _verifyValidPublicKey(sealedBidPublicKey);
-
-        // Verify that the sale has not ended
-        _verifySaleHasNotEnded();
-
-        // Verify that the sale is not canceled
-        _verifySaleNotCanceled();
 
         // Verify that the amount invested is more than the minimum required
         _verifyMinimumInvestAmount(amount);
@@ -107,16 +126,14 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
     }
 
     /// @inheritdoc ILegionSealedBidAuctionSale
-    function initializePublishSaleResults() external onlyLegion {
-        // Verify that the sale is not canceled
-        _verifySaleNotCanceled();
-
-        // Verify that canceling is not locked
-        _verifyCancelNotLocked();
-
-        // Verify that the refund period is over
-        _verifyRefundPeriodIsOver();
-
+    function initializePublishSaleResults()
+        external
+        onlyLegion
+        whenNotPaused
+        whenSaleNotCanceled
+        whenCancelNotLocked
+        whenRefundPeriodIsOver
+    {
         // Verify that sale results are not already published
         _verifyCanPublishSaleResults();
 
@@ -137,16 +154,11 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
     )
         external
         onlyLegion
+        whenNotPaused
+        whenSaleNotCanceled
+        whenRefundPeriodIsOver
+        whenCancelLocked
     {
-        // Verify that the sale is not canceled
-        _verifySaleNotCanceled();
-
-        // Verify that canceling is locked
-        _verifyCancelLocked();
-
-        // Verify that the refund period is over
-        _verifyRefundPeriodIsOver();
-
         // Verify if the provided private key is valid
         _verifyValidPrivateKey(sealedBidPrivateKey);
 
@@ -180,12 +192,15 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
     }
 
     /// @inheritdoc ILegionAbstractSale
-    function cancel() public override(ILegionAbstractSale, LegionAbstractSale) onlyProject whenNotPaused {
+    function cancel()
+        public
+        override(ILegionAbstractSale, LegionAbstractSale)
+        onlyProject
+        whenNotPaused
+        whenCancelNotLocked
+    {
         // Call parent method
         super.cancel();
-
-        // Verify that canceling is not locked
-        _verifyCancelNotLocked();
     }
 
     /// @inheritdoc ILegionSealedBidAuctionSale

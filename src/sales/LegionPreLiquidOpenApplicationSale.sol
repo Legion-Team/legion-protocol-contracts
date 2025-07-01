@@ -34,6 +34,14 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
     /// @dev Struct containing the pre-liquid sale configuration
     PreLiquidSaleConfiguration private s_preLiquidSaleConfig;
 
+    /// @notice Restricts interaction to when the sale has ended.
+    /// @dev Reverts if the sale has not ended.
+    modifier whenSaleEnded() {
+        // Verify that the sale has ended
+        _verifySaleHasEnded();
+        _;
+    }
+
     /// @inheritdoc ILegionPreLiquidOpenApplicationSale
     function initialize(LegionSaleInitializationParams calldata saleInitParams) external initializer {
         // Initialize and set the sale common parameters
@@ -47,7 +55,15 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
     }
 
     /// @inheritdoc ILegionPreLiquidOpenApplicationSale
-    function invest(uint256 amount, bytes calldata signature) external whenNotPaused {
+    function invest(
+        uint256 amount,
+        bytes calldata signature
+    )
+        external
+        whenNotPaused
+        whenSaleNotEnded
+        whenSaleNotCanceled
+    {
         // Check if the investor has already invested
         // If not, create a new investor position
         uint256 positionId = _getInvestorPositionId(msg.sender) == 0
@@ -56,12 +72,6 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
 
         // Verify that the investor is allowed to invest capital
         _verifyInvestSignature(signature);
-
-        // Verify that the sale has not ended
-        _verifySaleHasNotEnded();
-
-        // Verify that the sale is not canceled
-        _verifySaleNotCanceled();
 
         // Verify that the amount invested is more than the minimum required
         _verifyMinimumInvestAmount(amount);
@@ -86,13 +96,7 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
     }
 
     /// @inheritdoc ILegionPreLiquidOpenApplicationSale
-    function end() external onlyLegionOrProject whenNotPaused {
-        // Verify that the sale is not canceled
-        _verifySaleNotCanceled();
-
-        // Verify that the sale has not ended
-        _verifySaleHasNotEnded();
-
+    function end() external onlyLegionOrProject whenNotPaused whenSaleNotCanceled whenSaleNotEnded {
         // Update the `hasEnded` status to true
         s_preLiquidSaleConfig.hasEnded = true;
 
@@ -114,16 +118,10 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
         external
         onlyLegion
         whenNotPaused
+        whenSaleNotCanceled
+        whenSaleEnded
+        whenRefundPeriodIsOver
     {
-        // Verify that the sale is not canceled
-        _verifySaleNotCanceled();
-
-        // verify that the sale has ended
-        _verifySaleHasEnded();
-
-        // Verify that the refund period is over
-        _verifyRefundPeriodIsOver();
-
         // Verify that capital raised can be published.
         _verifyCanPublishCapitalRaised();
 
@@ -146,16 +144,10 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
         external
         onlyLegion
         whenNotPaused
+        whenSaleNotCanceled
+        whenSaleEnded
+        whenRefundPeriodIsOver
     {
-        // Verify that the sale is not canceled
-        _verifySaleNotCanceled();
-
-        // Verify that the sale has ended
-        _verifySaleHasEnded();
-
-        // Verify that the refund period is over
-        _verifyRefundPeriodIsOver();
-
         // Verify that sale results are not published
         _verifyCanPublishSaleResults();
 
@@ -178,16 +170,10 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
         override(ILegionAbstractSale, LegionAbstractSale)
         onlyProject
         whenNotPaused
+        whenSaleEnded
+        whenRefundPeriodIsOver
+        whenSaleNotCanceled
     {
-        // Verify that the sale has ended
-        _verifySaleHasEnded();
-
-        // Verify that the refund period is over
-        _verifyRefundPeriodIsOver();
-
-        // Verify that the sale is not canceled
-        _verifySaleNotCanceled();
-
         // Verify that the project can withdraw capital
         _verifyCanWithdrawCapital();
 
@@ -239,13 +225,14 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
     }
 
     /// @inheritdoc ILegionAbstractSale
-    function cancel() public override(ILegionAbstractSale, LegionAbstractSale) onlyProject whenNotPaused {
-        // Verify sale has not already been canceled
-        _verifySaleNotCanceled();
-
-        // Verify that no tokens have been supplied to the sale by the project
-        _verifyTokensNotSupplied();
-
+    function cancel()
+        public
+        override(ILegionAbstractSale, LegionAbstractSale)
+        onlyProject
+        whenNotPaused
+        whenSaleNotCanceled
+        whenTokensNotSupplied
+    {
         // Cache the amount of funds to be returned to the capital raise
         // The project should return the total capital raised including the charged fees
         uint256 capitalToReturn = s_saleStatus.totalCapitalWithdrawn;
