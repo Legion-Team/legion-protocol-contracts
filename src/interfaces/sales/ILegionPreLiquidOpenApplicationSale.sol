@@ -37,8 +37,7 @@ interface ILegionPreLiquidOpenApplicationSale is ILegionAbstractSale {
 
     /// @notice Emitted when the total capital raised is published by the Legion admin.
     /// @param capitalRaised The total capital raised by the project.
-    /// @param acceptedMerkleRoot The Merkle root for verifying accepted capital.
-    event CapitalRaisedPublished(uint256 capitalRaised, bytes32 acceptedMerkleRoot);
+    event CapitalRaisedPublished(uint256 capitalRaised);
 
     /// @notice Emitted when the sale is ended by Legion or project.
     event SaleEnded();
@@ -61,10 +60,9 @@ interface ILegionPreLiquidOpenApplicationSale is ILegionAbstractSale {
     /// @notice Ends the sale and sets the refund period.
     function end() external;
 
-    /// @notice Publishes the total capital raised and accepted capital Merkle root.
+    /// @notice Publishes the total capital raised.
     /// @param capitalRaised The total capital raised by the project.
-    /// @param acceptedMerkleRoot The Merkle root for verifying accepted capital.
-    function publishRaisedCapital(uint256 capitalRaised, bytes32 acceptedMerkleRoot) external;
+    function publishRaisedCapital(uint256 capitalRaised) external;
 
     /// @notice Publishes sale results including token allocation details.
     /// @param claimMerkleRoot The Merkle root for verifying token claims.

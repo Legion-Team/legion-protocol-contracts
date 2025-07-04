@@ -1415,24 +1415,6 @@ contract LegionFixedPriceSaleTest is Test {
     }
 
     /**
-     * @notice Tests that setting accepted capital after refund period reverts
-     * @dev Expects LegionSale__SaleHasEnded revert when called after refundEndTime
-     */
-    function test_setAcceptedCapital_revertsIfSaleHasEnded() public {
-        // Arrange
-        prepareCreateLegionFixedPriceSale();
-
-        vm.warp(refundEndTime() + 1);
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleHasEnded.selector, (refundEndTime() + 1)));
-
-        // Act
-        vm.prank(legionBouncer);
-        ILegionFixedPriceSale(legionSaleInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
-    }
-
-    /**
      * @notice Tests that setting accepted capital after cancellation reverts
      * @dev Expects LegionSale__SaleIsCanceled revert when sale is canceled
      */

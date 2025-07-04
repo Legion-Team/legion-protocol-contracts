@@ -111,10 +111,7 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
     }
 
     /// @inheritdoc ILegionPreLiquidOpenApplicationSale
-    function publishRaisedCapital(
-        uint256 capitalRaised,
-        bytes32 acceptedMerkleRoot
-    )
+    function publishRaisedCapital(uint256 capitalRaised)
         external
         onlyLegion
         whenNotPaused
@@ -128,11 +125,8 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
         // Set the total capital raised to be withdrawn by the project
         s_saleStatus.totalCapitalRaised = capitalRaised;
 
-        // Set the merkle root for accepted capital
-        s_saleStatus.acceptedCapitalMerkleRoot = acceptedMerkleRoot;
-
         // Emit CapitalRaisedPublished event
-        emit CapitalRaisedPublished(capitalRaised, acceptedMerkleRoot);
+        emit CapitalRaisedPublished(capitalRaised);
     }
 
     /// @inheritdoc ILegionPreLiquidOpenApplicationSale
@@ -180,11 +174,11 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
         // Flag that the capital has been withdrawn
         s_saleStatus.capitalWithdrawn = true;
 
-        // Set the total capital that has been withdrawn
-        s_saleStatus.totalCapitalWithdrawn = s_saleStatus.totalCapitalRaised;
-
         // Cache value in memory
         uint256 _totalCapitalRaised = s_saleStatus.totalCapitalRaised;
+
+        // Set the total capital that has been withdrawn
+        s_saleStatus.totalCapitalWithdrawn = _totalCapitalRaised;
 
         // Cache Legion Sale Address Configuration
         LegionSaleAddressConfiguration memory addressConfig = s_addressConfig;
