@@ -1071,13 +1071,11 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
 
         // Expect
         vm.expectEmit();
-        emit ILegionPreLiquidOpenApplicationSale.CapitalRaisedPublished(10_000 * 1e6, acceptedCapitalMerkleRoot);
+        emit ILegionPreLiquidOpenApplicationSale.CapitalRaisedPublished(10_000 * 1e6);
 
         // Act
         vm.prank(legionBouncer);
-        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).publishRaisedCapital(
-            10_000 * 1e6, acceptedCapitalMerkleRoot
-        );
+        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).publishRaisedCapital(10_000 * 1e6);
     }
 
     /**
@@ -1099,9 +1097,7 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
 
         // Act
         vm.prank(nonLegionAdmin);
-        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).publishRaisedCapital(
-            10_000 * 1e6, acceptedCapitalMerkleRoot
-        );
+        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).publishRaisedCapital(10_000 * 1e6);
     }
 
     /**
@@ -1125,9 +1121,7 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).publishRaisedCapital(
-            10_000 * 1e6, acceptedCapitalMerkleRoot
-        );
+        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).publishRaisedCapital(10_000 * 1e6);
     }
 
     /**
@@ -1143,9 +1137,7 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).publishRaisedCapital(
-            10_000 * 1e6, acceptedCapitalMerkleRoot
-        );
+        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).publishRaisedCapital(10_000 * 1e6);
     }
 
     /**
@@ -1166,9 +1158,7 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).publishRaisedCapital(
-            10_000 * 1e6, acceptedCapitalMerkleRoot
-        );
+        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).publishRaisedCapital(10_000 * 1e6);
     }
 
     /**
@@ -1185,18 +1175,14 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
         vm.warp(refundEndTime() + 1);
 
         vm.prank(legionBouncer);
-        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).publishRaisedCapital(
-            10_000 * 1e6, acceptedCapitalMerkleRoot
-        );
+        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).publishRaisedCapital(10_000 * 1e6);
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__CapitalRaisedAlreadyPublished.selector));
 
         // Act
         vm.prank(legionBouncer);
-        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).publishRaisedCapital(
-            10_000 * 1e6, acceptedCapitalMerkleRoot
-        );
+        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).publishRaisedCapital(10_000 * 1e6);
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -1429,9 +1415,7 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
         vm.warp(refundEndTime() + 1);
 
         vm.prank(legionBouncer);
-        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).publishRaisedCapital(
-            10_000 * 1e6, acceptedCapitalMerkleRoot
-        );
+        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).publishRaisedCapital(10_000 * 1e6);
 
         vm.prank(projectAdmin);
         ILegionPreLiquidOpenApplicationSale(legionSaleInstance).withdrawRaisedCapital();
@@ -2103,9 +2087,7 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
         vm.warp(refundEndTime() + 1);
 
         vm.prank(legionBouncer);
-        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).publishRaisedCapital(
-            10_000 * 1e6, acceptedCapitalMerkleRoot
-        );
+        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).publishRaisedCapital(10_000 * 1e6);
 
         // Expect
         vm.expectEmit();
@@ -2163,9 +2145,7 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
         vm.warp(refundEndTime() + 1);
 
         vm.prank(legionBouncer);
-        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).publishRaisedCapital(
-            10_000 * 1e6, acceptedCapitalMerkleRoot
-        );
+        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).publishRaisedCapital(10_000 * 1e6);
 
         // Expect
         vm.expectEmit();
@@ -2289,9 +2269,7 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
         vm.warp(refundEndTime() + 1);
 
         vm.prank(legionBouncer);
-        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).publishRaisedCapital(
-            10_000 * 1e6, acceptedCapitalMerkleRoot
-        );
+        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).publishRaisedCapital(10_000 * 1e6);
 
         vm.prank(projectAdmin);
         ILegionPreLiquidOpenApplicationSale(legionSaleInstance).withdrawRaisedCapital();

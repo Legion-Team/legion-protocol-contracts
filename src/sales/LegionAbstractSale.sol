@@ -211,6 +211,9 @@ abstract contract LegionAbstractSale is
         // Cache value in memory
         uint256 _totalCapitalRaised = s_saleStatus.totalCapitalRaised;
 
+        // Set the total capital that has been withdrawn
+        s_saleStatus.totalCapitalWithdrawn = _totalCapitalRaised;
+
         // Cache Legion Sale Address Configuration
         LegionSaleAddressConfiguration memory addressConfig = s_addressConfig;
 
@@ -430,7 +433,7 @@ abstract contract LegionAbstractSale is
     }
 
     /// @inheritdoc ILegionAbstractSale
-    function setAcceptedCapital(bytes32 merkleRoot) external virtual onlyLegion whenSaleNotCanceled whenSaleNotEnded {
+    function setAcceptedCapital(bytes32 merkleRoot) external virtual onlyLegion whenSaleNotCanceled {
         // Set the merkle root for accepted capital
         s_saleStatus.acceptedCapitalMerkleRoot = merkleRoot;
 

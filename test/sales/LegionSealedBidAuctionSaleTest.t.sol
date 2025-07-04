@@ -1801,24 +1801,6 @@ contract LegionSealedBidAuctionSaleTest is Test {
     }
 
     /**
-     * @notice Tests that setting accepted capital after the sale has ended reverts
-     * @dev Expects LegionSale__SaleHasEnded revert when called after the refund period ends
-     */
-    function test_setAcceptedCapital_revertsIfSaleHasEnded() public {
-        // Arrange
-        prepareCreateLegionSealedBidAuction();
-
-        vm.warp(refundEndTime() + 1); // After refund period (2 weeks + 1 second)
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleHasEnded.selector, (refundEndTime() + 1)));
-
-        // Act
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
-    }
-
-    /**
      * @notice Tests that setting accepted capital when the sale is canceled reverts
      * @dev Expects LegionSale__SaleIsCanceled revert after projectAdmin cancels the sale
      */
