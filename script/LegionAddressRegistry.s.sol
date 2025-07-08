@@ -15,6 +15,7 @@ contract LegionAddressRegistryScript is Script {
         address legionSigner = vm.envAddress("LEGION_SIGNER");
         address legionFeeReceiver = vm.envAddress("LEGION_FEE_RECEIVER");
         address legionVestingFactory = vm.envAddress("LEGION_VESTING_FACTORY");
+        address legionVestingController = vm.envAddress("LEGION_VESTING_CONTROLLER");
 
         vm.startBroadcast(deployerPrivateKey);
 
@@ -45,6 +46,15 @@ contract LegionAddressRegistryScript is Script {
             address(addressRegistry),
             abi.encodeWithSelector(
                 LegionAddressRegistry.setLegionAddress.selector, bytes32("LEGION_VESTING_FACTORY"), legionVestingFactory
+            )
+        );
+
+        LegionBouncer(legionBouncer).functionCall(
+            address(addressRegistry),
+            abi.encodeWithSelector(
+                LegionAddressRegistry.setLegionAddress.selector,
+                bytes32("LEGION_VESTING_CONTROLLER"),
+                legionVestingController
             )
         );
 

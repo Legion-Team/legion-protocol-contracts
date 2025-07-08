@@ -167,8 +167,13 @@ interface ILegionAbstractSale {
     /// @param legionSigner The updated Legion signer address.
     /// @param legionFeeReceiver The updated Legion fee receiver address.
     /// @param vestingFactory The updated vesting factory address.
+    /// @param vestingController The updated vesting controller address.
     event LegionAddressesSynced(
-        address legionBouncer, address legionSigner, address legionFeeReceiver, address vestingFactory
+        address legionBouncer,
+        address legionSigner,
+        address legionFeeReceiver,
+        address vestingFactory,
+        address vestingController
     );
 
     /// @notice Emitted when a sale is canceled.

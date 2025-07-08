@@ -1,5 +1,5 @@
 # LegionPreLiquidOpenApplicationSale
-[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/1b4860840757d3318edea1bebfb7423e200bff55/src/sales/LegionPreLiquidOpenApplicationSale.sol)
+[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/ee293af08cf63f9bfeacc7adda6146d75c306212/src/sales/LegionPreLiquidOpenApplicationSale.sol)
 
 **Inherits:**
 [LegionAbstractSale](/src/sales/LegionAbstractSale.sol/abstract.LegionAbstractSale.md), [ILegionPreLiquidOpenApplicationSale](/src/interfaces/sales/ILegionPreLiquidOpenApplicationSale.sol/interface.ILegionPreLiquidOpenApplicationSale.md)
@@ -77,14 +77,11 @@ function end() external onlyLegionOrProject whenNotPaused whenSaleNotCanceled wh
 
 ### publishRaisedCapital
 
-Publishes the total capital raised and accepted capital Merkle root.
+Publishes the total capital raised.
 
 
 ```solidity
-function publishRaisedCapital(
-    uint256 capitalRaised,
-    bytes32 acceptedMerkleRoot
-)
+function publishRaisedCapital(uint256 capitalRaised)
     external
     onlyLegion
     whenNotPaused
@@ -97,7 +94,6 @@ function publishRaisedCapital(
 |Name|Type|Description|
 |----|----|-----------|
 |`capitalRaised`|`uint256`|The total capital raised by the project.|
-|`acceptedMerkleRoot`|`bytes32`|The Merkle root for verifying accepted capital.|
 
 
 ### publishSaleResults

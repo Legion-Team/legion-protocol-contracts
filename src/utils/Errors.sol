@@ -118,6 +118,9 @@ library Errors {
     /// @notice Thrown when a function is not called by the project admin.
     error LegionSale__NotCalledByProject();
 
+    /// @notice Thrown when a function is not called by the vesting controller.
+    error LegionSale__NotCalledByVestingController();
+
     /// @notice Thrown when an investor is not in the token claim whitelist.
     /// @param investor The address of the non-whitelisted investor.
     error LegionSale__NotInClaimWhitelist(address investor);

@@ -22,15 +22,21 @@ pragma solidity 0.8.30;
 interface ILegionVestingFactory {
     /// @notice Emitted when a new linear vesting schedule contract is deployed for an investor.
     /// @param beneficiary The address of the beneficiary receiving the vested tokens.
+    /// @param vestingController The address of the vesting controller contract for access control.
     /// @param startTimestamp The Unix timestamp (in seconds) when the vesting period begins.
     /// @param durationSeconds The total duration of the vesting period in seconds.
     /// @param cliffDurationSeconds The duration of the cliff period in seconds.
     event NewLinearVestingCreated(
-        address beneficiary, uint64 startTimestamp, uint64 durationSeconds, uint64 cliffDurationSeconds
+        address beneficiary,
+        address vestingController,
+        uint64 startTimestamp,
+        uint64 durationSeconds,
+        uint64 cliffDurationSeconds
     );
 
     /// @notice Emitted when a new linear epoch vesting schedule contract is deployed for an investor.
     /// @param beneficiary The address of the beneficiary receiving the vested tokens.
+    /// @param vestingController The address of the vesting controller contract for access control.
     /// @param startTimestamp The Unix timestamp (in seconds) when the vesting period begins.
     /// @param durationSeconds The total duration of the vesting period in seconds.
     /// @param cliffDurationSeconds The duration of the cliff period in seconds.
@@ -38,6 +44,7 @@ interface ILegionVestingFactory {
     /// @param numberOfEpochs The total number of epochs in the vesting schedule.
     event NewLinearEpochVestingCreated(
         address beneficiary,
+        address vestingController,
         uint64 startTimestamp,
         uint64 durationSeconds,
         uint64 cliffDurationSeconds,
@@ -47,12 +54,14 @@ interface ILegionVestingFactory {
 
     /// @notice Creates a new linear vesting contract instance.
     /// @param beneficiary The address that will receive the vested tokens.
+    /// @param vestingController The address of the vesting controller contract for access control.
     /// @param startTimestamp The Unix timestamp when the vesting period begins.
     /// @param durationSeconds The total duration of the vesting period in seconds.
     /// @param cliffDurationSeconds The duration of the cliff period in seconds.
     /// @return linearVestingInstance The address of the newly deployed and initialized LegionLinearVesting instance.
     function createLinearVesting(
         address beneficiary,
+        address vestingController,
         uint64 startTimestamp,
         uint64 durationSeconds,
         uint64 cliffDurationSeconds
@@ -62,6 +71,7 @@ interface ILegionVestingFactory {
 
     /// @notice Creates a new linear epoch vesting contract instance.
     /// @param beneficiary The address that will receive the vested tokens.
+    /// @param vestingController The address of the vesting controller contract for access control.
     /// @param startTimestamp The Unix timestamp when the vesting period begins.
     /// @param durationSeconds The total duration of the vesting period in seconds.
     /// @param cliffDurationSeconds The duration of the cliff period in seconds.
@@ -71,6 +81,7 @@ interface ILegionVestingFactory {
     /// instance.
     function createLinearEpochVesting(
         address beneficiary,
+        address vestingController,
         uint64 startTimestamp,
         uint64 durationSeconds,
         uint64 cliffDurationSeconds,

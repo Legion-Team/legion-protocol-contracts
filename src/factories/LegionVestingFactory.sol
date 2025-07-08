@@ -40,6 +40,7 @@ contract LegionVestingFactory is ILegionVestingFactory {
     /// @inheritdoc ILegionVestingFactory
     function createLinearVesting(
         address beneficiary,
+        address vestingController,
         uint64 startTimestamp,
         uint64 durationSeconds,
         uint64 cliffDurationSeconds
@@ -51,17 +52,20 @@ contract LegionVestingFactory is ILegionVestingFactory {
         linearVestingInstance = payable(i_linearVestingTemplate.clone());
 
         // Emit NewLinearVestingCreated
-        emit NewLinearVestingCreated(beneficiary, startTimestamp, durationSeconds, cliffDurationSeconds);
+        emit NewLinearVestingCreated(
+            beneficiary, vestingController, startTimestamp, durationSeconds, cliffDurationSeconds
+        );
 
         // Initialize the LegionLinearVesting with the provided configuration
         LegionLinearVesting(linearVestingInstance).initialize(
-            beneficiary, startTimestamp, durationSeconds, cliffDurationSeconds
+            beneficiary, vestingController, startTimestamp, durationSeconds, cliffDurationSeconds
         );
     }
 
     /// @inheritdoc ILegionVestingFactory
     function createLinearEpochVesting(
         address beneficiary,
+        address vestingController,
         uint64 startTimestamp,
         uint64 durationSeconds,
         uint64 cliffDurationSeconds,
@@ -76,12 +80,24 @@ contract LegionVestingFactory is ILegionVestingFactory {
 
         // Emit NewLinearEpochVestingCreated
         emit NewLinearEpochVestingCreated(
-            beneficiary, startTimestamp, durationSeconds, cliffDurationSeconds, epochDurationSeconds, numberOfEpochs
+            beneficiary,
+            vestingController,
+            startTimestamp,
+            durationSeconds,
+            cliffDurationSeconds,
+            epochDurationSeconds,
+            numberOfEpochs
         );
 
         // Initialize the LegionLinearEpochVesting with the provided configuration
         LegionLinearEpochVesting(linearEpochVestingInstance).initialize(
-            beneficiary, startTimestamp, durationSeconds, cliffDurationSeconds, epochDurationSeconds, numberOfEpochs
+            beneficiary,
+            vestingController,
+            startTimestamp,
+            durationSeconds,
+            cliffDurationSeconds,
+            epochDurationSeconds,
+            numberOfEpochs
         );
     }
 }

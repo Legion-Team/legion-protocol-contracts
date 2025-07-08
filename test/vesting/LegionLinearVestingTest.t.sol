@@ -38,8 +38,11 @@ contract LegionLinearVestingTest is Test {
     /// @notice Address of the deployed vesting contract instance
     address public legionVestingInstance;
 
-    /// @notice Address representing the vesting contract owner, set to 0x04
+    /// @notice Address representing the vesting contract owner, set to 0x03
     address vestingOwner = address(0x03);
+
+    /// @notice Address representing the vesting contract controller, set to 0x04
+    address vestingController = address(0x04);
 
     /*//////////////////////////////////////////////////////////////////////////
                                   SETUP FUNCTION
@@ -65,7 +68,7 @@ contract LegionLinearVestingTest is Test {
      */
     function prepareCreateLegionLinearVesting() public {
         legionVestingInstance = legionVestingFactory.createLinearVesting(
-            vestingOwner, uint64(block.timestamp), uint64(52 weeks), uint64(1 hours)
+            vestingOwner, vestingController, uint64(block.timestamp), uint64(52 weeks), uint64(1 hours)
         );
         vm.deal(legionVestingInstance, 1000 ether);
         askToken.mint(legionVestingInstance, 1000 * 1e18);
@@ -103,7 +106,7 @@ contract LegionLinearVestingTest is Test {
 
         // Act
         LegionLinearVesting(payable(legionVestingInstance)).initialize(
-            vestingOwner, uint64(block.timestamp), uint64(52 weeks), uint64(1 hours)
+            vestingOwner, vestingController, uint64(block.timestamp), uint64(52 weeks), uint64(1 hours)
         );
     }
 
@@ -120,7 +123,7 @@ contract LegionLinearVestingTest is Test {
 
         // Act
         LegionLinearVesting(payable(linearVestingImplementation)).initialize(
-            vestingOwner, uint64(block.timestamp), uint64(52 weeks), uint64(1 hours)
+            vestingOwner, vestingController, uint64(block.timestamp), uint64(52 weeks), uint64(1 hours)
         );
     }
 
@@ -134,7 +137,7 @@ contract LegionLinearVestingTest is Test {
 
         // Act
         LegionLinearVesting(payable(linearVestingTemplate)).initialize(
-            vestingOwner, uint64(block.timestamp), uint64(52 weeks), uint64(1 hours)
+            vestingOwner, vestingController, uint64(block.timestamp), uint64(52 weeks), uint64(1 hours)
         );
     }
 
@@ -173,5 +176,53 @@ contract LegionLinearVestingTest is Test {
 
         // Act
         LegionLinearVesting(payable(legionVestingInstance)).release(address(askToken));
+    }
+
+    /**
+     * @notice Tests successfull owenership transfer to a new address by Legion
+     * @dev Expects OwnershipTransferred event to be emitted
+     */
+    function test_emergencyTransferOwnership_successfullyTransfersOwnership() public {
+        // Arrange
+        prepareCreateLegionLinearVesting();
+
+        // Expect
+        vm.expectEmit();
+        emit Ownable.OwnershipTransferred(vestingOwner, address(this));
+
+        // Act
+        vm.prank(vestingController);
+        LegionLinearVesting(payable(legionVestingInstance)).emergencyTransferOwnership(address(this));
+    }
+
+    /**
+     * @notice Tests that emergency ownership transfer reverts if not called by vesting controller
+     * @dev Expects LegionSale__NotCalledByVestingController revert
+     */
+    function test_emergencyTransferOwnership_revertsIfNotCalledByVestingController() public {
+        // Arrange
+        prepareCreateLegionLinearVesting();
+
+        // Expect
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NotCalledByVestingController.selector));
+
+        // Act
+        LegionLinearVesting(payable(legionVestingInstance)).emergencyTransferOwnership(address(this));
+    }
+
+    /**
+     * @notice Tests that emergency ownership transfer reverts if new owner is zero address
+     * @dev Expects OwnableInvalidOwner revert with address(0)
+     */
+    function test_emergencyTransferOwnership_revertsIfNewOwnerIsZeroAddress() public {
+        // Arrange
+        prepareCreateLegionLinearVesting();
+
+        // Expect
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableInvalidOwner.selector, address(0)));
+
+        // Act
+        vm.prank(vestingController);
+        LegionLinearVesting(payable(legionVestingInstance)).emergencyTransferOwnership(address(0));
     }
 }

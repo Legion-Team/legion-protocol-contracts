@@ -36,10 +36,20 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
     /// @dev The last epoch for which tokens were claimed.
     uint64 private s_lastClaimedEpoch;
 
+    /// @dev Address of the vesting controller.
+    address private s_vestingController;
+
     /// @notice Restricts token release until the cliff period has ended.
     /// @dev Reverts with LegionVesting__CliffNotEnded if block.timestamp is before cliffEndTimestamp.
     modifier onlyCliffEnded() {
         if (block.timestamp < s_cliffEndTimestamp) revert Errors.LegionVesting__CliffNotEnded(block.timestamp);
+        _;
+    }
+
+    /// @notice Restricts function access to the vesting controller only.
+    /// @dev Reverts if the caller is not the configured vesting controller address.
+    modifier onlyVestingController() {
+        if (msg.sender != s_vestingController) revert Errors.LegionSale__NotCalledByVestingController();
         _;
     }
 
@@ -53,6 +63,7 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
     /// @notice Initializes the vesting contract with specified parameters.
     /// @dev Sets up the vesting schedule, cliff, and epoch details; callable only once.
     /// @param _beneficiary The address to receive the vested tokens.
+    /// @param _vestingController The address of the vesting controller contract for access control.
     /// @param _startTimestamp The Unix timestamp (seconds) when vesting starts.
     /// @param _durationSeconds The total duration of the vesting period in seconds.
     /// @param _cliffDurationSeconds The duration of the cliff period in seconds.
@@ -60,6 +71,7 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
     /// @param _numberOfEpochs The number of epochs in the vesting schedule.
     function initialize(
         address _beneficiary,
+        address _vestingController,
         uint64 _startTimestamp,
         uint64 _durationSeconds,
         uint64 _cliffDurationSeconds,
@@ -80,6 +92,9 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
 
         // Set the number of epochs
         s_numberOfEpochs = _numberOfEpochs;
+
+        // Set the vesting controller address for access control
+        s_vestingController = _vestingController;
     }
 
     /// @notice Returns the timestamp when the cliff period ends
@@ -118,6 +133,16 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
 
         // Update the last claimed epoch
         _updateLastClaimedEpoch();
+    }
+
+    /// @notice Transfers ownership of the contract to a new address.
+    /// @dev Can only be called by the vesting controller.
+    /// @param newOwner The address to transfer ownership to.
+    function emergencyTransferOwnership(address newOwner) external onlyVestingController {
+        if (newOwner == address(0)) {
+            revert OwnableInvalidOwner(address(0));
+        }
+        _transferOwnership(newOwner);
     }
 
     /// @notice Returns the current epoch based on the current block timestamp.

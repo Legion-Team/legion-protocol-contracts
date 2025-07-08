@@ -1,5 +1,5 @@
 # Errors
-[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/1b4860840757d3318edea1bebfb7423e200bff55/src/utils/Errors.sol)
+[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/ee293af08cf63f9bfeacc7adda6146d75c306212/src/utils/Errors.sol)
 
 **Author:**
 Legion
@@ -299,6 +299,14 @@ Thrown when a function is not called by the project admin.
 
 ```solidity
 error LegionSale__NotCalledByProject();
+```
+
+### LegionSale__NotCalledByVestingController
+Thrown when a function is not called by the vesting controller.
+
+
+```solidity
+error LegionSale__NotCalledByVestingController();
 ```
 
 ### LegionSale__NotInClaimWhitelist

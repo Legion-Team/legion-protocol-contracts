@@ -77,6 +77,9 @@ contract LegionPreLiquidApprovedSaleTest is Test {
     /// @notice Address of the LegionBouncer contract, initialized with legionEOA and awsBroadcaster
     address legionBouncer = address(new LegionBouncer(legionEOA, awsBroadcaster));
 
+    /// @notice Address representing the vesting contract controller, set to 0x99
+    address public legionVestingController = address(0x99);
+
     /// @notice Address representing the project admin, set to 0x02
     address projectAdmin = address(0x02);
 
@@ -241,6 +244,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         legionAddressRegistry.setLegionAddress(bytes32("LEGION_SIGNER"), vm.addr(legionSignerPK));
         legionAddressRegistry.setLegionAddress(bytes32("LEGION_FEE_RECEIVER"), legionFeeReceiver);
         legionAddressRegistry.setLegionAddress(bytes32("LEGION_VESTING_FACTORY"), address(legionVestingFactory));
+        legionAddressRegistry.setLegionAddress(bytes32("LEGION_VESTING_CONTROLLER"), legionVestingController);
         vm.stopPrank();
     }
 
@@ -3001,7 +3005,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         // Expect
         vm.expectEmit();
         emit ILegionPreLiquidApprovedSale.LegionAddressesSynced(
-            legionBouncer, vm.addr(legionSignerPK), address(1), address(legionVestingFactory)
+            legionBouncer, vm.addr(legionSignerPK), address(1), address(legionVestingFactory), legionVestingController
         );
 
         // Act

@@ -654,13 +654,17 @@ abstract contract LegionAbstractSale is
         s_vestingConfig.vestingFactory = ILegionAddressRegistry(s_addressConfig.addressRegistry).getLegionAddress(
             Constants.LEGION_VESTING_FACTORY_ID
         );
+        s_vestingConfig.vestingController = ILegionAddressRegistry(s_addressConfig.addressRegistry).getLegionAddress(
+            Constants.LEGION_VESTING_CONTROLLER_ID
+        );
 
         // Emit LegionAddressesSynced
         emit LegionAddressesSynced(
             s_addressConfig.legionBouncer,
             s_addressConfig.legionSigner,
             s_addressConfig.legionFeeReceiver,
-            s_vestingConfig.vestingFactory
+            s_vestingConfig.vestingFactory,
+            s_vestingConfig.vestingController
         );
     }
 

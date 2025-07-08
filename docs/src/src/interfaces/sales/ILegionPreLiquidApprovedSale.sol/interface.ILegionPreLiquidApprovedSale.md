@@ -1,5 +1,5 @@
 # ILegionPreLiquidApprovedSale
-[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/1b4860840757d3318edea1bebfb7423e200bff55/src/interfaces/sales/ILegionPreLiquidApprovedSale.sol)
+[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/ee293af08cf63f9bfeacc7adda6146d75c306212/src/interfaces/sales/ILegionPreLiquidApprovedSale.sol)
 
 **Author:**
 Legion
@@ -434,7 +434,11 @@ Emitted when Legion addresses are successfully synced.
 
 ```solidity
 event LegionAddressesSynced(
-    address legionBouncer, address legionSigner, address legionFeeReceiver, address vestingFactory
+    address legionBouncer,
+    address legionSigner,
+    address legionFeeReceiver,
+    address vestingFactory,
+    address vestingController
 );
 ```
 
@@ -446,6 +450,7 @@ event LegionAddressesSynced(
 |`legionSigner`|`address`|The updated Legion signer address.|
 |`legionFeeReceiver`|`address`|The updated Legion fee receiver address.|
 |`vestingFactory`|`address`|The updated vesting factory address.|
+|`vestingController`|`address`|The updated vesting controller address.|
 
 ### SaleCanceled
 Emitted when the sale is successfully canceled.

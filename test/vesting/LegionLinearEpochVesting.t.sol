@@ -38,8 +38,11 @@ contract LegionLinearEpochVestingTest is Test {
     /// @notice Address of the deployed vesting contract instance
     address public legionVestingInstance;
 
-    /// @notice Address representing the vesting contract owner, set to 0x04
+    /// @notice Address representing the vesting contract owner, set to 0x03
     address vestingOwner = address(0x03);
+
+    /// @notice Address representing the vesting contract controller, set to 0x04
+    address vestingController = address(0x04);
 
     /*//////////////////////////////////////////////////////////////////////////
                                   SETUP FUNCTION
@@ -65,7 +68,7 @@ contract LegionLinearEpochVestingTest is Test {
      */
     function prepareCreateLegionLinearEpochVesting() public {
         legionVestingInstance = legionVestingFactory.createLinearEpochVesting(
-            vestingOwner, uint64(block.timestamp), 2_678_400 * 12, uint64(1 hours), 2_678_400, 12
+            vestingOwner, vestingController, uint64(block.timestamp), 2_678_400 * 12, uint64(1 hours), 2_678_400, 12
         );
         vm.deal(legionVestingInstance, 1200 ether);
         askToken.mint(legionVestingInstance, 1200 * 1e18);
@@ -108,7 +111,7 @@ contract LegionLinearEpochVestingTest is Test {
 
         // Act
         LegionLinearEpochVesting(payable(legionVestingInstance)).initialize(
-            vestingOwner, uint64(block.timestamp), 2_678_400 * 12, uint64(1 hours), 2_678_400, 12
+            vestingOwner, vestingController, uint64(block.timestamp), 2_678_400 * 12, uint64(1 hours), 2_678_400, 12
         );
     }
 
@@ -125,7 +128,7 @@ contract LegionLinearEpochVestingTest is Test {
 
         // Act
         LegionLinearEpochVesting(payable(linearVestingImplementation)).initialize(
-            vestingOwner, uint64(block.timestamp), 2_678_400 * 12, uint64(1 hours), 2_678_400, 12
+            vestingOwner, vestingController, uint64(block.timestamp), 2_678_400 * 12, uint64(1 hours), 2_678_400, 12
         );
     }
 
@@ -139,7 +142,7 @@ contract LegionLinearEpochVestingTest is Test {
 
         // Act
         LegionLinearEpochVesting(payable(linearVestingTemplate)).initialize(
-            vestingOwner, uint64(block.timestamp), 2_678_400 * 12, uint64(1 hours), 2_678_400, 12
+            vestingOwner, vestingController, uint64(block.timestamp), 2_678_400 * 12, uint64(1 hours), 2_678_400, 12
         );
     }
 
@@ -196,5 +199,53 @@ contract LegionLinearEpochVestingTest is Test {
 
         // Act
         LegionLinearEpochVesting(payable(legionVestingInstance)).release(address(askToken));
+    }
+
+    /**
+     * @notice Tests successfull owenership transfer to a new address by Legion
+     * @dev Expects OwnershipTransferred event to be emitted
+     */
+    function test_emergencyTransferOwnership_successfullyTransfersOwnership() public {
+        // Arrange
+        prepareCreateLegionLinearEpochVesting();
+
+        // Expect
+        vm.expectEmit();
+        emit Ownable.OwnershipTransferred(vestingOwner, address(this));
+
+        // Act
+        vm.prank(vestingController);
+        LegionLinearEpochVesting(payable(legionVestingInstance)).emergencyTransferOwnership(address(this));
+    }
+
+    /**
+     * @notice Tests that emergency ownership transfer reverts if not called by vesting controller
+     * @dev Expects LegionSale__NotCalledByVestingController revert
+     */
+    function test_emergencyTransferOwnership_revertsIfNotCalledByVestingController() public {
+        // Arrange
+        prepareCreateLegionLinearEpochVesting();
+
+        // Expect
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NotCalledByVestingController.selector));
+
+        // Act
+        LegionLinearEpochVesting(payable(legionVestingInstance)).emergencyTransferOwnership(address(this));
+    }
+
+    /**
+     * @notice Tests that emergency ownership transfer reverts if new owner is zero address
+     * @dev Expects OwnableInvalidOwner revert with address(0)
+     */
+    function test_emergencyTransferOwnership_revertsIfNewOwnerIsZeroAddress() public {
+        // Arrange
+        prepareCreateLegionLinearEpochVesting();
+
+        // Expect
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableInvalidOwner.selector, address(0)));
+
+        // Act
+        vm.prank(vestingController);
+        LegionLinearEpochVesting(payable(legionVestingInstance)).emergencyTransferOwnership(address(0));
     }
 }

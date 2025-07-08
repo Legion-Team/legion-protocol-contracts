@@ -46,4 +46,7 @@ library Constants {
 
     /// @dev Unique identifier for the Legion Vesting Factory in the Address Registry.
     bytes32 internal constant LEGION_VESTING_FACTORY_ID = bytes32("LEGION_VESTING_FACTORY");
+
+    /// @dev Unique identifier for the Legion Vesting Controller in the Address Registry.
+    bytes32 internal constant LEGION_VESTING_CONTROLLER_ID = bytes32("LEGION_VESTING_CONTROLLER");
 }

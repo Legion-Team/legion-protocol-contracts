@@ -1,5 +1,5 @@
 # Constants
-[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/1b4860840757d3318edea1bebfb7423e200bff55/src/utils/Constants.sol)
+[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/ee293af08cf63f9bfeacc7adda6146d75c306212/src/utils/Constants.sol)
 
 **Author:**
 Legion
@@ -88,6 +88,15 @@ bytes32 internal constant LEGION_SIGNER_ID = bytes32("LEGION_SIGNER");
 
 ```solidity
 bytes32 internal constant LEGION_VESTING_FACTORY_ID = bytes32("LEGION_VESTING_FACTORY");
+```
+
+
+### LEGION_VESTING_CONTROLLER_ID
+*Unique identifier for the Legion Vesting Controller in the Address Registry.*
+
+
+```solidity
+bytes32 internal constant LEGION_VESTING_CONTROLLER_ID = bytes32("LEGION_VESTING_CONTROLLER");
 ```
 
 
