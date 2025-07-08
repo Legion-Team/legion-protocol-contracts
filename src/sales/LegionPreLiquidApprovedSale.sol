@@ -777,13 +777,17 @@ contract LegionPreLiquidApprovedSale is
             ILegionAddressRegistry(s_saleConfig.addressRegistry).getLegionAddress(Constants.LEGION_FEE_RECEIVER_ID);
         s_vestingConfig.vestingFactory =
             ILegionAddressRegistry(s_saleConfig.addressRegistry).getLegionAddress(Constants.LEGION_VESTING_FACTORY_ID);
+        s_vestingConfig.vestingController = ILegionAddressRegistry(s_saleConfig.addressRegistry).getLegionAddress(
+            Constants.LEGION_VESTING_CONTROLLER_ID
+        );
 
         // Emit LegionAddressesSynced event
         emit LegionAddressesSynced(
             s_saleConfig.legionBouncer,
             s_saleConfig.legionSigner,
             s_saleConfig.legionFeeReceiver,
-            s_vestingConfig.vestingFactory
+            s_vestingConfig.vestingFactory,
+            s_vestingConfig.vestingController
         );
     }
 

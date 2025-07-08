@@ -1,5 +1,5 @@
 # LegionVestingManager
-[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/1b4860840757d3318edea1bebfb7423e200bff55/src/vesting/LegionVestingManager.sol)
+[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/ee293af08cf63f9bfeacc7adda6146d75c306212/src/vesting/LegionVestingManager.sol)
 
 **Inherits:**
 [ILegionVestingManager](/src/interfaces/vesting/ILegionVestingManager.sol/interface.ILegionVestingManager.md)
@@ -70,6 +70,7 @@ function _createVesting(LegionInvestorVestingConfig calldata _investorVestingCon
 ```solidity
 function _createLinearVesting(
     address _beneficiary,
+    address _vestingController,
     address _vestingFactory,
     uint64 _startTimestamp,
     uint64 _durationSeconds,
@@ -84,6 +85,7 @@ function _createLinearVesting(
 |Name|Type|Description|
 |----|----|-----------|
 |`_beneficiary`|`address`|The address to receive the vested tokens.|
+|`_vestingController`|`address`|The address of the vesting controller contract.|
 |`_vestingFactory`|`address`|The address of the vesting factory contract.|
 |`_startTimestamp`|`uint64`|The Unix timestamp (seconds) when vesting starts.|
 |`_durationSeconds`|`uint64`|The duration of the vesting period in seconds.|
@@ -104,6 +106,7 @@ function _createLinearVesting(
 ```solidity
 function _createLinearEpochVesting(
     address _beneficiary,
+    address _vestingController,
     address _vestingFactory,
     uint64 _startTimestamp,
     uint64 _durationSeconds,
@@ -120,6 +123,7 @@ function _createLinearEpochVesting(
 |Name|Type|Description|
 |----|----|-----------|
 |`_beneficiary`|`address`|The address to receive the vested tokens.|
+|`_vestingController`|`address`|The address of the vesting controller contract.|
 |`_vestingFactory`|`address`|The address of the vesting factory contract.|
 |`_startTimestamp`|`uint64`|The Unix timestamp (seconds) when vesting starts.|
 |`_durationSeconds`|`uint64`|The duration of the vesting period in seconds.|

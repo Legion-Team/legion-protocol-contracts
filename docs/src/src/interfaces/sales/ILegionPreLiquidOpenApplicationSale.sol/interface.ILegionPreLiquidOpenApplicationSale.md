@@ -1,5 +1,5 @@
 # ILegionPreLiquidOpenApplicationSale
-[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/1b4860840757d3318edea1bebfb7423e200bff55/src/interfaces/sales/ILegionPreLiquidOpenApplicationSale.sol)
+[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/ee293af08cf63f9bfeacc7adda6146d75c306212/src/interfaces/sales/ILegionPreLiquidOpenApplicationSale.sol)
 
 **Inherits:**
 [ILegionAbstractSale](/src/interfaces/sales/ILegionAbstractSale.sol/interface.ILegionAbstractSale.md)
@@ -53,18 +53,17 @@ function end() external;
 
 ### publishRaisedCapital
 
-Publishes the total capital raised and accepted capital Merkle root.
+Publishes the total capital raised.
 
 
 ```solidity
-function publishRaisedCapital(uint256 capitalRaised, bytes32 acceptedMerkleRoot) external;
+function publishRaisedCapital(uint256 capitalRaised) external;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
 |`capitalRaised`|`uint256`|The total capital raised by the project.|
-|`acceptedMerkleRoot`|`bytes32`|The Merkle root for verifying accepted capital.|
 
 
 ### publishSaleResults
@@ -121,7 +120,7 @@ Emitted when the total capital raised is published by the Legion admin.
 
 
 ```solidity
-event CapitalRaisedPublished(uint256 capitalRaised, bytes32 acceptedMerkleRoot);
+event CapitalRaisedPublished(uint256 capitalRaised);
 ```
 
 **Parameters**
@@ -129,7 +128,6 @@ event CapitalRaisedPublished(uint256 capitalRaised, bytes32 acceptedMerkleRoot);
 |Name|Type|Description|
 |----|----|-----------|
 |`capitalRaised`|`uint256`|The total capital raised by the project.|
-|`acceptedMerkleRoot`|`bytes32`|The Merkle root for verifying accepted capital.|
 
 ### SaleEnded
 Emitted when the sale is ended by Legion or project.

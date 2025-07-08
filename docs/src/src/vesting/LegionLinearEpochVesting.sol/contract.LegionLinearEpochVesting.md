@@ -1,5 +1,5 @@
 # LegionLinearEpochVesting
-[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/1b4860840757d3318edea1bebfb7423e200bff55/src/vesting/LegionLinearEpochVesting.sol)
+[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/ee293af08cf63f9bfeacc7adda6146d75c306212/src/vesting/LegionLinearEpochVesting.sol)
 
 **Inherits:**
 VestingWalletUpgradeable
@@ -49,6 +49,15 @@ uint64 private s_lastClaimedEpoch;
 ```
 
 
+### s_vestingController
+*Address of the vesting controller.*
+
+
+```solidity
+address private s_vestingController;
+```
+
+
 ## Functions
 ### onlyCliffEnded
 
@@ -59,6 +68,17 @@ Restricts token release until the cliff period has ended.
 
 ```solidity
 modifier onlyCliffEnded();
+```
+
+### onlyVestingController
+
+Restricts function access to the vesting controller only.
+
+*Reverts if the caller is not the configured vesting controller address.*
+
+
+```solidity
+modifier onlyVestingController();
 ```
 
 ### constructor
@@ -82,6 +102,7 @@ Initializes the vesting contract with specified parameters.
 ```solidity
 function initialize(
     address _beneficiary,
+    address _vestingController,
     uint64 _startTimestamp,
     uint64 _durationSeconds,
     uint64 _cliffDurationSeconds,
@@ -96,6 +117,7 @@ function initialize(
 |Name|Type|Description|
 |----|----|-----------|
 |`_beneficiary`|`address`|The address to receive the vested tokens.|
+|`_vestingController`|`address`|The address of the vesting controller contract for access control.|
 |`_startTimestamp`|`uint64`|The Unix timestamp (seconds) when vesting starts.|
 |`_durationSeconds`|`uint64`|The total duration of the vesting period in seconds.|
 |`_cliffDurationSeconds`|`uint64`|The duration of the cliff period in seconds.|
@@ -186,6 +208,23 @@ function release(address token) public override onlyCliffEnded;
 |Name|Type|Description|
 |----|----|-----------|
 |`token`|`address`|The address of the token to release.|
+
+
+### emergencyTransferOwnership
+
+Transfers ownership of the contract to a new address.
+
+*Can only be called by the vesting controller.*
+
+
+```solidity
+function emergencyTransferOwnership(address newOwner) external onlyVestingController;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`newOwner`|`address`|The address to transfer ownership to.|
 
 
 ### getCurrentEpoch

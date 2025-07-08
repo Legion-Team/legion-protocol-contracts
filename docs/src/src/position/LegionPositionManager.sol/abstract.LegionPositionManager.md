@@ -1,5 +1,5 @@
 # LegionPositionManager
-[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/1b4860840757d3318edea1bebfb7423e200bff55/src/position/LegionPositionManager.sol)
+[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/ee293af08cf63f9bfeacc7adda6146d75c306212/src/position/LegionPositionManager.sol)
 
 **Inherits:**
 [ILegionPositionManager](/src/interfaces/position/ILegionPositionManager.sol/interface.ILegionPositionManager.md), [ERC5192](/src/lib/ERC5192.sol/abstract.ERC5192.md)

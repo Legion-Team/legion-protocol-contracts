@@ -49,6 +49,12 @@ contract LegionVestingFactoryTest is Test {
     address public vestingOwner = address(0x04);
 
     /**
+     * @notice Address representing the vesting controller
+     * @dev Set to 0x05, manages vesting operations
+     */
+    address public vestingController = address(0x05);
+
+    /**
      * @notice Sets up the test environment by deploying the LegionVestingFactory
      * @dev Initializes the factory contract with no initial owner restrictions
      */
@@ -67,7 +73,7 @@ contract LegionVestingFactoryTest is Test {
      */
     function prepareCreateLegionLinearVesting() public returns (address) {
         legionLinearVestingInstance = legionVestingFactory.createLinearVesting(
-            vestingOwner, uint64(block.timestamp), uint64(52 weeks), uint64(1 hours)
+            vestingOwner, vestingController, uint64(block.timestamp), uint64(52 weeks), uint64(1 hours)
         );
         return legionLinearVestingInstance;
     }
@@ -79,7 +85,7 @@ contract LegionVestingFactoryTest is Test {
      */
     function prepareCreateLegionLinearEpochVesting() public returns (address) {
         legionLinearEpochVestingInstance = legionVestingFactory.createLinearEpochVesting(
-            vestingOwner, uint64(block.timestamp), uint64(52 weeks), uint64(1 hours), 1 weeks, 52
+            vestingOwner, vestingController, uint64(block.timestamp), uint64(52 weeks), uint64(1 hours), 1 weeks, 52
         );
         return legionLinearEpochVestingInstance;
     }

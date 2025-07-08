@@ -126,6 +126,11 @@ contract LegionSealedBidAuctionSaleTest is Test {
     address public legionBouncer = address(new LegionBouncer(legionEOA, awsBroadcaster));
 
     /**
+     * @notice Address representing the vesting contract controller, set to 0x99
+     */
+    address public legionVestingController = address(0x99);
+
+    /**
      * @notice Address representing the project admin
      * @dev Set to 0x02, manages sale operations
      */
@@ -482,6 +487,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         legionAddressRegistry.setLegionAddress(bytes32("LEGION_SIGNER"), vm.addr(legionSignerPK));
         legionAddressRegistry.setLegionAddress(bytes32("LEGION_FEE_RECEIVER"), legionFeeReceiver);
         legionAddressRegistry.setLegionAddress(bytes32("LEGION_VESTING_FACTORY"), address(legionVestingFactory));
+        legionAddressRegistry.setLegionAddress(bytes32("LEGION_VESTING_CONTROLLER"), legionVestingController);
 
         vm.stopPrank();
     }
@@ -2979,7 +2985,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         // Expect
         vm.expectEmit();
         emit ILegionAbstractSale.LegionAddressesSynced(
-            legionBouncer, vm.addr(legionSignerPK), address(1), address(legionVestingFactory)
+            legionBouncer, vm.addr(legionSignerPK), address(1), address(legionVestingFactory), legionVestingController
         );
 
         // Act

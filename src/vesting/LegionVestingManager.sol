@@ -46,6 +46,7 @@ abstract contract LegionVestingManager is ILegionVestingManager {
         if (_investorVestingConfig.vestingType == VestingType.LEGION_LINEAR) {
             vestingInstance = _createLinearVesting(
                 msg.sender,
+                s_vestingConfig.vestingController,
                 s_vestingConfig.vestingFactory,
                 _investorVestingConfig.vestingStartTime,
                 _investorVestingConfig.vestingDurationSeconds,
@@ -57,6 +58,7 @@ abstract contract LegionVestingManager is ILegionVestingManager {
         if (_investorVestingConfig.vestingType == VestingType.LEGION_LINEAR_EPOCH) {
             vestingInstance = _createLinearEpochVesting(
                 msg.sender,
+                s_vestingConfig.vestingController,
                 s_vestingConfig.vestingFactory,
                 _investorVestingConfig.vestingStartTime,
                 _investorVestingConfig.vestingDurationSeconds,
@@ -69,6 +71,7 @@ abstract contract LegionVestingManager is ILegionVestingManager {
 
     /// @dev Creates a linear vesting schedule contract.
     /// @param _beneficiary The address to receive the vested tokens.
+    /// @param _vestingController The address of the vesting controller contract.
     /// @param _vestingFactory The address of the vesting factory contract.
     /// @param _startTimestamp The Unix timestamp (seconds) when vesting starts.
     /// @param _durationSeconds The duration of the vesting period in seconds.
@@ -76,6 +79,7 @@ abstract contract LegionVestingManager is ILegionVestingManager {
     /// @return vestingInstance The address of the deployed linear vesting contract.
     function _createLinearVesting(
         address _beneficiary,
+        address _vestingController,
         address _vestingFactory,
         uint64 _startTimestamp,
         uint64 _durationSeconds,
@@ -87,12 +91,13 @@ abstract contract LegionVestingManager is ILegionVestingManager {
     {
         // Deploy a linear vesting schedule instance
         vestingInstance = ILegionVestingFactory(_vestingFactory).createLinearVesting(
-            _beneficiary, _startTimestamp, _durationSeconds, _cliffDurationSeconds
+            _beneficiary, _vestingController, _startTimestamp, _durationSeconds, _cliffDurationSeconds
         );
     }
 
     /// @dev Creates a linear epoch-based vesting schedule contract.
     /// @param _beneficiary The address to receive the vested tokens.
+    /// @param _vestingController The address of the vesting controller contract.
     /// @param _vestingFactory The address of the vesting factory contract.
     /// @param _startTimestamp The Unix timestamp (seconds) when vesting starts.
     /// @param _durationSeconds The duration of the vesting period in seconds.
@@ -102,6 +107,7 @@ abstract contract LegionVestingManager is ILegionVestingManager {
     /// @return vestingInstance The address of the deployed epoch vesting contract.
     function _createLinearEpochVesting(
         address _beneficiary,
+        address _vestingController,
         address _vestingFactory,
         uint64 _startTimestamp,
         uint64 _durationSeconds,
@@ -116,6 +122,7 @@ abstract contract LegionVestingManager is ILegionVestingManager {
         // Deploy a linear epoch vesting schedule instance
         vestingInstance = ILegionVestingFactory(_vestingFactory).createLinearEpochVesting(
             _beneficiary,
+            _vestingController,
             _startTimestamp,
             _durationSeconds,
             _cliffDurationSeconds,

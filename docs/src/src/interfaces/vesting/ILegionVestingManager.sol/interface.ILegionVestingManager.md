@@ -1,5 +1,5 @@
 # ILegionVestingManager
-[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/1b4860840757d3318edea1bebfb7423e200bff55/src/interfaces/vesting/ILegionVestingManager.sol)
+[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/ee293af08cf63f9bfeacc7adda6146d75c306212/src/interfaces/vesting/ILegionVestingManager.sol)
 
 **Author:**
 Legion
@@ -31,6 +31,7 @@ function vestingConfiguration() external view returns (ILegionVestingManager.Leg
 ```solidity
 struct LegionVestingConfig {
     address vestingFactory;
+    address vestingController;
 }
 ```
 

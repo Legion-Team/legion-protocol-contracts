@@ -1,5 +1,5 @@
 # ILegionVestingFactory
-[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/1b4860840757d3318edea1bebfb7423e200bff55/src/interfaces/factories/ILegionVestingFactory.sol)
+[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/ee293af08cf63f9bfeacc7adda6146d75c306212/src/interfaces/factories/ILegionVestingFactory.sol)
 
 **Author:**
 Legion
@@ -18,6 +18,7 @@ Creates a new linear vesting contract instance.
 ```solidity
 function createLinearVesting(
     address beneficiary,
+    address vestingController,
     uint64 startTimestamp,
     uint64 durationSeconds,
     uint64 cliffDurationSeconds
@@ -30,6 +31,7 @@ function createLinearVesting(
 |Name|Type|Description|
 |----|----|-----------|
 |`beneficiary`|`address`|The address that will receive the vested tokens.|
+|`vestingController`|`address`|The address of the vesting controller contract for access control.|
 |`startTimestamp`|`uint64`|The Unix timestamp when the vesting period begins.|
 |`durationSeconds`|`uint64`|The total duration of the vesting period in seconds.|
 |`cliffDurationSeconds`|`uint64`|The duration of the cliff period in seconds.|
@@ -49,6 +51,7 @@ Creates a new linear epoch vesting contract instance.
 ```solidity
 function createLinearEpochVesting(
     address beneficiary,
+    address vestingController,
     uint64 startTimestamp,
     uint64 durationSeconds,
     uint64 cliffDurationSeconds,
@@ -63,6 +66,7 @@ function createLinearEpochVesting(
 |Name|Type|Description|
 |----|----|-----------|
 |`beneficiary`|`address`|The address that will receive the vested tokens.|
+|`vestingController`|`address`|The address of the vesting controller contract for access control.|
 |`startTimestamp`|`uint64`|The Unix timestamp when the vesting period begins.|
 |`durationSeconds`|`uint64`|The total duration of the vesting period in seconds.|
 |`cliffDurationSeconds`|`uint64`|The duration of the cliff period in seconds.|
@@ -83,7 +87,11 @@ Emitted when a new linear vesting schedule contract is deployed for an investor.
 
 ```solidity
 event NewLinearVestingCreated(
-    address beneficiary, uint64 startTimestamp, uint64 durationSeconds, uint64 cliffDurationSeconds
+    address beneficiary,
+    address vestingController,
+    uint64 startTimestamp,
+    uint64 durationSeconds,
+    uint64 cliffDurationSeconds
 );
 ```
 
@@ -92,6 +100,7 @@ event NewLinearVestingCreated(
 |Name|Type|Description|
 |----|----|-----------|
 |`beneficiary`|`address`|The address of the beneficiary receiving the vested tokens.|
+|`vestingController`|`address`|The address of the vesting controller contract for access control.|
 |`startTimestamp`|`uint64`|The Unix timestamp (in seconds) when the vesting period begins.|
 |`durationSeconds`|`uint64`|The total duration of the vesting period in seconds.|
 |`cliffDurationSeconds`|`uint64`|The duration of the cliff period in seconds.|
@@ -103,6 +112,7 @@ Emitted when a new linear epoch vesting schedule contract is deployed for an inv
 ```solidity
 event NewLinearEpochVestingCreated(
     address beneficiary,
+    address vestingController,
     uint64 startTimestamp,
     uint64 durationSeconds,
     uint64 cliffDurationSeconds,
@@ -116,6 +126,7 @@ event NewLinearEpochVestingCreated(
 |Name|Type|Description|
 |----|----|-----------|
 |`beneficiary`|`address`|The address of the beneficiary receiving the vested tokens.|
+|`vestingController`|`address`|The address of the vesting controller contract for access control.|
 |`startTimestamp`|`uint64`|The Unix timestamp (in seconds) when the vesting period begins.|
 |`durationSeconds`|`uint64`|The total duration of the vesting period in seconds.|
 |`cliffDurationSeconds`|`uint64`|The duration of the cliff period in seconds.|

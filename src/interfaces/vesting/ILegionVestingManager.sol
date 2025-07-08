@@ -31,6 +31,8 @@ interface ILegionVestingManager {
     struct LegionVestingConfig {
         // Address of Legion's Vesting Factory contract.
         address vestingFactory;
+        // Address of Legion's Vesting Controller contract.
+        address vestingController;
     }
 
     /// @dev Struct representing an investor's vesting status.

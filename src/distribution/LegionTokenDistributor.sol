@@ -289,13 +289,16 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
             .getLegionAddress(Constants.LEGION_FEE_RECEIVER_ID);
         s_vestingConfig.vestingFactory = ILegionAddressRegistry(s_tokenDistributorConfig.addressRegistry)
             .getLegionAddress(Constants.LEGION_VESTING_FACTORY_ID);
+        s_vestingConfig.vestingController = ILegionAddressRegistry(s_tokenDistributorConfig.addressRegistry)
+            .getLegionAddress(Constants.LEGION_VESTING_CONTROLLER_ID);
 
         // Emit LegionAddressesSynced
         emit LegionAddressesSynced(
             s_tokenDistributorConfig.legionBouncer,
             s_tokenDistributorConfig.legionSigner,
             s_tokenDistributorConfig.legionFeeReceiver,
-            s_vestingConfig.vestingFactory
+            s_vestingConfig.vestingFactory,
+            s_vestingConfig.vestingController
         );
     }
 
