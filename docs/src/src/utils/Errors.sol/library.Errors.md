@@ -1,5 +1,5 @@
 # Errors
-[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/ee293af08cf63f9bfeacc7adda6146d75c306212/src/utils/Errors.sol)
+[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/8b23239dfc702a4510efb5dd06fb67719eb5eab0/src/utils/Errors.sol)
 
 **Author:**
 Legion
@@ -234,6 +234,14 @@ error LegionSale__InvalidWithdrawAmount(uint256 amount);
 |Name|Type|Description|
 |----|----|-----------|
 |`amount`|`uint256`|The amount of tokens requested for withdrawal.|
+
+### LegionSale__InvalidMerkleProof
+Thrown when an invalid Merkle proof is provided for referrer fee claims.
+
+
+```solidity
+error LegionSale__InvalidMerkleProof();
+```
 
 ### LegionSale__InvestorHasClaimedExcess
 Thrown when an investor who has already claimed excess capital attempts another action.

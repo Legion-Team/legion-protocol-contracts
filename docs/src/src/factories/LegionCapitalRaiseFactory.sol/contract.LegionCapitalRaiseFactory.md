@@ -1,5 +1,5 @@
 # LegionCapitalRaiseFactory
-[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/ee293af08cf63f9bfeacc7adda6146d75c306212/src/factories/LegionCapitalRaiseFactory.sol)
+[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/8b23239dfc702a4510efb5dd06fb67719eb5eab0/src/factories/LegionCapitalRaiseFactory.sol)
 
 **Inherits:**
 [ILegionCapitalRaiseFactory](/src/interfaces/factories/ILegionCapitalRaiseFactory.sol/interface.ILegionCapitalRaiseFactory.md), Ownable

@@ -6,3 +6,4 @@ forge script script/LegionPreLiquidApprovedSaleFactory.s.sol:LegionPreLiquidAppr
 forge script script/LegionPreLiquidOpenApplicationSaleFactory.s.sol:LegionPreLiquidOpenApplicationSaleFactoryScript --rpc-url $RPC_URL --broadcast --verify -vvvv
 forge script script/LegionSealedBidAuctionSaleFactory.s.sol:LegionSealedBidAuctionSaleFactoryScript --rpc-url $RPC_URL --broadcast --verify -vvvv
 forge script script/LegionAddressRegistry.s.sol:LegionAddressRegistryScript --rpc-url $RPC_URL --broadcast --verify -vvvv
+forge script script/LegionReferrerFeeDistributor.s.sol:LegionReferrerFeeDistributor --rpc-url $RPC_URL --broadcast --verify -vvvv
