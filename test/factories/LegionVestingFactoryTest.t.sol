@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import { MockERC20 } from "@solady/test/utils/mocks/MockERC20.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Test, console2, Vm } from "forge-std/Test.sol";
 
@@ -54,12 +55,16 @@ contract LegionVestingFactoryTest is Test {
      */
     address public vestingController = address(0x05);
 
+    /// @notice Mock ERC20 token used for vesting tests
+    MockERC20 public askToken;
+
     /**
      * @notice Sets up the test environment by deploying the LegionVestingFactory
      * @dev Initializes the factory contract with no initial owner restrictions
      */
     function setUp() public {
         legionVestingFactory = new LegionVestingFactory();
+        askToken = new MockERC20("LFG Coin", "LFG", 18);
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -85,7 +90,14 @@ contract LegionVestingFactoryTest is Test {
      */
     function prepareCreateLegionLinearEpochVesting() public returns (address) {
         legionLinearEpochVestingInstance = legionVestingFactory.createLinearEpochVesting(
-            vestingOwner, vestingController, uint64(block.timestamp), uint64(52 weeks), uint64(1 hours), 1 weeks, 52
+            vestingOwner,
+            vestingController,
+            address(askToken),
+            uint64(block.timestamp),
+            uint64(52 weeks),
+            uint64(1 hours),
+            1 weeks,
+            52
         );
         return legionLinearEpochVestingInstance;
     }

@@ -36,8 +36,12 @@ abstract contract LegionVestingManager is ILegionVestingManager {
 
     /// @dev Creates a vesting schedule contract for an investor based on configuration.
     /// @param _investorVestingConfig The vesting schedule configuration for the investor.
+    /// @param _askToken The address of the token used for vesting.
     /// @return vestingInstance The address of the deployed vesting contract instance.
-    function _createVesting(LegionInvestorVestingConfig calldata _investorVestingConfig)
+    function _createVesting(
+        LegionInvestorVestingConfig calldata _investorVestingConfig,
+        address _askToken
+    )
         internal
         virtual
         returns (address payable vestingInstance)
@@ -60,6 +64,7 @@ abstract contract LegionVestingManager is ILegionVestingManager {
                 msg.sender,
                 s_vestingConfig.vestingController,
                 s_vestingConfig.vestingFactory,
+                _askToken,
                 _investorVestingConfig.vestingStartTime,
                 _investorVestingConfig.vestingDurationSeconds,
                 _investorVestingConfig.vestingCliffDurationSeconds,
@@ -99,6 +104,7 @@ abstract contract LegionVestingManager is ILegionVestingManager {
     /// @param _beneficiary The address to receive the vested tokens.
     /// @param _vestingController The address of the vesting controller contract.
     /// @param _vestingFactory The address of the vesting factory contract.
+    /// @param _askToken The address of the token to be vested.
     /// @param _startTimestamp The Unix timestamp (seconds) when vesting starts.
     /// @param _durationSeconds The duration of the vesting period in seconds.
     /// @param _cliffDurationSeconds The duration of the cliff period in seconds.
@@ -109,6 +115,7 @@ abstract contract LegionVestingManager is ILegionVestingManager {
         address _beneficiary,
         address _vestingController,
         address _vestingFactory,
+        address _askToken,
         uint64 _startTimestamp,
         uint64 _durationSeconds,
         uint64 _cliffDurationSeconds,
@@ -123,6 +130,7 @@ abstract contract LegionVestingManager is ILegionVestingManager {
         vestingInstance = ILegionVestingFactory(_vestingFactory).createLinearEpochVesting(
             _beneficiary,
             _vestingController,
+            _askToken,
             _startTimestamp,
             _durationSeconds,
             _cliffDurationSeconds,

@@ -68,7 +68,14 @@ contract LegionLinearEpochVestingTest is Test {
      */
     function prepareCreateLegionLinearEpochVesting() public {
         legionVestingInstance = legionVestingFactory.createLinearEpochVesting(
-            vestingOwner, vestingController, uint64(block.timestamp), 2_678_400 * 12, uint64(1 hours), 2_678_400, 12
+            vestingOwner,
+            vestingController,
+            address(askToken),
+            uint64(block.timestamp),
+            2_678_400 * 12,
+            uint64(1 hours),
+            2_678_400,
+            12
         );
         vm.deal(legionVestingInstance, 1200 ether);
         askToken.mint(legionVestingInstance, 1200 * 1e18);
@@ -111,7 +118,14 @@ contract LegionLinearEpochVestingTest is Test {
 
         // Act
         LegionLinearEpochVesting(payable(legionVestingInstance)).initialize(
-            vestingOwner, vestingController, uint64(block.timestamp), 2_678_400 * 12, uint64(1 hours), 2_678_400, 12
+            vestingOwner,
+            vestingController,
+            address(askToken),
+            uint64(block.timestamp),
+            2_678_400 * 12,
+            uint64(1 hours),
+            2_678_400,
+            12
         );
     }
 
@@ -128,7 +142,14 @@ contract LegionLinearEpochVestingTest is Test {
 
         // Act
         LegionLinearEpochVesting(payable(linearVestingImplementation)).initialize(
-            vestingOwner, vestingController, uint64(block.timestamp), 2_678_400 * 12, uint64(1 hours), 2_678_400, 12
+            vestingOwner,
+            vestingController,
+            address(askToken),
+            uint64(block.timestamp),
+            2_678_400 * 12,
+            uint64(1 hours),
+            2_678_400,
+            12
         );
     }
 
@@ -142,7 +163,14 @@ contract LegionLinearEpochVestingTest is Test {
 
         // Act
         LegionLinearEpochVesting(payable(linearVestingTemplate)).initialize(
-            vestingOwner, vestingController, uint64(block.timestamp), 2_678_400 * 12, uint64(1 hours), 2_678_400, 12
+            vestingOwner,
+            vestingController,
+            address(askToken),
+            uint64(block.timestamp),
+            2_678_400 * 12,
+            uint64(1 hours),
+            2_678_400,
+            12
         );
     }
 
@@ -163,6 +191,21 @@ contract LegionLinearEpochVestingTest is Test {
 
         // Act
         LegionLinearEpochVesting(payable(legionVestingInstance)).release(address(askToken));
+    }
+
+    /**
+     * @notice Tests that releasing tokens with a different token address reverts
+     * @dev Expects LegionVesting__OnlyAskTokenReleasable revert when releasing non-ask token
+     */
+    function test_release_revertsIfDifferentThanAskToken() public {
+        // Arrange
+        prepareCreateLegionLinearEpochVesting();
+
+        // Expect
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionVesting__OnlyAskTokenReleasable.selector));
+
+        // Act
+        LegionLinearEpochVesting(payable(legionVestingInstance)).release(address(0x123));
     }
 
     /**

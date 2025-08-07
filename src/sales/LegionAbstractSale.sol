@@ -297,7 +297,7 @@ abstract contract LegionAbstractSale is
         // Deploy vesting and distribute tokens only if there is anything to distribute
         if (amountToBeVested != 0) {
             // Deploy a vesting contract for the investor
-            address payable vestingAddress = _createVesting(investorVestingConfig);
+            address payable vestingAddress = _createVesting(investorVestingConfig, addressConfig.askToken);
 
             // Save the vesting address for the investor
             position.vestingAddress = vestingAddress;

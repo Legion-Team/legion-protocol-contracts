@@ -66,6 +66,7 @@ contract LegionVestingFactory is ILegionVestingFactory {
     function createLinearEpochVesting(
         address beneficiary,
         address vestingController,
+        address askToken,
         uint64 startTimestamp,
         uint64 durationSeconds,
         uint64 cliffDurationSeconds,
@@ -82,6 +83,7 @@ contract LegionVestingFactory is ILegionVestingFactory {
         emit NewLinearEpochVestingCreated(
             beneficiary,
             vestingController,
+            askToken,
             startTimestamp,
             durationSeconds,
             cliffDurationSeconds,
@@ -93,6 +95,7 @@ contract LegionVestingFactory is ILegionVestingFactory {
         LegionLinearEpochVesting(linearEpochVestingInstance).initialize(
             beneficiary,
             vestingController,
+            askToken,
             startTimestamp,
             durationSeconds,
             cliffDurationSeconds,

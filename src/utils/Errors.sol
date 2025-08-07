@@ -197,6 +197,9 @@ library Errors {
     /// @param currentTimestamp The current block timestamp when the attempt was made.
     error LegionVesting__CliffNotEnded(uint256 currentTimestamp);
 
+    /// @notice Thrown when a token different from the expected ask token is released.
+    error LegionVesting__OnlyAskTokenReleasable();
+
     /// @notice Thrown when the vesting configuration parameters are invalid.
     /// @param vestingType The type of vesting schedule (linear or epoch-based).
     /// @param vestingStartTimestamp The Unix timestamp when vesting starts.

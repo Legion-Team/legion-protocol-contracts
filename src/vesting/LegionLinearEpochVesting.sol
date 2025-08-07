@@ -39,6 +39,9 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
     /// @dev Address of the vesting controller.
     address private s_vestingController;
 
+    /// @dev The address of the token to be vested.
+    address private s_askToken;
+
     /// @notice Restricts token release until the cliff period has ended.
     /// @dev Reverts with LegionVesting__CliffNotEnded if block.timestamp is before cliffEndTimestamp.
     modifier onlyCliffEnded() {
@@ -53,6 +56,14 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
         _;
     }
 
+    /// @notice Restricts function access to release the ask token only.
+    /// @dev Reverts if the token being released is not the configured ask token.
+    /// @param token The address of the token to release.
+    modifier onlyAskToken(address token) {
+        if (token != s_askToken) revert Errors.LegionVesting__OnlyAskTokenReleasable();
+        _;
+    }
+
     /// @notice Constructor for the LegionLinearEpochVesting contract.
     /// @dev Prevents the implementation contract from being initialized directly.
     constructor() {
@@ -64,6 +75,7 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
     /// @dev Sets up the vesting schedule, cliff, and epoch details; callable only once.
     /// @param _beneficiary The address to receive the vested tokens.
     /// @param _vestingController The address of the vesting controller contract for access control.
+    /// @param _askToken The address of the token to be vested.
     /// @param _startTimestamp The Unix timestamp (seconds) when vesting starts.
     /// @param _durationSeconds The total duration of the vesting period in seconds.
     /// @param _cliffDurationSeconds The duration of the cliff period in seconds.
@@ -72,6 +84,7 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
     function initialize(
         address _beneficiary,
         address _vestingController,
+        address _askToken,
         uint64 _startTimestamp,
         uint64 _durationSeconds,
         uint64 _cliffDurationSeconds,
@@ -95,6 +108,9 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
 
         // Set the vesting controller address for access control
         s_vestingController = _vestingController;
+
+        // Set the ask token address
+        s_askToken = _askToken;
     }
 
     /// @notice Returns the timestamp when the cliff period ends
@@ -128,7 +144,7 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
     /// @notice Releases vested tokens of a specific type to the beneficiary.
     /// @dev Overrides VestingWalletUpgradeable; requires cliff to have ended.
     /// @param token The address of the token to release.
-    function release(address token) public override onlyCliffEnded {
+    function release(address token) public override onlyAskToken(token) onlyCliffEnded {
         super.release(token);
 
         // Update the last claimed epoch

@@ -179,7 +179,7 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
         // Deploy vesting and distribute tokens only if there is anything to distribute
         if (amountToBeVested != 0) {
             // Deploy a vesting contract for the investor
-            address payable vestingAddress = _createVesting(investorVestingConfig);
+            address payable vestingAddress = _createVesting(investorVestingConfig, tokenDistributorConfig.askToken);
 
             // Save the vesting contract address for the investor
             position.vestingAddress = vestingAddress;
