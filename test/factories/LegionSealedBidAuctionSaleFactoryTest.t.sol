@@ -259,10 +259,6 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
 
         assertEq(LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).name(), "Legion LFG Sale");
         assertEq(LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).symbol(), "LLFGS");
-        assertEq(
-            LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).tokenURI(1),
-            "https://metadata.legion.cc/1"
-        );
     }
 
     /**

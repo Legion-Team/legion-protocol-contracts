@@ -301,9 +301,5 @@ contract LegionPreLiquidOpenApplicationSaleFactoryTest is Test {
 
         assertEq(LegionPreLiquidOpenApplicationSale(payable(legionPreLiquidSaleInstance)).name(), "Legion LFG Sale");
         assertEq(LegionPreLiquidOpenApplicationSale(payable(legionPreLiquidSaleInstance)).symbol(), "LLFGS");
-        assertEq(
-            LegionPreLiquidOpenApplicationSale(payable(legionPreLiquidSaleInstance)).tokenURI(1),
-            "https://metadata.legion.cc/1"
-        );
     }
 }

@@ -203,7 +203,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
                 referrerFeeReceiver: referrerFeeReceiver,
                 saleName: "Legion LFG Pre-Liquid Sale",
                 saleSymbol: "LLFGPS",
-                saleBaseURI: "https://metadata.legion.cc"
+                saleBaseURI: "https://metadata.legion.cc/"
             })
         );
         vm.prank(legionBouncer);
@@ -774,6 +774,38 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         vm.prank(investor1);
         ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).invest(
             10_000 * 1e6, 10_000 * 1e6, 5_000_000_000_000_000, signatureInv1
+        );
+    }
+
+    /**
+     * @notice Tests that successful investment mints an investor position
+     * @dev Expects ERC721 balance increase and correct token URI after investment
+     */
+    function test_invest_successfullyMintsInvestorPosition() public {
+        // Arrange
+        prepareCreateLegionPreLiquidSale();
+        prepareMintAndApproveTokens();
+        prepareInvestorSignatures();
+
+        vm.warp(1);
+
+        // Expect
+        vm.expectRevert("ERC721: URI query for nonexistent token");
+
+        vm.prank(investor1);
+        LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).tokenURI(1);
+
+        // Act
+        vm.prank(investor1);
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).invest(
+            10_000 * 1e6, 10_000 * 1e6, 5_000_000_000_000_000, signatureInv1
+        );
+
+        // Assert
+        assertEq(ERC721(legionPreLiquidSaleInstance).balanceOf(investor1), 1);
+        assertEq(
+            LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).tokenURI(1),
+            "https://metadata.legion.cc/1"
         );
     }
 

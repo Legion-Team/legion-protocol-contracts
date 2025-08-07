@@ -161,7 +161,6 @@ contract LegionCapitalRaiseFactoryTest is Test {
 
         assertEq(LegionCapitalRaise(payable(legionCapitalRaiseInstance)).name(), "Legion LFG Sale");
         assertEq(LegionCapitalRaise(payable(legionCapitalRaiseInstance)).symbol(), "LLFGS");
-        assertEq(LegionCapitalRaise(payable(legionCapitalRaiseInstance)).tokenURI(1), "https://metadata.legion.cc/1");
     }
 
     /**

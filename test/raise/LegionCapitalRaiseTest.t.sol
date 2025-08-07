@@ -168,7 +168,7 @@ contract LegionCapitalRaiseTest is Test {
                 referrerFeeReceiver: referrerFeeReceiver,
                 saleName: "Legion LFG Sale",
                 saleSymbol: "LLFGS",
-                saleBaseURI: "https://metadata.legion.cc"
+                saleBaseURI: "https://metadata.legion.cc/"
             })
         );
         vm.prank(legionBouncer);
@@ -635,6 +635,35 @@ contract LegionCapitalRaiseTest is Test {
             ILegionCapitalRaise(payable(legionCapitalRaiseInstance)).investorPosition(investor1);
 
         assertEq(position.investedCapital, 10_000 * 1e6);
+    }
+
+    /**
+     * @notice Tests that successful investment mints an investor position
+     * @dev Expects ERC721 balance increase and correct token URI after investment
+     */
+    function test_invest_successfullyMintsInvestorPosition() public {
+        // Arrange
+        prepareCreateLegionCapitalRaise();
+        prepareMintAndApproveTokens();
+        prepareInvestorSignatures();
+
+        vm.warp(1);
+
+        // Expect
+        vm.expectRevert("ERC721: URI query for nonexistent token");
+
+        vm.prank(investor1);
+        LegionCapitalRaise(payable(legionCapitalRaiseInstance)).tokenURI(1);
+
+        // Act
+        vm.prank(investor1);
+        ILegionCapitalRaise(legionCapitalRaiseInstance).invest(
+            10_000 * 1e6, 10_000 * 1e6, 5_000_000_000_000_000, signatureInv1
+        );
+
+        // Assert
+        assertEq(ERC721(legionCapitalRaiseInstance).balanceOf(investor1), 1);
+        assertEq(LegionCapitalRaise(payable(legionCapitalRaiseInstance)).tokenURI(1), "https://metadata.legion.cc/1");
     }
 
     /**

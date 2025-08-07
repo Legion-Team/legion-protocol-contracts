@@ -66,6 +66,9 @@ abstract contract LegionPositionManager is ILegionPositionManager, ERC5192 {
 
     /// @inheritdoc ERC5192
     function tokenURI(uint256 id) public view override returns (string memory) {
+        if (!_exists(id)) {
+            revert("ERC721: URI query for nonexistent token");
+        }
         string memory baseURI = s_positionManagerConfig.baseURI;
         return bytes(baseURI).length > 0 ? string.concat(baseURI, id.toString()) : "";
     }

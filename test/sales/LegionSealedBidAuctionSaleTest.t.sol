@@ -298,7 +298,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
                 referrerFeeReceiver: referrerFeeReceiver,
                 saleName: "Legion LFG Sale",
                 saleSymbol: "LLFGS",
-                saleBaseURI: "https://metadata.legion.cc"
+                saleBaseURI: "https://metadata.legion.cc/"
             }),
             ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
@@ -918,6 +918,39 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.prank(investor1);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).invest(
             1000 * 1e6, sealedBidDataInvestor1, signatureInv1
+        );
+    }
+
+    /**
+     * @notice Tests that successful investment mints an investor position
+     * @dev Expects ERC721 balance increase and correct token URI after investment
+     */
+    function test_invest_successfullyMintsInvestorPosition() public {
+        // Arrange
+        prepareSealedBidData();
+        prepareCreateLegionSealedBidAuction();
+        prepareMintAndApproveInvestorTokens();
+        prepareInvestorSignatures();
+
+        vm.warp(1);
+
+        // Expect
+        vm.expectRevert("ERC721: URI query for nonexistent token");
+
+        vm.prank(investor1);
+        LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).tokenURI(1);
+
+        // Act
+        vm.prank(investor1);
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).invest(
+            1000 * 1e6, sealedBidDataInvestor1, signatureInv1
+        );
+
+        // Assert
+        assertEq(ERC721(legionSealedBidAuctionInstance).balanceOf(investor1), 1);
+        assertEq(
+            LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).tokenURI(1),
+            "https://metadata.legion.cc/1"
         );
     }
 

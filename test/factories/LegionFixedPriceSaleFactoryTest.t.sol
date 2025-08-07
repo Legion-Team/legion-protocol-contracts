@@ -292,8 +292,5 @@ contract LegionFixedPriceSaleFactoryTest is Test {
 
         assertEq(LegionFixedPriceSale(payable(legionFixedPriceSaleInstance)).name(), "Legion LFG Sale");
         assertEq(LegionFixedPriceSale(payable(legionFixedPriceSaleInstance)).symbol(), "LLFGS");
-        assertEq(
-            LegionFixedPriceSale(payable(legionFixedPriceSaleInstance)).tokenURI(1), "https://metadata.legion.cc/1"
-        );
     }
 }
