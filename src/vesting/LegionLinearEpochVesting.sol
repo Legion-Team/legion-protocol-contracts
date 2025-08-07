@@ -196,6 +196,7 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
         // If all epochs have elapsed, return the total allocation
         if (currentEpoch >= s_numberOfEpochs + 1) {
             amountVested = _totalAllocation;
+            return amountVested;
         }
 
         // Otherwise, calculate the amount vested based on the current epoch
