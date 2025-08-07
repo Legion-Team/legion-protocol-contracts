@@ -511,7 +511,7 @@ abstract contract LegionAbstractSale is
         whenNotPaused
         whenSaleNotCanceled
         whenRefundPeriodIsOver
-        whenTokensNotSupplied
+        whenSaleResultsNotPublished
     {
         // Verify that the position can be transferred
         _verifyCanTransferInvestorPosition(positionId);
@@ -533,7 +533,7 @@ abstract contract LegionAbstractSale is
         whenNotPaused
         whenSaleNotCanceled
         whenRefundPeriodIsOver
-        whenTokensNotSupplied
+        whenSaleResultsNotPublished
     {
         // Verify the signature for transferring the position
         _verifyTransferSignature(from, to, positionId, s_addressConfig.legionSigner, transferSignature);

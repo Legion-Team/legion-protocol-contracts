@@ -3216,10 +3216,11 @@ contract LegionSealedBidAuctionSaleTest is Test {
     }
 
     /**
-     * @notice Test case: Attempt to transfer investor position if tokens are already supplied
-     * @dev Expects LegionSale__TokensAlreadySupplied revert when trying to transfer position after tokens are supplied
+     * @notice Test case: Attempt to transfer investor position if sale results are published
+     * @dev Expects LegionSale__SaleResultsAlreadyPublished revert when trying to transfer position after sale results
+     * are published
      */
-    function test_transferInvestorPosition_revertsIfTokensAreSupplied() public {
+    function test_transferInvestorPosition_revertsIfSaleResultsArePublished() public {
         // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
@@ -3244,11 +3245,8 @@ contract LegionSealedBidAuctionSaleTest is Test {
             claimTokensMerkleRoot, acceptedCapitalMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
-        vm.prank(projectAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
-
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__TokensAlreadySupplied.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleResultsAlreadyPublished.selector));
 
         // Act
         vm.prank(legionBouncer);
@@ -3508,10 +3506,11 @@ contract LegionSealedBidAuctionSaleTest is Test {
     }
 
     /**
-     * @notice Test case: Attempt to transfer investor position with signature if tokens are already supplied
-     * @dev Expects LegionSale__TokensAlreadySupplied revert when trying to transfer position after tokens are supplied
+     * @notice Test case: Attempt to transfer investor position with signature if sale results are published
+     * @dev Expects LegionSale__SaleResultsAlreadyPublished revert when trying to transfer position after sale results
+     * are published
      */
-    function test_transferInvestorPositionWithSignature_revertsIfTokensAreSupplied() public {
+    function test_transferInvestorPositionWithSignature_revertsIfSaleResultsArePublished() public {
         // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
@@ -3537,11 +3536,8 @@ contract LegionSealedBidAuctionSaleTest is Test {
             claimTokensMerkleRoot, acceptedCapitalMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY
         );
 
-        vm.prank(projectAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
-
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__TokensAlreadySupplied.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleResultsAlreadyPublished.selector));
 
         // Act
         vm.prank(investor1);
