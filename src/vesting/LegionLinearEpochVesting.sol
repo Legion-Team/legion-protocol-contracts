@@ -200,7 +200,7 @@ contract LegionLinearEpochVesting is VestingWalletUpgradeable {
 
         // Otherwise, calculate the amount vested based on the current epoch
         if (currentEpoch > s_lastClaimedEpoch) {
-            amountVested = ((currentEpoch - 1 - s_lastClaimedEpoch) * _totalAllocation) / s_numberOfEpochs;
+            amountVested = ((currentEpoch - 1) * _totalAllocation) / s_numberOfEpochs;
         }
     }
 }
