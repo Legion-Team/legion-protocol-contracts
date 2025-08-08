@@ -112,6 +112,10 @@ library Errors {
     /// @param positionId The ID of the position that cannot be transferred.
     error LegionSale__UnableToTransferInvestorPosition(uint256 positionId);
 
+    /// @notice Thrown when attempting to merge an investor position that has been refunded or settled.
+    /// @param positionId The ID of the position that cannot be merged.
+    error LegionSale__UnableToMergeInvestorPosition(uint256 positionId);
+
     /// @notice Thrown when a function is not called by the Legion address.
     error LegionSale__NotCalledByLegion();
 

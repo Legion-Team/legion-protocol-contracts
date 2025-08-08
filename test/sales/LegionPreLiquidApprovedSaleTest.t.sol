@@ -3168,6 +3168,44 @@ contract LegionPreLiquidApprovedSaleTest is Test {
     }
 
     /**
+     * @notice Test case: Attempt to transfer investor position if existing position is refunded
+     * @dev Expects LegionSale__UnableToMergeInvestorPosition revert when trying to transfer position of refunded
+     * investor
+     */
+    function test_transferInvestorPosition_revertsIfExistingPositionIsRefunded() public {
+        // Arrange
+        prepareCreateLegionPreLiquidSale();
+        prepareMintAndApproveTokens();
+        prepareInvestorSignatures();
+
+        vm.warp(block.timestamp + 1);
+
+        vm.prank(investor1);
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).invest(
+            10_000 * 1e6, 10_000 * 1e6, 5_000_000_000_000_000, signatureInv1
+        );
+
+        vm.startPrank(investor2);
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).invest(
+            10_000 * 1e6, 10_000 * 1e6, 5_000_000_000_000_000, signatureInv2
+        );
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).refund();
+        vm.stopPrank();
+
+        vm.prank(projectAdmin);
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
+
+        vm.warp(block.timestamp + 2 weeks + 1);
+
+        // Expect
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__UnableToMergeInvestorPosition.selector, 2));
+
+        // Act
+        vm.prank(legionBouncer);
+        LegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).transferInvestorPosition(investor1, investor2, 1);
+    }
+
+    /**
      * @notice Test case: Attempt to transfer investor position without Legion admin permissions
      * @dev Expects LegionSale__NotCalledByLegion revert when called by non-Legion admin
      */
@@ -3464,6 +3502,47 @@ contract LegionPreLiquidApprovedSaleTest is Test {
             LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPosition(investor2)
                 .cachedInvestAmount,
             20_000 * 1e6
+        );
+    }
+
+    /**
+     * @notice Test case: Attempt to transfer investor position with signature if existing position is refunded
+     * @dev Expects LegionSale__UnableToMergeInvestorPosition revert when trying to transfer position of refunded
+     * investor
+     */
+    function test_transferInvestorPositionWithSignature_revertsIfExistingPositionIsRefunded() public {
+        // Arrange
+        prepareCreateLegionPreLiquidSale();
+        prepareMintAndApproveTokens();
+        prepareInvestorSignatures();
+        prepareTransferSignatures();
+
+        vm.warp(block.timestamp + 1);
+
+        vm.prank(investor1);
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).invest(
+            10_000 * 1e6, 10_000 * 1e6, 5_000_000_000_000_000, signatureInv1
+        );
+
+        vm.startPrank(investor2);
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).invest(
+            10_000 * 1e6, 10_000 * 1e6, 5_000_000_000_000_000, signatureInv2
+        );
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).refund();
+        vm.stopPrank();
+
+        vm.prank(projectAdmin);
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
+
+        vm.warp(block.timestamp + 2 weeks + 1);
+
+        // Expect
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__UnableToMergeInvestorPosition.selector, 2));
+
+        // Act
+        vm.prank(investor1);
+        LegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).transferInvestorPositionWithAuthorization(
+            investor1, investor2, 1, signatureInv1Transfer
         );
     }
 

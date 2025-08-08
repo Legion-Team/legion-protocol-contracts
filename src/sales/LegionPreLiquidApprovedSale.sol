@@ -831,6 +831,11 @@ contract LegionPreLiquidApprovedSale is
             InvestorPosition memory positionToBurn = s_investorPositions[_positionId];
             InvestorPosition storage positionToUpdate = s_investorPositions[positionIdTo];
 
+            // Verify that the updated position is not settled or refunded
+            if (positionToUpdate.hasRefunded || positionToUpdate.hasSettled) {
+                revert Errors.LegionSale__UnableToMergeInvestorPosition(positionIdTo);
+            }
+
             // Update the existing position with the transferred values
             positionToUpdate.investedCapital += positionToBurn.investedCapital;
             positionToUpdate.cachedTokenAllocationRate += positionToBurn.cachedTokenAllocationRate;
