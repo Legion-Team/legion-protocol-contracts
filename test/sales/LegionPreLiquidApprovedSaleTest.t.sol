@@ -3291,10 +3291,11 @@ contract LegionPreLiquidApprovedSaleTest is Test {
     }
 
     /**
-     * @notice Test case: Attempt to transfer investor position if tokens are already supplied
-     * @dev Expects LegionSale__TokensAlreadySupplied revert when trying to transfer position after tokens are supplied
+     * @notice Test case: Attempt to transfer investor position if sale results are already published
+     * @dev Expects LegionSale__SaleResultsAlreadyPublished revert when trying to transfer position after sale results
+     * are published
      */
-    function test_transferInvestorPosition_revertsIfTokensAreSupplied() public {
+    function test_transferInvestorPosition_revertsIfSaleResultsArePublished() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
         prepareMintAndApproveTokens();
@@ -3317,11 +3318,8 @@ contract LegionPreLiquidApprovedSaleTest is Test {
             address(askToken), 1_000_000 * 1e18, 20_000 * 1e18
         );
 
-        vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).supplyTokens(20_000 * 1e18, 500 * 1e18, 200 * 1e18);
-
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__TokensAlreadySupplied.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleResultsAlreadyPublished.selector));
 
         // Act
         vm.prank(legionBouncer);
@@ -3646,10 +3644,11 @@ contract LegionPreLiquidApprovedSaleTest is Test {
     }
 
     /**
-     * @notice Test case: Attempt to transfer investor position with signature if tokens are already supplied
-     * @dev Expects LegionSale__TokensAlreadySupplied revert when trying to transfer position after tokens are supplied
+     * @notice Test case: Attempt to transfer investor position with signature if sale results are already published
+     * @dev Expects LegionSale__SaleResultsAlreadyPublished revert when trying to transfer position after sale results
+     * are published
      */
-    function test_transferInvestorPositionWithSignature_revertsIfTokensAreSupplied() public {
+    function test_transferInvestorPositionWithSignature_revertsIfSaleResultsArePublished() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
         prepareMintAndApproveTokens();
@@ -3673,11 +3672,8 @@ contract LegionPreLiquidApprovedSaleTest is Test {
             address(askToken), 1_000_000 * 1e18, 20_000 * 1e18
         );
 
-        vm.prank(projectAdmin);
-        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).supplyTokens(20_000 * 1e18, 500 * 1e18, 200 * 1e18);
-
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__TokensAlreadySupplied.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleResultsAlreadyPublished.selector));
 
         // Act
         vm.prank(investor1);

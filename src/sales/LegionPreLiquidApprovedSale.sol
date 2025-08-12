@@ -146,6 +146,14 @@ contract LegionPreLiquidApprovedSale is
         _;
     }
 
+    /// @notice Restricts interaction to when the sale results have not been published.
+    /// @dev Reverts if sale results have been published.
+    modifier whenSaleResultsNotPublished() {
+        // Verify that sale results have not been published
+        _verifySaleResultsNotPublished();
+        _;
+    }
+
     /// @notice Constructor for the LegionPreLiquidApprovedSale contract.
     /// @dev Prevents the implementation contract from being initialized directly.
     constructor() {
@@ -632,7 +640,7 @@ contract LegionPreLiquidApprovedSale is
         whenSaleNotCanceled
         whenSaleEnded
         whenRefundPeriodIsOver
-        whenTokensNotSupplied
+        whenSaleResultsNotPublished
     {
         // Verify that the position can be transferred
         _verifyCanTransferInvestorPosition(positionId);
@@ -655,7 +663,7 @@ contract LegionPreLiquidApprovedSale is
         whenSaleNotCanceled
         whenSaleEnded
         whenRefundPeriodIsOver
-        whenTokensNotSupplied
+        whenSaleResultsNotPublished
     {
         // Verify the signature for transferring the position
         _verifyTransferSignature(from, to, positionId, s_saleConfig.legionSigner, transferSignature);
@@ -987,6 +995,11 @@ contract LegionPreLiquidApprovedSale is
         if (refundEndTime > 0 && block.timestamp >= refundEndTime) {
             revert Errors.LegionSale__RefundPeriodIsOver(block.timestamp, refundEndTime);
         }
+    }
+
+    /// @dev Verifies that sale results have not been published.
+    function _verifySaleResultsNotPublished() internal view virtual {
+        if (s_saleStatus.totalTokensAllocated != 0) revert Errors.LegionSale__SaleResultsAlreadyPublished();
     }
 
     /// @dev Verifies that the investor has not refunded.
