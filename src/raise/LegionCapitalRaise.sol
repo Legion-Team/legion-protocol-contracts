@@ -158,6 +158,9 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
         // Verify that the invest signature has not been used
         _verifySignatureNotUsed(investSignature);
 
+        // Verify that the investor has not claimed excess capital
+        _verifyCanClaimExcessCapital(positionId);
+
         // Load the investor position
         InvestorPosition storage position = s_investorPositions[positionId];
 
