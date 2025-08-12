@@ -347,7 +347,7 @@ abstract contract LegionAbstractSale is
         emit ExcessCapitalWithdrawn(amount, msg.sender, positionId);
 
         // Transfer the excess capital back to the investor
-        SafeTransferLib.safeTransfer(s_addressConfig.bidToken, msg.sender, amount);
+        if (amount > 0) SafeTransferLib.safeTransfer(s_addressConfig.bidToken, msg.sender, amount);
     }
 
     /// @inheritdoc ILegionAbstractSale
@@ -684,7 +684,7 @@ abstract contract LegionAbstractSale is
             InvestorPosition storage positionToUpdate = s_investorPositions[positionIdTo];
 
             // Verify that the updated position is not settled or refunded
-            if (positionToUpdate.hasRefunded || positionToUpdate.hasSettled) {
+            if (positionToUpdate.hasRefunded || positionToUpdate.hasSettled || !positionToUpdate.hasClaimedExcess) {
                 revert Errors.LegionSale__UnableToMergeInvestorPosition(positionIdTo);
             }
 
@@ -921,7 +921,7 @@ abstract contract LegionAbstractSale is
         InvestorPosition memory position = s_investorPositions[_positionId];
 
         // Verify that the position is not settled or refunded
-        if (position.hasRefunded || position.hasSettled) {
+        if (position.hasRefunded || position.hasSettled || !position.hasClaimedExcess) {
             revert Errors.LegionSale__UnableToTransferInvestorPosition(_positionId);
         }
     }

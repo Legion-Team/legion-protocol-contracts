@@ -186,7 +186,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @dev Precomputed roots for token claims, capital distribution, and malicious scenarios
      */
     bytes32 public claimTokensMerkleRoot = 0x8d7c018c2099eaee9884eb772e1565b75cb717aa61d4caa276dd612273cdd649;
-    bytes32 public acceptedCapitalMerkleRoot = 0x54c416133cce27821e67f6c475e59fcdafb30c065ea8feaac86970c532db0202;
+    bytes32 public acceptedCapitalMerkleRoot = 0x380f79c2e8e6e4bc37b7fda83ac0f1a33b5abc5d70831c08add80068b2d564cf;
     bytes32 public excessCapitalMerkleRootMalicious = 0x04169dca2cf842bea9fcf4df22c9372c6d6f04410bfa446585e287aa1c834974;
 
     /**
@@ -1153,8 +1153,8 @@ contract LegionSealedBidAuctionSaleTest is Test {
         prepareInvestedCapitalFromAllInvestors();
 
         bytes32[] memory excessClaimProofInvestor2 = new bytes32[](2);
-        excessClaimProofInvestor2[0] = bytes32(0x048605503187722f63911ca26b8cca1d0a2afc10509c8be7f963371fec52b188);
-        excessClaimProofInvestor2[1] = bytes32(0xcbe43c4b6aafb4df43acc0bebce3220a96e982592e3c306730bf73681c612708);
+        excessClaimProofInvestor2[0] = bytes32(0x5a967157246c689bfb28b0e8bdd445fe3b05cd751cb10e979ae3dbaf0a02c5c7);
+        excessClaimProofInvestor2[1] = bytes32(0x224c3f0b0526195d6161b6c193e3d2f3c63cbc435919720096ad25be50414394);
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
@@ -2414,19 +2414,19 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @notice Tests successful withdrawal of excess invested capital by an investor
      * @dev Verifies excess capital (1000 USDC) is transferred back to investor2 with valid Merkle proof
      */
-    function test_withdrawExcessInvestedCapital_successfullyTransfersBackExcessCapitalTokens() public {
+    function test_withdrawExcessInvestedCapital_successfullyTransfersBackExcessCapital() public {
         // Arrange
         prepareSealedBidData();
         prepareCreateLegionSealedBidAuction();
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
-        prepareInvestedCapitalFromAllInvestors(); // investor2 invests 2000 USDC
+        prepareInvestedCapitalFromAllInvestors();
 
         bytes32[] memory excessClaimProofInvestor2 = new bytes32[](2);
-        excessClaimProofInvestor2[0] = bytes32(0x048605503187722f63911ca26b8cca1d0a2afc10509c8be7f963371fec52b188);
-        excessClaimProofInvestor2[1] = bytes32(0xcbe43c4b6aafb4df43acc0bebce3220a96e982592e3c306730bf73681c612708);
+        excessClaimProofInvestor2[0] = bytes32(0x5a967157246c689bfb28b0e8bdd445fe3b05cd751cb10e979ae3dbaf0a02c5c7);
+        excessClaimProofInvestor2[1] = bytes32(0x224c3f0b0526195d6161b6c193e3d2f3c63cbc435919720096ad25be50414394);
 
-        vm.warp(endTime() - 1); // Before sale ends (1 hour - 1 second)
+        vm.warp(endTime() - 1);
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
@@ -2462,10 +2462,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
         prepareInvestedCapitalFromAllInvestors();
 
         bytes32[] memory excessClaimProofInvestor2 = new bytes32[](2);
-        excessClaimProofInvestor2[0] = bytes32(0x048605503187722f63911ca26b8cca1d0a2afc10509c8be7f963371fec52b188);
-        excessClaimProofInvestor2[1] = bytes32(0xcbe43c4b6aafb4df43acc0bebce3220a96e982592e3c306730bf73681c612708);
+        excessClaimProofInvestor2[0] = bytes32(0x5a967157246c689bfb28b0e8bdd445fe3b05cd751cb10e979ae3dbaf0a02c5c7);
+        excessClaimProofInvestor2[1] = bytes32(0x224c3f0b0526195d6161b6c193e3d2f3c63cbc435919720096ad25be50414394);
 
-        vm.warp(endTime() - 1); // Before sale ends
+        vm.warp(endTime() - 1);
 
         vm.prank(legionBouncer);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
@@ -2532,8 +2532,8 @@ contract LegionSealedBidAuctionSaleTest is Test {
         prepareInvestedCapitalFromAllInvestors();
 
         bytes32[] memory excessClaimProofInvestor2 = new bytes32[](2);
-        excessClaimProofInvestor2[0] = bytes32(0x048605503187722f63911ca26b8cca1d0a2afc10509c8be7f963371fec52b188);
-        excessClaimProofInvestor2[1] = bytes32(0xcbe43c4b6aafb4df43acc0bebce3220a96e982592e3c306730bf73681c612708);
+        excessClaimProofInvestor2[0] = bytes32(0x5a967157246c689bfb28b0e8bdd445fe3b05cd751cb10e979ae3dbaf0a02c5c7);
+        excessClaimProofInvestor2[1] = bytes32(0x224c3f0b0526195d6161b6c193e3d2f3c63cbc435919720096ad25be50414394);
 
         vm.warp(endTime() - 1);
 
@@ -3061,6 +3061,11 @@ contract LegionSealedBidAuctionSaleTest is Test {
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
 
+        bytes32[] memory excessClaimProofInvestor1 = new bytes32[](2);
+
+        excessClaimProofInvestor1[0] = bytes32(0x94092e373061307b4d0adbfbdcdbf2952dd4f9faa4a19e459bf977b439fe7f6c);
+        excessClaimProofInvestor1[1] = bytes32(0xd8c305ca65c62aada7dd6b63558219cfac0d5dc314d02aa0cda610cb75656ee7);
+
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
@@ -3069,6 +3074,14 @@ contract LegionSealedBidAuctionSaleTest is Test {
         );
 
         vm.warp(refundEndTime() + 1);
+
+        vm.prank(legionBouncer);
+        LegionSealedBidAuctionSale(legionSealedBidAuctionInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
+
+        vm.prank(investor1);
+        LegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawExcessInvestedCapital(
+            0, excessClaimProofInvestor1
+        );
 
         // Act
         vm.prank(legionBouncer);
@@ -3096,6 +3109,15 @@ contract LegionSealedBidAuctionSaleTest is Test {
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
 
+        bytes32[] memory excessClaimProofInvestor1 = new bytes32[](2);
+        bytes32[] memory excessClaimProofInvestor2 = new bytes32[](2);
+
+        excessClaimProofInvestor1[0] = bytes32(0x94092e373061307b4d0adbfbdcdbf2952dd4f9faa4a19e459bf977b439fe7f6c);
+        excessClaimProofInvestor1[1] = bytes32(0xd8c305ca65c62aada7dd6b63558219cfac0d5dc314d02aa0cda610cb75656ee7);
+
+        excessClaimProofInvestor2[0] = bytes32(0x5a967157246c689bfb28b0e8bdd445fe3b05cd751cb10e979ae3dbaf0a02c5c7);
+        excessClaimProofInvestor2[1] = bytes32(0x224c3f0b0526195d6161b6c193e3d2f3c63cbc435919720096ad25be50414394);
+
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
@@ -3105,10 +3127,23 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         vm.prank(investor2);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).invest(
-            1000 * 1e6, sealedBidDataInvestor2, signatureInv2
+            2000 * 1e6, sealedBidDataInvestor2, signatureInv2
         );
 
         vm.warp(refundEndTime() + 1);
+
+        vm.prank(legionBouncer);
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
+
+        vm.prank(investor1);
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawExcessInvestedCapital(
+            0, excessClaimProofInvestor1
+        );
+
+        vm.prank(investor2);
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawExcessInvestedCapital(
+            1000 * 1e6, excessClaimProofInvestor2
+        );
 
         // Act
         vm.prank(legionBouncer);
@@ -3142,6 +3177,11 @@ contract LegionSealedBidAuctionSaleTest is Test {
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
 
+        bytes32[] memory excessClaimProofInvestor1 = new bytes32[](2);
+
+        excessClaimProofInvestor1[0] = bytes32(0x94092e373061307b4d0adbfbdcdbf2952dd4f9faa4a19e459bf977b439fe7f6c);
+        excessClaimProofInvestor1[1] = bytes32(0xd8c305ca65c62aada7dd6b63558219cfac0d5dc314d02aa0cda610cb75656ee7);
+
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
@@ -3151,12 +3191,20 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         vm.startPrank(investor2);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).invest(
-            1000 * 1e6, sealedBidDataInvestor2, signatureInv2
+            2000 * 1e6, sealedBidDataInvestor2, signatureInv2
         );
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).refund();
         vm.stopPrank();
 
         vm.warp(refundEndTime() + 1);
+
+        vm.prank(legionBouncer);
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
+
+        vm.prank(investor1);
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawExcessInvestedCapital(
+            0, excessClaimProofInvestor1
+        );
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__UnableToMergeInvestorPosition.selector, 2));
@@ -3367,6 +3415,11 @@ contract LegionSealedBidAuctionSaleTest is Test {
         prepareInvestorSignatures();
         prepareTransferSignatures();
 
+        bytes32[] memory excessClaimProofInvestor1 = new bytes32[](2);
+
+        excessClaimProofInvestor1[0] = bytes32(0x94092e373061307b4d0adbfbdcdbf2952dd4f9faa4a19e459bf977b439fe7f6c);
+        excessClaimProofInvestor1[1] = bytes32(0xd8c305ca65c62aada7dd6b63558219cfac0d5dc314d02aa0cda610cb75656ee7);
+
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
@@ -3375,6 +3428,14 @@ contract LegionSealedBidAuctionSaleTest is Test {
         );
 
         vm.warp(refundEndTime() + 1);
+
+        vm.prank(legionBouncer);
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
+
+        vm.prank(investor1);
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawExcessInvestedCapital(
+            0, excessClaimProofInvestor1
+        );
 
         // Act
         vm.prank(investor1);
@@ -3410,6 +3471,15 @@ contract LegionSealedBidAuctionSaleTest is Test {
         prepareInvestorSignatures();
         prepareTransferSignatures();
 
+        bytes32[] memory excessClaimProofInvestor1 = new bytes32[](2);
+        bytes32[] memory excessClaimProofInvestor2 = new bytes32[](2);
+
+        excessClaimProofInvestor1[0] = bytes32(0x94092e373061307b4d0adbfbdcdbf2952dd4f9faa4a19e459bf977b439fe7f6c);
+        excessClaimProofInvestor1[1] = bytes32(0xd8c305ca65c62aada7dd6b63558219cfac0d5dc314d02aa0cda610cb75656ee7);
+
+        excessClaimProofInvestor2[0] = bytes32(0x5a967157246c689bfb28b0e8bdd445fe3b05cd751cb10e979ae3dbaf0a02c5c7);
+        excessClaimProofInvestor2[1] = bytes32(0x224c3f0b0526195d6161b6c193e3d2f3c63cbc435919720096ad25be50414394);
+
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
@@ -3419,10 +3489,24 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         vm.prank(investor2);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).invest(
-            1000 * 1e6, sealedBidDataInvestor2, signatureInv2
+            2000 * 1e6, sealedBidDataInvestor2, signatureInv2
         );
 
         vm.warp(refundEndTime() + 1);
+
+        vm.prank(legionBouncer);
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
+
+        vm.prank(investor1);
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawExcessInvestedCapital(
+            0, excessClaimProofInvestor1
+        );
+
+        vm.prank(investor2);
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawExcessInvestedCapital(
+            1000 * 1e6, excessClaimProofInvestor2
+        );
+
         // Act
         vm.prank(investor1);
         LegionSealedBidAuctionSale(legionSealedBidAuctionInstance).transferInvestorPositionWithAuthorization(
@@ -3458,6 +3542,11 @@ contract LegionSealedBidAuctionSaleTest is Test {
         prepareInvestorSignatures();
         prepareTransferSignatures();
 
+        bytes32[] memory excessClaimProofInvestor1 = new bytes32[](2);
+
+        excessClaimProofInvestor1[0] = bytes32(0x94092e373061307b4d0adbfbdcdbf2952dd4f9faa4a19e459bf977b439fe7f6c);
+        excessClaimProofInvestor1[1] = bytes32(0xd8c305ca65c62aada7dd6b63558219cfac0d5dc314d02aa0cda610cb75656ee7);
+
         vm.warp(block.timestamp + 1);
 
         vm.prank(investor1);
@@ -3473,6 +3562,14 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.stopPrank();
 
         vm.warp(refundEndTime() + 1);
+
+        vm.prank(legionBouncer);
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
+
+        vm.prank(investor1);
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawExcessInvestedCapital(
+            0, excessClaimProofInvestor1
+        );
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__UnableToMergeInvestorPosition.selector, 2));

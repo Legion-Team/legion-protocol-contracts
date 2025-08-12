@@ -113,11 +113,11 @@ contract LegionPreLiquidApprovedSaleTest is Test {
     /// @notice Signature for investor2's investment
     bytes signatureInv2;
 
+    /// @notice Signature for investor2's excess capital withdrawal
+    bytes signatureInv2WithdrawExcess;
+
     /// @notice Signature for investor2's token allocation claim
     bytes signatureInv2Claim;
-
-    /// @notice Invalid signature for testing invalid cases
-    bytes invalidSignature;
 
     /// @notice Invalid vesting signature for testing invalid cases
     bytes invalidVestingSignature;
@@ -363,6 +363,17 @@ contract LegionPreLiquidApprovedSaleTest is Test {
             )
         ).toEthSignedMessageHash();
 
+        bytes32 digest2WithdrawExcess = keccak256(
+            abi.encodePacked(
+                investor2,
+                legionPreLiquidSaleInstance,
+                block.chainid,
+                uint256(5000 * 1e6),
+                uint256(2_500_000_000_000_000),
+                ILegionPreLiquidApprovedSale.SaleAction.WITHDRAW_EXCESS_CAPITAL
+            )
+        ).toEthSignedMessageHash();
+
         bytes32 digest2Claim = keccak256(
             abi.encodePacked(
                 investor2,
@@ -398,27 +409,15 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         (v, r, s) = vm.sign(legionSignerPK, digest2);
         signatureInv2 = abi.encodePacked(r, s, v);
 
+        (v, r, s) = vm.sign(legionSignerPK, digest2WithdrawExcess);
+        signatureInv2WithdrawExcess = abi.encodePacked(r, s, v);
+
         (v, r, s) = vm.sign(legionSignerPK, digest2Claim);
         signatureInv2Claim = abi.encodePacked(r, s, v);
 
         vm.stopPrank();
 
         vm.startPrank(nonLegionSigner);
-
-        bytes32 digest5 = keccak256(
-            abi.encodePacked(
-                investor1,
-                legionPreLiquidSaleInstance,
-                block.chainid,
-                uint256(10_000 * 1e6),
-                uint256(5_000_000_000_000_000),
-                bytes32(uint256(0x0000000000000000000000000000000000000000000000000000000000000003)),
-                ILegionPreLiquidApprovedSale.SaleAction.INVEST
-            )
-        ).toEthSignedMessageHash();
-
-        (v, r, s) = vm.sign(nonLegionSignerPK, digest5);
-        invalidSignature = abi.encodePacked(r, s, v);
 
         (v, r, s) = vm.sign(nonLegionSignerPK, digest1Vesting);
         invalidVestingSignature = abi.encodePacked(r, s, v);
@@ -3091,6 +3090,11 @@ contract LegionPreLiquidApprovedSaleTest is Test {
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
+        vm.prank(investor1);
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).withdrawExcessInvestedCapital(
+            1000 * 1e6, 9000 * 1e6, 4_000_000_000_000_000, signatureInv1WithdrawExcess
+        );
+
         // Act
         vm.prank(legionBouncer);
         LegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).transferInvestorPosition(investor1, investor2, 1);
@@ -3104,7 +3108,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         assertEq(
             LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPosition(investor2)
                 .investedCapital,
-            10_000 * 1e6
+            9000 * 1e6
         );
     }
 
@@ -3135,6 +3139,16 @@ contract LegionPreLiquidApprovedSaleTest is Test {
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
+        vm.prank(investor1);
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).withdrawExcessInvestedCapital(
+            1000 * 1e6, 9000 * 1e6, 4_000_000_000_000_000, signatureInv1WithdrawExcess
+        );
+
+        vm.prank(investor2);
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).withdrawExcessInvestedCapital(
+            5000 * 1e6, 5000 * 1e6, 2_500_000_000_000_000, signatureInv2WithdrawExcess
+        );
+
         // Act
         vm.prank(legionBouncer);
         LegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).transferInvestorPosition(investor1, investor2, 1);
@@ -3151,19 +3165,19 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         assertEq(
             LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPosition(investor2)
                 .investedCapital,
-            20_000 * 1e6
+            14_000 * 1e6
         );
 
         assertEq(
             LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPosition(investor2)
                 .cachedTokenAllocationRate,
-            10_000_000_000_000_000
+            6_500_000_000_000_000
         );
 
         assertEq(
             LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPosition(investor2)
                 .cachedInvestAmount,
-            20_000 * 1e6
+            14_000 * 1e6
         );
     }
 
@@ -3194,6 +3208,11 @@ contract LegionPreLiquidApprovedSaleTest is Test {
 
         vm.prank(projectAdmin);
         ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
+
+        vm.prank(investor1);
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).withdrawExcessInvestedCapital(
+            1000 * 1e6, 9000 * 1e6, 4_000_000_000_000_000, signatureInv1WithdrawExcess
+        );
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
@@ -3419,6 +3438,11 @@ contract LegionPreLiquidApprovedSaleTest is Test {
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
+        vm.prank(investor1);
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).withdrawExcessInvestedCapital(
+            1000 * 1e6, 9000 * 1e6, 4_000_000_000_000_000, signatureInv1WithdrawExcess
+        );
+
         // Act
         vm.prank(investor1);
         LegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).transferInvestorPositionWithAuthorization(
@@ -3434,7 +3458,7 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         assertEq(
             LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPosition(investor2)
                 .investedCapital,
-            10_000 * 1e6
+            9000 * 1e6
         );
         assertEq(ERC721(legionPreLiquidSaleInstance).ownerOf(1), investor2);
     }
@@ -3469,6 +3493,16 @@ contract LegionPreLiquidApprovedSaleTest is Test {
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
+        vm.prank(investor1);
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).withdrawExcessInvestedCapital(
+            1000 * 1e6, 9000 * 1e6, 4_000_000_000_000_000, signatureInv1WithdrawExcess
+        );
+
+        vm.prank(investor2);
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).withdrawExcessInvestedCapital(
+            5000 * 1e6, 5000 * 1e6, 2_500_000_000_000_000, signatureInv2WithdrawExcess
+        );
+
         // Act
         vm.prank(investor1);
         LegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).transferInvestorPositionWithAuthorization(
@@ -3487,19 +3521,19 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         assertEq(
             LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPosition(investor2)
                 .investedCapital,
-            20_000 * 1e6
+            14_000 * 1e6
         );
 
         assertEq(
             LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPosition(investor2)
                 .cachedTokenAllocationRate,
-            10_000_000_000_000_000
+            6_500_000_000_000_000
         );
 
         assertEq(
             LegionPreLiquidApprovedSale(payable(legionPreLiquidSaleInstance)).investorPosition(investor2)
                 .cachedInvestAmount,
-            20_000 * 1e6
+            14_000 * 1e6
         );
     }
 
@@ -3533,6 +3567,11 @@ contract LegionPreLiquidApprovedSaleTest is Test {
         ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).end();
 
         vm.warp(block.timestamp + 2 weeks + 1);
+
+        vm.prank(investor1);
+        ILegionPreLiquidApprovedSale(legionPreLiquidSaleInstance).withdrawExcessInvestedCapital(
+            1000 * 1e6, 9000 * 1e6, 4_000_000_000_000_000, signatureInv1WithdrawExcess
+        );
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__UnableToMergeInvestorPosition.selector, 2));

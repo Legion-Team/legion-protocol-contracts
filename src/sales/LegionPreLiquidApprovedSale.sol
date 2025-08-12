@@ -572,7 +572,7 @@ contract LegionPreLiquidApprovedSale is
         emit ExcessCapitalWithdrawn(amount, msg.sender, positionId);
 
         // Transfer the excess capital to the investor
-        SafeTransferLib.safeTransfer(s_saleConfig.bidToken, msg.sender, amount);
+        if (amount > 0) SafeTransferLib.safeTransfer(s_saleConfig.bidToken, msg.sender, amount);
     }
 
     /// @inheritdoc ILegionPreLiquidApprovedSale
@@ -840,7 +840,7 @@ contract LegionPreLiquidApprovedSale is
             InvestorPosition storage positionToUpdate = s_investorPositions[positionIdTo];
 
             // Verify that the updated position is not settled or refunded
-            if (positionToUpdate.hasRefunded || positionToUpdate.hasSettled) {
+            if (positionToUpdate.hasRefunded || positionToUpdate.hasSettled || !positionToUpdate.hasClaimedExcess) {
                 revert Errors.LegionSale__UnableToMergeInvestorPosition(positionIdTo);
             }
 
@@ -1068,7 +1068,7 @@ contract LegionPreLiquidApprovedSale is
         InvestorPosition memory position = s_investorPositions[_positionId];
 
         // Verify that the position is not settled or refunded
-        if (position.hasRefunded || position.hasSettled) {
+        if (position.hasRefunded || position.hasSettled || !position.hasClaimedExcess) {
             revert Errors.LegionSale__UnableToTransferInvestorPosition(_positionId);
         }
     }
