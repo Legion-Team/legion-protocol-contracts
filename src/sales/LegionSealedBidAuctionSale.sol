@@ -94,11 +94,7 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
         _verifyInvestSignature(signature);
 
         // Decode the sealed bid data
-        (uint256 encryptedAmountOut, uint256 salt, Point memory sealedBidPublicKey) =
-            abi.decode(sealedBid, (uint256, uint256, Point));
-
-        // Verify that the provided salt is valid
-        _verifyValidSalt(salt);
+        (uint256 encryptedAmountOut, Point memory sealedBidPublicKey) = abi.decode(sealedBid, (uint256, Point));
 
         // Verify that the provided public key is valid
         _verifyValidPublicKey(sealedBidPublicKey);
@@ -119,7 +115,7 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
         s_investorPositions[positionId].investedCapital += amount;
 
         // Emit CapitalInvested event
-        emit CapitalInvested(amount, encryptedAmountOut, salt, msg.sender, positionId);
+        emit CapitalInvested(amount, encryptedAmountOut, msg.sender, positionId);
 
         // Transfer the invested capital to the contract
         SafeTransferLib.safeTransferFrom(s_addressConfig.bidToken, msg.sender, address(this), amount);
@@ -150,7 +146,8 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
         bytes32 acceptedMerkleRoot,
         uint256 tokensAllocated,
         uint256 capitalRaised,
-        uint256 sealedBidPrivateKey
+        uint256 sealedBidPrivateKey,
+        uint256 fixedSalt
     )
         external
         onlyLegion
@@ -180,9 +177,12 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
         // Set the private key used to decrypt sealed bids
         s_sealedBidAuctionSaleConfig.privateKey = sealedBidPrivateKey;
 
+        // Set the fixed salt used for sealing bids
+        s_sealedBidAuctionSaleConfig.fixedSalt = fixedSalt;
+
         // Emit SaleResultsPublished event
         emit SaleResultsPublished(
-            claimMerkleRoot, acceptedMerkleRoot, tokensAllocated, capitalRaised, sealedBidPrivateKey
+            claimMerkleRoot, acceptedMerkleRoot, tokensAllocated, capitalRaised, sealedBidPrivateKey, fixedSalt
         );
     }
 
@@ -204,7 +204,7 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
     }
 
     /// @inheritdoc ILegionSealedBidAuctionSale
-    function decryptSealedBid(uint256 encryptedAmountOut, uint256 salt) external view returns (uint256) {
+    function decryptSealedBid(uint256 encryptedAmountOut, address investor) external view returns (uint256) {
         // Verify that the private key has been published by Legion
         _verifyPrivateKeyIsPublished();
 
@@ -213,7 +213,10 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
 
         // Decrypt the sealed bid
         return ECIES.decrypt(
-            encryptedAmountOut, sealedBidAuctionSaleConfig.publicKey, sealedBidAuctionSaleConfig.privateKey, salt
+            encryptedAmountOut,
+            sealedBidAuctionSaleConfig.publicKey,
+            sealedBidAuctionSaleConfig.privateKey,
+            uint256(keccak256(abi.encodePacked(investor, sealedBidAuctionSaleConfig.fixedSalt)))
         );
     }
 
@@ -271,12 +274,6 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
         if (s_sealedBidAuctionSaleConfig.privateKey == 0) {
             revert Errors.LegionSale__PrivateKeyNotPublished();
         }
-    }
-
-    /// @dev Verifies the validity of the salt used in bid encryption.
-    /// @param _salt The salt value provided in the sealed bid.
-    function _verifyValidSalt(uint256 _salt) private view {
-        if (uint256(uint160(msg.sender)) != _salt) revert Errors.LegionSale__InvalidSalt();
     }
 
     /// @dev Verifies that cancellation is not locked.

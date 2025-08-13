@@ -36,6 +36,8 @@ interface ILegionSealedBidAuctionSale is ILegionAbstractSale {
         Point publicKey;
         // Private key used to decrypt sealed bids
         uint256 privateKey;
+        // Fixed salt value for bid encryption
+        uint256 fixedSalt;
     }
 
     /// @dev Struct representing an encrypted bid's components
@@ -49,12 +51,9 @@ interface ILegionSealedBidAuctionSale is ILegionAbstractSale {
     /// @notice Emitted when capital is successfully invested in the sealed bid auction.
     /// @param amount The amount of capital invested (in bid tokens).
     /// @param encryptedAmountOut The encrypted bid amount of tokens from the investor.
-    /// @param salt The unique salt used in encryption (typically investor address).
     /// @param investor The address of the investor.
     /// @param positionId The unique identifier for the investment position.
-    event CapitalInvested(
-        uint256 amount, uint256 encryptedAmountOut, uint256 salt, address investor, uint256 positionId
-    );
+    event CapitalInvested(uint256 amount, uint256 encryptedAmountOut, address investor, uint256 positionId);
 
     /// @notice Emitted when the process of publishing sale results is initialized.
     event PublishSaleResultsInitialized();
@@ -65,12 +64,14 @@ interface ILegionSealedBidAuctionSale is ILegionAbstractSale {
     /// @param tokensAllocated The total tokens allocated from the sale.
     /// @param capitalRaised The total capital raised from the auction.
     /// @param sealedBidPrivateKey The private key used to decrypt sealed bids.
+    /// @param fixedSalt The fixed salt used for sealing bids.
     event SaleResultsPublished(
         bytes32 claimMerkleRoot,
         bytes32 acceptedMerkleRoot,
         uint256 tokensAllocated,
         uint256 capitalRaised,
-        uint256 sealedBidPrivateKey
+        uint256 sealedBidPrivateKey,
+        uint256 fixedSalt
     );
 
     /// @notice Initializes the sealed bid auction sale contract with parameters.
@@ -97,12 +98,14 @@ interface ILegionSealedBidAuctionSale is ILegionAbstractSale {
     /// @param tokensAllocated The total tokens allocated for investors.
     /// @param capitalRaised The total capital raised from the auction.
     /// @param sealedBidPrivateKey The private key to decrypt sealed bids.
+    /// @param fixedSalt The fixed salt used for sealing bids.
     function publishSaleResults(
         bytes32 claimMerkleRoot,
         bytes32 acceptedMerkleRoot,
         uint256 tokensAllocated,
         uint256 capitalRaised,
-        uint256 sealedBidPrivateKey
+        uint256 sealedBidPrivateKey,
+        uint256 fixedSalt
     )
         external;
 
@@ -113,7 +116,7 @@ interface ILegionSealedBidAuctionSale is ILegionAbstractSale {
 
     /// @notice Decrypts a sealed bid using the published private key.
     /// @param encryptedAmountOut The encrypted bid amount from the investor.
-    /// @param salt The salt used in the encryption process.
+    /// @param investor The address of the investor who made the bid.
     /// @return The decrypted bid amount.
-    function decryptSealedBid(uint256 encryptedAmountOut, uint256 salt) external view returns (uint256);
+    function decryptSealedBid(uint256 encryptedAmountOut, address investor) external view returns (uint256);
 }
