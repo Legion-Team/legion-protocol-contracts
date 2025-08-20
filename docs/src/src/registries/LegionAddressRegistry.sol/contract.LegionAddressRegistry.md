@@ -1,5 +1,5 @@
 # LegionAddressRegistry
-[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/8b23239dfc702a4510efb5dd06fb67719eb5eab0/src/registries/LegionAddressRegistry.sol)
+[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/85d479ea08d148a380138b535ed11768adee16de/src/registries/LegionAddressRegistry.sol)
 
 **Inherits:**
 [ILegionAddressRegistry](/src/interfaces/registries/ILegionAddressRegistry.sol/interface.ILegionAddressRegistry.md), Ownable

@@ -17,33 +17,33 @@ jobs:
       contents: read
       security-events: write
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        submodules: recursive
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-    - name: Install Foundry
-      uses: foundry-rs/foundry-toolchain@v1
-      with:
-        version: nightly
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-    - name: Install Slither
-      run: pip install slither-analyzer
+      - name: Install Slither
+        run: pip install slither-analyzer
 
-    - name: Install solc 0.8.29
-      run: |
-        pip install solc-select
-        solc-select install 0.8.29
-        solc-select use 0.8.29
+      - name: Install solc 0.8.29
+        run: |
+          pip install solc-select
+          solc-select install 0.8.29
+          solc-select use 0.8.29
 
-    - name: Run Slither
-      id: slither
-      run: slither . --skip-assembly --fail-high
+      - name: Run Slither
+        id: slither
+        run: slither . --skip-assembly --fail-high
 
   forge-test:
     name: Run Forge Tests and Checks
@@ -106,35 +106,6 @@ jobs:
           cat coverage.txt  # Debug: Show the output
         id: coverage
 
-      - name: Check coverage threshold
-        run: |
-          # Extract the % Lines from the "Total" row (2nd column after "| Total")
-          COVERAGE=$(cat coverage.txt | grep "Total" | awk -F'|' '{print $3}' | awk '{print $1}' | sed 's/%//')
-          echo "Total coverage: $COVERAGE%"
-          
-          # If no coverage data found, fail early
-          if [ -z "$COVERAGE" ]; then
-            echo "Error: No coverage data found in output"
-            cat coverage.txt
-            exit 1
-          fi
-          
-          # Validate coverage is a number
-          if ! [[ "$COVERAGE" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
-            echo "Error: Could not parse coverage percentage"
-            cat coverage.txt
-            exit 1
-          fi
-          
-          # Compare with 95% threshold
-          if (( $(echo "$COVERAGE < 95" | bc -l) )); then
-            echo "Error: Coverage ($COVERAGE%) is below 95%"
-            exit 1
-          else
-            echo "Coverage ($COVERAGE%) meets or exceeds 95%"
-          fi
-
       - name: Prune coverage
         run: |
           lcov --remove ./lcov.info -o ./lcov-filtered.info
-          

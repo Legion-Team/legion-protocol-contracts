@@ -1,5 +1,5 @@
 # Errors
-[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/8b23239dfc702a4510efb5dd06fb67719eb5eab0/src/utils/Errors.sol)
+[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/85d479ea08d148a380138b535ed11768adee16de/src/utils/Errors.sol)
 
 **Author:**
 Legion
@@ -285,6 +285,20 @@ error LegionSale__UnableToTransferInvestorPosition(uint256 positionId);
 |----|----|-----------|
 |`positionId`|`uint256`|The ID of the position that cannot be transferred.|
 
+### LegionSale__UnableToMergeInvestorPosition
+Thrown when attempting to merge an investor position that has been refunded or settled.
+
+
+```solidity
+error LegionSale__UnableToMergeInvestorPosition(uint256 positionId);
+```
+
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`positionId`|`uint256`|The ID of the position that cannot be merged.|
+
 ### LegionSale__NotCalledByLegion
 Thrown when a function is not called by the Legion address.
 
@@ -534,6 +548,14 @@ error LegionVesting__CliffNotEnded(uint256 currentTimestamp);
 |Name|Type|Description|
 |----|----|-----------|
 |`currentTimestamp`|`uint256`|The current block timestamp when the attempt was made.|
+
+### LegionVesting__OnlyAskTokenReleasable
+Thrown when a token different from the expected ask token is released.
+
+
+```solidity
+error LegionVesting__OnlyAskTokenReleasable();
+```
 
 ### LegionVesting__InvalidVestingConfig
 Thrown when the vesting configuration parameters are invalid.

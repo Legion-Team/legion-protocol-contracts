@@ -1,5 +1,5 @@
 # LegionVestingManager
-[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/8b23239dfc702a4510efb5dd06fb67719eb5eab0/src/vesting/LegionVestingManager.sol)
+[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/85d479ea08d148a380138b535ed11768adee16de/src/vesting/LegionVestingManager.sol)
 
 **Inherits:**
 [ILegionVestingManager](/src/interfaces/vesting/ILegionVestingManager.sol/interface.ILegionVestingManager.md)
@@ -44,7 +44,10 @@ function vestingConfiguration() external view virtual returns (LegionVestingConf
 
 
 ```solidity
-function _createVesting(LegionInvestorVestingConfig calldata _investorVestingConfig)
+function _createVesting(
+    LegionInvestorVestingConfig calldata _investorVestingConfig,
+    address _askToken
+)
     internal
     virtual
     returns (address payable vestingInstance);
@@ -54,6 +57,7 @@ function _createVesting(LegionInvestorVestingConfig calldata _investorVestingCon
 |Name|Type|Description|
 |----|----|-----------|
 |`_investorVestingConfig`|`LegionInvestorVestingConfig`|The vesting schedule configuration for the investor.|
+|`_askToken`|`address`|The address of the token used for vesting.|
 
 **Returns**
 
@@ -108,6 +112,7 @@ function _createLinearEpochVesting(
     address _beneficiary,
     address _vestingController,
     address _vestingFactory,
+    address _askToken,
     uint64 _startTimestamp,
     uint64 _durationSeconds,
     uint64 _cliffDurationSeconds,
@@ -125,6 +130,7 @@ function _createLinearEpochVesting(
 |`_beneficiary`|`address`|The address to receive the vested tokens.|
 |`_vestingController`|`address`|The address of the vesting controller contract.|
 |`_vestingFactory`|`address`|The address of the vesting factory contract.|
+|`_askToken`|`address`|The address of the token to be vested.|
 |`_startTimestamp`|`uint64`|The Unix timestamp (seconds) when vesting starts.|
 |`_durationSeconds`|`uint64`|The duration of the vesting period in seconds.|
 |`_cliffDurationSeconds`|`uint64`|The duration of the cliff period in seconds.|

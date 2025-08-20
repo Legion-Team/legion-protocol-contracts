@@ -1,5 +1,5 @@
 # LegionPreLiquidApprovedSale
-[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/8b23239dfc702a4510efb5dd06fb67719eb5eab0/src/sales/LegionPreLiquidApprovedSale.sol)
+[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/85d479ea08d148a380138b535ed11768adee16de/src/sales/LegionPreLiquidApprovedSale.sol)
 
 **Inherits:**
 [ILegionPreLiquidApprovedSale](/src/interfaces/sales/ILegionPreLiquidApprovedSale.sol/interface.ILegionPreLiquidApprovedSale.md), [LegionVestingManager](/src/vesting/LegionVestingManager.sol/abstract.LegionVestingManager.md), [LegionPositionManager](/src/position/LegionPositionManager.sol/abstract.LegionPositionManager.md), Initializable, Pausable
@@ -170,6 +170,17 @@ Restricts interaction to when tokens have not been supplied for distribution.
 
 ```solidity
 modifier whenTokensNotSupplied();
+```
+
+### whenSaleResultsNotPublished
+
+Restricts interaction to when the sale results have not been published.
+
+*Reverts if sale results have been published.*
+
+
+```solidity
+modifier whenSaleResultsNotPublished();
 ```
 
 ### constructor
@@ -449,7 +460,7 @@ function transferInvestorPosition(
     whenSaleNotCanceled
     whenSaleEnded
     whenRefundPeriodIsOver
-    whenTokensNotSupplied;
+    whenSaleResultsNotPublished;
 ```
 
 ### transferInvestorPositionWithAuthorization
@@ -469,7 +480,7 @@ function transferInvestorPositionWithAuthorization(
     whenSaleNotCanceled
     whenSaleEnded
     whenRefundPeriodIsOver
-    whenTokensNotSupplied;
+    whenSaleResultsNotPublished;
 ```
 
 ### syncLegionAddresses
@@ -796,6 +807,15 @@ function _verifyRefundPeriodIsOver() private view;
 
 ```solidity
 function _verifyRefundPeriodIsNotOver() private view;
+```
+
+### _verifySaleResultsNotPublished
+
+*Verifies that sale results have not been published.*
+
+
+```solidity
+function _verifySaleResultsNotPublished() internal view virtual;
 ```
 
 ### _verifyHasNotRefunded

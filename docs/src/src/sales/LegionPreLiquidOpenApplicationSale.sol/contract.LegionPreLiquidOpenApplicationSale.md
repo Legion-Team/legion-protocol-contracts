@@ -1,5 +1,5 @@
 # LegionPreLiquidOpenApplicationSale
-[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/8b23239dfc702a4510efb5dd06fb67719eb5eab0/src/sales/LegionPreLiquidOpenApplicationSale.sol)
+[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/85d479ea08d148a380138b535ed11768adee16de/src/sales/LegionPreLiquidOpenApplicationSale.sol)
 
 **Inherits:**
 [LegionAbstractSale](/src/sales/LegionAbstractSale.sol/abstract.LegionAbstractSale.md), [ILegionPreLiquidOpenApplicationSale](/src/interfaces/sales/ILegionPreLiquidOpenApplicationSale.sol/interface.ILegionPreLiquidOpenApplicationSale.md)

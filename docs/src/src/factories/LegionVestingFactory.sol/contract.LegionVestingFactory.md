@@ -1,5 +1,5 @@
 # LegionVestingFactory
-[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/8b23239dfc702a4510efb5dd06fb67719eb5eab0/src/factories/LegionVestingFactory.sol)
+[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/85d479ea08d148a380138b535ed11768adee16de/src/factories/LegionVestingFactory.sol)
 
 **Inherits:**
 [ILegionVestingFactory](/src/interfaces/factories/ILegionVestingFactory.sol/interface.ILegionVestingFactory.md)
@@ -78,6 +78,7 @@ Creates a new linear epoch vesting contract instance.
 function createLinearEpochVesting(
     address beneficiary,
     address vestingController,
+    address askToken,
     uint64 startTimestamp,
     uint64 durationSeconds,
     uint64 cliffDurationSeconds,
@@ -93,6 +94,7 @@ function createLinearEpochVesting(
 |----|----|-----------|
 |`beneficiary`|`address`|The address that will receive the vested tokens.|
 |`vestingController`|`address`|The address of the vesting controller contract for access control.|
+|`askToken`|`address`|The address of the token to be vested.|
 |`startTimestamp`|`uint64`|The Unix timestamp when the vesting period begins.|
 |`durationSeconds`|`uint64`|The total duration of the vesting period in seconds.|
 |`cliffDurationSeconds`|`uint64`|The duration of the cliff period in seconds.|

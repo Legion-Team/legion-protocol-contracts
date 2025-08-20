@@ -1,5 +1,5 @@
 # LegionFixedPriceSale
-[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/8b23239dfc702a4510efb5dd06fb67719eb5eab0/src/sales/LegionFixedPriceSale.sol)
+[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/85d479ea08d148a380138b535ed11768adee16de/src/sales/LegionFixedPriceSale.sol)
 
 **Inherits:**
 [LegionAbstractSale](/src/sales/LegionAbstractSale.sol/abstract.LegionAbstractSale.md), [ILegionFixedPriceSale](/src/interfaces/sales/ILegionFixedPriceSale.sol/interface.ILegionFixedPriceSale.md)

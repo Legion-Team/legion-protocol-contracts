@@ -1,5 +1,5 @@
 # LegionSealedBidAuctionSale
-[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/8b23239dfc702a4510efb5dd06fb67719eb5eab0/src/sales/LegionSealedBidAuctionSale.sol)
+[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/85d479ea08d148a380138b535ed11768adee16de/src/sales/LegionSealedBidAuctionSale.sol)
 
 **Inherits:**
 [LegionAbstractSale](/src/sales/LegionAbstractSale.sol/abstract.LegionAbstractSale.md), [ILegionSealedBidAuctionSale](/src/interfaces/sales/ILegionSealedBidAuctionSale.sol/interface.ILegionSealedBidAuctionSale.md)
@@ -118,7 +118,8 @@ function publishSaleResults(
     bytes32 acceptedMerkleRoot,
     uint256 tokensAllocated,
     uint256 capitalRaised,
-    uint256 sealedBidPrivateKey
+    uint256 sealedBidPrivateKey,
+    uint256 fixedSalt
 )
     external
     onlyLegion
@@ -136,6 +137,7 @@ function publishSaleResults(
 |`tokensAllocated`|`uint256`|The total tokens allocated for investors.|
 |`capitalRaised`|`uint256`|The total capital raised from the auction.|
 |`sealedBidPrivateKey`|`uint256`|The private key to decrypt sealed bids.|
+|`fixedSalt`|`uint256`|The fixed salt used for sealing bids.|
 
 
 ### sealedBidAuctionSaleConfiguration
@@ -177,14 +179,14 @@ Decrypts a sealed bid using the published private key.
 
 
 ```solidity
-function decryptSealedBid(uint256 encryptedAmountOut, uint256 salt) external view returns (uint256);
+function decryptSealedBid(uint256 encryptedAmountOut, address investor) external view returns (uint256);
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
 |`encryptedAmountOut`|`uint256`|The encrypted bid amount from the investor.|
-|`salt`|`uint256`|The salt used in the encryption process.|
+|`investor`|`address`|The address of the investor who made the bid.|
 
 **Returns**
 
@@ -248,21 +250,6 @@ function _verifyValidPrivateKey(uint256 _privateKey) private view;
 ```solidity
 function _verifyPrivateKeyIsPublished() private view;
 ```
-
-### _verifyValidSalt
-
-*Verifies the validity of the salt used in bid encryption.*
-
-
-```solidity
-function _verifyValidSalt(uint256 _salt) private view;
-```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`_salt`|`uint256`|The salt value provided in the sealed bid.|
-
 
 ### _verifyCancelNotLocked
 
