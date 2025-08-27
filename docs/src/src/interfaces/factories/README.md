@@ -1,8 +1,10 @@
 
 
 # Contents
+- [ILegionCapitalRaiseFactory](ILegionCapitalRaiseFactory.sol/interface.ILegionCapitalRaiseFactory.md)
 - [ILegionFixedPriceSaleFactory](ILegionFixedPriceSaleFactory.sol/interface.ILegionFixedPriceSaleFactory.md)
-- [ILegionPreLiquidSaleV1Factory](ILegionPreLiquidSaleV1Factory.sol/interface.ILegionPreLiquidSaleV1Factory.md)
-- [ILegionPreLiquidSaleV2Factory](ILegionPreLiquidSaleV2Factory.sol/interface.ILegionPreLiquidSaleV2Factory.md)
+- [ILegionPreLiquidApprovedSaleFactory](ILegionPreLiquidApprovedSaleFactory.sol/interface.ILegionPreLiquidApprovedSaleFactory.md)
+- [ILegionPreLiquidOpenApplicationSaleFactory](ILegionPreLiquidOpenApplicationSaleFactory.sol/interface.ILegionPreLiquidOpenApplicationSaleFactory.md)
 - [ILegionSealedBidAuctionSaleFactory](ILegionSealedBidAuctionSaleFactory.sol/interface.ILegionSealedBidAuctionSaleFactory.md)
+- [ILegionTokenDistributorFactory](ILegionTokenDistributorFactory.sol/interface.ILegionTokenDistributorFactory.md)
 - [ILegionVestingFactory](ILegionVestingFactory.sol/interface.ILegionVestingFactory.md)

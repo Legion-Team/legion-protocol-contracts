@@ -1,131 +1,217 @@
 # Errors
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/1a165deeea33dfd2b1dca142bf23d06b547c39a3/src/utils/Errors.sol)
+[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/85d479ea08d148a380138b535ed11768adee16de/src/utils/Errors.sol)
 
 **Author:**
 Legion
 
-A library used for storing errors shared across the Legion protocol
+Defines custom errors shared across the Legion Protocol.
+
+*Provides reusable error types for consistent exception handling throughout the protocol contracts.*
 
 
 ## Errors
-### AlreadySettled
-Throws when tokens already settled by investor.
+### LegionSale__AlreadyClaimedExcess
+Thrown when an investor attempts to claim excess capital that was already claimed.
 
 
 ```solidity
-error AlreadySettled(address investor);
+error LegionSale__AlreadyClaimedExcess(address investor);
 ```
 
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`investor`|`address`|The address of the investor trying to claim.|
+|`investor`|`address`|The address of the investor attempting to claim excess.|
 
-### AlreadyClaimedExcess
-Throws when excess capital has already been claimed by investor.
+### LegionSale__AlreadySettled
+Thrown when an investor attempts to settle tokens that are already settled.
 
 
 ```solidity
-error AlreadyClaimedExcess(address investor);
+error LegionSale__AlreadySettled(address investor);
 ```
 
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`investor`|`address`|The address of the investor trying to get excess capital back.|
+|`investor`|`address`|The address of the investor attempting to settle.|
 
-### AskTokenUnavailable
-Throws when the `askToken` is unavailable.
+### LegionSale__CancelLocked
+Thrown when sale cancellation is locked.
+
+*Indicates cancellation is prevented, typically during result publication.*
 
 
 ```solidity
-error AskTokenUnavailable();
+error LegionSale__CancelLocked();
 ```
 
-### AskTokensNotSupplied
-Throws when the ask tokens have not been supplied by the project.
+### LegionSale__CancelNotLocked
+Thrown when sale cancellation is not locked but should be.
+
+*Indicates cancellation lock is required but not set.*
 
 
 ```solidity
-error AskTokensNotSupplied();
+error LegionSale__CancelNotLocked();
 ```
 
-### CancelLocked
-Throws when canceling is locked.
+### LegionSale__CapitalAlreadyWithdrawn
+Thrown when capital has already been withdrawn by the project.
 
 
 ```solidity
-error CancelLocked();
+error LegionSale__CapitalAlreadyWithdrawn();
 ```
 
-### CancelNotLocked
-Throws when canceling is not locked.
+### LegionSale__CapitalNotRaised
+Thrown when no capital has been raised.
+
+*Indicates no capital is available for withdrawal.*
 
 
 ```solidity
-error CancelNotLocked();
+error LegionSale__CapitalNotRaised();
 ```
 
-### CliffNotEnded
-Throws when an user tries to release tokens before the cliff period has ended.
+### LegionSale__CapitalRaisedAlreadyPublished
+Thrown when capital raised data has already been published.
 
 
 ```solidity
-error CliffNotEnded(uint256 currentTimestamp);
+error LegionSale__CapitalRaisedAlreadyPublished();
 ```
 
-**Parameters**
+### LegionSale__CapitalRaisedNotPublished
+Thrown when capital raised data has not been published.
 
-|Name|Type|Description|
-|----|----|-----------|
-|`currentTimestamp`|`uint256`|The current block timestamp.|
-
-### CapitalAlreadyWithdrawn
-Throws when capital has already been withdrawn by the Project.
+*Indicates an action requires published capital data.*
 
 
 ```solidity
-error CapitalAlreadyWithdrawn();
+error LegionSale__CapitalRaisedNotPublished();
 ```
 
-### CapitalNotRaised
-Throws when no capital has been raised.
+### LegionSale__CannotWithdrawExcessInvestedCapital
+Thrown when an investor is not eligible to withdraw excess invested capital.
 
 
 ```solidity
-error CapitalNotRaised();
-```
-
-### CannotWithdrawExcessInvestedCapital
-Throws when the investor is not flagged to have excess capital returned.
-
-
-```solidity
-error CannotWithdrawExcessInvestedCapital(address investor);
+error LegionSale__CannotWithdrawExcessInvestedCapital(address investor, uint256 amount);
 ```
 
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`investor`|`address`|The address of the investor.|
+|`investor`|`address`|The address of the investor attempting to withdraw.|
+|`amount`|`uint256`|The amount of excess capital the investor is trying to withdraw.|
 
-### InvalidClaimAmount
-Throws when the claim amount is invalid.
+### LegionSale__InvalidBidPrivateKey
+Thrown when an invalid private key is provided for bid decryption.
+
+*Indicates the private key does not correspond to the public key.*
 
 
 ```solidity
-error InvalidClaimAmount();
+error LegionSale__InvalidBidPrivateKey();
 ```
 
-### InvalidTokenAmountSupplied
-Throws when an invalid amount of tokens has been supplied by the project.
+### LegionSale__InvalidBidPublicKey
+Thrown when an invalid public key is used for bid encryption.
+
+*Indicates the public key is not valid or does not match the auction key.*
 
 
 ```solidity
-error InvalidTokenAmountSupplied(uint256 amount);
+error LegionSale__InvalidBidPublicKey();
+```
+
+### LegionSale__InvalidFeeAmount
+Thrown when an invalid fee amount is provided.
+
+
+```solidity
+error LegionSale__InvalidFeeAmount(uint256 amount, uint256 expectedAmount);
+```
+
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`amount`|`uint256`|The fee amount provided.|
+|`expectedAmount`|`uint256`|The expected fee amount.|
+
+### LegionSale__InvalidInvestAmount
+Thrown when an invalid investment amount is provided.
+
+
+```solidity
+error LegionSale__InvalidInvestAmount(uint256 amount);
+```
+
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`amount`|`uint256`|The amount being invested.|
+
+### LegionSale__InvalidPeriodConfig
+Thrown when an invalid time period configuration is provided.
+
+*Indicates periods (e.g., sale, refund) are outside allowed ranges.*
+
+
+```solidity
+error LegionSale__InvalidPeriodConfig();
+```
+
+### LegionSale__InvalidPositionAmount
+Thrown when invested capital does not match the SAFT amount.
+
+
+```solidity
+error LegionSale__InvalidPositionAmount(address investor);
+```
+
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`investor`|`address`|The address of the investor with the mismatch.|
+
+### LegionSale__InvalidSalt
+Thrown when an invalid salt is used for bid encryption.
+
+*Indicates the salt does not match the expected value (e.g., investor address).*
+
+
+```solidity
+error LegionSale__InvalidSalt();
+```
+
+### LegionSale__InvalidSignature
+Thrown when an invalid signature is provided for investment.
+
+
+```solidity
+error LegionSale__InvalidSignature(bytes signature);
+```
+
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`signature`|`bytes`|The signature provided by the investor.|
+
+### LegionSale__InvalidTokenAmountSupplied
+Thrown when an invalid amount of tokens is supplied by the project.
+
+
+```solidity
+error LegionSale__InvalidTokenAmountSupplied(uint256 amount, uint256 expectedAmount);
 ```
 
 **Parameters**
@@ -133,366 +219,369 @@ error InvalidTokenAmountSupplied(uint256 amount);
 |Name|Type|Description|
 |----|----|-----------|
 |`amount`|`uint256`|The amount of tokens supplied.|
+|`expectedAmount`|`uint256`|The expected token amount to be supplied.|
 
-### InvalidVestingConfig
-Throws when the vesting configuration is invalid.
-
-
-```solidity
-error InvalidVestingConfig();
-```
-
-### InvalidWithdrawAmount
-Throws when an invalid amount of tokens has been claimed.
+### LegionSale__InvalidWithdrawAmount
+Thrown when an invalid withdrawal amount is requested.
 
 
 ```solidity
-error InvalidWithdrawAmount();
-```
-
-### InvalidRefundAmount
-Throws when an invalid amount has been requested for refund.
-
-
-```solidity
-error InvalidRefundAmount();
-```
-
-### InvalidFeeAmount
-Throws when an invalid amount has been requested for fee.
-
-
-```solidity
-error InvalidFeeAmount();
-```
-
-### InvalidPeriodConfig
-Throws when an invalid time config has been provided.
-
-
-```solidity
-error InvalidPeriodConfig();
-```
-
-### InvalidInvestAmount
-Throws when an invalid pledge amount has been sent.
-
-
-```solidity
-error InvalidInvestAmount(uint256 amount);
+error LegionSale__InvalidWithdrawAmount(uint256 amount);
 ```
 
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`amount`|`uint256`|The amount being pledged.|
+|`amount`|`uint256`|The amount of tokens requested for withdrawal.|
 
-### InvalidSignature
-Throws when an invalid signature has been provided when pledging capital.
+### LegionSale__InvalidMerkleProof
+Thrown when an invalid Merkle proof is provided for referrer fee claims.
 
 
 ```solidity
-error InvalidSignature();
+error LegionSale__InvalidMerkleProof();
 ```
 
-### InvalidPositionAmount
-Throws when the invested capital amount is not equal to the SAFT amount.
+### LegionSale__InvestorHasClaimedExcess
+Thrown when an investor who has already claimed excess capital attempts another action.
 
 
 ```solidity
-error InvalidPositionAmount(address investor);
-```
-
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`investor`|`address`|The address of the investor.|
-
-### InvestorHasRefunded
-Throws when the investor has refunded.
-
-
-```solidity
-error InvestorHasRefunded(address investor);
+error LegionSale__InvestorHasClaimedExcess(address investor);
 ```
 
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`investor`|`address`|The address of the investor.|
+|`investor`|`address`|The address of the investor who claimed excess.|
 
-### InvestorHasClaimedExcess
-Throws when the investor has claimed excess capital invested.
+### LegionSale__InvestorHasRefunded
+Thrown when an investor who has already refunded attempts another action.
 
 
 ```solidity
-error InvestorHasClaimedExcess(address investor);
+error LegionSale__InvestorHasRefunded(address investor);
 ```
 
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`investor`|`address`|The address of the investor.|
+|`investor`|`address`|The address of the refunded investor.|
 
-### InvalidSalt
-Throws when the salt used to encrypt the bid is invalid.
-
-
-```solidity
-error InvalidSalt();
-```
-
-### InvalidBidPublicKey
-Throws when an invalid bid public key is used to encrypt a bid.
+### LegionSale__UnableToTransferInvestorPosition
+Thrown when attempting to transfer a position that has been refunded or settled.
 
 
 ```solidity
-error InvalidBidPublicKey();
-```
-
-### InvalidBidPrivateKey
-Throws when an invalid bid private key is provided to decrypt a bid.
-
-
-```solidity
-error InvalidBidPrivateKey();
-```
-
-### LockupPeriodIsNotOver
-Throws when the lockup period is not over.
-
-
-```solidity
-error LockupPeriodIsNotOver();
-```
-
-### NotInClaimWhitelist
-Throws when the investor is not in the claim whitelist for tokens.
-
-
-```solidity
-error NotInClaimWhitelist(address investor);
+error LegionSale__UnableToTransferInvestorPosition(uint256 positionId);
 ```
 
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`investor`|`address`|The address of the investor.|
+|`positionId`|`uint256`|The ID of the position that cannot be transferred.|
 
-### NoCapitalInvested
-Throws when no capital has been pledged by an investor.
+### LegionSale__UnableToMergeInvestorPosition
+Thrown when attempting to merge an investor position that has been refunded or settled.
 
 
 ```solidity
-error NoCapitalInvested(address investor);
+error LegionSale__UnableToMergeInvestorPosition(uint256 positionId);
 ```
 
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`investor`|`address`|The address of the investor.|
+|`positionId`|`uint256`|The ID of the position that cannot be merged.|
 
-### NotCalledByLegion
-Throws when not called by Legion.
+### LegionSale__NotCalledByLegion
+Thrown when a function is not called by the Legion address.
 
 
 ```solidity
-error NotCalledByLegion();
+error LegionSale__NotCalledByLegion();
 ```
 
-### NotCalledByProject
-Throws when not called by the Project.
+### LegionSale__NotCalledByLegionOrProject
+Thrown when a function is not called by Legion or project admin.
 
 
 ```solidity
-error NotCalledByProject();
+error LegionSale__NotCalledByLegionOrProject();
 ```
 
-### NotCalledByLegionOrProject
-Throws when not called by Legion or the Project.
+### LegionSale__NotCalledByProject
+Thrown when a function is not called by the project admin.
 
 
 ```solidity
-error NotCalledByLegionOrProject();
+error LegionSale__NotCalledByProject();
 ```
 
-### PrefundAllocationPeriodNotEnded
-Throws when capital is pledged during the pre-fund allocation period.
+### LegionSale__NotCalledByVestingController
+Thrown when a function is not called by the vesting controller.
 
 
 ```solidity
-error PrefundAllocationPeriodNotEnded();
+error LegionSale__NotCalledByVestingController();
 ```
 
-### ProjectHasWithdrawnCapital
-Throws when the Project has withdrawn capital.
+### LegionSale__NotInClaimWhitelist
+Thrown when an investor is not in the token claim whitelist.
 
 
 ```solidity
-error ProjectHasWithdrawnCapital();
-```
-
-### PrivateKeyAlreadyPublished
-Throws when the private key has already been published by Legion.
-
-
-```solidity
-error PrivateKeyAlreadyPublished();
-```
-
-### PrivateKeyNotPublished
-Throws when the private key has not been published by Legion.
-
-
-```solidity
-error PrivateKeyNotPublished();
-```
-
-### RefundPeriodIsNotOver
-Throws when the refund period is not over.
-
-
-```solidity
-error RefundPeriodIsNotOver();
-```
-
-### RefundPeriodIsOver
-Throws when the refund period is over.
-
-
-```solidity
-error RefundPeriodIsOver();
-```
-
-### SaleHasEnded
-Throws when the sale has ended.
-
-
-```solidity
-error SaleHasEnded();
-```
-
-### SaleHasNotEnded
-Throws when the sale has not ended.
-
-
-```solidity
-error SaleHasNotEnded();
-```
-
-### SaleIsCanceled
-Throws when the sale is canceled.
-
-
-```solidity
-error SaleIsCanceled();
-```
-
-### SaleIsNotCanceled
-Throws when the sale is not canceled.
-
-
-```solidity
-error SaleIsNotCanceled();
-```
-
-### SaleResultsNotPublished
-Throws when the sale results are not published.
-
-
-```solidity
-error SaleResultsNotPublished();
-```
-
-### SignatureAlreadyUsed
-Throws when the signature has already been used.
-
-
-```solidity
-error SignatureAlreadyUsed(bytes signature);
+error LegionSale__NotInClaimWhitelist(address investor);
 ```
 
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`signature`|`bytes`|The signature that has been used.|
+|`investor`|`address`|The address of the non-whitelisted investor.|
 
-### CapitalRaisedNotPublished
-Throws when the raised capital has not published.
-
-
-```solidity
-error CapitalRaisedNotPublished();
-```
-
-### SaleResultsAlreadyPublished
-Throws when the sale results have been already published.
+### LegionSale__InvestorPositionDoesNotExist
+Thrown when attempting to access a non-existent investor position.
 
 
 ```solidity
-error SaleResultsAlreadyPublished();
+error LegionSale__InvestorPositionDoesNotExist();
 ```
 
-### CapitalRaisedAlreadyPublished
-Throws when the raised capital have been already published.
+### LegionSale__PrefundAllocationPeriodNotEnded
+Thrown when investment is attempted during the prefund allocation period.
 
 
 ```solidity
-error CapitalRaisedAlreadyPublished();
+error LegionSale__PrefundAllocationPeriodNotEnded(uint256 timestamp);
 ```
 
-### TokensAlreadyAllocated
-Throws when the tokens have already been allocated.
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`timestamp`|`uint256`|The current timestamp when the investment is attempted.|
+
+### LegionSale__PrivateKeyAlreadyPublished
+Thrown when the private key has already been published.
 
 
 ```solidity
-error TokensAlreadyAllocated();
+error LegionSale__PrivateKeyAlreadyPublished();
 ```
 
-### TokensNotAllocated
-Throws when tokens have not been allocated.
+### LegionSale__PrivateKeyNotPublished
+Thrown when attempting decryption before the private key is published.
 
 
 ```solidity
-error TokensNotAllocated();
+error LegionSale__PrivateKeyNotPublished();
 ```
 
-### TokensAlreadySupplied
-Throws when tokens have already been supplied.
+### LegionSale__RefundPeriodIsNotOver
+Thrown when an action is attempted before the refund period ends.
 
 
 ```solidity
-error TokensAlreadySupplied();
+error LegionSale__RefundPeriodIsNotOver(uint256 currentTimestamp, uint256 refundEndTimestamp);
 ```
 
-### TokensNotSupplied
-Throws when tokens have not been supplied.
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`currentTimestamp`|`uint256`|The current timestamp when the action is attempted.|
+|`refundEndTimestamp`|`uint256`|The timestamp when the refund period ends.|
+
+### LegionSale__RefundPeriodIsOver
+Thrown when a refund is attempted after the refund period ends.
 
 
 ```solidity
-error TokensNotSupplied();
+error LegionSale__RefundPeriodIsOver(uint256 currentTimestamp, uint256 refundEndTimestamp);
 ```
 
-### ZeroAddressProvided
-Throws when zero address has been provided.
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`currentTimestamp`|`uint256`|The current timestamp when the action is attempted.|
+|`refundEndTimestamp`|`uint256`|The timestamp when the refund period ends.|
+
+### LegionSale__SaleHasEnded
+Thrown when an action is attempted after the sale has ended.
 
 
 ```solidity
-error ZeroAddressProvided();
+error LegionSale__SaleHasEnded(uint256 timestamp);
 ```
 
-### ZeroValueProvided
-Throws when zero value has been provided.
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`timestamp`|`uint256`|The current timestamp when the action is attempted.|
+
+### LegionSale__SaleHasNotEnded
+Thrown when an action requires the sale to be completed first.
 
 
 ```solidity
-error ZeroValueProvided();
+error LegionSale__SaleHasNotEnded(uint256 timestamp);
 ```
+
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`timestamp`|`uint256`|The current timestamp when the action is attempted.|
+
+### LegionSale__SaleIsCanceled
+Thrown when an action is attempted on a canceled sale.
+
+
+```solidity
+error LegionSale__SaleIsCanceled();
+```
+
+### LegionSale__SaleIsNotCanceled
+Thrown when an action requires the sale to be canceled first.
+
+
+```solidity
+error LegionSale__SaleIsNotCanceled();
+```
+
+### LegionSale__SaleResultsAlreadyPublished
+Thrown when attempting to republish sale results.
+
+
+```solidity
+error LegionSale__SaleResultsAlreadyPublished();
+```
+
+### LegionSale__SaleResultsNotPublished
+Thrown when an action requires published sale results.
+
+
+```solidity
+error LegionSale__SaleResultsNotPublished();
+```
+
+### LegionSale__SignatureAlreadyUsed
+Thrown when a signature is reused.
+
+
+```solidity
+error LegionSale__SignatureAlreadyUsed(bytes signature);
+```
+
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`signature`|`bytes`|The signature that was previously used.|
+
+### LegionSale__TokensAlreadyAllocated
+Thrown when attempting to reallocate tokens.
+
+
+```solidity
+error LegionSale__TokensAlreadyAllocated();
+```
+
+### LegionSale__TokensAlreadySupplied
+Thrown when attempting to resupply tokens.
+
+
+```solidity
+error LegionSale__TokensAlreadySupplied();
+```
+
+### LegionSale__TokensNotAllocated
+Thrown when an action requires token allocation first.
+
+
+```solidity
+error LegionSale__TokensNotAllocated();
+```
+
+### LegionSale__TokensNotSupplied
+Thrown when an action requires supplied tokens first.
+
+
+```solidity
+error LegionSale__TokensNotSupplied();
+```
+
+### LegionSale__ZeroAddressProvided
+Thrown when a zero address is provided as a parameter.
+
+
+```solidity
+error LegionSale__ZeroAddressProvided();
+```
+
+### LegionSale__ZeroValueProvided
+Thrown when a zero value is provided as a parameter.
+
+
+```solidity
+error LegionSale__ZeroValueProvided();
+```
+
+### LegionVesting__CliffNotEnded
+Thrown when attempting to release tokens before the cliff period ends.
+
+
+```solidity
+error LegionVesting__CliffNotEnded(uint256 currentTimestamp);
+```
+
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`currentTimestamp`|`uint256`|The current block timestamp when the attempt was made.|
+
+### LegionVesting__OnlyAskTokenReleasable
+Thrown when a token different from the expected ask token is released.
+
+
+```solidity
+error LegionVesting__OnlyAskTokenReleasable();
+```
+
+### LegionVesting__InvalidVestingConfig
+Thrown when the vesting configuration parameters are invalid.
+
+
+```solidity
+error LegionVesting__InvalidVestingConfig(
+    uint8 vestingType,
+    uint256 vestingStartTimestamp,
+    uint256 vestingDurationSeconds,
+    uint256 vestingCliffDurationSeconds,
+    uint256 epochDurationSeconds,
+    uint256 numberOfEpochs,
+    uint256 tokenAllocationOnTGERate
+);
+```
+
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`vestingType`|`uint8`|The type of vesting schedule (linear or epoch-based).|
+|`vestingStartTimestamp`|`uint256`|The Unix timestamp when vesting starts.|
+|`vestingDurationSeconds`|`uint256`|The duration of the vesting schedule in seconds.|
+|`vestingCliffDurationSeconds`|`uint256`|The duration of the cliff period in seconds.|
+|`epochDurationSeconds`|`uint256`|The duration of each epoch in seconds.|
+|`numberOfEpochs`|`uint256`|The total number of epochs in the vesting schedule.|
+|`tokenAllocationOnTGERate`|`uint256`|The token allocation released at TGE (18 decimal precision).|
 

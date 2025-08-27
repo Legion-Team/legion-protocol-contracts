@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.30;
 
 import { Script, console2 } from "forge-std/Script.sol";
-import { LegionBouncer } from "../src/LegionBouncer.sol";
+import { LegionBouncer } from "../src/access/LegionBouncer.sol";
 
 contract LegionBouncerScript is Script {
     function setUp() public { }

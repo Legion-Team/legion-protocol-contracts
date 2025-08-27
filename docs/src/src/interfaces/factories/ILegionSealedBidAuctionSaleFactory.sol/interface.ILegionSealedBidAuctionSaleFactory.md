@@ -1,18 +1,22 @@
 # ILegionSealedBidAuctionSaleFactory
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/1a165deeea33dfd2b1dca142bf23d06b547c39a3/src/interfaces/factories/ILegionSealedBidAuctionSaleFactory.sol)
+[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/85d479ea08d148a380138b535ed11768adee16de/src/interfaces/factories/ILegionSealedBidAuctionSaleFactory.sol)
+
+**Author:**
+Legion
+
+Interface for the LegionSealedBidAuctionSaleFactory contract.
 
 
 ## Functions
-### createSealedBidAuction
+### createSealedBidAuctionSale
 
-Deploy a LegionSealedBidAuctionSale contract.
+Deploys a new LegionSealedBidAuctionSale contract instance.
 
 
 ```solidity
-function createSealedBidAuction(
-    ILegionSale.LegionSaleInitializationParams memory saleInitParams,
-    ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams memory sealedBidAuctionSaleInitParams,
-    ILegionSale.LegionVestingInitializationParams memory vestingInitParams
+function createSealedBidAuctionSale(
+    ILegionAbstractSale.LegionSaleInitializationParams memory saleInitParams,
+    ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams memory sealedBidAuctionSaleInitParams
 )
     external
     returns (address payable sealedBidAuctionInstance);
@@ -21,28 +25,26 @@ function createSealedBidAuction(
 
 |Name|Type|Description|
 |----|----|-----------|
-|`saleInitParams`|`ILegionSale.LegionSaleInitializationParams`|The Legion sale initialization parameters.|
+|`saleInitParams`|`ILegionAbstractSale.LegionSaleInitializationParams`|The general Legion sale initialization parameters.|
 |`sealedBidAuctionSaleInitParams`|`ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams`|The sealed bid auction sale specific initialization parameters.|
-|`vestingInitParams`|`ILegionSale.LegionVestingInitializationParams`|The vesting initialization parameters.|
 
 **Returns**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`sealedBidAuctionInstance`|`address payable`|The address of the SealedBidAuction instance deployed.|
+|`sealedBidAuctionInstance`|`address payable`|The address of the newly deployed and initialized LegionSealedBidAuctionSale instance.|
 
 
 ## Events
-### NewSealedBidAuctionCreated
-This event is emitted when a new sealed bid auction is deployed and initialized.
+### NewSealedBidAuctionSaleCreated
+Emitted when a new sealed bid auction sale contract is deployed and initialized.
 
 
 ```solidity
-event NewSealedBidAuctionCreated(
+event NewSealedBidAuctionSaleCreated(
     address saleInstance,
-    ILegionSale.LegionSaleInitializationParams saleInitParams,
-    ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams sealedBidAuctionSaleInitParams,
-    ILegionSale.LegionVestingInitializationParams vestingInitParams
+    ILegionAbstractSale.LegionSaleInitializationParams saleInitParams,
+    ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams sealedBidAuctionSaleInitParams
 );
 ```
 
@@ -50,8 +52,7 @@ event NewSealedBidAuctionCreated(
 
 |Name|Type|Description|
 |----|----|-----------|
-|`saleInstance`|`address`|The address of the sale instance deployed.|
-|`saleInitParams`|`ILegionSale.LegionSaleInitializationParams`|The Legion sale initialization parameters.|
-|`sealedBidAuctionSaleInitParams`|`ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams`|The sealed bid auction sale specific initialization parameters.|
-|`vestingInitParams`|`ILegionSale.LegionVestingInitializationParams`|The vesting initialization parameters.|
+|`saleInstance`|`address`|The address of the newly deployed sealed bid auction sale contract.|
+|`saleInitParams`|`ILegionAbstractSale.LegionSaleInitializationParams`|The Legion sale initialization parameters used.|
+|`sealedBidAuctionSaleInitParams`|`ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams`|The sealed bid auction sale specific initialization parameters used.|
 

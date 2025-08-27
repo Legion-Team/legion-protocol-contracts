@@ -1,5 +1,5 @@
 # LegionSealedBidAuctionSaleFactory
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/1a165deeea33dfd2b1dca142bf23d06b547c39a3/src/factories/LegionSealedBidAuctionSaleFactory.sol)
+[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/85d479ea08d148a380138b535ed11768adee16de/src/factories/LegionSealedBidAuctionSaleFactory.sol)
 
 **Inherits:**
 [ILegionSealedBidAuctionSaleFactory](/src/interfaces/factories/ILegionSealedBidAuctionSaleFactory.sol/interface.ILegionSealedBidAuctionSaleFactory.md), Ownable
@@ -7,23 +7,29 @@
 **Author:**
 Legion
 
-A factory contract for deploying proxy instances of Legion sealed bid auction sales
+Deploys proxy instances of Legion sealed bid auction sale contracts using the clone pattern.
+
+*Creates gas-efficient clones of a single implementation contract for each sealed bid auction sale.*
 
 
 ## State Variables
-### sealedBidAuctionTemplate
-*The LegionSealedBidAuctionSale implementation contract*
+### i_sealedBidAuctionTemplate
+The address of the LegionSealedBidAuctionSale implementation contract used as a template.
+
+*Immutable reference to the base implementation deployed during construction.*
 
 
 ```solidity
-address public immutable sealedBidAuctionTemplate = address(new LegionSealedBidAuctionSale());
+address public immutable i_sealedBidAuctionTemplate = address(new LegionSealedBidAuctionSale());
 ```
 
 
 ## Functions
 ### constructor
 
-*Constructor to initialize the LegionSaleFactory*
+Constructor for the LegionSealedBidAuctionSaleFactory contract.
+
+*Initializes ownership during contract deployment.*
 
 
 ```solidity
@@ -33,19 +39,18 @@ constructor(address newOwner);
 
 |Name|Type|Description|
 |----|----|-----------|
-|`newOwner`|`address`|The owner of the factory contract|
+|`newOwner`|`address`|The address to be set as the initial owner of the factory.|
 
 
-### createSealedBidAuction
+### createSealedBidAuctionSale
 
-Deploy a LegionSealedBidAuctionSale contract.
+Deploys a new LegionSealedBidAuctionSale contract instance.
 
 
 ```solidity
-function createSealedBidAuction(
-    ILegionSale.LegionSaleInitializationParams memory saleInitParams,
-    ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams memory sealedBidAuctionSaleInitParams,
-    ILegionSale.LegionVestingInitializationParams memory vestingInitParams
+function createSealedBidAuctionSale(
+    ILegionAbstractSale.LegionSaleInitializationParams calldata saleInitParams,
+    ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams calldata sealedBidAuctionSaleInitParams
 )
     external
     onlyOwner
@@ -55,14 +60,13 @@ function createSealedBidAuction(
 
 |Name|Type|Description|
 |----|----|-----------|
-|`saleInitParams`|`ILegionSale.LegionSaleInitializationParams`|The Legion sale initialization parameters.|
+|`saleInitParams`|`ILegionAbstractSale.LegionSaleInitializationParams`|The general Legion sale initialization parameters.|
 |`sealedBidAuctionSaleInitParams`|`ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams`|The sealed bid auction sale specific initialization parameters.|
-|`vestingInitParams`|`ILegionSale.LegionVestingInitializationParams`|The vesting initialization parameters.|
 
 **Returns**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`sealedBidAuctionInstance`|`address payable`|The address of the SealedBidAuction instance deployed.|
+|`sealedBidAuctionInstance`|`address payable`|The address of the newly deployed and initialized LegionSealedBidAuctionSale instance.|
 
 

@@ -1,8 +1,21 @@
 [profile.default]
-  solc = "0.8.28"
+  solc = "0.8.30"
   src = "src"
   out = "out"
   libs = ["lib"]
+  optimizer = true
+  optimizer_runs = 200
+
+remappings = [ 
+  "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+  "@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/",
+  "@solady/src=lib/solady/src",
+  "@solady/test=lib/solady/test"
+]
+
+[fuzz]
+  runs = 256
+  max_assume_rejects = 1000
 
 [fmt]
   bracket_spacing = true
@@ -17,7 +30,7 @@
 [doc]
   ignore = ["**/*.t.sol"]
   out = "docs"
-  repository = "https://github.com/Legion-Team/evm-contracts"
+  repository = "https://github.com/Legion-Team/legion-protocol-contracts"
 
 [rpc_endpoints]
   mainnet = "${MAINNET_RPC_URL}"

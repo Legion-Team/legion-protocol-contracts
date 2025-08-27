@@ -1,18 +1,22 @@
 # ILegionFixedPriceSaleFactory
-[Git Source](https://github.com/Legion-Team/evm-contracts/blob/1a165deeea33dfd2b1dca142bf23d06b547c39a3/src/interfaces/factories/ILegionFixedPriceSaleFactory.sol)
+[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/85d479ea08d148a380138b535ed11768adee16de/src/interfaces/factories/ILegionFixedPriceSaleFactory.sol)
+
+**Author:**
+Legion
+
+Interface for the LegionFixedPriceSaleFactory contract.
 
 
 ## Functions
 ### createFixedPriceSale
 
-Deploy a LegionFixedPriceSale contract.
+Deploys a new LegionFixedPriceSale contract instance.
 
 
 ```solidity
 function createFixedPriceSale(
-    ILegionSale.LegionSaleInitializationParams memory saleInitParams,
-    ILegionFixedPriceSale.FixedPriceSaleInitializationParams memory fixedPriceSaleInitParams,
-    ILegionSale.LegionVestingInitializationParams memory vestingInitParams
+    ILegionAbstractSale.LegionSaleInitializationParams calldata saleInitParams,
+    ILegionFixedPriceSale.FixedPriceSaleInitializationParams calldata fixedPriceSaleInitParams
 )
     external
     returns (address payable fixedPriceSaleInstance);
@@ -21,28 +25,26 @@ function createFixedPriceSale(
 
 |Name|Type|Description|
 |----|----|-----------|
-|`saleInitParams`|`ILegionSale.LegionSaleInitializationParams`|The Legion sale initialization parameters.|
+|`saleInitParams`|`ILegionAbstractSale.LegionSaleInitializationParams`|The general Legion sale initialization parameters.|
 |`fixedPriceSaleInitParams`|`ILegionFixedPriceSale.FixedPriceSaleInitializationParams`|The fixed price sale specific initialization parameters.|
-|`vestingInitParams`|`ILegionSale.LegionVestingInitializationParams`|The vesting initialization parameters.|
 
 **Returns**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`fixedPriceSaleInstance`|`address payable`|The address of the FixedPriceSale instance deployed.|
+|`fixedPriceSaleInstance`|`address payable`|The address of the newly deployed and initialized LegionFixedPriceSale instance.|
 
 
 ## Events
 ### NewFixedPriceSaleCreated
-This event is emitted when a new fixed price sale is deployed and initialized.
+Emitted when a new fixed price sale contract is deployed and initialized.
 
 
 ```solidity
 event NewFixedPriceSaleCreated(
     address saleInstance,
-    ILegionSale.LegionSaleInitializationParams saleInitParams,
-    ILegionFixedPriceSale.FixedPriceSaleInitializationParams fixedPriceSaleInitParams,
-    ILegionSale.LegionVestingInitializationParams vestingInitParams
+    ILegionAbstractSale.LegionSaleInitializationParams saleInitParams,
+    ILegionFixedPriceSale.FixedPriceSaleInitializationParams fixedPriceSaleInitParams
 );
 ```
 
@@ -50,8 +52,7 @@ event NewFixedPriceSaleCreated(
 
 |Name|Type|Description|
 |----|----|-----------|
-|`saleInstance`|`address`|The address of the sale instance deployed.|
-|`saleInitParams`|`ILegionSale.LegionSaleInitializationParams`|The Legion sale initialization parameters.|
-|`fixedPriceSaleInitParams`|`ILegionFixedPriceSale.FixedPriceSaleInitializationParams`|The fixed price sale specific initialization parameters.|
-|`vestingInitParams`|`ILegionSale.LegionVestingInitializationParams`|The vesting initialization parameters.|
+|`saleInstance`|`address`|The address of the newly deployed sale contract.|
+|`saleInitParams`|`ILegionAbstractSale.LegionSaleInitializationParams`|The Legion sale initialization parameters used.|
+|`fixedPriceSaleInitParams`|`ILegionFixedPriceSale.FixedPriceSaleInitializationParams`|The fixed price sale specific initialization parameters used.|
 

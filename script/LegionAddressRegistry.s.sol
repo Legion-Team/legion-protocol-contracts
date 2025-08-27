@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.30;
 
 import { Script, console2 } from "forge-std/Script.sol";
-import { LegionAddressRegistry } from "../src/LegionAddressRegistry.sol";
-import { LegionBouncer } from "../src/LegionBouncer.sol";
+import { LegionAddressRegistry } from "../src/registries/LegionAddressRegistry.sol";
+import { LegionBouncer } from "../src/access/LegionBouncer.sol";
 
 contract LegionAddressRegistryScript is Script {
     function setUp() public { }
@@ -15,6 +15,7 @@ contract LegionAddressRegistryScript is Script {
         address legionSigner = vm.envAddress("LEGION_SIGNER");
         address legionFeeReceiver = vm.envAddress("LEGION_FEE_RECEIVER");
         address legionVestingFactory = vm.envAddress("LEGION_VESTING_FACTORY");
+        address legionVestingController = vm.envAddress("LEGION_VESTING_CONTROLLER");
 
         vm.startBroadcast(deployerPrivateKey);
 
@@ -45,6 +46,15 @@ contract LegionAddressRegistryScript is Script {
             address(addressRegistry),
             abi.encodeWithSelector(
                 LegionAddressRegistry.setLegionAddress.selector, bytes32("LEGION_VESTING_FACTORY"), legionVestingFactory
+            )
+        );
+
+        LegionBouncer(legionBouncer).functionCall(
+            address(addressRegistry),
+            abi.encodeWithSelector(
+                LegionAddressRegistry.setLegionAddress.selector,
+                bytes32("LEGION_VESTING_CONTROLLER"),
+                legionVestingController
             )
         );
 

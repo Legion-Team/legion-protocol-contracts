@@ -4,11 +4,47 @@ on:
   pull_request:
     branches:
       - master
+      - dev
 
 env:
   FOUNDRY_PROFILE: ci
 
 jobs:
+  slither-analyze:
+    name: Run Slither Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Slither
+        run: pip install slither-analyzer
+
+      - name: Install solc 0.8.29
+        run: |
+          pip install solc-select
+          solc-select install 0.8.29
+          solc-select use 0.8.29
+
+      - name: Run Slither
+        id: slither
+        run: slither . --skip-assembly --fail-high
+
   forge-test:
     name: Run Forge Tests and Checks
     runs-on: ubuntu-latest
@@ -66,7 +102,9 @@ jobs:
 
       - name: Run coverage
         run: |
-          forge coverage --report summary --report lcov
+          forge coverage --no-match-coverage "(script|test|lib|mocks)" --report summary --report lcov > coverage.txt
+          cat coverage.txt  # Debug: Show the output
+        id: coverage
 
       - name: Prune coverage
         run: |

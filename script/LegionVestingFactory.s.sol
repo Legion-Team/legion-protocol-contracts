@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.30;
 
 import { Script, console2 } from "forge-std/Script.sol";
 import { LegionVestingFactory } from "../src/factories/LegionVestingFactory.sol";

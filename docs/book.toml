@@ -7,7 +7,7 @@ no-section-label = true
 additional-js = ["solidity.min.js"]
 additional-css = ["book.css"]
 mathjax-support = true
-git-repository-url = "https://github.com/Legion-Team/evm-contracts"
+git-repository-url = "https://github.com/Legion-Team/legion-protocol-contracts"
 
 [output.html.fold]
 enable = true
