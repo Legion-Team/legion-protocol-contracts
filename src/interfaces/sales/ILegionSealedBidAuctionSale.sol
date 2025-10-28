@@ -60,14 +60,12 @@ interface ILegionSealedBidAuctionSale is ILegionAbstractSale {
 
     /// @notice Emitted when sale results are published by the Legion admin.
     /// @param claimMerkleRoot The Merkle root for verifying token claims.
-    /// @param acceptedMerkleRoot The Merkle root for verifying accepted capital.
     /// @param tokensAllocated The total tokens allocated from the sale.
     /// @param capitalRaised The total capital raised from the auction.
     /// @param sealedBidPrivateKey The private key used to decrypt sealed bids.
     /// @param fixedSalt The fixed salt used for sealing bids.
     event SaleResultsPublished(
         bytes32 claimMerkleRoot,
-        bytes32 acceptedMerkleRoot,
         uint256 tokensAllocated,
         uint256 capitalRaised,
         uint256 sealedBidPrivateKey,
@@ -94,14 +92,12 @@ interface ILegionSealedBidAuctionSale is ILegionAbstractSale {
 
     /// @notice Publishes auction results including token allocation and capital raised.
     /// @param claimMerkleRoot The Merkle root for verifying token claims.
-    /// @param acceptedMerkleRoot The Merkle root for verifying accepted capital.
     /// @param tokensAllocated The total tokens allocated for investors.
     /// @param capitalRaised The total capital raised from the auction.
     /// @param sealedBidPrivateKey The private key to decrypt sealed bids.
     /// @param fixedSalt The fixed salt used for sealing bids.
     function publishSaleResults(
         bytes32 claimMerkleRoot,
-        bytes32 acceptedMerkleRoot,
         uint256 tokensAllocated,
         uint256 capitalRaised,
         uint256 sealedBidPrivateKey,

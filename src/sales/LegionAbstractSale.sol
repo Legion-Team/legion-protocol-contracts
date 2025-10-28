@@ -315,7 +315,7 @@ abstract contract LegionAbstractSale is
     /// @inheritdoc ILegionAbstractSale
     function withdrawExcessInvestedCapital(
         uint256 amount,
-        bytes32[] calldata proof
+        bytes calldata signature
     )
         external
         virtual
@@ -332,7 +332,7 @@ abstract contract LegionAbstractSale is
         _verifyHasNotRefunded(positionId);
 
         // Verify that the investor is eligible to get excess capital back
-        _verifyCanClaimExcessCapital(msg.sender, positionId, amount, proof);
+        _verifyCanClaimExcessCapital(msg.sender, positionId, amount, signature);
 
         // Mark that the excess capital has been returned
         s_investorPositions[positionId].hasClaimedExcess = true;
@@ -430,15 +430,6 @@ abstract contract LegionAbstractSale is
                 addressConfig.askToken, msg.sender, addressConfig.referrerFeeReceiver, referrerFee
             );
         }
-    }
-
-    /// @inheritdoc ILegionAbstractSale
-    function setAcceptedCapital(bytes32 merkleRoot) external virtual onlyLegion whenSaleNotCanceled {
-        // Set the merkle root for accepted capital
-        s_saleStatus.acceptedCapitalMerkleRoot = merkleRoot;
-
-        // Emit AcceptedCapitalSet
-        emit AcceptedCapitalSet(merkleRoot);
     }
 
     /// @inheritdoc ILegionAbstractSale
@@ -743,12 +734,12 @@ abstract contract LegionAbstractSale is
     /// @param _investor The address of the investor.
     /// @param _positionId The position ID of the investor.
     /// @param _amount The amount of excess capital to claim.
-    /// @param _proof The Merkle proof for excess capital verification.
+    /// @param _signature The signature authorizing the withdrawal.
     function _verifyCanClaimExcessCapital(
         address _investor,
         uint256 _positionId,
         uint256 _amount,
-        bytes32[] calldata _proof
+        bytes calldata _signature
     )
         internal
         view
@@ -760,12 +751,14 @@ abstract contract LegionAbstractSale is
         // Check if the investor has already settled their allocation
         if (position.hasClaimedExcess) revert Errors.LegionSale__AlreadyClaimedExcess(_investor);
 
-        // Generate the merkle leaf and verify accepted capital
-        bytes32 leaf = keccak256(bytes.concat(keccak256(abi.encode(_investor, (position.investedCapital - _amount)))));
+        // Construct the signed data
+        bytes32 _data = keccak256(
+            abi.encodePacked(msg.sender, address(this), block.chainid, _amount, SaleAction.WITHDRAW_EXCESS_CAPITAL)
+        ).toEthSignedMessageHash();
 
-        // Verify the merkle proof
-        if (!MerkleProofLib.verify(_proof, s_saleStatus.acceptedCapitalMerkleRoot, leaf)) {
-            revert Errors.LegionSale__CannotWithdrawExcessInvestedCapital(_investor, _amount);
+        // Verify the signature
+        if (_data.recover(_signature) != s_addressConfig.legionSigner) {
+            revert Errors.LegionSale__InvalidSignature(_signature);
         }
     }
 

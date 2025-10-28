@@ -107,8 +107,6 @@ interface ILegionAbstractSale {
         uint256 totalCapitalWithdrawn;
         // Merkle root for verifying token distribution amounts
         bytes32 claimTokensMerkleRoot;
-        // Merkle root for verifying accepted capital amounts
-        bytes32 acceptedCapitalMerkleRoot;
         // Indicates if the sale has been canceled
         bool isCanceled;
         // Indicates if tokens have been supplied by the project
@@ -131,6 +129,14 @@ interface ILegionAbstractSale {
         address vestingAddress;
     }
 
+    /// @dev Enum defining possible actions during the sale
+    enum SaleAction {
+        INVEST, // Investing capital
+        WITHDRAW_EXCESS_CAPITAL, // Withdrawing excess capital
+        CLAIM_TOKEN_ALLOCATION // Claiming token allocation
+
+    }
+
     /// @notice Emitted when capital is withdrawn by the project owner.
     /// @param amount The amount of capital withdrawn.
     event CapitalWithdrawn(uint256 amount);
@@ -151,10 +157,6 @@ interface ILegionAbstractSale {
     /// @param investor The address of the investor claiming excess.
     /// @param positionId The ID of the investor's position.
     event ExcessCapitalWithdrawn(uint256 amount, address investor, uint256 positionId);
-
-    /// @notice Emitted when accepted capital Merkle root is published by Legion.
-    /// @param merkleRoot The Merkle root for accepted capital verification.
-    event AcceptedCapitalSet(bytes32 merkleRoot);
 
     /// @notice Emitted during an emergency withdrawal by Legion.
     /// @param receiver The address receiving withdrawn tokens.
@@ -211,8 +213,8 @@ interface ILegionAbstractSale {
 
     /// @notice Withdraws excess invested capital back to the investor.
     /// @param amount The amount of excess capital to withdraw.
-    /// @param proof The Merkle proof for excess capital verification.
-    function withdrawExcessInvestedCapital(uint256 amount, bytes32[] calldata proof) external;
+    /// @param signature The signature authorizing the withdrawal.
+    function withdrawExcessInvestedCapital(uint256 amount, bytes calldata signature) external;
 
     /// @notice Releases vested tokens to the investor.
     /// @dev Interacts with the investor's vesting contract to release available tokens.
@@ -223,10 +225,6 @@ interface ILegionAbstractSale {
     /// @param legionFee The fee amount for Legion.
     /// @param referrerFee The fee amount for the referrer.
     function supplyTokens(uint256 amount, uint256 legionFee, uint256 referrerFee) external;
-
-    /// @notice Sets the Merkle root for accepted capital verification.
-    /// @param merkleRoot The Merkle root for accepted capital verification.
-    function setAcceptedCapital(bytes32 merkleRoot) external;
 
     /// @notice Withdraws invested capital if the sale is canceled.
     function withdrawInvestedCapitalIfCanceled() external;

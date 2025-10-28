@@ -116,7 +116,6 @@ contract LegionFixedPriceSale is LegionAbstractSale, ILegionFixedPriceSale {
     /// @inheritdoc ILegionFixedPriceSale
     function publishSaleResults(
         bytes32 claimMerkleRoot,
-        bytes32 acceptedMerkleRoot,
         uint256 tokensAllocated,
         uint8 askTokenDecimals
     )
@@ -132,9 +131,6 @@ contract LegionFixedPriceSale is LegionAbstractSale, ILegionFixedPriceSale {
         // Set the merkle root for claiming tokens
         s_saleStatus.claimTokensMerkleRoot = claimMerkleRoot;
 
-        // Set the merkle root for accepted capital
-        s_saleStatus.acceptedCapitalMerkleRoot = acceptedMerkleRoot;
-
         // Set the total tokens to be allocated by the Project team
         s_saleStatus.totalTokensAllocated = tokensAllocated;
 
@@ -143,7 +139,7 @@ contract LegionFixedPriceSale is LegionAbstractSale, ILegionFixedPriceSale {
             (tokensAllocated * s_fixedPriceSaleConfig.tokenPrice) / (10 ** askTokenDecimals);
 
         // Emit SaleResultsPublished event
-        emit SaleResultsPublished(claimMerkleRoot, acceptedMerkleRoot, tokensAllocated);
+        emit SaleResultsPublished(claimMerkleRoot, tokensAllocated);
     }
 
     /// @inheritdoc ILegionFixedPriceSale

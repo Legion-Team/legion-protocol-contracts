@@ -230,17 +230,10 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
      */
     bytes32 public claimTokensMerkleRoot = 0x8d7c018c2099eaee9884eb772e1565b75cb717aa61d4caa276dd612273cdd649;
 
-    /**
-     * @notice Merkle root for accepted capital
-     * @dev Precomputed root for verifying accepted capital claims
-     */
-    bytes32 public acceptedCapitalMerkleRoot = 0x380f79c2e8e6e4bc37b7fda83ac0f1a33b5abc5d70831c08add80068b2d564cf;
-
-    /**
-     * @notice Malicious Merkle root for excess capital
-     * @dev Precomputed root for testing invalid excess capital claims
-     */
-    bytes32 public excessCapitalMerkleRootMalicious = 0x04169dca2cf842bea9fcf4df22c9372c6d6f04410bfa446585e287aa1c834974;
+    /// @notice Signatures for excess withdrawal tests
+    bytes signatureInv1ExcessWithdrawal;
+    bytes signatureInv2ExcessWithdrawal;
+    bytes signatureInv3ExcessWithdrawal;
 
     /*//////////////////////////////////////////////////////////////////////////
                                   SETUP FUNCTION
@@ -432,6 +425,53 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
 
         (v, r, s) = vm.sign(legionSignerPK, digest2Transfer);
         signatureInv2Transfer = abi.encodePacked(r, s, v);
+
+        vm.stopPrank();
+    }
+
+    /**
+     * @notice Prepares excess withdrawal signatures
+     * @dev Generates signatures for withdrawing excess capital between investors
+     */
+    function prepareExcessWithdrawalSignatures() public {
+        address legionSigner = vm.addr(legionSignerPK);
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
+
+        vm.startPrank(legionSigner);
+
+        bytes32 digest1ExcessWithdrawal = keccak256(
+            abi.encodePacked(
+                investor1,
+                legionSaleInstance,
+                block.chainid,
+                uint256(0),
+                ILegionAbstractSale.SaleAction.WITHDRAW_EXCESS_CAPITAL
+            )
+        ).toEthSignedMessageHash();
+
+        bytes32 digest2ExcessWithdrawal = keccak256(
+            abi.encodePacked(
+                investor2,
+                legionSaleInstance,
+                block.chainid,
+                uint256(1000 * 1e6),
+                ILegionAbstractSale.SaleAction.WITHDRAW_EXCESS_CAPITAL
+            )
+        ).toEthSignedMessageHash();
+
+        bytes32 digest3ExcessWithdrawal =
+            keccak256(abi.encodePacked(investor3, legionSaleInstance, block.chainid)).toEthSignedMessageHash();
+
+        (v, r, s) = vm.sign(legionSignerPK, digest1ExcessWithdrawal);
+        signatureInv1ExcessWithdrawal = abi.encodePacked(r, s, v);
+
+        (v, r, s) = vm.sign(legionSignerPK, digest2ExcessWithdrawal);
+        signatureInv2ExcessWithdrawal = abi.encodePacked(r, s, v);
+
+        (v, r, s) = vm.sign(legionSignerPK, digest3ExcessWithdrawal);
+        signatureInv3ExcessWithdrawal = abi.encodePacked(r, s, v);
 
         vm.stopPrank();
     }
@@ -970,18 +1010,11 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
         prepareInvestedCapitalFromAllInvestors();
-
-        bytes32[] memory excessClaimProofInvestor2 = new bytes32[](2);
-
-        excessClaimProofInvestor2[0] = bytes32(0x5a967157246c689bfb28b0e8bdd445fe3b05cd751cb10e979ae3dbaf0a02c5c7);
-        excessClaimProofInvestor2[1] = bytes32(0x224c3f0b0526195d6161b6c193e3d2f3c63cbc435919720096ad25be50414394);
-
-        vm.prank(legionBouncer);
-        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
+        prepareExcessWithdrawalSignatures();
 
         vm.prank(investor2);
         ILegionPreLiquidOpenApplicationSale(legionSaleInstance).withdrawExcessInvestedCapital(
-            1000 * 1e6, excessClaimProofInvestor2
+            1000 * 1e6, signatureInv2ExcessWithdrawal
         );
 
         // Expect
@@ -1765,67 +1798,6 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
     }
 
     /*//////////////////////////////////////////////////////////////////////////
-                        SET ACCEPTED CAPITAL TESTS
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /**
-     * @notice Tests successful setting of accepted capital by Legion admin
-     * @dev Expects AcceptedCapitalSet event emission with correct merkle root
-     */
-    function test_setAcceptedCapital_successfullyEmitsAcceptedCapitalSet() public {
-        // Arrange
-        prepareCreateLegionPreLiquidSale();
-
-        vm.warp(endTime() + 1);
-
-        // Expect
-        vm.expectEmit();
-        emit ILegionAbstractSale.AcceptedCapitalSet(acceptedCapitalMerkleRoot);
-
-        // Act
-        vm.prank(legionBouncer);
-        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
-    }
-
-    /**
-     * @notice Tests that setting accepted capital by non-Legion admin reverts
-     * @dev Expects LegionSale__NotCalledByLegion revert when called by nonLegionAdmin
-     */
-    function testFuzz_setAcceptedCapital_revertsIfCalledByNonLegionAdmin(address nonLegionAdmin) public {
-        // Arrange
-        vm.assume(nonLegionAdmin != legionBouncer);
-        prepareCreateLegionPreLiquidSale();
-
-        vm.warp(endTime() + 1);
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NotCalledByLegion.selector));
-
-        // Act
-        vm.prank(nonLegionAdmin);
-        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
-    }
-
-    /**
-     * @notice Tests that setting accepted capital when sale is canceled reverts
-     * @dev Expects LegionSale__SaleIsCanceled revert when sale is canceled
-     */
-    function test_setAcceptedCapital_revertsIfSaleIsCanceled() public {
-        // Arrange
-        prepareCreateLegionPreLiquidSale();
-
-        vm.prank(projectAdmin);
-        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).cancel();
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
-
-        // Act
-        vm.prank(legionBouncer);
-        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
-    }
-
-    /*//////////////////////////////////////////////////////////////////////////
                            SUPPLY TOKENS TESTS
     //////////////////////////////////////////////////////////////////////////*/
 
@@ -2332,20 +2304,14 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
         prepareInvestedCapitalFromAllInvestors();
-
-        bytes32[] memory excessClaimProofInvestor2 = new bytes32[](2);
-        excessClaimProofInvestor2[0] = bytes32(0x5a967157246c689bfb28b0e8bdd445fe3b05cd751cb10e979ae3dbaf0a02c5c7);
-        excessClaimProofInvestor2[1] = bytes32(0x224c3f0b0526195d6161b6c193e3d2f3c63cbc435919720096ad25be50414394);
+        prepareExcessWithdrawalSignatures();
 
         vm.warp(endTime() + 1);
-
-        vm.prank(legionBouncer);
-        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
 
         // Act
         vm.prank(investor2);
         ILegionPreLiquidOpenApplicationSale(legionSaleInstance).withdrawExcessInvestedCapital(
-            1000 * 1e6, excessClaimProofInvestor2
+            1000 * 1e6, signatureInv2ExcessWithdrawal
         );
 
         // Expect
@@ -2367,10 +2333,7 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
         prepareInvestedCapitalFromAllInvestors();
-
-        bytes32[] memory excessClaimProofInvestor2 = new bytes32[](2);
-        excessClaimProofInvestor2[0] = bytes32(0x5a967157246c689bfb28b0e8bdd445fe3b05cd751cb10e979ae3dbaf0a02c5c7);
-        excessClaimProofInvestor2[1] = bytes32(0x224c3f0b0526195d6161b6c193e3d2f3c63cbc435919720096ad25be50414394);
+        prepareExcessWithdrawalSignatures();
 
         vm.prank(projectAdmin);
         ILegionPreLiquidOpenApplicationSale(legionSaleInstance).cancel();
@@ -2382,41 +2345,31 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
         // Act
         vm.prank(investor2);
         ILegionPreLiquidOpenApplicationSale(legionSaleInstance).withdrawExcessInvestedCapital(
-            1000 * 1e6, excessClaimProofInvestor2
+            1000 * 1e6, signatureInv2ExcessWithdrawal
         );
     }
 
     /**
-     * @notice Tests that withdrawing excess capital with an incorrect Merkle proof reverts
-     * @dev Ensures the contract rejects an invalid proof for investor2, expecting a
-     * LegionSale__CannotWithdrawExcessInvestedCapital
-     * revert.
+     * @notice Tests that withdrawing excess capital with invalid signature reverts
+     * @dev Expects LegionSale__InvalidSignature revert with invalid signature
      */
-    function test_withdrawExcessInvestedCapital_revertsWithIncorrectProof() public {
+    function test_withdrawExcessInvestedCapital_revertsWithInvalidSignature() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
-        prepareInvestedCapitalFromAllInvestors(); // Investor2 invests 2000 USDC
-
-        bytes32[] memory excessClaimProofInvestor2 = new bytes32[](2);
-        excessClaimProofInvestor2[0] = bytes32(0x048605503187722f63911ca26b8cca1d0a2afc10509c8be7f963371fec52b188);
-        excessClaimProofInvestor2[1] = bytes32(0xcbe43c4b6aafb4df43acc0bebce3220a96e982592e3c306730bf73681c612707);
-
-        vm.prank(legionBouncer);
-        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
+        prepareInvestedCapitalFromAllInvestors();
+        prepareExcessWithdrawalSignatures();
 
         // Expect
         vm.expectRevert(
-            abi.encodeWithSelector(
-                Errors.LegionSale__CannotWithdrawExcessInvestedCapital.selector, investor2, 1000 * 1e6
-            )
+            abi.encodeWithSelector(Errors.LegionSale__InvalidSignature.selector, signatureInv3ExcessWithdrawal)
         );
 
         // Act
         vm.prank(investor2);
         ILegionPreLiquidOpenApplicationSale(legionSaleInstance).withdrawExcessInvestedCapital(
-            1000 * 1e6, excessClaimProofInvestor2
+            1000 * 1e6, signatureInv3ExcessWithdrawal
         );
     }
 
@@ -2431,19 +2384,13 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
         prepareInvestedCapitalFromAllInvestors();
-
-        bytes32[] memory excessClaimProofInvestor2 = new bytes32[](2);
-        excessClaimProofInvestor2[0] = bytes32(0x5a967157246c689bfb28b0e8bdd445fe3b05cd751cb10e979ae3dbaf0a02c5c7);
-        excessClaimProofInvestor2[1] = bytes32(0x224c3f0b0526195d6161b6c193e3d2f3c63cbc435919720096ad25be50414394);
+        prepareExcessWithdrawalSignatures();
 
         vm.warp(endTime() + 1);
 
-        vm.prank(legionBouncer);
-        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
-
         vm.prank(investor2);
         ILegionPreLiquidOpenApplicationSale(legionSaleInstance).withdrawExcessInvestedCapital(
-            1000 * 1e6, excessClaimProofInvestor2
+            1000 * 1e6, signatureInv2ExcessWithdrawal
         );
 
         // Expect
@@ -2452,7 +2399,7 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
         // Act
         vm.prank(investor2);
         ILegionPreLiquidOpenApplicationSale(legionSaleInstance).withdrawExcessInvestedCapital(
-            1000 * 1e6, excessClaimProofInvestor2
+            1000 * 1e6, signatureInv2ExcessWithdrawal
         );
     }
 
@@ -2464,16 +2411,9 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
     function test_withdrawExcessInvestedCapital_revertsIfNoCapitalInvested() public {
         // Arrange
         prepareCreateLegionPreLiquidSale();
-
-        bytes32[] memory excessClaimProofInvestor5 = new bytes32[](3);
-        excessClaimProofInvestor5[0] = bytes32(0x048605503187722f63911ca26b8cca1d0a2afc10509c8be7f963371fec52b188);
-        excessClaimProofInvestor5[1] = bytes32(0xe3d631b26859e467c1b67a022155b59ea1d0c431074ce3cc5b424d06e598ce5b);
-        excessClaimProofInvestor5[2] = bytes32(0xe2c834aa6df188c7ae16c529aafb5e7588aa06afcced782a044b70652cadbdc3);
+        prepareExcessWithdrawalSignatures();
 
         vm.warp(endTime() + 1);
-
-        vm.prank(legionBouncer);
-        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).setAcceptedCapital(excessCapitalMerkleRootMalicious);
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
@@ -2481,7 +2421,7 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
         // Act
         vm.prank(investor5);
         ILegionPreLiquidOpenApplicationSale(legionSaleInstance).withdrawExcessInvestedCapital(
-            6000 * 1e6, excessClaimProofInvestor5
+            6000 * 1e6, signatureInv1ExcessWithdrawal
         );
     }
 
@@ -2891,11 +2831,7 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
         prepareCreateLegionPreLiquidSale();
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
-
-        bytes32[] memory excessClaimProofInvestor1 = new bytes32[](2);
-
-        excessClaimProofInvestor1[0] = bytes32(0x94092e373061307b4d0adbfbdcdbf2952dd4f9faa4a19e459bf977b439fe7f6c);
-        excessClaimProofInvestor1[1] = bytes32(0xd8c305ca65c62aada7dd6b63558219cfac0d5dc314d02aa0cda610cb75656ee7);
+        prepareExcessWithdrawalSignatures();
 
         vm.warp(block.timestamp + 1);
 
@@ -2907,12 +2843,9 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
-        vm.prank(legionBouncer);
-        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
-
         vm.prank(investor1);
         ILegionPreLiquidOpenApplicationSale(legionSaleInstance).withdrawExcessInvestedCapital(
-            0, excessClaimProofInvestor1
+            0, signatureInv1ExcessWithdrawal
         );
 
         // Act
@@ -2938,15 +2871,7 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
         prepareCreateLegionPreLiquidSale();
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
-
-        bytes32[] memory excessClaimProofInvestor1 = new bytes32[](2);
-        bytes32[] memory excessClaimProofInvestor2 = new bytes32[](2);
-
-        excessClaimProofInvestor1[0] = bytes32(0x94092e373061307b4d0adbfbdcdbf2952dd4f9faa4a19e459bf977b439fe7f6c);
-        excessClaimProofInvestor1[1] = bytes32(0xd8c305ca65c62aada7dd6b63558219cfac0d5dc314d02aa0cda610cb75656ee7);
-
-        excessClaimProofInvestor2[0] = bytes32(0x5a967157246c689bfb28b0e8bdd445fe3b05cd751cb10e979ae3dbaf0a02c5c7);
-        excessClaimProofInvestor2[1] = bytes32(0x224c3f0b0526195d6161b6c193e3d2f3c63cbc435919720096ad25be50414394);
+        prepareExcessWithdrawalSignatures();
 
         vm.warp(block.timestamp + 1);
 
@@ -2961,17 +2886,14 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
-        vm.prank(legionBouncer);
-        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
-
         vm.prank(investor1);
         ILegionPreLiquidOpenApplicationSale(legionSaleInstance).withdrawExcessInvestedCapital(
-            0, excessClaimProofInvestor1
+            0, signatureInv1ExcessWithdrawal
         );
 
         vm.prank(investor2);
         ILegionPreLiquidOpenApplicationSale(legionSaleInstance).withdrawExcessInvestedCapital(
-            1000 * 1e6, excessClaimProofInvestor2
+            1000 * 1e6, signatureInv2ExcessWithdrawal
         );
 
         // Act
@@ -3003,11 +2925,7 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
         prepareCreateLegionPreLiquidSale();
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
-
-        bytes32[] memory excessClaimProofInvestor1 = new bytes32[](2);
-
-        excessClaimProofInvestor1[0] = bytes32(0x94092e373061307b4d0adbfbdcdbf2952dd4f9faa4a19e459bf977b439fe7f6c);
-        excessClaimProofInvestor1[1] = bytes32(0xd8c305ca65c62aada7dd6b63558219cfac0d5dc314d02aa0cda610cb75656ee7);
+        prepareExcessWithdrawalSignatures();
 
         vm.warp(block.timestamp + 1);
 
@@ -3024,12 +2942,9 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
-        vm.prank(legionBouncer);
-        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
-
         vm.prank(investor1);
         ILegionPreLiquidOpenApplicationSale(legionSaleInstance).withdrawExcessInvestedCapital(
-            0, excessClaimProofInvestor1
+            0, signatureInv1ExcessWithdrawal
         );
 
         // Expect
@@ -3230,11 +3145,7 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
         prepareTransferSignatures();
-
-        bytes32[] memory excessClaimProofInvestor1 = new bytes32[](2);
-
-        excessClaimProofInvestor1[0] = bytes32(0x94092e373061307b4d0adbfbdcdbf2952dd4f9faa4a19e459bf977b439fe7f6c);
-        excessClaimProofInvestor1[1] = bytes32(0xd8c305ca65c62aada7dd6b63558219cfac0d5dc314d02aa0cda610cb75656ee7);
+        prepareExcessWithdrawalSignatures();
 
         vm.warp(block.timestamp + 1);
 
@@ -3246,12 +3157,9 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
-        vm.prank(legionBouncer);
-        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
-
         vm.prank(investor1);
         ILegionPreLiquidOpenApplicationSale(legionSaleInstance).withdrawExcessInvestedCapital(
-            0, excessClaimProofInvestor1
+            0, signatureInv1ExcessWithdrawal
         );
 
         // Act
@@ -3285,15 +3193,7 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
         prepareTransferSignatures();
-
-        bytes32[] memory excessClaimProofInvestor1 = new bytes32[](2);
-        bytes32[] memory excessClaimProofInvestor2 = new bytes32[](2);
-
-        excessClaimProofInvestor1[0] = bytes32(0x94092e373061307b4d0adbfbdcdbf2952dd4f9faa4a19e459bf977b439fe7f6c);
-        excessClaimProofInvestor1[1] = bytes32(0xd8c305ca65c62aada7dd6b63558219cfac0d5dc314d02aa0cda610cb75656ee7);
-
-        excessClaimProofInvestor2[0] = bytes32(0x5a967157246c689bfb28b0e8bdd445fe3b05cd751cb10e979ae3dbaf0a02c5c7);
-        excessClaimProofInvestor2[1] = bytes32(0x224c3f0b0526195d6161b6c193e3d2f3c63cbc435919720096ad25be50414394);
+        prepareExcessWithdrawalSignatures();
 
         vm.warp(block.timestamp + 1);
 
@@ -3308,17 +3208,14 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
 
         vm.warp(block.timestamp + 2 weeks + 1);
 
-        vm.prank(legionBouncer);
-        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
-
         vm.prank(investor1);
         ILegionPreLiquidOpenApplicationSale(legionSaleInstance).withdrawExcessInvestedCapital(
-            0, excessClaimProofInvestor1
+            0, signatureInv1ExcessWithdrawal
         );
 
         vm.prank(investor2);
         ILegionPreLiquidOpenApplicationSale(legionSaleInstance).withdrawExcessInvestedCapital(
-            1000 * 1e6, excessClaimProofInvestor2
+            1000 * 1e6, signatureInv2ExcessWithdrawal
         );
 
         // Act
@@ -3353,11 +3250,7 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
         prepareTransferSignatures();
-
-        bytes32[] memory excessClaimProofInvestor1 = new bytes32[](2);
-
-        excessClaimProofInvestor1[0] = bytes32(0x94092e373061307b4d0adbfbdcdbf2952dd4f9faa4a19e459bf977b439fe7f6c);
-        excessClaimProofInvestor1[1] = bytes32(0xd8c305ca65c62aada7dd6b63558219cfac0d5dc314d02aa0cda610cb75656ee7);
+        prepareExcessWithdrawalSignatures();
 
         vm.warp(block.timestamp + 1);
 
@@ -3372,12 +3265,9 @@ contract LegionPreLiquidOpenApplicationSaleTest is Test {
         vm.prank(projectAdmin);
         ILegionPreLiquidOpenApplicationSale(legionSaleInstance).end();
 
-        vm.prank(legionBouncer);
-        ILegionPreLiquidOpenApplicationSale(legionSaleInstance).setAcceptedCapital(acceptedCapitalMerkleRoot);
-
         vm.prank(investor1);
         ILegionPreLiquidOpenApplicationSale(legionSaleInstance).withdrawExcessInvestedCapital(
-            0, excessClaimProofInvestor1
+            0, signatureInv1ExcessWithdrawal
         );
 
         vm.warp(block.timestamp + 2 weeks + 1);

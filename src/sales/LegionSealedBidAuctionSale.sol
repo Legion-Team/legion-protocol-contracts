@@ -143,7 +143,6 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
     /// @inheritdoc ILegionSealedBidAuctionSale
     function publishSaleResults(
         bytes32 claimMerkleRoot,
-        bytes32 acceptedMerkleRoot,
         uint256 tokensAllocated,
         uint256 capitalRaised,
         uint256 sealedBidPrivateKey,
@@ -165,9 +164,6 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
         // Set the merkle root for claiming tokens
         s_saleStatus.claimTokensMerkleRoot = claimMerkleRoot;
 
-        // Set the merkle root for accepted capital
-        s_saleStatus.acceptedCapitalMerkleRoot = acceptedMerkleRoot;
-
         // Set the total tokens to be allocated by the Project team
         s_saleStatus.totalTokensAllocated = tokensAllocated;
 
@@ -181,9 +177,7 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
         s_sealedBidAuctionSaleConfig.fixedSalt = fixedSalt;
 
         // Emit SaleResultsPublished event
-        emit SaleResultsPublished(
-            claimMerkleRoot, acceptedMerkleRoot, tokensAllocated, capitalRaised, sealedBidPrivateKey, fixedSalt
-        );
+        emit SaleResultsPublished(claimMerkleRoot, tokensAllocated, capitalRaised, sealedBidPrivateKey, fixedSalt);
     }
 
     /// @inheritdoc ILegionSealedBidAuctionSale

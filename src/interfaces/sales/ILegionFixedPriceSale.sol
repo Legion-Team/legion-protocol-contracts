@@ -50,9 +50,8 @@ interface ILegionFixedPriceSale is ILegionAbstractSale {
 
     /// @notice Emitted when sale results are published by the Legion admin.
     /// @param claimMerkleRoot The Merkle root for verifying token claims.
-    /// @param acceptedMerkleRoot The Merkle root for verifying accepted capital.
     /// @param tokensAllocated The total amount of tokens allocated from the sale.
-    event SaleResultsPublished(bytes32 claimMerkleRoot, bytes32 acceptedMerkleRoot, uint256 tokensAllocated);
+    event SaleResultsPublished(bytes32 claimMerkleRoot, uint256 tokensAllocated);
 
     /// @notice Initializes the contract with sale parameters.
     /// @param saleInitParams The common Legion sale initialization parameters.
@@ -70,16 +69,9 @@ interface ILegionFixedPriceSale is ILegionAbstractSale {
 
     /// @notice Publishes the sale results after completion.
     /// @param claimMerkleRoot The Merkle root for verifying token claims.
-    /// @param acceptedMerkleRoot The Merkle root for verifying accepted capital.
     /// @param tokensAllocated The total tokens allocated for distribution.
     /// @param askTokenDecimals The decimals of the ask token for raised capital calculation.
-    function publishSaleResults(
-        bytes32 claimMerkleRoot,
-        bytes32 acceptedMerkleRoot,
-        uint256 tokensAllocated,
-        uint8 askTokenDecimals
-    )
-        external;
+    function publishSaleResults(bytes32 claimMerkleRoot, uint256 tokensAllocated, uint8 askTokenDecimals) external;
 
     /// @notice Returns the current fixed-price sale configuration.
     /// @return The complete fixed-price sale configuration struct.
