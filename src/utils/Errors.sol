@@ -179,6 +179,11 @@ library Errors {
     /// @param signature The signature that was previously used.
     error LegionSale__SignatureAlreadyUsed(bytes signature);
 
+    /// @notice Thrown when a signature has expired.
+    /// @param currentTimestamp The current block timestamp when the signature is used.
+    /// @param deadline The deadline timestamp after which the signature is invalid.
+    error LegionSale__SignatureExpired(uint256 currentTimestamp, uint256 deadline);
+
     /// @notice Thrown when attempting to reallocate tokens.
     error LegionSale__TokensAlreadyAllocated();
 

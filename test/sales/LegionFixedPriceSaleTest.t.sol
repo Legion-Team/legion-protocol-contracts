@@ -276,14 +276,47 @@ contract LegionFixedPriceSaleTest is Test {
         bytes32 s;
 
         vm.startPrank(legionSigner);
-        bytes32 digest1 =
-            keccak256(abi.encodePacked(investor1, legionSaleInstance, block.chainid)).toEthSignedMessageHash();
-        bytes32 digest2 =
-            keccak256(abi.encodePacked(investor2, legionSaleInstance, block.chainid)).toEthSignedMessageHash();
-        bytes32 digest3 =
-            keccak256(abi.encodePacked(investor3, legionSaleInstance, block.chainid)).toEthSignedMessageHash();
-        bytes32 digest4 =
-            keccak256(abi.encodePacked(investor4, legionSaleInstance, block.chainid)).toEthSignedMessageHash();
+
+        bytes32 digest1 = keccak256(
+            abi.encodePacked(
+                investor1,
+                legionSaleInstance,
+                block.chainid,
+                uint256(1000 * 1e6),
+                (block.timestamp + 100),
+                ILegionAbstractSale.SaleAction.INVEST
+            )
+        ).toEthSignedMessageHash();
+        bytes32 digest2 = keccak256(
+            abi.encodePacked(
+                investor2,
+                legionSaleInstance,
+                block.chainid,
+                uint256(2000 * 1e6),
+                (block.timestamp + 100),
+                ILegionAbstractSale.SaleAction.INVEST
+            )
+        ).toEthSignedMessageHash();
+        bytes32 digest3 = keccak256(
+            abi.encodePacked(
+                investor3,
+                legionSaleInstance,
+                block.chainid,
+                uint256(3000 * 1e6),
+                (block.timestamp + 100),
+                ILegionAbstractSale.SaleAction.INVEST
+            )
+        ).toEthSignedMessageHash();
+        bytes32 digest4 = keccak256(
+            abi.encodePacked(
+                investor4,
+                legionSaleInstance,
+                block.chainid,
+                uint256(4000 * 1e6),
+                (block.timestamp + 100),
+                ILegionAbstractSale.SaleAction.INVEST
+            )
+        ).toEthSignedMessageHash();
 
         (v, r, s) = vm.sign(legionSignerPK, digest1);
         signatureInv1 = abi.encodePacked(r, s, v);
@@ -296,6 +329,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         (v, r, s) = vm.sign(legionSignerPK, digest4);
         signatureInv4 = abi.encodePacked(r, s, v);
+
         vm.stopPrank();
 
         vm.startPrank(nonLegionSigner);
@@ -388,16 +422,16 @@ contract LegionFixedPriceSaleTest is Test {
      */
     function prepareInvestedCapitalFromAllInvestors() public {
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         vm.prank(investor2);
-        ILegionFixedPriceSale(legionSaleInstance).invest(2000 * 1e6, signatureInv2);
+        ILegionFixedPriceSale(legionSaleInstance).invest(2000 * 1e6, (block.timestamp + 100), signatureInv2);
 
         vm.prank(investor3);
-        ILegionFixedPriceSale(legionSaleInstance).invest(3000 * 1e6, signatureInv3);
+        ILegionFixedPriceSale(legionSaleInstance).invest(3000 * 1e6, (block.timestamp + 100), signatureInv3);
 
         vm.prank(investor4);
-        ILegionFixedPriceSale(legionSaleInstance).invest(4000 * 1e6, signatureInv4);
+        ILegionFixedPriceSale(legionSaleInstance).invest(4000 * 1e6, (block.timestamp + 100), signatureInv4);
     }
 
     /**
@@ -762,7 +796,6 @@ contract LegionFixedPriceSaleTest is Test {
         // Arrange
         prepareCreateLegionFixedPriceSale();
         prepareMintAndApproveInvestorTokens();
-        prepareInvestorSignatures();
 
         saleStartTime = bound(saleStartTime, startTime(), endTime());
         secondsAfterStart = bound(secondsAfterStart, 0, 1 hours);
@@ -770,13 +803,15 @@ contract LegionFixedPriceSaleTest is Test {
 
         vm.warp(saleStartTime + secondsAfterStart);
 
+        prepareInvestorSignatures();
+
         // Expect
         vm.expectEmit();
         emit ILegionFixedPriceSale.CapitalInvested(1000 * 1e6, investor1, false, 1);
 
         // Act
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
     }
 
     /**
@@ -799,7 +834,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         // Assert
         assertEq(ERC721(legionSaleInstance).balanceOf(investor1), 1);
@@ -825,7 +860,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
     }
 
     /**
@@ -844,7 +879,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
     }
 
     /**
@@ -864,7 +899,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
     }
 
     /**
@@ -882,7 +917,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1 * 1e5, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1 * 1e5, (block.timestamp + 100), signatureInv1);
     }
 
     /**
@@ -903,7 +938,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
     }
 
     /**
@@ -921,22 +956,21 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, invalidSignature);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), invalidSignature);
     }
 
     /**
      * @notice Tests that reinvesting after refunding reverts
      * @dev Expects LegionSale__InvestorHasRefunded revert after investor refunds
      */
-    function test_invest_revertsIfInvestorHasRefunded1() public {
+    function test_invest_revertsIfInvestorHasRefunded() public {
         // Arrange
         prepareCreateLegionFixedPriceSale();
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
 
-        vm.warp(startTime() + 1);
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         vm.prank(investor1);
         ILegionFixedPriceSale(legionSaleInstance).refund();
@@ -946,7 +980,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
     }
 
     /**
@@ -961,8 +995,6 @@ contract LegionFixedPriceSaleTest is Test {
         prepareInvestedCapitalFromAllInvestors();
         prepareExcessWithdrawalSignatures();
 
-        vm.warp(endTime() - 1);
-
         vm.prank(investor2);
         ILegionFixedPriceSale(legionSaleInstance).withdrawExcessInvestedCapital(
             1000 * 1e6, signatureInv2ExcessWithdrawal
@@ -973,7 +1005,27 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(investor2);
-        ILegionFixedPriceSale(legionSaleInstance).invest(2000 * 1e6, signatureInv2);
+        ILegionFixedPriceSale(legionSaleInstance).invest(2000 * 1e6, (block.timestamp + 100), signatureInv2);
+    }
+
+    /**
+     * @notice Tests that investing after the deadline reverts
+     * @dev Expects LegionSale__SignatureExpired revert when deadline has passed
+     */
+    function test_invest_revertsIfSignatureDeadlineHasExpired() public {
+        // Arrange
+        prepareCreateLegionFixedPriceSale();
+        prepareMintAndApproveInvestorTokens();
+        prepareInvestorSignatures();
+
+        vm.warp(102);
+
+        // Expect
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SignatureExpired.selector, 102, 101));
+
+        // Act
+        vm.prank(investor1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, 101, signatureInv1);
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -991,7 +1043,7 @@ contract LegionFixedPriceSaleTest is Test {
         prepareInvestorSignatures();
 
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         // Expect
         vm.expectEmit();
@@ -1013,7 +1065,7 @@ contract LegionFixedPriceSaleTest is Test {
         prepareInvestorSignatures();
 
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NotCalledByLegion.selector));
@@ -1038,7 +1090,7 @@ contract LegionFixedPriceSaleTest is Test {
         prepareInvestorSignatures();
 
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         vm.warp(endTime() + 1);
 
@@ -1066,7 +1118,7 @@ contract LegionFixedPriceSaleTest is Test {
         prepareInvestorSignatures();
 
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         vm.warp(refundEndTime() + 1);
 
@@ -1093,7 +1145,7 @@ contract LegionFixedPriceSaleTest is Test {
         prepareInvestorSignatures();
 
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         vm.prank(projectAdmin);
         ILegionFixedPriceSale(legionSaleInstance).cancel();
@@ -1137,7 +1189,7 @@ contract LegionFixedPriceSaleTest is Test {
         prepareInvestorSignatures();
 
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         vm.warp(endTime() + 1);
 
@@ -1246,7 +1298,7 @@ contract LegionFixedPriceSaleTest is Test {
         prepareInvestorSignatures();
 
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         vm.prank(projectAdmin);
         ILegionFixedPriceSale(legionSaleInstance).cancel();
@@ -1274,7 +1326,7 @@ contract LegionFixedPriceSaleTest is Test {
         prepareInvestorSignatures();
 
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsNotCanceled.selector));
@@ -1314,7 +1366,7 @@ contract LegionFixedPriceSaleTest is Test {
         prepareInvestorSignatures();
 
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         vm.prank(projectAdmin);
         ILegionFixedPriceSale(legionSaleInstance).cancel();
@@ -1345,7 +1397,7 @@ contract LegionFixedPriceSaleTest is Test {
         prepareInvestorSignatures();
 
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         vm.warp(refundEndTime() + 1);
 
@@ -2470,10 +2522,8 @@ contract LegionFixedPriceSaleTest is Test {
         prepareInvestorSignatures();
         prepareExcessWithdrawalSignatures();
 
-        vm.warp(block.timestamp + 1);
-
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         vm.warp(refundEndTime() + 1);
 
@@ -2504,13 +2554,11 @@ contract LegionFixedPriceSaleTest is Test {
         prepareInvestorSignatures();
         prepareExcessWithdrawalSignatures();
 
-        vm.warp(block.timestamp + 1);
-
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         vm.prank(investor2);
-        ILegionFixedPriceSale(legionSaleInstance).invest(2000 * 1e6, signatureInv2);
+        ILegionFixedPriceSale(legionSaleInstance).invest(2000 * 1e6, (block.timestamp + 100), signatureInv2);
 
         vm.warp(refundEndTime() + 1);
 
@@ -2552,13 +2600,11 @@ contract LegionFixedPriceSaleTest is Test {
         prepareInvestorSignatures();
         prepareExcessWithdrawalSignatures();
 
-        vm.warp(block.timestamp + 1);
-
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         vm.startPrank(investor2);
-        ILegionFixedPriceSale(legionSaleInstance).invest(2000 * 1e6, signatureInv2);
+        ILegionFixedPriceSale(legionSaleInstance).invest(2000 * 1e6, (block.timestamp + 100), signatureInv2);
         ILegionFixedPriceSale(legionSaleInstance).refund();
         vm.stopPrank();
 
@@ -2585,10 +2631,8 @@ contract LegionFixedPriceSaleTest is Test {
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
 
-        vm.warp(block.timestamp + 1);
-
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NotCalledByLegion.selector));
@@ -2608,10 +2652,8 @@ contract LegionFixedPriceSaleTest is Test {
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
 
-        vm.warp(block.timestamp + 1);
-
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         vm.prank(projectAdmin);
         ILegionFixedPriceSale(legionSaleInstance).cancel();
@@ -2634,10 +2676,8 @@ contract LegionFixedPriceSaleTest is Test {
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
 
-        vm.warp(block.timestamp + 1);
-
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         vm.warp(block.timestamp + 1 days);
 
@@ -2663,10 +2703,8 @@ contract LegionFixedPriceSaleTest is Test {
         prepareMintAndApproveProjectTokens();
         prepareInvestorSignatures();
 
-        vm.warp(block.timestamp + 1);
-
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         vm.warp(refundEndTime() + 1);
 
@@ -2693,10 +2731,8 @@ contract LegionFixedPriceSaleTest is Test {
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
 
-        vm.warp(block.timestamp + 1);
-
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         vm.warp(refundEndTime() + 1);
 
@@ -2721,10 +2757,8 @@ contract LegionFixedPriceSaleTest is Test {
         prepareMintAndApproveInvestorTokens();
         prepareInvestorSignatures();
 
-        vm.warp(block.timestamp + 1);
-
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         vm.prank(investor1);
         ILegionFixedPriceSale(legionSaleInstance).refund();
@@ -2755,10 +2789,8 @@ contract LegionFixedPriceSaleTest is Test {
         prepareTransferSignatures();
         prepareExcessWithdrawalSignatures();
 
-        vm.warp(block.timestamp + 1);
-
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         vm.warp(refundEndTime() + 1);
 
@@ -2797,13 +2829,11 @@ contract LegionFixedPriceSaleTest is Test {
         prepareTransferSignatures();
         prepareExcessWithdrawalSignatures();
 
-        vm.warp(block.timestamp + 1);
-
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         vm.prank(investor2);
-        ILegionFixedPriceSale(legionSaleInstance).invest(2000 * 1e6, signatureInv2);
+        ILegionFixedPriceSale(legionSaleInstance).invest(2000 * 1e6, (block.timestamp + 100), signatureInv2);
 
         vm.warp(refundEndTime() + 1);
 
@@ -2848,13 +2878,11 @@ contract LegionFixedPriceSaleTest is Test {
         prepareTransferSignatures();
         prepareExcessWithdrawalSignatures();
 
-        vm.warp(block.timestamp + 1);
-
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         vm.startPrank(investor2);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv2);
+        ILegionFixedPriceSale(legionSaleInstance).invest(2000 * 1e6, (block.timestamp + 100), signatureInv2);
         ILegionFixedPriceSale(legionSaleInstance).refund();
         vm.stopPrank();
 
@@ -2884,10 +2912,8 @@ contract LegionFixedPriceSaleTest is Test {
         prepareInvestorSignatures();
         prepareTransferSignatures();
 
-        vm.warp(block.timestamp + 1);
-
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         vm.warp(refundEndTime() + 1);
 
@@ -2912,10 +2938,8 @@ contract LegionFixedPriceSaleTest is Test {
         prepareInvestorSignatures();
         prepareTransferSignatures();
 
-        vm.warp(block.timestamp + 1);
-
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         vm.prank(projectAdmin);
         ILegionFixedPriceSale(legionSaleInstance).cancel();
@@ -2941,10 +2965,8 @@ contract LegionFixedPriceSaleTest is Test {
         prepareInvestorSignatures();
         prepareTransferSignatures();
 
-        vm.warp(block.timestamp + 1);
-
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         vm.warp(block.timestamp + 1 days);
 
@@ -2973,10 +2995,8 @@ contract LegionFixedPriceSaleTest is Test {
         prepareInvestorSignatures();
         prepareTransferSignatures();
 
-        vm.warp(block.timestamp + 1);
-
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         vm.warp(refundEndTime() + 1);
 
@@ -3006,10 +3026,8 @@ contract LegionFixedPriceSaleTest is Test {
         prepareInvestorSignatures();
         prepareTransferSignatures();
 
-        vm.warp(block.timestamp + 1);
-
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         vm.warp(refundEndTime() + 1);
 
@@ -3037,10 +3055,8 @@ contract LegionFixedPriceSaleTest is Test {
         prepareInvestorSignatures();
         prepareTransferSignatures();
 
-        vm.warp(block.timestamp + 1);
-
         vm.prank(investor1);
-        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, signatureInv1);
+        ILegionFixedPriceSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
 
         vm.prank(investor1);
         ILegionFixedPriceSale(legionSaleInstance).refund();

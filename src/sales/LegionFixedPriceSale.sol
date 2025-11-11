@@ -71,6 +71,7 @@ contract LegionFixedPriceSale is LegionAbstractSale, ILegionFixedPriceSale {
     /// @inheritdoc ILegionFixedPriceSale
     function invest(
         uint256 amount,
+        uint256 deadline,
         bytes calldata signature
     )
         external
@@ -85,11 +86,11 @@ contract LegionFixedPriceSale is LegionAbstractSale, ILegionFixedPriceSale {
             ? _createInvestorPosition(msg.sender)
             : s_investorPositionIds[msg.sender];
 
-        // Verify that the investor is allowed to invest capital
-        _verifyInvestSignature(signature);
-
         // Verify that the amount invested is more than the minimum required
         _verifyMinimumInvestAmount(amount);
+
+        // Verify that the investor is allowed to invest capital
+        _verifyInvestSignature(signature, amount, deadline);
 
         // Verify that the investor has not refunded
         _verifyHasNotRefunded(positionId);

@@ -876,11 +876,25 @@ abstract contract LegionAbstractSale is
 
     /// @dev Verifies that an investment signature is valid.
     /// @param _signature The signature to verify.
-    function _verifyInvestSignature(bytes calldata _signature) internal view virtual {
-        bytes32 _data = keccak256(abi.encodePacked(msg.sender, address(this), block.chainid)).toEthSignedMessageHash();
+    function _verifyInvestSignature(
+        bytes calldata _signature,
+        uint256 amount,
+        uint256 deadline
+    )
+        internal
+        view
+        virtual
+    {
+        bytes32 _data = keccak256(
+            abi.encodePacked(msg.sender, address(this), block.chainid, amount, deadline, SaleAction.INVEST)
+        ).toEthSignedMessageHash();
 
         if (_data.recover(_signature) != s_addressConfig.legionSigner) {
             revert Errors.LegionSale__InvalidSignature(_signature);
+        }
+
+        if (block.timestamp > deadline) {
+            revert Errors.LegionSale__SignatureExpired(block.timestamp, deadline);
         }
     }
 

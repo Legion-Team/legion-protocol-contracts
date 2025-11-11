@@ -76,6 +76,7 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
     /// @inheritdoc ILegionSealedBidAuctionSale
     function invest(
         uint256 amount,
+        uint256 deadline,
         bytes calldata sealedBid,
         bytes calldata signature
     )
@@ -90,17 +91,17 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
             ? _createInvestorPosition(msg.sender)
             : s_investorPositionIds[msg.sender];
 
+        // Verify that the amount invested is more than the minimum required
+        _verifyMinimumInvestAmount(amount);
+
         // Verify that the investor is allowed to invest capital
-        _verifyInvestSignature(signature);
+        _verifyInvestSignature(signature, amount, deadline);
 
         // Decode the sealed bid data
         (uint256 encryptedAmountOut, Point memory sealedBidPublicKey) = abi.decode(sealedBid, (uint256, Point));
 
         // Verify that the provided public key is valid
         _verifyValidPublicKey(sealedBidPublicKey);
-
-        // Verify that the amount invested is more than the minimum required
-        _verifyMinimumInvestAmount(amount);
 
         // Verify that the investor has not refunded
         _verifyHasNotRefunded(positionId);

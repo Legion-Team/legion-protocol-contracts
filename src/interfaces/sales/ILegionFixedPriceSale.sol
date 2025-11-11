@@ -64,8 +64,9 @@ interface ILegionFixedPriceSale is ILegionAbstractSale {
 
     /// @notice Allows an investor to contribute capital to the fixed-price sale.
     /// @param amount The amount of capital to invest.
+    /// @param deadline The deadline for the investment.
     /// @param signature The Legion signature for investor verification.
-    function invest(uint256 amount, bytes calldata signature) external;
+    function invest(uint256 amount, uint256 deadline, bytes calldata signature) external;
 
     /// @notice Publishes the sale results after completion.
     /// @param claimMerkleRoot The Merkle root for verifying token claims.
