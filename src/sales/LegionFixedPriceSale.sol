@@ -53,9 +53,6 @@ contract LegionFixedPriceSale is LegionAbstractSale, ILegionFixedPriceSale {
         // Initialize and set the sale common parameters
         _setLegionSaleConfig(saleInitParams);
 
-        // Set the fixed price sale specific configuration
-        s_fixedPriceSaleConfig.tokenPrice = fixedPriceSaleInitParams.tokenPrice;
-
         // Calculate and set prefundStartTime and prefundEndTime
         s_fixedPriceSaleConfig.prefundStartTime = uint64(block.timestamp);
         s_fixedPriceSaleConfig.prefundEndTime =
@@ -115,32 +112,21 @@ contract LegionFixedPriceSale is LegionAbstractSale, ILegionFixedPriceSale {
     }
 
     /// @inheritdoc ILegionFixedPriceSale
-    function publishSaleResults(
-        bytes32 claimMerkleRoot,
-        uint256 tokensAllocated,
-        uint8 askTokenDecimals
-    )
+    function publishRaisedCapital(uint256 capitalRaised)
         external
         onlyLegion
         whenNotPaused
         whenSaleNotCanceled
         whenRefundPeriodIsOver
     {
-        // Verify that sale results are not already published
-        _verifyCanPublishSaleResults();
-
-        // Set the merkle root for claiming tokens
-        s_saleStatus.claimTokensMerkleRoot = claimMerkleRoot;
-
-        // Set the total tokens to be allocated by the Project team
-        s_saleStatus.totalTokensAllocated = tokensAllocated;
+        // Verify that capital raised can be published.
+        _verifyCanPublishCapitalRaised();
 
         // Set the total capital raised to be withdrawn by the project
-        s_saleStatus.totalCapitalRaised =
-            (tokensAllocated * s_fixedPriceSaleConfig.tokenPrice) / (10 ** askTokenDecimals);
+        s_saleStatus.totalCapitalRaised = capitalRaised;
 
-        // Emit SaleResultsPublished event
-        emit SaleResultsPublished(claimMerkleRoot, tokensAllocated);
+        // Emit CapitalRaisedPublished event
+        emit CapitalRaisedPublished(capitalRaised);
     }
 
     /// @inheritdoc ILegionFixedPriceSale
@@ -155,7 +141,6 @@ contract LegionFixedPriceSale is LegionAbstractSale, ILegionFixedPriceSale {
         if (
             _fixedPriceSaleInitParams.prefundPeriodSeconds == 0
                 || _fixedPriceSaleInitParams.prefundAllocationPeriodSeconds == 0
-                || _fixedPriceSaleInitParams.tokenPrice == 0
         ) {
             revert Errors.LegionSale__ZeroValueProvided();
         }
@@ -188,5 +173,10 @@ contract LegionFixedPriceSale is LegionAbstractSale, ILegionFixedPriceSale {
         if (block.timestamp >= s_fixedPriceSaleConfig.prefundEndTime && block.timestamp < s_saleConfig.startTime) {
             revert Errors.LegionSale__PrefundAllocationPeriodNotEnded(block.timestamp);
         }
+    }
+
+    /// @dev Verifies conditions for publishing capital raised.
+    function _verifyCanPublishCapitalRaised() private view {
+        if (s_saleStatus.totalCapitalRaised != 0) revert Errors.LegionSale__CapitalRaisedAlreadyPublished();
     }
 }

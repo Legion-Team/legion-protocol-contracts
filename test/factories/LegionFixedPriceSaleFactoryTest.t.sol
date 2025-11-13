@@ -128,12 +128,9 @@ contract LegionFixedPriceSaleFactoryTest is Test {
                 salePeriodSeconds: 1 hours,
                 refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 250,
-                legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
-                referrerFeeOnTokensSoldBps: 100,
                 minimumInvestAmount: 1e18,
                 bidToken: address(bidToken),
-                askToken: address(askToken),
                 projectAdmin: projectAdmin,
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: referrerFeeReceiver,
@@ -143,8 +140,7 @@ contract LegionFixedPriceSaleFactoryTest is Test {
             }),
             ILegionFixedPriceSale.FixedPriceSaleInitializationParams({
                 prefundPeriodSeconds: 1 hours,
-                prefundAllocationPeriodSeconds: 1 hours,
-                tokenPrice: 1e18
+                prefundAllocationPeriodSeconds: 1 hours
             })
         );
 
@@ -225,12 +221,9 @@ contract LegionFixedPriceSaleFactoryTest is Test {
                 salePeriodSeconds: 1 hours,
                 refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 250,
-                legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
-                referrerFeeOnTokensSoldBps: 100,
                 minimumInvestAmount: 1e18,
                 bidToken: address(0),
-                askToken: address(0),
                 projectAdmin: address(0),
                 addressRegistry: address(0),
                 referrerFeeReceiver: address(0),
@@ -240,8 +233,7 @@ contract LegionFixedPriceSaleFactoryTest is Test {
             }),
             ILegionFixedPriceSale.FixedPriceSaleInitializationParams({
                 prefundPeriodSeconds: 1 hours,
-                prefundAllocationPeriodSeconds: 1 hours,
-                tokenPrice: 1e18
+                prefundAllocationPeriodSeconds: 1 hours
             })
         );
 
@@ -280,15 +272,11 @@ contract LegionFixedPriceSaleFactoryTest is Test {
         // Arrange
         prepareCreateLegionFixedPriceSale();
 
-        // Act
-        ILegionVestingManager.LegionVestingConfig memory _vestingConfig =
-            LegionFixedPriceSale(payable(legionFixedPriceSaleInstance)).vestingConfiguration();
         ILegionFixedPriceSale.FixedPriceSaleConfiguration memory _fixedPriceSaleConfig =
             LegionFixedPriceSale(payable(legionFixedPriceSaleInstance)).fixedPriceSaleConfiguration();
 
         // Expect
-        assertEq(_fixedPriceSaleConfig.tokenPrice, 1e18);
-        assertEq(_vestingConfig.vestingFactory, address(legionVestingFactory));
+        assertEq(_fixedPriceSaleConfig.prefundStartTime, uint64(block.timestamp));
 
         assertEq(LegionFixedPriceSale(payable(legionFixedPriceSaleInstance)).name(), "Legion LFG Sale");
         assertEq(LegionFixedPriceSale(payable(legionFixedPriceSaleInstance)).symbol(), "LLFGS");

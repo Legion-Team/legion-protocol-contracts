@@ -123,7 +123,7 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
     }
 
     /// @inheritdoc ILegionSealedBidAuctionSale
-    function initializePublishSaleResults()
+    function initializeReveal()
         external
         onlyLegion
         whenNotPaused
@@ -131,21 +131,15 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
         whenCancelNotLocked
         whenRefundPeriodIsOver
     {
-        // Verify that sale results are not already published
-        _verifyCanPublishSaleResults();
-
         // Flag that the sale is locked from canceling
         s_sealedBidAuctionSaleConfig.cancelLocked = true;
 
-        // Emit PublishSaleResultsInitialized event
-        emit PublishSaleResultsInitialized();
+        // Emit RevealInitialized event
+        emit RevealInitialized();
     }
 
     /// @inheritdoc ILegionSealedBidAuctionSale
-    function publishSaleResults(
-        bytes32 claimMerkleRoot,
-        uint256 tokensAllocated,
-        uint256 capitalRaised,
+    function reveal(
         uint256 sealedBidPrivateKey,
         uint256 fixedSalt
     )
@@ -159,26 +153,32 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
         // Verify if the provided private key is valid
         _verifyValidPrivateKey(sealedBidPrivateKey);
 
-        // Verify that sale results are not already published
-        _verifyCanPublishSaleResults();
-
-        // Set the merkle root for claiming tokens
-        s_saleStatus.claimTokensMerkleRoot = claimMerkleRoot;
-
-        // Set the total tokens to be allocated by the Project team
-        s_saleStatus.totalTokensAllocated = tokensAllocated;
-
-        // Set the total capital raised to be withdrawn by the project
-        s_saleStatus.totalCapitalRaised = capitalRaised;
-
         // Set the private key used to decrypt sealed bids
         s_sealedBidAuctionSaleConfig.privateKey = sealedBidPrivateKey;
 
         // Set the fixed salt used for sealing bids
         s_sealedBidAuctionSaleConfig.fixedSalt = fixedSalt;
 
-        // Emit SaleResultsPublished event
-        emit SaleResultsPublished(claimMerkleRoot, tokensAllocated, capitalRaised, sealedBidPrivateKey, fixedSalt);
+        // Emit Revealed event
+        emit Revealed(sealedBidPrivateKey, fixedSalt);
+    }
+
+    /// @inheritdoc ILegionSealedBidAuctionSale
+    function publishRaisedCapital(uint256 capitalRaised)
+        external
+        onlyLegion
+        whenNotPaused
+        whenSaleNotCanceled
+        whenRefundPeriodIsOver
+    {
+        // Verify that capital raised can be published.
+        _verifyCanPublishCapitalRaised();
+
+        // Set the total capital raised to be withdrawn by the project
+        s_saleStatus.totalCapitalRaised = capitalRaised;
+
+        // Emit CapitalRaisedPublished event
+        emit CapitalRaisedPublished(capitalRaised);
     }
 
     /// @inheritdoc ILegionSealedBidAuctionSale
@@ -192,6 +192,7 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
         override(ILegionAbstractSale, LegionAbstractSale)
         onlyProject
         whenNotPaused
+        whenSaleNotCanceled
         whenCancelNotLocked
     {
         // Call parent method
@@ -283,5 +284,10 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
         if (!s_sealedBidAuctionSaleConfig.cancelLocked) {
             revert Errors.LegionSale__CancelNotLocked();
         }
+    }
+
+    /// @dev Verifies conditions for publishing capital raised.
+    function _verifyCanPublishCapitalRaised() private view {
+        if (s_saleStatus.totalCapitalRaised != 0) revert Errors.LegionSale__CapitalRaisedAlreadyPublished();
     }
 }

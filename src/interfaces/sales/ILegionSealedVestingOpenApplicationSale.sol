@@ -59,29 +59,18 @@ interface ILegionSealedVestingOpenApplicationSale is ILegionAbstractSale {
     /// @param positionId The unique identifier for the investment position.
     event CapitalInvested(uint256 amount, uint256 encryptedVestingOption, address investor, uint256 positionId);
 
-    /// @notice Emitted when the process of publishing sale results is initialized.
-    event PublishSaleResultsInitialized();
-
     /// @notice Emitted when the total capital raised is published by the Legion admin.
     /// @param capitalRaised The total capital raised by the project.
     event CapitalRaisedPublished(uint256 capitalRaised);
 
+    /// @notice Emitted when the sealed bid reveal process is initialized.
+    event RevealInitialized();
+
+    /// @notice Emitted when sealed bids are revealed by the Legion admin.
+    event Revealed(uint256 sealedVestingOptionPrivateKey, uint256 fixedSalt);
+
     /// @notice Emitted when the sale is ended by Legion or project.
     event SaleEnded();
-
-    /// @notice Emitted when sale results are published by the Legion admin.
-    /// @param claimMerkleRoot The Merkle root for verifying token claims.
-    /// @param tokensAllocated The total amount of tokens allocated from the sale.
-    /// @param tokenAddress The address of the token distributed to investors.
-    /// @param sealedVestingOptionPrivateKey The private key used to decrypt sealed vesting options.
-    /// @param fixedSalt The fixed salt used for sealing vesting options.
-    event SaleResultsPublished(
-        bytes32 claimMerkleRoot,
-        uint256 tokensAllocated,
-        address tokenAddress,
-        uint256 sealedVestingOptionPrivateKey,
-        uint256 fixedSalt
-    );
 
     /// @notice Initializes the pre-liquid sale contract with parameters.
     /// @param saleInitParams The Legion sale initialization parameters.
@@ -113,22 +102,12 @@ interface ILegionSealedVestingOpenApplicationSale is ILegionAbstractSale {
     function publishRaisedCapital(uint256 capitalRaised) external;
 
     /// @notice Locks sale cancellation to initialize publishing of results.
-    function initializePublishSaleResults() external;
+    function initializeReveal() external;
 
     /// @notice Publishes sale results including token allocation details.
-    /// @param claimMerkleRoot The Merkle root for verifying token claims.
-    /// @param tokensAllocated The total tokens allocated for investors.
-    /// @param askToken The address of the token to be distributed.
     /// @param sealedVestingOptionPrivateKey The private key to decrypt sealed vesting options.
     /// @param fixedSalt The fixed salt used for sealing vesting options.
-    function publishSaleResults(
-        bytes32 claimMerkleRoot,
-        uint256 tokensAllocated,
-        address askToken,
-        uint256 sealedVestingOptionPrivateKey,
-        uint256 fixedSalt
-    )
-        external;
+    function reveal(uint256 sealedVestingOptionPrivateKey, uint256 fixedSalt) external;
 
     /// @notice Returns the current pre-liquid sale configuration.
     /// @return The complete pre-liquid sale configuration struct.

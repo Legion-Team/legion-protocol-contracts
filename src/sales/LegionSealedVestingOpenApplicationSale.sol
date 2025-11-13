@@ -170,7 +170,7 @@ contract LegionSealedVestingOpenApplicationSale is LegionAbstractSale, ILegionSe
     }
 
     /// @inheritdoc ILegionSealedVestingOpenApplicationSale
-    function initializePublishSaleResults()
+    function initializeReveal()
         external
         onlyLegion
         whenNotPaused
@@ -178,21 +178,15 @@ contract LegionSealedVestingOpenApplicationSale is LegionAbstractSale, ILegionSe
         whenCancelNotLocked
         whenRefundPeriodIsOver
     {
-        // Verify that sale results are not already published
-        _verifyCanPublishSaleResults();
-
         // Flag that the sale is locked from canceling
         s_preLiquidSaleConfig.cancelLocked = true;
 
-        // Emit PublishSaleResultsInitialized event
-        emit PublishSaleResultsInitialized();
+        // Emit RevealInitialized event
+        emit RevealInitialized();
     }
 
     /// @inheritdoc ILegionSealedVestingOpenApplicationSale
-    function publishSaleResults(
-        bytes32 claimMerkleRoot,
-        uint256 tokensAllocated,
-        address askToken,
+    function reveal(
         uint256 sealedVestingOptionPrivateKey,
         uint256 fixedSalt
     )
@@ -207,20 +201,14 @@ contract LegionSealedVestingOpenApplicationSale is LegionAbstractSale, ILegionSe
         // Verify if the provided private key is valid
         _verifyValidPrivateKey(sealedVestingOptionPrivateKey);
 
-        // Verify that sale results are not published
-        _verifyCanPublishSaleResults();
+        // Set the private key used to decrypt sealed bids
+        s_preLiquidSaleConfig.privateKey = sealedVestingOptionPrivateKey;
 
-        // Set the merkle root for claiming tokens
-        s_saleStatus.claimTokensMerkleRoot = claimMerkleRoot;
+        // Set the fixed salt used for sealing bids
+        s_preLiquidSaleConfig.fixedSalt = fixedSalt;
 
-        // Set the total tokens to be allocated by the Project team
-        s_saleStatus.totalTokensAllocated = tokensAllocated;
-
-        /// Set the address of the token distributed to investors
-        s_addressConfig.askToken = askToken;
-
-        // Emit SaleResultsPublished event
-        emit SaleResultsPublished(claimMerkleRoot, tokensAllocated, askToken, sealedVestingOptionPrivateKey, fixedSalt);
+        // Emit Revealed event
+        emit Revealed(sealedVestingOptionPrivateKey, fixedSalt);
     }
 
     /// @inheritdoc ILegionAbstractSale
@@ -290,26 +278,10 @@ contract LegionSealedVestingOpenApplicationSale is LegionAbstractSale, ILegionSe
         onlyProject
         whenNotPaused
         whenSaleNotCanceled
-        whenTokensNotSupplied
         whenCancelNotLocked
     {
-        // Cache the amount of funds to be returned to the capital raise
-        // The project should return the total capital raised including the charged fees
-        uint256 capitalToReturn = s_saleStatus.totalCapitalWithdrawn;
-
-        // Mark sale as canceled
-        s_saleStatus.isCanceled = true;
-
-        // Emit SaleCanceled event
-        emit SaleCanceled();
-
-        // In case there's capital to return, transfer the funds back to the contract
-        if (capitalToReturn > 0) {
-            // Set the totalCapitalWithdrawn to zero
-            s_saleStatus.totalCapitalWithdrawn = 0;
-            // Transfer the capital back to the contract
-            SafeTransferLib.safeTransferFrom(s_addressConfig.bidToken, msg.sender, address(this), capitalToReturn);
-        }
+        // Call parent method
+        super.cancel();
     }
 
     /// @inheritdoc ILegionSealedVestingOpenApplicationSale

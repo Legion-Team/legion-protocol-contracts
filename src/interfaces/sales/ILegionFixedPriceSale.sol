@@ -27,8 +27,6 @@ interface ILegionFixedPriceSale is ILegionAbstractSale {
         uint64 prefundPeriodSeconds;
         // Duration of the prefund allocation period in seconds
         uint64 prefundAllocationPeriodSeconds;
-        // Price of the token being sold in terms of the bid token
-        uint256 tokenPrice;
     }
 
     /// @dev Struct containing the runtime configuration of the fixed-price sale
@@ -37,8 +35,6 @@ interface ILegionFixedPriceSale is ILegionAbstractSale {
         uint64 prefundStartTime;
         // Unix timestamp (in seconds) when the prefund period ends
         uint64 prefundEndTime;
-        // Price of the token being sold in terms of the bid token
-        uint256 tokenPrice;
     }
 
     /// @notice Emitted when capital is successfully invested in the sale.
@@ -48,10 +44,9 @@ interface ILegionFixedPriceSale is ILegionAbstractSale {
     /// @param positionId The unique identifier for the investment position.
     event CapitalInvested(uint256 amount, address investor, bool isPrefund, uint256 positionId);
 
-    /// @notice Emitted when sale results are published by the Legion admin.
-    /// @param claimMerkleRoot The Merkle root for verifying token claims.
-    /// @param tokensAllocated The total amount of tokens allocated from the sale.
-    event SaleResultsPublished(bytes32 claimMerkleRoot, uint256 tokensAllocated);
+    /// @notice Emitted when the total capital raised is published by the Legion admin.
+    /// @param capitalRaised The total capital raised by the project.
+    event CapitalRaisedPublished(uint256 capitalRaised);
 
     /// @notice Initializes the contract with sale parameters.
     /// @param saleInitParams The common Legion sale initialization parameters.
@@ -68,11 +63,9 @@ interface ILegionFixedPriceSale is ILegionAbstractSale {
     /// @param signature The Legion signature for investor verification.
     function invest(uint256 amount, uint256 deadline, bytes calldata signature) external;
 
-    /// @notice Publishes the sale results after completion.
-    /// @param claimMerkleRoot The Merkle root for verifying token claims.
-    /// @param tokensAllocated The total tokens allocated for distribution.
-    /// @param askTokenDecimals The decimals of the ask token for raised capital calculation.
-    function publishSaleResults(bytes32 claimMerkleRoot, uint256 tokensAllocated, uint8 askTokenDecimals) external;
+    /// @notice Publishes the total capital raised.
+    /// @param capitalRaised The total capital raised by the project.
+    function publishRaisedCapital(uint256 capitalRaised) external;
 
     /// @notice Returns the current fixed-price sale configuration.
     /// @return The complete fixed-price sale configuration struct.

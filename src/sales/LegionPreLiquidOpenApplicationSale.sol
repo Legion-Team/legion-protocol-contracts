@@ -130,35 +130,6 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
         emit CapitalRaisedPublished(capitalRaised);
     }
 
-    /// @inheritdoc ILegionPreLiquidOpenApplicationSale
-    function publishSaleResults(
-        bytes32 claimMerkleRoot,
-        uint256 tokensAllocated,
-        address askToken
-    )
-        external
-        onlyLegion
-        whenNotPaused
-        whenSaleNotCanceled
-        whenSaleEnded
-        whenRefundPeriodIsOver
-    {
-        // Verify that sale results are not published
-        _verifyCanPublishSaleResults();
-
-        // Set the merkle root for claiming tokens
-        s_saleStatus.claimTokensMerkleRoot = claimMerkleRoot;
-
-        // Set the total tokens to be allocated by the Project team
-        s_saleStatus.totalTokensAllocated = tokensAllocated;
-
-        /// Set the address of the token distributed to investors
-        s_addressConfig.askToken = askToken;
-
-        // Emit SaleResultsPublished event
-        emit SaleResultsPublished(claimMerkleRoot, tokensAllocated, askToken);
-    }
-
     /// @inheritdoc ILegionAbstractSale
     function withdrawRaisedCapital()
         external
@@ -217,34 +188,6 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
     /// @inheritdoc ILegionPreLiquidOpenApplicationSale
     function preLiquidSaleConfiguration() external view returns (PreLiquidSaleConfiguration memory) {
         return s_preLiquidSaleConfig;
-    }
-
-    /// @inheritdoc ILegionAbstractSale
-    function cancel()
-        public
-        override(ILegionAbstractSale, LegionAbstractSale)
-        onlyProject
-        whenNotPaused
-        whenSaleNotCanceled
-        whenTokensNotSupplied
-    {
-        // Cache the amount of funds to be returned to the capital raise
-        // The project should return the total capital raised including the charged fees
-        uint256 capitalToReturn = s_saleStatus.totalCapitalWithdrawn;
-
-        // Mark sale as canceled
-        s_saleStatus.isCanceled = true;
-
-        // Emit SaleCanceled event
-        emit SaleCanceled();
-
-        // In case there's capital to return, transfer the funds back to the contract
-        if (capitalToReturn > 0) {
-            // Set the totalCapitalWithdrawn to zero
-            s_saleStatus.totalCapitalWithdrawn = 0;
-            // Transfer the capital back to the contract
-            SafeTransferLib.safeTransferFrom(s_addressConfig.bidToken, msg.sender, address(this), capitalToReturn);
-        }
     }
 
     /// @dev Verifies that the sale has not ended.

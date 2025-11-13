@@ -42,12 +42,6 @@ interface ILegionPreLiquidOpenApplicationSale is ILegionAbstractSale {
     /// @notice Emitted when the sale is ended by Legion or project.
     event SaleEnded();
 
-    /// @notice Emitted when sale results are published by the Legion admin.
-    /// @param claimMerkleRoot The Merkle root for verifying token claims.
-    /// @param tokensAllocated The total amount of tokens allocated from the sale.
-    /// @param tokenAddress The address of the token distributed to investors.
-    event SaleResultsPublished(bytes32 claimMerkleRoot, uint256 tokensAllocated, address tokenAddress);
-
     /// @notice Initializes the pre-liquid sale contract with parameters.
     /// @param saleInitParams The Legion sale initialization parameters.
     function initialize(LegionSaleInitializationParams calldata saleInitParams) external;
@@ -64,12 +58,6 @@ interface ILegionPreLiquidOpenApplicationSale is ILegionAbstractSale {
     /// @notice Publishes the total capital raised.
     /// @param capitalRaised The total capital raised by the project.
     function publishRaisedCapital(uint256 capitalRaised) external;
-
-    /// @notice Publishes sale results including token allocation details.
-    /// @param claimMerkleRoot The Merkle root for verifying token claims.
-    /// @param tokensAllocated The total tokens allocated for investors.
-    /// @param askToken The address of the token to be distributed.
-    function publishSaleResults(bytes32 claimMerkleRoot, uint256 tokensAllocated, address askToken) external;
 
     /// @notice Returns the current pre-liquid sale configuration.
     /// @return The complete pre-liquid sale configuration struct.

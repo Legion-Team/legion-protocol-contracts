@@ -96,7 +96,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
     MockERC20 public bidToken;
 
     /**
-     * @notice Mock token used as the sale token狂
+     * @notice Mock token used as the sale token
      * @dev Represents LFG with 18 decimals
      */
     MockERC20 public askToken;
@@ -251,6 +251,56 @@ contract LegionSealedBidAuctionSaleTest is Test {
     //////////////////////////////////////////////////////////////////////////*/
 
     /**
+     * @notice Performs common setup operations for most tests
+     * @dev Creates sale instance, mints tokens, approves spending, prepares sealed bid data and signatures
+     */
+    function prepareStandardTestSetup() public {
+        prepareSealedBidData();
+        prepareCreateLegionSealedBidAuction();
+        prepareMintAndApproveInvestorTokens();
+        prepareInvestorSignatures();
+    }
+
+    /**
+     * @notice Performs common setup operations for tests requiring project tokens
+     * @dev Creates sale instance, mints all tokens, approves spending, prepares sealed bid data and signatures
+     */
+    function prepareFullTestSetup() public {
+        prepareSealedBidData();
+        prepareCreateLegionSealedBidAuction();
+        prepareMintAndApproveInvestorTokens();
+        prepareMintAndApproveProjectTokens();
+        prepareInvestorSignatures();
+    }
+
+    /**
+     * @notice Performs setup for transfer position tests
+     * @dev Creates sale instance, mints tokens, approves spending, prepares sealed bid data, investment and transfer
+     * signatures
+     */
+    function prepareTransferTestSetup() public {
+        prepareSealedBidData();
+        prepareCreateLegionSealedBidAuction();
+        prepareMintAndApproveInvestorTokens();
+        prepareInvestorSignatures();
+        prepareTransferSignatures();
+    }
+
+    /**
+     * @notice Performs setup for excess withdrawal tests
+     * @dev Creates sale instance, mints tokens, approves spending, prepares sealed bids, invests from all investors,
+     * and prepares excess withdrawal signatures
+     */
+    function prepareExcessWithdrawalTestSetup() public {
+        prepareSealedBidData();
+        prepareCreateLegionSealedBidAuction();
+        prepareMintAndApproveInvestorTokens();
+        prepareInvestorSignatures();
+        prepareInvestedCapitalFromAllInvestors();
+        prepareExcessWithdrawalSignatures();
+    }
+
+    /**
      * @notice Sets the sale and sealed bid auction parameters
      * @dev Updates testConfig with provided initialization parameters
      * @param _saleInitParams General sale initialization parameters
@@ -266,12 +316,9 @@ contract LegionSealedBidAuctionSaleTest is Test {
             salePeriodSeconds: _saleInitParams.salePeriodSeconds,
             refundPeriodSeconds: _saleInitParams.refundPeriodSeconds,
             legionFeeOnCapitalRaisedBps: _saleInitParams.legionFeeOnCapitalRaisedBps,
-            legionFeeOnTokensSoldBps: _saleInitParams.legionFeeOnTokensSoldBps,
             referrerFeeOnCapitalRaisedBps: _saleInitParams.referrerFeeOnCapitalRaisedBps,
-            referrerFeeOnTokensSoldBps: _saleInitParams.referrerFeeOnTokensSoldBps,
             minimumInvestAmount: _saleInitParams.minimumInvestAmount,
             bidToken: _saleInitParams.bidToken,
-            askToken: _saleInitParams.askToken,
             projectAdmin: _saleInitParams.projectAdmin,
             addressRegistry: _saleInitParams.addressRegistry,
             referrerFeeReceiver: _saleInitParams.referrerFeeReceiver,
@@ -295,12 +342,9 @@ contract LegionSealedBidAuctionSaleTest is Test {
                 salePeriodSeconds: 1 hours,
                 refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 250,
-                legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
-                referrerFeeOnTokensSoldBps: 100,
                 minimumInvestAmount: 1e6,
                 bidToken: address(bidToken),
-                askToken: address(askToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: referrerFeeReceiver,
@@ -663,13 +707,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         ILegionSealedBidAuctionSale.SealedBidAuctionSaleConfiguration memory _sealedBidAuctionSaleConfig =
             LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).sealedBidAuctionSaleConfiguration();
-        ILegionVestingManager.LegionVestingConfig memory _vestingConfig =
-            LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).vestingConfiguration();
 
         // Expect
         assertEq(_sealedBidAuctionSaleConfig.publicKey.x, PUBLIC_KEY.x, "Public key x-coordinate mismatch");
         assertEq(_sealedBidAuctionSaleConfig.publicKey.y, PUBLIC_KEY.y, "Public key y-coordinate mismatch");
-        assertEq(_vestingConfig.vestingFactory, address(legionVestingFactory), "Vesting factory address mismatch");
     }
 
     /**
@@ -731,12 +772,9 @@ contract LegionSealedBidAuctionSaleTest is Test {
                 salePeriodSeconds: 1 hours,
                 refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 250,
-                legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
-                referrerFeeOnTokensSoldBps: 100,
                 minimumInvestAmount: 1e6,
                 bidToken: address(0),
-                askToken: address(0),
                 projectAdmin: address(0),
                 addressRegistry: address(0),
                 referrerFeeReceiver: address(0),
@@ -768,12 +806,9 @@ contract LegionSealedBidAuctionSaleTest is Test {
                 salePeriodSeconds: 0,
                 refundPeriodSeconds: 0,
                 legionFeeOnCapitalRaisedBps: 0,
-                legionFeeOnTokensSoldBps: 0,
                 referrerFeeOnCapitalRaisedBps: 0,
-                referrerFeeOnTokensSoldBps: 0,
                 minimumInvestAmount: 0,
                 bidToken: address(bidToken),
-                askToken: address(askToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: referrerFeeReceiver,
@@ -805,12 +840,9 @@ contract LegionSealedBidAuctionSaleTest is Test {
                 salePeriodSeconds: 12 weeks + 1,
                 refundPeriodSeconds: 2 weeks + 1,
                 legionFeeOnCapitalRaisedBps: 250,
-                legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
-                referrerFeeOnTokensSoldBps: 100,
                 minimumInvestAmount: 1e6,
                 bidToken: address(bidToken),
-                askToken: address(askToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: referrerFeeReceiver,
@@ -842,12 +874,9 @@ contract LegionSealedBidAuctionSaleTest is Test {
                 salePeriodSeconds: 1 hours - 1,
                 refundPeriodSeconds: 1 hours - 1,
                 legionFeeOnCapitalRaisedBps: 250,
-                legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
-                referrerFeeOnTokensSoldBps: 100,
                 minimumInvestAmount: 1e6,
                 bidToken: address(bidToken),
-                askToken: address(askToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: referrerFeeReceiver,
@@ -879,12 +908,9 @@ contract LegionSealedBidAuctionSaleTest is Test {
                 salePeriodSeconds: 1 hours,
                 refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 250,
-                legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
-                referrerFeeOnTokensSoldBps: 100,
                 minimumInvestAmount: 1e6,
                 bidToken: address(bidToken),
-                askToken: address(askToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: referrerFeeReceiver,
@@ -993,10 +1019,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      */
     function test_invest_successfullyEmitsCapitalInvested() public {
         // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareInvestorSignatures();
+        prepareStandardTestSetup();
 
         // Expect
         vm.expectEmit();
@@ -1015,10 +1038,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      */
     function test_invest_successfullyMintsInvestorPosition() public {
         // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareInvestorSignatures();
+        prepareStandardTestSetup();
 
         vm.warp(1);
 
@@ -1048,10 +1068,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      */
     function test_invest_revertsIfSaleHasEnded() public {
         // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareInvestorSignatures();
+        prepareStandardTestSetup();
 
         vm.warp(endTime() + 1);
 
@@ -1071,10 +1088,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      */
     function test_invest_revertsIfDifferentPublicKey() public {
         // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareInvestorSignatures();
+        prepareStandardTestSetup();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidBidPublicKey.selector));
@@ -1092,10 +1106,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      */
     function test_invest_revertsIfInvalidPublicKey() public {
         // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareInvestorSignatures();
+        prepareStandardTestSetup();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidBidPublicKey.selector));
@@ -1113,10 +1124,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      */
     function test_invest_revertsIfAmountLessThanMinimum() public {
         // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareInvestorSignatures();
+        prepareStandardTestSetup();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidInvestAmount.selector, 1 * 1e5));
@@ -1134,10 +1142,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      */
     function test_invest_revertsIfSaleIsCanceled() public {
         // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareInvestorSignatures();
+        prepareStandardTestSetup();
 
         vm.prank(projectAdmin);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancel();
@@ -1158,10 +1163,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      */
     function test_invest_revertsIfInvalidSignature() public {
         // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareInvestorSignatures();
+        prepareStandardTestSetup();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidSignature.selector, invalidSignature));
@@ -1179,10 +1181,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      */
     function test_invest_revertsIfInvestorHasRefunded() public {
         // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareInvestorSignatures();
+        prepareStandardTestSetup();
 
         vm.prank(investor1);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).invest(
@@ -1207,12 +1206,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      */
     function test_invest_revertsIfInvestorHasClaimedExcessCapital() public {
         // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareInvestorSignatures();
-        prepareInvestedCapitalFromAllInvestors();
-        prepareExcessWithdrawalSignatures();
+        prepareExcessWithdrawalTestSetup();
 
         vm.prank(investor2);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawExcessInvestedCapital(
@@ -1235,10 +1229,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      */
     function test_invest_revertsIfSignatureDeadlineHasExpired() public {
         // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareInvestorSignatures();
+        prepareStandardTestSetup();
 
         vm.warp(102);
 
@@ -1262,10 +1253,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      */
     function test_emergencyWithdraw_successfullyWithdrawByLegionAdmin() public {
         // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareInvestorSignatures();
+        prepareStandardTestSetup();
 
         vm.prank(investor1);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).invest(
@@ -1311,10 +1299,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      */
     function test_refund_successfullyEmitsCapitalRefunded() public {
         // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareInvestorSignatures();
+        prepareStandardTestSetup();
 
         vm.prank(investor1);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).invest(
@@ -1342,10 +1327,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      */
     function test_refund_revertsIfRefundPeriodHasEnded() public {
         // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareInvestorSignatures();
+        prepareStandardTestSetup();
 
         vm.prank(investor1);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).invest(
@@ -1372,10 +1354,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      */
     function test_refund_revertsIfSaleIsCanceled() public {
         // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareInvestorSignatures();
+        prepareStandardTestSetup();
 
         vm.prank(investor1);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).invest(
@@ -1419,10 +1398,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      */
     function test_refund_revertsIfInvestorHasRefunded() public {
         // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareInvestorSignatures();
+        prepareStandardTestSetup();
 
         vm.prank(investor1);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).invest(
@@ -1510,7 +1486,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.warp(refundEndTime() + 1);
 
         vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializeReveal();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__CancelLocked.selector));
@@ -1628,40 +1604,36 @@ contract LegionSealedBidAuctionSaleTest is Test {
     }
 
     /*//////////////////////////////////////////////////////////////////////////
-                        PUBLISH SALE RESULTS TESTS
+                                    REVEAL TESTS
     //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Tests successful publishing of sale results by the Legion admin
      * @dev Verifies that the SaleResultsPublished event is emitted with correct parameters
      */
-    function test_publishSaleResults_successfullyEmitsSaleResultsPublished() public {
+    function test_reveal_successfullyEmitsSaleResultsPublished() public {
         // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.warp(refundEndTime() + 1);
 
         vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializeReveal();
 
         // Expect
         vm.expectEmit();
-        emit ILegionSealedBidAuctionSale.SaleResultsPublished(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY, FIXED_SALT
-        );
+        emit ILegionSealedBidAuctionSale.Revealed(PRIVATE_KEY, FIXED_SALT);
 
         // Act
         vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY, FIXED_SALT
-        );
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).reveal(PRIVATE_KEY, FIXED_SALT);
     }
 
     /**
      * @notice Tests that publishing results when the sale is canceled reverts
      * @dev Expects LegionSale__SaleIsCanceled revert after cancellation
      */
-    function test_publishSaleResults_revertsIfSaleIsCanceled() public {
+    function test_reveal_revertsIfSaleIsCanceled() public {
         // Arrange
         prepareCreateLegionSealedBidAuction();
 
@@ -1673,16 +1645,14 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY, FIXED_SALT
-        );
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).reveal(PRIVATE_KEY, FIXED_SALT);
     }
 
     /**
      * @notice Tests that publishing results by a non-Legion admin reverts
      * @dev Expects LegionSale__NotCalledByLegion revert when called by nonLegionAdmin
      */
-    function testFuzz_publishSaleResults_revertsIfCalledByNonLegionAdmin(address nonLegionAdmin) public {
+    function testFuzz_reveal_revertsIfCalledByNonLegionAdmin(address nonLegionAdmin) public {
         // Arrange
         vm.assume(nonLegionAdmin != legionBouncer);
         prepareCreateLegionSealedBidAuction();
@@ -1690,23 +1660,21 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.warp(refundEndTime() + 1);
 
         vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializeReveal();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NotCalledByLegion.selector));
 
         // Act
         vm.prank(nonLegionAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY, FIXED_SALT
-        );
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).reveal(PRIVATE_KEY, FIXED_SALT);
     }
 
     /**
      * @notice Tests that publishing results without locking cancel reverts
-     * @dev Expects LegionSale__CancelNotLocked revert when initializePublishSaleResults is not called
+     * @dev Expects LegionSale__CancelNotLocked revert when initializeReveal is not called
      */
-    function test_publishSaleResults_revertsIfCancelNotLocked() public {
+    function test_reveal_revertsIfCancelNotLocked() public {
         // Arrange
         prepareCreateLegionSealedBidAuction();
         vm.warp(refundEndTime() + 1);
@@ -1716,71 +1684,63 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY, FIXED_SALT
-        );
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).reveal(PRIVATE_KEY, FIXED_SALT);
     }
 
     /**
      * @notice Tests that republishing results reverts
      * @dev Expects LegionSale__PrivateKeyAlreadyPublished revert after initial publication
      */
-    function test_publishSaleResults_revertsIfPrivateKeyAlreadyPublished() public {
+    function test_reveal_revertsIfPrivateKeyAlreadyPublished() public {
         // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.warp(refundEndTime() + 1);
 
         vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializeReveal();
 
         vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY, FIXED_SALT
-        );
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).reveal(PRIVATE_KEY, FIXED_SALT);
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__PrivateKeyAlreadyPublished.selector));
 
         // Act
         vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY, FIXED_SALT
-        );
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).reveal(PRIVATE_KEY, FIXED_SALT);
     }
 
     /**
      * @notice Tests that publishing with an invalid private key reverts
      * @dev Expects LegionSale__InvalidBidPrivateKey revert when using an incorrect private key
      */
-    function test_publishSaleResults_revertsIfInvalidPrivateKey() public {
+    function test_reveal_revertsIfInvalidPrivateKey() public {
         // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.warp(refundEndTime() + 1);
 
         vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializeReveal();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidBidPrivateKey.selector));
 
         // Act
         vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY - 1, FIXED_SALT
-        );
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).reveal(PRIVATE_KEY - 1, FIXED_SALT);
     }
 
     /*//////////////////////////////////////////////////////////////////////////
-                        INITIALIZE PUBLISH SALE RESULTS TESTS
+                            INITIALIZE REVEAL TESTS
     //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Tests successful initialization of publish sale results by the Legion admin
      * @dev Verifies that the PublishSaleResultsInitialized event is emitted
      */
-    function test_initializePublishSaleResults_successfullyEmitsPublishSaleResultsInitialized() public {
+    function test_initializeReveal_successfullyEmitsPublishSaleResultsInitialized() public {
         // Arrange
         prepareCreateLegionSealedBidAuction();
 
@@ -1788,18 +1748,18 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         // Expect
         vm.expectEmit();
-        emit ILegionSealedBidAuctionSale.PublishSaleResultsInitialized();
+        emit ILegionSealedBidAuctionSale.RevealInitialized();
 
         // Act
         vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializeReveal();
     }
 
     /**
      * @notice Tests that initializing publish sale results when the sale is canceled reverts
      * @dev Expects LegionSale__SaleIsCanceled revert after cancellation
      */
-    function test_initializePublishSaleResults_revertsIfSaleIsCanceled() public {
+    function test_initializeReveal_revertsIfSaleIsCanceled() public {
         // Arrange
         prepareCreateLegionSealedBidAuction();
 
@@ -1811,35 +1771,35 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializeReveal();
     }
 
     /**
      * @notice Tests that reinitializing publish sale results reverts
      * @dev Expects LegionSale__CancelLocked revert after initial initialization
      */
-    function test_initializePublishSaleResults_revertsIfCancelIsLocked() public {
+    function test_initializeReveal_revertsIfCancelIsLocked() public {
         // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.warp(refundEndTime() + 1);
 
         vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializeReveal();
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__CancelLocked.selector));
 
         // Act
         vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializeReveal();
     }
 
     /**
      * @notice Tests that initializing publish sale results by a non-Legion admin reverts
      * @dev Expects LegionSale__NotCalledByLegion revert when called by projectAdmin
      */
-    function test_initializePublishSaleResults_revertsIfNotCalledByLegionAdmin() public {
+    function test_initializeReveal_revertsIfNotCalledByLegionAdmin() public {
         // Arrange
         prepareCreateLegionSealedBidAuction();
 
@@ -1850,14 +1810,14 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         // Act
         vm.prank(projectAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializeReveal();
     }
 
     /**
      * @notice Tests that initializing publish sale results before refund period ends reverts
      * @dev Expects LegionSale__RefundPeriodIsNotOver revert when called before refundEndTime
      */
-    function test_initializePublishSaleResults_revertsIfRefunPeriodIsNotOver() public {
+    function test_initializeReveal_revertsIfRefundPeriodIsNotOver() public {
         // Arrange
         prepareCreateLegionSealedBidAuction();
 
@@ -1870,264 +1830,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
-    }
-
-    /*//////////////////////////////////////////////////////////////////////////
-                           SUPPLY TOKENS TESTS
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /**
-     * @notice Tests successful token supply with non-zero Legion fee by the project admin
-     * @dev Verifies that TokensSuppliedForDistribution event is emitted with correct amounts after sale results are
-     * published
-     */
-    function test_supplyTokens_successfullyEmitsTokensSuppliedForDistribution() public {
-        // Arrange
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveProjectTokens();
-
-        vm.warp(refundEndTime() + 1); // After refund period (2 weeks + 1 second)
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY, FIXED_SALT
-        );
-
-        // Expect
-        // referrer fee
-        vm.expectEmit();
-        emit ILegionAbstractSale.TokensSuppliedForDistribution(4000 * 1e18, 100 * 1e18, 40 * 1e18);
-
-        // Act
-        vm.prank(projectAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
-    }
-
-    /**
-     * @notice Tests successful token supply with zero Legion fee by the project admin
-     * @dev Verifies that TokensSuppliedForDistribution event is emitted correctly when Legion fee is configured as 0
-     */
-    function test_supplyTokens_successfullyEmitsIfLegionFeeIsZero() public {
-        // Arrange
-        prepareSealedBidData();
-        setSaleParams(
-            ILegionAbstractSale.LegionSaleInitializationParams({
-                salePeriodSeconds: 1 hours,
-                refundPeriodSeconds: 2 weeks,
-                legionFeeOnCapitalRaisedBps: 250,
-                legionFeeOnTokensSoldBps: 0,
-                referrerFeeOnCapitalRaisedBps: 100,
-                referrerFeeOnTokensSoldBps: 100,
-                minimumInvestAmount: 0,
-                bidToken: address(bidToken),
-                askToken: address(askToken),
-                projectAdmin: address(projectAdmin),
-                addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver,
-                saleName: "Legion LFG Sale",
-                saleSymbol: "LLFGS",
-                saleBaseURI: "https://metadata.legion.cc"
-            }),
-            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
-        );
-
-        vm.prank(legionBouncer);
-        legionSealedBidAuctionInstance = legionSaleFactory.createSealedBidAuctionSale(
-            testConfig.saleInitParams, testConfig.sealedBidAuctionSaleInitParams
-        );
-
-        prepareMintAndApproveProjectTokens();
-
-        vm.warp(refundEndTime() + 1);
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY, FIXED_SALT
-        );
-
-        // Expect
-        // referrer fee
-        vm.expectEmit();
-        emit ILegionAbstractSale.TokensSuppliedForDistribution(4000 * 1e18, 0, 40 * 1e18);
-
-        // Act
-        vm.prank(projectAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 0, 40 * 1e18);
-    }
-
-    /**
-     * @notice Tests that supplying tokens by a non-project admin reverts
-     * @dev Expects LegionSale__NotCalledByProject revert when called by nonProjectAdmin
-     */
-    function testFuzz_supplyTokens_revertsIfNotCalledByProjectAdmin(address nonProjectAdmin) public {
-        // Arrange
-        vm.assume(nonProjectAdmin != projectAdmin);
-        prepareCreateLegionSealedBidAuction();
-
-        vm.warp(refundEndTime() + 1);
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NotCalledByProject.selector));
-
-        // Act
-        vm.prank(nonProjectAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(10_000 * 1e18, 250 * 1e18, 40 * 1e18);
-    }
-
-    /**
-     * @notice Tests that supplying tokens with an incorrect Legion fee amount reverts
-     * @dev Expects LegionSale__InvalidFeeAmount revert when Legion fee (90 LFG) does not match expected (100 LFG)
-     */
-    function test_supplyTokens_revertsIfLegionFeeIsIncorrect() public {
-        // Arrange
-        prepareCreateLegionSealedBidAuction();
-
-        vm.warp(refundEndTime() + 1);
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY, FIXED_SALT
-        );
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidFeeAmount.selector, 90 * 1e18, 100 * 1e18));
-
-        // Act
-        vm.prank(projectAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 90 * 1e18, 40 * 1e18);
-    }
-
-    /**
-     * @notice Tests that supplying tokens with an incorrect referrer fee amount reverts
-     * @dev Expects LegionSale__InvalidFeeAmount revert when referrer fee (39 LFG) does not match expected (40 LFG)
-     */
-    function test_supplyTokens_revertsIfReferreFeeIsIncorrect() public {
-        // Arrange
-        prepareCreateLegionSealedBidAuction();
-
-        vm.warp(refundEndTime() + 1);
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY, FIXED_SALT
-        );
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidFeeAmount.selector, 39 * 1e18, 40 * 1e18));
-
-        // Act
-        vm.prank(projectAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 39 * 1e18);
-    }
-
-    /**
-     * @notice Tests that supplying tokens when the sale is canceled reverts
-     * @dev Expects LegionSale__SaleIsCanceled revert after projectAdmin cancels the sale
-     */
-    function test_supplyTokens_revertsIfSaleIsCanceled() public {
-        // Arrange
-        prepareCreateLegionSealedBidAuction();
-
-        vm.prank(projectAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancel();
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
-
-        // Act
-        vm.prank(projectAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
-    }
-
-    /**
-     * @notice Tests that supplying tokens with an incorrect total amount reverts
-     * @dev Expects LegionSale__InvalidTokenAmountSupplied revert when supplied amount (9990 LFG) does not match
-     * published (4000
-     * LFG)
-     */
-    function test_supplyTokens_revertsIfIncorrectAmountSupplied() public {
-        // Arrange
-        prepareCreateLegionSealedBidAuction();
-
-        vm.warp(refundEndTime() + 1);
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY, FIXED_SALT
-        );
-
-        // Expect
-        vm.expectRevert(
-            abi.encodeWithSelector(Errors.LegionSale__InvalidTokenAmountSupplied.selector, 9990 * 1e18, 4000 * 1e18)
-        );
-
-        // Act
-        vm.prank(projectAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(9990 * 1e18, 250 * 1e18, 40 * 1e18);
-    }
-
-    /**
-     * @notice Tests that supplying tokens before sale results are published reverts
-     * @dev Expects LegionSale__TokensNotAllocated revert when results are not yet published
-     */
-    function test_supplyTokens_revertsIfSaleResultsNotPublished() public {
-        // Arrange
-        prepareCreateLegionSealedBidAuction();
-
-        vm.warp(refundEndTime() + 1);
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__TokensNotAllocated.selector));
-
-        // Act
-        vm.prank(projectAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(10_000 * 1e18, 250 * 1e18, 40 * 1e18);
-    }
-
-    /**
-     * @notice Tests that supplying tokens twice reverts
-     * @dev Expects LegionSale__TokensAlreadySupplied revert after initial supply
-     */
-    function test_supplyTokens_revertsIfTokensAlreadySupplied() public {
-        // Arrange
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveProjectTokens();
-
-        vm.warp(refundEndTime() + 1);
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY, FIXED_SALT
-        );
-
-        vm.prank(projectAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__TokensAlreadySupplied.selector));
-
-        // Act
-        vm.prank(projectAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializeReveal();
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -2150,18 +1853,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.warp(refundEndTime() + 1);
 
         vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY, FIXED_SALT
-        );
-
-        vm.expectEmit();
-        emit ILegionAbstractSale.TokensSuppliedForDistribution(4000 * 1e18, 100 * 1e18, 40 * 1e18);
-
-        vm.prank(projectAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishRaisedCapital(10_000 * 1e6);
 
         // Expect
         vm.expectEmit();
@@ -2191,12 +1883,9 @@ contract LegionSealedBidAuctionSaleTest is Test {
                 salePeriodSeconds: 1 hours,
                 refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 0,
-                legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
-                referrerFeeOnTokensSoldBps: 100,
                 minimumInvestAmount: 1e6,
                 bidToken: address(bidToken),
-                askToken: address(askToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: referrerFeeReceiver,
@@ -2220,18 +1909,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.warp(refundEndTime() + 1);
 
         vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY, FIXED_SALT
-        );
-
-        vm.expectEmit();
-        emit ILegionAbstractSale.TokensSuppliedForDistribution(4000 * 1e18, 100 * 1e18, 40 * 1e18);
-
-        vm.prank(projectAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishRaisedCapital(10_000 * 1e6);
 
         // Expect
         vm.expectEmit();
@@ -2274,7 +1952,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
         // Arrange
         prepareCreateLegionSealedBidAuction();
 
-        vm.warp(refundEndTime() - 1); // Still within refund period (2 weeks - 1 second)
+        vm.warp(refundEndTime() - 1);
 
         // Expect
         vm.expectRevert(
@@ -2290,40 +1968,14 @@ contract LegionSealedBidAuctionSaleTest is Test {
      * @notice Tests that withdrawal before sale results are published reverts
      * @dev Expects LegionSale__SaleResultsNotPublished revert when results are not yet published
      */
-    function test_withdrawRaisedCapital_revertsIfSaleResultsNotPublished() public {
+    function test_withdrawRaisedCapital_revertsIfRaisedCapitalNotPublished() public {
         // Arrange
         prepareCreateLegionSealedBidAuction();
 
         vm.warp(refundEndTime() + 1);
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleResultsNotPublished.selector));
-
-        // Act
-        vm.prank(projectAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawRaisedCapital();
-    }
-
-    /**
-     * @notice Tests that withdrawal before tokens are supplied reverts
-     * @dev Expects LegionSale__TokensNotSupplied revert when tokens have not been supplied
-     */
-    function test_withdrawRaisedCapital_revertsIfNoTokensSupplied() public {
-        // Arrange
-        prepareCreateLegionSealedBidAuction();
-
-        vm.warp(refundEndTime() + 1);
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY, FIXED_SALT
-        );
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__TokensNotSupplied.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__CapitalNotRaised.selector));
 
         // Act
         vm.prank(projectAdmin);
@@ -2366,15 +2018,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         vm.warp(refundEndTime() + 1);
 
-        vm.startPrank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY, FIXED_SALT
-        );
-        vm.stopPrank();
+        vm.prank(legionBouncer);
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishRaisedCapital(10_000 * 1e6);
 
         vm.startPrank(projectAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
         ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).withdrawRaisedCapital();
         vm.stopPrank();
 
@@ -2402,14 +2049,9 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.warp(refundEndTime() + 1);
 
         vm.startPrank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 0, PRIVATE_KEY, FIXED_SALT
-        );
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializeReveal();
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).reveal(PRIVATE_KEY, FIXED_SALT);
         vm.stopPrank();
-
-        vm.prank(projectAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__CapitalNotRaised.selector));
@@ -2429,12 +2071,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      */
     function test_withdrawExcessInvestedCapital_successfullyTransfersBackExcessCapital() public {
         // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareInvestorSignatures();
-        prepareInvestedCapitalFromAllInvestors();
-        prepareExcessWithdrawalSignatures();
+        prepareExcessWithdrawalTestSetup();
 
         vm.warp(endTime() - 1);
 
@@ -2462,12 +2099,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      */
     function test_withdrawExcessInvestedCapital_revertsIfSaleIsCanceled() public {
         // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareInvestorSignatures();
-        prepareInvestedCapitalFromAllInvestors();
-        prepareExcessWithdrawalSignatures();
+        prepareExcessWithdrawalTestSetup();
 
         vm.warp(endTime() - 1);
 
@@ -2490,12 +2122,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      */
     function test_withdrawExcessInvestedCapital_revertsWithInvalidSignature() public {
         // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareInvestorSignatures();
-        prepareInvestedCapitalFromAllInvestors();
-        prepareExcessWithdrawalSignatures();
+        prepareExcessWithdrawalTestSetup();
 
         vm.warp(endTime() - 1);
 
@@ -2517,11 +2144,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
      */
     function test_withdrawExcessInvestedCapital_revertsIfExcessCapitalAlreadyWithdrawn() public {
         // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareMintAndApproveProjectTokens();
-        prepareInvestorSignatures();
+        prepareFullTestSetup();
         prepareInvestedCapitalFromAllInvestors();
         prepareExcessWithdrawalSignatures();
 
@@ -2564,359 +2187,6 @@ contract LegionSealedBidAuctionSaleTest is Test {
     }
 
     /*//////////////////////////////////////////////////////////////////////////
-                        CLAIM TOKEN ALLOCATION TESTS
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /**
-     * @notice Tests successful token allocation claim by an investor after sale results are published
-     * @dev Verifies tokens (900 LFG) are transferred to vesting contract for investor2 and (100 LFG) initial release,
-     * with valid proof
-     */
-    function test_claimTokenAllocation_successfullyTransfersTokensToVestingContract() public {
-        // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareMintAndApproveProjectTokens();
-        prepareInvestorSignatures();
-        prepareInvestedCapitalFromAllInvestors();
-
-        bytes32[] memory claimProofInvestor2 = new bytes32[](2);
-        claimProofInvestor2[0] = bytes32(0xff3d33a8fd9d2fd370071d27191d742338d3c1bdf0ed9e7074156278e31f492d);
-        claimProofInvestor2[1] = bytes32(0xe5fecd7e290c6f3102d02b9d4a89172fe2ebf2c44ef3c3699f4f1025adfe63cc);
-
-        vm.warp(refundEndTime() + 1); // After refund period (2 weeks + 1 second)
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY, FIXED_SALT
-        );
-
-        vm.prank(projectAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
-
-        // Act
-        vm.prank(investor2);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).claimTokenAllocation(
-            1000 * 1e18, investorVestingConfig, claimProofInvestor2
-        );
-
-        // Expect
-        ILegionAbstractSale.InvestorPosition memory _investorPosition =
-            LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).investorPosition(investor2);
-
-        ILegionVestingManager.LegionInvestorVestingStatus memory vestingStatus =
-            LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).investorVestingStatus(investor2);
-
-        assertEq(_investorPosition.hasSettled, true, "Investor2 should have settled position");
-        assertEq(
-            MockERC20(askToken).balanceOf(_investorPosition.vestingAddress),
-            9000 * 1e17,
-            "Vesting contract should hold 900 LFG (90% of 1000 LFG after 10% initial release)"
-        );
-        assertEq(vestingStatus.start, 0, "Vesting start should be 0");
-        assertEq(vestingStatus.end, 31_536_000, "Vesting end should be 1 year (31,536,000 seconds)");
-        assertEq(vestingStatus.cliffEnd, 3600, "Vesting cliff should be 1 hour (3600 seconds)");
-        assertEq(vestingStatus.duration, 31_536_000, "Vesting duration should be 1 year");
-        assertEq(vestingStatus.released, 0, "No tokens should be released yet");
-        assertApproxEqAbs(
-            vestingStatus.releasable,
-            34_623_344_748_858_447_488,
-            1e18,
-            "Releasable amount should approximate releasable amount"
-        );
-        assertApproxEqAbs(
-            vestingStatus.vestedAmount,
-            34_623_344_748_858_447_488,
-            1e18,
-            "Vested amount should approximate vested amount"
-        );
-    }
-
-    /**
-     * @notice Tests that claiming tokens before refund period ends reverts
-     * @dev Expects LegionSale__RefundPeriodIsNotOver revert when called before refundEndTime
-     */
-    function test_claimTokenAllocation_revertsIfRefundPeriodHasNotEnded() public {
-        // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareInvestorSignatures();
-        prepareInvestedCapitalFromAllInvestors();
-
-        bytes32[] memory claimProofInvestor2 = new bytes32[](2);
-        claimProofInvestor2[0] = bytes32(0xff3d33a8fd9d2fd370071d27191d742338d3c1bdf0ed9e7074156278e31f492d);
-        claimProofInvestor2[1] = bytes32(0xe5fecd7e290c6f3102d02b9d4a89172fe2ebf2c44ef3c3699f4f1025adfe63cc);
-
-        vm.warp(refundEndTime() + 1);
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY, FIXED_SALT
-        );
-
-        vm.warp(refundEndTime() - 1); // Before refund period ends (2 weeks - 1 second)
-
-        // Expect
-        vm.expectRevert(
-            abi.encodeWithSelector(Errors.LegionSale__RefundPeriodIsNotOver.selector, block.timestamp, refundEndTime())
-        );
-
-        // Act
-        vm.prank(investor2);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).claimTokenAllocation(
-            1000 * 1e18, investorVestingConfig, claimProofInvestor2
-        );
-    }
-
-    /**
-     * @notice Tests that claiming tokens when sale is canceled reverts
-     * @dev Expects LegionSale__SaleIsCanceled revert after projectAdmin cancels the sale
-     */
-    function test_claimTokenAllocation_revertsIfSaleIsCanceled() public {
-        // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareInvestorSignatures();
-        prepareInvestedCapitalFromAllInvestors();
-
-        bytes32[] memory claimProofInvestor2 = new bytes32[](2);
-        claimProofInvestor2[0] = bytes32(0xff3d33a8fd9d2fd370071d27191d742338d3c1bdf0ed9e7074156278e31f492d);
-        claimProofInvestor2[1] = bytes32(0xe5fecd7e290c6f3102d02b9d4a89172fe2ebf2c44ef3c3699f4f1025adfe63cc);
-
-        vm.prank(projectAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).cancel();
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
-
-        // Act
-        vm.prank(investor2);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).claimTokenAllocation(
-            1000 * 1e18, investorVestingConfig, claimProofInvestor2
-        );
-    }
-
-    /**
-     * @notice Tests that claiming tokens before sale results are published reverts
-     * @dev Expects LegionSale__SaleResultsNotPublished revert when results are not yet published
-     */
-    function test_claimTokenAllocation_revertsIfSaleResultsNotPublished() public {
-        // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareInvestorSignatures();
-        prepareInvestedCapitalFromAllInvestors();
-
-        bytes32[] memory claimProofInvestor2 = new bytes32[](2);
-        claimProofInvestor2[0] = bytes32(0x2054afa66e2c4ccd7ade9889c78d8cf4a46f716980dafb935d11ce1e564fa39c);
-        claimProofInvestor2[1] = bytes32(0xa2144e298b31c1e3aa896eab357fd937fb7a574cc7237959b432e96a9423492c);
-        vm.warp(refundEndTime() + 1);
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleResultsNotPublished.selector));
-
-        // Act
-        vm.prank(investor2);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).claimTokenAllocation(
-            1000 * 1e18, investorVestingConfig, claimProofInvestor2
-        );
-    }
-
-    /**
-     * @notice Tests that claiming more tokens than allocated reverts
-     * @dev Expects LegionSale__NotInClaimWhitelist revert when investor2 tries to claim 2000 LFG instead of 1000 LFG
-     */
-    function test_claimTokenAllocation_revertsIfTokensAreMoreThanAllocatedAmount() public {
-        // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareInvestorSignatures();
-        prepareInvestedCapitalFromAllInvestors();
-
-        bytes32[] memory claimProofInvestor2 = new bytes32[](2);
-        claimProofInvestor2[0] = bytes32(0x2054afa66e2c4ccd7ade9889c78d8cf4a46f716980dafb935d11ce1e564fa39c);
-        claimProofInvestor2[1] = bytes32(0xa2144e298b31c1e3aa896eab357fd937fb7a574cc7237959b432e96a9423492c);
-
-        vm.warp(refundEndTime() + 1);
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY, FIXED_SALT
-        );
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NotInClaimWhitelist.selector, investor2));
-
-        // Act
-        vm.prank(investor2);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).claimTokenAllocation(
-            2000 * 1e18, investorVestingConfig, claimProofInvestor2
-        );
-    }
-
-    /**
-     * @notice Tests that claiming tokens twice reverts
-     * @dev Expects LegionSale__AlreadySettled revert after investor2 claims allocation once
-     */
-    function test_claimTokenAllocation_revertsIfTokensAlreadyDistributed() public {
-        // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareMintAndApproveProjectTokens();
-        prepareInvestorSignatures();
-        prepareInvestedCapitalFromAllInvestors();
-
-        bytes32[] memory claimProofInvestor2 = new bytes32[](2);
-        claimProofInvestor2[0] = bytes32(0xff3d33a8fd9d2fd370071d27191d742338d3c1bdf0ed9e7074156278e31f492d);
-        claimProofInvestor2[1] = bytes32(0xe5fecd7e290c6f3102d02b9d4a89172fe2ebf2c44ef3c3699f4f1025adfe63cc);
-
-        vm.warp(refundEndTime() + 1);
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY, FIXED_SALT
-        );
-        vm.prank(projectAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
-
-        vm.prank(investor2);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).claimTokenAllocation(
-            1000 * 1e18, investorVestingConfig, claimProofInvestor2
-        );
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__AlreadySettled.selector, investor2));
-
-        // Act
-        vm.prank(investor2);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).claimTokenAllocation(
-            1000 * 1e18, investorVestingConfig, claimProofInvestor2
-        );
-    }
-
-    /*//////////////////////////////////////////////////////////////////////////
-                        RELEASE VESTED TOKENS TESTS
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /**
-     * @notice Tests successful release of vested tokens from investor vesting contract
-     * @dev Verifies investor2 receives vested tokens (approx. 134.72 LFG) after cliff period
-     */
-    function test_releaseVestedTokens_successfullyReleasesVestedTokensToInvestor() public {
-        // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareMintAndApproveProjectTokens();
-        prepareInvestorSignatures();
-        prepareInvestedCapitalFromAllInvestors();
-
-        bytes32[] memory claimProofInvestor2 = new bytes32[](2);
-        claimProofInvestor2[0] = bytes32(0xff3d33a8fd9d2fd370071d27191d742338d3c1bdf0ed9e7074156278e31f492d);
-        claimProofInvestor2[1] = bytes32(0xe5fecd7e290c6f3102d02b9d4a89172fe2ebf2c44ef3c3699f4f1025adfe63cc);
-
-        vm.warp(refundEndTime() + 1); // After refund period (2 weeks + 1 second)
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY, FIXED_SALT
-        );
-
-        vm.prank(projectAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
-
-        vm.prank(investor2);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).claimTokenAllocation(
-            1000 * 1e18, investorVestingConfig, claimProofInvestor2
-        );
-
-        // Act
-        vm.prank(investor2);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).releaseVestedTokens();
-
-        // Expect
-        assertApproxEqAbs(
-            MockERC20(askToken).balanceOf(investor2),
-            134_726_084_474_885_844_748,
-            1e18,
-            "Investor2 should have approximately 134.72 LFG after release"
-        );
-    }
-
-    /**
-     * @notice Tests that releasing vested tokens without a vesting contract reverts
-     * @dev Expects LegionSale__ZeroAddressProvided revert when investor2 has no vesting deployed
-     */
-    function test_releaseVestedTokens_revertsIfInvestorHasNoVesting() public {
-        // Arrange
-        prepareCreateLegionSealedBidAuction();
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
-
-        // Act
-        vm.prank(investor2);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).releaseVestedTokens();
-    }
-
-    /**
-     * @notice Test case: Attempt to release tokens without a deployed vesting contract
-     * @dev Expects LegionSale__ZeroAddressProvided revert when investor has no vesting contract deployed
-     */
-    function test_releaseVestedTokens_revertsIfCalledBeforeVestingIsDeployed() public {
-        // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareMintAndApproveProjectTokens();
-        prepareInvestorSignatures();
-        prepareInvestedCapitalFromAllInvestors();
-
-        vm.warp(refundEndTime() + 1);
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY, FIXED_SALT
-        );
-
-        vm.prank(projectAdmin);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).supplyTokens(4000 * 1e18, 100 * 1e18, 40 * 1e18);
-
-        vm.warp(refundEndTime() + 1 hours + 1);
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__ZeroAddressProvided.selector));
-
-        // Act
-        vm.prank(investor1);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).releaseVestedTokens();
-    }
-
-    /*//////////////////////////////////////////////////////////////////////////
                         DECRYPT SEALED BID TESTS
     //////////////////////////////////////////////////////////////////////////*/
 
@@ -2935,12 +2205,10 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.warp(refundEndTime() + 1); // After refund period (2 weeks + 1 second)
 
         vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializeReveal();
 
         vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY, FIXED_SALT
-        );
+        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).reveal(PRIVATE_KEY, FIXED_SALT);
 
         // Act
         uint256 decryptedBidInvestor1 = ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).decryptSealedBid(
@@ -2997,9 +2265,7 @@ contract LegionSealedBidAuctionSaleTest is Test {
 
         // Expect
         vm.expectEmit();
-        emit ILegionAbstractSale.LegionAddressesSynced(
-            legionBouncer, vm.addr(legionSignerPK), address(1), address(legionVestingFactory), legionVestingController
-        );
+        emit ILegionAbstractSale.LegionAddressesSynced(legionBouncer, vm.addr(legionSignerPK), address(1));
 
         // Act
         vm.prank(legionBouncer);
@@ -3236,42 +2502,6 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.expectRevert(
             abi.encodeWithSelector(Errors.LegionSale__RefundPeriodIsNotOver.selector, block.timestamp, refundEndTime())
         );
-
-        // Act
-        vm.prank(legionBouncer);
-        LegionSealedBidAuctionSale(legionSealedBidAuctionInstance).transferInvestorPosition(investor1, investor2, 1);
-    }
-
-    /**
-     * @notice Test case: Attempt to transfer investor position if sale results are published
-     * @dev Expects LegionSale__SaleResultsAlreadyPublished revert when trying to transfer position after sale results
-     * are published
-     */
-    function test_transferInvestorPosition_revertsIfSaleResultsArePublished() public {
-        // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareMintAndApproveProjectTokens();
-        prepareInvestorSignatures();
-
-        vm.prank(investor1);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).invest(
-            1000 * 1e6, (block.timestamp + 100), sealedBidDataInvestor1, signatureInv1
-        );
-
-        vm.warp(refundEndTime() + 1);
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY, FIXED_SALT
-        );
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleResultsAlreadyPublished.selector));
 
         // Act
         vm.prank(legionBouncer);
@@ -3571,45 +2801,6 @@ contract LegionSealedBidAuctionSaleTest is Test {
         vm.expectRevert(
             abi.encodeWithSelector(Errors.LegionSale__RefundPeriodIsNotOver.selector, block.timestamp, refundEndTime())
         );
-
-        // Act
-        vm.prank(investor1);
-        LegionSealedBidAuctionSale(legionSealedBidAuctionInstance).transferInvestorPositionWithAuthorization(
-            investor1, investor2, 1, signatureInv1Transfer
-        );
-    }
-
-    /**
-     * @notice Test case: Attempt to transfer investor position with signature if sale results are published
-     * @dev Expects LegionSale__SaleResultsAlreadyPublished revert when trying to transfer position after sale results
-     * are published
-     */
-    function test_transferInvestorPositionWithSignature_revertsIfSaleResultsArePublished() public {
-        // Arrange
-        prepareSealedBidData();
-        prepareCreateLegionSealedBidAuction();
-        prepareMintAndApproveInvestorTokens();
-        prepareMintAndApproveProjectTokens();
-        prepareInvestorSignatures();
-        prepareTransferSignatures();
-
-        vm.prank(investor1);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).invest(
-            1000 * 1e6, (block.timestamp + 100), sealedBidDataInvestor1, signatureInv1
-        );
-
-        vm.warp(refundEndTime() + 1);
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).initializePublishSaleResults();
-
-        vm.prank(legionBouncer);
-        ILegionSealedBidAuctionSale(legionSealedBidAuctionInstance).publishSaleResults(
-            claimTokensMerkleRoot, 4000 * 1e18, 4000 * 1e6, PRIVATE_KEY, FIXED_SALT
-        );
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleResultsAlreadyPublished.selector));
 
         // Act
         vm.prank(investor1);

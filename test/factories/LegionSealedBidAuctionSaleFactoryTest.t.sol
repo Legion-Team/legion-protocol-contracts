@@ -173,15 +173,12 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
     function prepareCreateLegionSealedBidAuction() public {
         setSealedBidAuctionSaleParams(
             ILegionAbstractSale.LegionSaleInitializationParams({
-                salePeriodSeconds: 1 hours, // 3600 seconds
-                refundPeriodSeconds: 2 weeks, // 1,209,600 seconds
-                legionFeeOnCapitalRaisedBps: 250, // 2.5%
-                legionFeeOnTokensSoldBps: 250, // 2.5%
-                referrerFeeOnCapitalRaisedBps: 100, // 1%
-                referrerFeeOnTokensSoldBps: 100, // 1%
-                minimumInvestAmount: 1e6, // 1 bid token (6 decimals adjusted in contract)
+                salePeriodSeconds: 1 hours,
+                refundPeriodSeconds: 2 weeks,
+                legionFeeOnCapitalRaisedBps: 250,
+                referrerFeeOnCapitalRaisedBps: 100,
+                minimumInvestAmount: 1e6,
                 bidToken: address(bidToken),
-                askToken: address(askToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: referrerFeeReceiver,
@@ -249,13 +246,10 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
 
         ILegionSealedBidAuctionSale.SealedBidAuctionSaleConfiguration memory _sealedBidAuctionSaleConfig =
             LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).sealedBidAuctionSaleConfiguration();
-        ILegionVestingManager.LegionVestingConfig memory _vestingConfig =
-            LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).vestingConfiguration();
 
         // Expect
         assertEq(_sealedBidAuctionSaleConfig.publicKey.x, PUBLIC_KEY.x); // Check x-coordinate of public key
         assertEq(_sealedBidAuctionSaleConfig.publicKey.y, PUBLIC_KEY.y); // Check y-coordinate of public key
-        assertEq(_vestingConfig.vestingFactory, address(legionVestingFactory)); // Check vesting factory address
 
         assertEq(LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).name(), "Legion LFG Sale");
         assertEq(LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).symbol(), "LLFGS");
@@ -291,12 +285,9 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
                 salePeriodSeconds: 1 hours,
                 refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 250,
-                legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
-                referrerFeeOnTokensSoldBps: 100,
                 minimumInvestAmount: 1e18,
                 bidToken: address(0),
-                askToken: address(0),
                 projectAdmin: address(0),
                 addressRegistry: address(0),
                 referrerFeeReceiver: address(0),
@@ -329,12 +320,9 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
                 salePeriodSeconds: 0,
                 refundPeriodSeconds: 0,
                 legionFeeOnCapitalRaisedBps: 0,
-                legionFeeOnTokensSoldBps: 0,
                 referrerFeeOnCapitalRaisedBps: 0,
-                referrerFeeOnTokensSoldBps: 0,
                 minimumInvestAmount: 0,
                 bidToken: address(bidToken),
-                askToken: address(askToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
                 referrerFeeReceiver: referrerFeeReceiver,
