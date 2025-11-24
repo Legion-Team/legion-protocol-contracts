@@ -26,10 +26,10 @@ import { ILegionAbstractSale } from "../interfaces/sales/ILegionAbstractSale.sol
 import { LegionAbstractSale } from "./LegionAbstractSale.sol";
 
 /**
- * @title Legion Pre-Liquid Open Application Sale
+ * @title Legion Pre-Liquid Sealed-Vesting Open Application Sale
  * @author Legion
  * @notice Executes pre-liquid sales of ERC20 tokens before Token Generation Event (TGE).
- * @dev Inherits from LegionAbstractSale and implements ILegionPreLiquidOpenApplicationSale for open application
+ * @dev Inherits from LegionAbstractSale and implements ILegionSealedVestingOpenApplicationSale for open application
  * pre-liquid sale management.
  */
 contract LegionSealedVestingOpenApplicationSale is LegionAbstractSale, ILegionSealedVestingOpenApplicationSale {
@@ -46,7 +46,6 @@ contract LegionSealedVestingOpenApplicationSale is LegionAbstractSale, ILegionSe
 
     /// @notice Restricts interaction to when the sale cancelation is locked.
     /// @dev Reverts if canceling is not locked.
-
     modifier whenCancelLocked() {
         // Verify that canceling is locked
         _verifyCancelLocked();
@@ -69,12 +68,11 @@ contract LegionSealedVestingOpenApplicationSale is LegionAbstractSale, ILegionSe
         external
         initializer
     {
-        // Verify if the sale initialization parameters are valid
-        _verifyValidParams(preLiquidSaleInitParams);
-
         // Initialize and set the sale common parameters
         _setLegionSaleConfig(saleInitParams);
 
+        // Verify if the sale initialization parameters are valid
+        _verifyValidParams(preLiquidSaleInitParams);
         // Set the sale start time
         s_saleConfig.startTime = uint64(block.timestamp);
 
@@ -133,6 +131,35 @@ contract LegionSealedVestingOpenApplicationSale is LegionAbstractSale, ILegionSe
 
         // Transfer the invested capital to the contract
         SafeTransferLib.safeTransferFrom(s_addressConfig.bidToken, msg.sender, address(this), amount);
+    }
+
+    /// @inheritdoc ILegionSealedVestingOpenApplicationSale
+    function updateSealedVestingOption(bytes calldata newSealedVestingOption)
+        external
+        whenNotPaused
+        whenSaleNotEnded
+        whenSaleNotCanceled
+    {
+        // Get the investor position ID
+        uint256 positionId = _getInvestorPositionId(msg.sender);
+
+        // Verify that the position exists
+        _verifyPositionExists(positionId);
+
+        // Verify that the investor has not refunded
+        _verifyHasNotRefunded(positionId);
+
+        // Verify that the investor has not claimed excess capital
+        _verifyHasNotClaimedExcess(positionId);
+
+        // Decode the sealed vesting data
+        (uint256 encryptedVestingOption, Point memory publicKey) = abi.decode(newSealedVestingOption, (uint256, Point));
+
+        // Verify that the provided public key is valid
+        _verifyValidPublicKey(publicKey);
+
+        // Emit VestingOptionEdited event
+        emit SealedVestingOptionUpdated(positionId, msg.sender, encryptedVestingOption);
     }
 
     /// @inheritdoc ILegionSealedVestingOpenApplicationSale

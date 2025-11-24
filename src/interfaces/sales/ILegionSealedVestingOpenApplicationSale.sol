@@ -69,6 +69,12 @@ interface ILegionSealedVestingOpenApplicationSale is ILegionAbstractSale {
     /// @notice Emitted when sealed bids are revealed by the Legion admin.
     event Revealed(uint256 sealedVestingOptionPrivateKey, uint256 fixedSalt);
 
+    /// @notice Emitted when an investor updates their sealed vesting option.
+    /// @param positionId The unique identifier for the investment position.
+    /// @param investor The address of the investor.
+    /// @param encryptedVestingOption The new encrypted vesting option from the investor.
+    event SealedVestingOptionUpdated(uint256 positionId, address investor, uint256 encryptedVestingOption);
+
     /// @notice Emitted when the sale is ended by Legion or project.
     event SaleEnded();
 
@@ -93,6 +99,10 @@ interface ILegionSealedVestingOpenApplicationSale is ILegionAbstractSale {
         bytes calldata signature
     )
         external;
+
+    /// @notice Allows an investor to update their sealed vesting option.
+    /// @param newSealedVestingOption The new encrypted vesting option from the investor
+    function updateSealedVestingOption(bytes calldata newSealedVestingOption) external;
 
     /// @notice Ends the sale and sets the refund period.
     function end() external;

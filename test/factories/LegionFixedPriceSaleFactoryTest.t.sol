@@ -58,9 +58,6 @@ contract LegionFixedPriceSaleFactoryTest is Test {
     /// @notice Mock token used as the bid token (e.g., USDC)
     MockERC20 public bidToken;
 
-    /// @notice Mock token used as the ask token (e.g., LFG)
-    MockERC20 public askToken;
-
     /// @notice Address of the deployed LegionFixedPriceSale instance
     address legionFixedPriceSaleInstance;
 
@@ -93,7 +90,6 @@ contract LegionFixedPriceSaleFactoryTest is Test {
         legionAddressRegistry = new LegionAddressRegistry(legionBouncer);
 
         bidToken = new MockERC20("USD Coin", "USDC", 6);
-        askToken = new MockERC20("LFG Coin", "LFG", 18);
 
         prepareLegionAddressRegistry();
     }

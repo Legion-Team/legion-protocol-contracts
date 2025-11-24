@@ -9,22 +9,23 @@ import { Constants } from "../../src/utils/Constants.sol";
 import { ECIES, Point } from "../../src/lib/ECIES.sol";
 import { Errors } from "../../src/utils/Errors.sol";
 
-import { ILegionPreLiquidOpenApplicationSale } from "../../src/interfaces/sales/ILegionPreLiquidOpenApplicationSale.sol";
+import { ILegionSealedVestingOpenApplicationSale } from
+    "../../src/interfaces/sales/ILegionSealedVestingOpenApplicationSale.sol";
 import { ILegionAbstractSale } from "../../src/interfaces/sales/ILegionAbstractSale.sol";
 
 import { LegionAddressRegistry } from "../../src/registries/LegionAddressRegistry.sol";
-import { LegionPreLiquidOpenApplicationSale } from "../../src/sales/LegionPreLiquidOpenApplicationSale.sol";
-import { LegionPreLiquidOpenApplicationSaleFactory } from
-    "../../src/factories/LegionPreLiquidOpenApplicationSaleFactory.sol";
+import { LegionSealedVestingOpenApplicationSale } from "../../src/sales/LegionSealedVestingOpenApplicationSale.sol";
+import { LegionSealedVestingOpenApplicationSaleFactory } from
+    "../../src/factories/LegionSealedVestingOpenApplicationSaleFactory.sol";
 import { LegionVestingFactory } from "../../src/factories/LegionVestingFactory.sol";
 
 /**
  * @title Legion Pre-Liquid Open Application Sale Factory Test
  * @author Legion
- * @notice Test suite for the LegionPreLiquidOpenApplicationSaleFactory contract
+ * @notice Test suite for the LegionSealedVestingOpenApplicationSaleFactory contract
  * @dev Inherits from Forge's Test contract to access testing utilities
  */
-contract LegionPreLiquidOpenApplicationSaleFactoryTest is Test {
+contract LegionSealedVestingOpenApplicationSaleFactoryTest is Test {
     /*//////////////////////////////////////////////////////////////////////////
                                    STRUCTS
     //////////////////////////////////////////////////////////////////////////*/
@@ -43,6 +44,8 @@ contract LegionPreLiquidOpenApplicationSaleFactoryTest is Test {
      */
     struct PreLiquidSaleTestConfig {
         ILegionAbstractSale.LegionSaleInitializationParams saleInitParams; // Sale initialization parameters
+        ILegionSealedVestingOpenApplicationSale.PreLiquidSaleInitializationParams
+            sealedVestingOpenApplicationSaleInitParams;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -63,9 +66,9 @@ contract LegionPreLiquidOpenApplicationSaleFactoryTest is Test {
 
     /**
      * @notice Factory contract for creating pre-liquid sale V2 instances
-     * @dev Deploys new instances of LegionPreLiquidOpenApplicationSale
+     * @dev Deploys new instances of LegionSealedVestingOpenApplicationSale
      */
-    LegionPreLiquidOpenApplicationSaleFactory public legionSaleFactory;
+    LegionSealedVestingOpenApplicationSaleFactory public legionSaleFactory;
 
     /**
      * @notice Factory contract for creating vesting instances
@@ -115,6 +118,25 @@ contract LegionPreLiquidOpenApplicationSaleFactoryTest is Test {
      */
     uint256 public legionSignerPK = 1234;
 
+    /**
+     * @notice Private key for encryption/decryption
+     * @dev Set to 69, used to generate PUBLIC_KEY
+     */
+    uint256 public PRIVATE_KEY = 69;
+
+    /**
+     * @notice Fixed salt value for bid encryption
+     */
+    uint256 public FIXED_SALT = 420;
+
+    /**
+     * @notice Public keys for encryption/decryption
+     * @dev PUBLIC_KEY is valid, INVALID_PUBLIC_KEY and INVALID_PUBLIC_KEY_1 are for testing invalid scenarios
+     */
+    Point public PUBLIC_KEY = ECIES.calcPubKey(Point(1, 2), PRIVATE_KEY);
+    Point public INVALID_PUBLIC_KEY = ECIES.calcPubKey(Point(1, 2), PRIVATE_KEY + 1);
+    Point public INVALID_PUBLIC_KEY_1 = Point(1, 1);
+
     /*//////////////////////////////////////////////////////////////////////////
                                   SETUP FUNCTION
     //////////////////////////////////////////////////////////////////////////*/
@@ -124,7 +146,7 @@ contract LegionPreLiquidOpenApplicationSaleFactoryTest is Test {
      * @dev Initializes factory, vesting factory, registry, and tokens
      */
     function setUp() public {
-        legionSaleFactory = new LegionPreLiquidOpenApplicationSaleFactory(legionBouncer);
+        legionSaleFactory = new LegionSealedVestingOpenApplicationSaleFactory(legionBouncer);
         legionVestingFactory = new LegionVestingFactory();
         legionAddressRegistry = new LegionAddressRegistry(legionBouncer);
         bidToken = new MockERC20("USD Coin", "USDC", 6);
@@ -140,12 +162,20 @@ contract LegionPreLiquidOpenApplicationSaleFactoryTest is Test {
      * @dev Updates the testConfig with provided initialization parameters
      * @param _saleInitParams Parameters for initializing a pre-liquid sale
      */
-    function setPreLiquidSaleParams(ILegionAbstractSale.LegionSaleInitializationParams memory _saleInitParams) public {
+    function setPreLiquidSaleParams(
+        ILegionAbstractSale.LegionSaleInitializationParams memory _saleInitParams,
+        ILegionSealedVestingOpenApplicationSale.PreLiquidSaleInitializationParams memory
+            _sealedVestingOpenApplicationSaleInitParams
+    )
+        public
+    {
         testConfig.preLiquidSaleTestConfig.saleInitParams = _saleInitParams;
+        testConfig.preLiquidSaleTestConfig.sealedVestingOpenApplicationSaleInitParams =
+            _sealedVestingOpenApplicationSaleInitParams;
     }
 
     /**
-     * @notice Creates and initializes a LegionPreLiquidOpenApplicationSale instance
+     * @notice Creates and initializes a LegionSealedVestingOpenApplicationSale instance
      * @dev Deploys a pre-liquid sale with default parameters via the factory
      */
     function prepareCreateLegionPreLiquidSale() public {
@@ -163,12 +193,15 @@ contract LegionPreLiquidOpenApplicationSaleFactoryTest is Test {
                 saleName: "Legion LFG Sale",
                 saleSymbol: "LLFGS",
                 saleBaseURI: "https://metadata.legion.cc/"
-            })
+            }),
+            ILegionSealedVestingOpenApplicationSale.PreLiquidSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
 
         vm.prank(legionBouncer);
-        legionPreLiquidSaleInstance =
-            legionSaleFactory.createPreLiquidOpenApplicationSale(testConfig.preLiquidSaleTestConfig.saleInitParams);
+        legionPreLiquidSaleInstance = legionSaleFactory.createSealedVestingOpenApplicationSale(
+            testConfig.preLiquidSaleTestConfig.saleInitParams,
+            testConfig.preLiquidSaleTestConfig.sealedVestingOpenApplicationSaleInitParams
+        );
     }
 
     /**
@@ -200,7 +233,7 @@ contract LegionPreLiquidOpenApplicationSaleFactoryTest is Test {
     }
 
     /**
-     * @notice Tests successful creation of a new LegionPreLiquidOpenApplicationSale instance by the owner
+     * @notice Tests successful creation of a new LegionSealedVestingOpenApplicationSale instance by the owner
      * @dev Verifies that the sale instance address is non-zero after creation
      */
     function test_createPreLiquidSale_successullyCreatesPreLiquidSale() public {
@@ -224,7 +257,10 @@ contract LegionPreLiquidOpenApplicationSaleFactoryTest is Test {
 
         // Act
         vm.prank(nonOwner);
-        legionSaleFactory.createPreLiquidOpenApplicationSale(testConfig.preLiquidSaleTestConfig.saleInitParams);
+        legionSaleFactory.createSealedVestingOpenApplicationSale(
+            testConfig.preLiquidSaleTestConfig.saleInitParams,
+            testConfig.preLiquidSaleTestConfig.sealedVestingOpenApplicationSaleInitParams
+        );
     }
 
     /**
@@ -237,7 +273,10 @@ contract LegionPreLiquidOpenApplicationSaleFactoryTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        legionSaleFactory.createPreLiquidOpenApplicationSale(testConfig.preLiquidSaleTestConfig.saleInitParams);
+        legionSaleFactory.createSealedVestingOpenApplicationSale(
+            testConfig.preLiquidSaleTestConfig.saleInitParams,
+            testConfig.preLiquidSaleTestConfig.sealedVestingOpenApplicationSaleInitParams
+        );
     }
 
     /**
@@ -260,7 +299,8 @@ contract LegionPreLiquidOpenApplicationSaleFactoryTest is Test {
                 saleName: "",
                 saleSymbol: "",
                 saleBaseURI: ""
-            })
+            }),
+            ILegionSealedVestingOpenApplicationSale.PreLiquidSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
 
         // Expect
@@ -268,25 +308,28 @@ contract LegionPreLiquidOpenApplicationSaleFactoryTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        legionSaleFactory.createPreLiquidOpenApplicationSale(testConfig.preLiquidSaleTestConfig.saleInitParams);
+        legionSaleFactory.createSealedVestingOpenApplicationSale(
+            testConfig.preLiquidSaleTestConfig.saleInitParams,
+            testConfig.preLiquidSaleTestConfig.sealedVestingOpenApplicationSaleInitParams
+        );
     }
 
     /**
-     * @notice Verifies that a LegionPreLiquidOpenApplicationSale instance initializes with correct configuration
+     * @notice Verifies that a LegionSealedVestingOpenApplicationSale instance initializes with correct configuration
      * @dev Checks refund period and sale status after creation
      */
     function test_createPreLiquidSale_successfullyCreatedWithCorrectConfiguration() public {
         // Arrange & Act
         prepareCreateLegionPreLiquidSale();
 
-        ILegionPreLiquidOpenApplicationSale.PreLiquidSaleConfiguration memory _preLiquidSaleConfig =
-            LegionPreLiquidOpenApplicationSale(payable(legionPreLiquidSaleInstance)).preLiquidSaleConfiguration();
+        ILegionSealedVestingOpenApplicationSale.PreLiquidSaleConfiguration memory _preLiquidSaleConfig =
+            LegionSealedVestingOpenApplicationSale(payable(legionPreLiquidSaleInstance)).preLiquidSaleConfiguration();
 
         // Expect
         assertEq(_preLiquidSaleConfig.refundPeriodSeconds, 2 weeks);
         assertEq(_preLiquidSaleConfig.hasEnded, false);
 
-        assertEq(LegionPreLiquidOpenApplicationSale(payable(legionPreLiquidSaleInstance)).name(), "Legion LFG Sale");
-        assertEq(LegionPreLiquidOpenApplicationSale(payable(legionPreLiquidSaleInstance)).symbol(), "LLFGS");
+        assertEq(LegionSealedVestingOpenApplicationSale(payable(legionPreLiquidSaleInstance)).name(), "Legion LFG Sale");
+        assertEq(LegionSealedVestingOpenApplicationSale(payable(legionPreLiquidSaleInstance)).symbol(), "LLFGS");
     }
 }

@@ -309,11 +309,16 @@ contract LegionTokenDistributorTest is Test {
         ILegionTokenDistributor.TokenDistributorConfig memory distributorConfig =
             LegionTokenDistributor(payable(legionTokenDistributorInstance)).distributorConfiguration();
 
+        ILegionVestingManager.LegionVestingConfig memory vestingConfig =
+            LegionTokenDistributor(payable(legionTokenDistributorInstance)).vestingConfiguration();
+
         // Expect
         assertEq(distributorConfig.legionFeeOnTokensSoldBps, 250);
         assertEq(distributorConfig.askToken, address(askToken));
         assertEq(distributorConfig.projectAdmin, projectAdmin);
         assertEq(distributorConfig.addressRegistry, address(legionAddressRegistry));
+
+        assertEq(vestingConfig.vestingFactory, address(legionVestingFactory));
     }
 
     /**

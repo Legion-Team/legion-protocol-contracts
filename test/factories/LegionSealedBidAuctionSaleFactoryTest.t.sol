@@ -82,12 +82,6 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
     MockERC20 public bidToken;
 
     /**
-     * @notice Mock token used as the sale token
-     * @dev Represents the token being sold (e.g., LFG, 18 decimals)
-     */
-    MockERC20 public askToken;
-
-    /**
      * @notice Address of the deployed sealed bid auction sale instance
      * @dev Points to the active sale contract being tested
      */
@@ -142,7 +136,6 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
         legionVestingFactory = new LegionVestingFactory();
         legionAddressRegistry = new LegionAddressRegistry(legionBouncer);
         bidToken = new MockERC20("USD Coin", "USDC", 6); // 6 decimals for USDC
-        askToken = new MockERC20("LFG Coin", "LFG", 18); // 18 decimals for LFG
         prepareLegionAddressRegistry();
     }
 
@@ -276,7 +269,7 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
 
     /**
      * @notice Tests that creating a sale with zero address configurations reverts
-     * @dev Expects a LegionSale__ZeroAddressProvided revert when key addresses (bidToken, askToken, etc.) are zero
+     * @dev Expects a LegionSale__ZeroAddressProvided revert when key addresses (bidToken, etc.) are zero
      */
     function test_createSealedBidAuctionSale_revertsWithZeroAddressProvided() public {
         // Arrange
