@@ -81,6 +81,7 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
         bytes calldata signature
     )
         external
+        payable
         whenNotPaused
         whenSaleNotEnded
         whenSaleNotCanceled
@@ -117,6 +118,9 @@ contract LegionSealedBidAuctionSale is LegionAbstractSale, ILegionSealedBidAucti
 
         // Emit CapitalInvested event
         emit CapitalInvested(amount, encryptedAmountOut, msg.sender, positionId);
+
+        // Collect Legion's operations fee
+        _handleOpsFee();
 
         // Transfer the invested capital to the contract
         SafeTransferLib.safeTransferFrom(s_addressConfig.bidToken, msg.sender, address(this), amount);

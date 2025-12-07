@@ -81,7 +81,14 @@ interface ILegionSealedBidAuctionSale is ILegionAbstractSale {
     /// @param deadline The deadline for the investment.
     /// @param sealedBid The encoded sealed bid data (encrypted amount out, salt, public key).
     /// @param signature The Legion signature for investor verification.
-    function invest(uint256 amount, uint256 deadline, bytes calldata sealedBid, bytes calldata signature) external;
+    function invest(
+        uint256 amount,
+        uint256 deadline,
+        bytes calldata sealedBid,
+        bytes calldata signature
+    )
+        external
+        payable;
 
     /// @notice Locks sale cancellation to initialize publishing of results.
     function initializeReveal() external;

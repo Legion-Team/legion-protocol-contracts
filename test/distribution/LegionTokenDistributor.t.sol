@@ -130,7 +130,7 @@ contract LegionTokenDistributorTest is Test {
     address referrerFeeReceiver = address(0x08);
 
     /// @notice Address representing the Legion fee receiver, set to 0x09
-    address legionFeeReceiver = address(0x09);
+    address legionFeeReceiver = makeAddr("legionFeeReceiver");
 
     /**
      * @notice Sets up the test environment by deploying necessary contracts and configurations
@@ -162,6 +162,7 @@ contract LegionTokenDistributorTest is Test {
             legionFeeOnTokensSoldBps: _tokenDistributorInitParams.legionFeeOnTokensSoldBps,
             referrerFeeOnTokensSoldBps: _tokenDistributorInitParams.referrerFeeOnTokensSoldBps,
             referrerFeeReceiver: _tokenDistributorInitParams.referrerFeeReceiver,
+            legionOpsFeeInWei: _tokenDistributorInitParams.legionOpsFeeInWei,
             askToken: _tokenDistributorInitParams.askToken,
             addressRegistry: _tokenDistributorInitParams.addressRegistry,
             projectAdmin: _tokenDistributorInitParams.projectAdmin
@@ -178,6 +179,7 @@ contract LegionTokenDistributorTest is Test {
                 totalAmountToDistribute: 20_000 * 1e18,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnTokensSoldBps: 100,
+                legionOpsFeeInWei: 0,
                 referrerFeeReceiver: referrerFeeReceiver,
                 askToken: address(askToken),
                 addressRegistry: address(legionAddressRegistry),
@@ -347,6 +349,7 @@ contract LegionTokenDistributorTest is Test {
                 totalAmountToDistribute: 1_000_000 * 1e18,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnTokensSoldBps: 100,
+                legionOpsFeeInWei: 0,
                 referrerFeeReceiver: referrerFeeReceiver,
                 askToken: address(askToken),
                 addressRegistry: address(legionAddressRegistry),
@@ -374,6 +377,7 @@ contract LegionTokenDistributorTest is Test {
                 totalAmountToDistribute: 1_000_000 * 1e18,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnTokensSoldBps: 100,
+                legionOpsFeeInWei: 0,
                 referrerFeeReceiver: referrerFeeReceiver,
                 askToken: address(askToken),
                 addressRegistry: address(legionAddressRegistry),
@@ -399,6 +403,7 @@ contract LegionTokenDistributorTest is Test {
                 totalAmountToDistribute: 1_000_000 * 1e18,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnTokensSoldBps: 100,
+                legionOpsFeeInWei: 0,
                 referrerFeeReceiver: referrerFeeReceiver,
                 askToken: address(0),
                 addressRegistry: address(0),
@@ -425,6 +430,7 @@ contract LegionTokenDistributorTest is Test {
                 totalAmountToDistribute: 0,
                 legionFeeOnTokensSoldBps: 250,
                 referrerFeeOnTokensSoldBps: 100,
+                legionOpsFeeInWei: 0,
                 referrerFeeReceiver: referrerFeeReceiver,
                 askToken: address(askToken),
                 addressRegistry: address(legionAddressRegistry),
@@ -516,6 +522,44 @@ contract LegionTokenDistributorTest is Test {
         // Act
         vm.prank(nonLegionAdmin);
         ILegionTokenDistributor(legionTokenDistributorInstance).unpause();
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                        UPDATE LEGION OPS FEE TESTS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /**
+     * @notice Tests successful update of Legion ops fee by Legion admin
+     * @dev Expects LegionOpsFeeUpdated event emission with correct parameters
+     */
+    function test_updateLegionOpsFeeInWei_successfullyUpdateLegionOpsFee() public {
+        // Arrange
+        prepareCreateLegionTokenDistributor();
+
+        // Expect
+        vm.expectEmit();
+        emit ILegionTokenDistributor.LegionOpsFeeUpdated(0, 34_500_000_000_000);
+
+        // Act
+        vm.prank(legionBouncer);
+        ILegionTokenDistributor(legionTokenDistributorInstance).updateLegionOpsFee(34_500_000_000_000);
+    }
+
+    /**
+     * @notice Tests that updating Legion ops fee by a non-Legion admin reverts
+     * @dev Expects LegionSale__NotCalledByLegion revert when called by nonLegionAdmin
+     */
+    function testFuzz_updateLegionOpsFeeInWei_revertsIfNotCalledByLegionAdmin(address nonLegionAdmin) public {
+        // Arrange
+        vm.assume(nonLegionAdmin != legionBouncer);
+        prepareCreateLegionTokenDistributor();
+
+        // Expect
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NotCalledByLegion.selector));
+
+        // Act
+        vm.prank(nonLegionAdmin);
+        ILegionTokenDistributor(legionTokenDistributorInstance).updateLegionOpsFee(34_500_000_000_000);
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -786,6 +830,67 @@ contract LegionTokenDistributorTest is Test {
         assertEq(vestingStatus.released, 0);
         assertEq(vestingStatus.releasable, 0);
         assertEq(vestingStatus.vestedAmount, 0);
+    }
+
+    /**
+     * @notice Test case: Successfully claim allocated tokens by investor with ops fee
+     * @dev Verifies token allocation and vesting setup after TGE details, token supply, and ops fee update
+     */
+    function test_claimTokenAllocation_successfullyClaimsWithOpsFee() public {
+        // Arrange
+        prepareCreateLegionTokenDistributor();
+        prepareMintAndApproveTokens();
+        prepareInvestorSignatures();
+
+        vm.warp(block.timestamp + 1);
+
+        vm.deal(investor2, 1 ether);
+
+        vm.prank(legionBouncer);
+        ILegionTokenDistributor(legionTokenDistributorInstance).updateLegionOpsFee(34_500_000_000_000);
+
+        vm.prank(projectAdmin);
+        ILegionTokenDistributor(legionTokenDistributorInstance).supplyTokens(20_000 * 1e18, 500 * 1e18, 200 * 1e18);
+
+        // Act
+        vm.prank(investor2);
+        ILegionTokenDistributor(legionTokenDistributorInstance).claimTokenAllocation{ value: 34_500_000_000_000 }(
+            uint256(5000 * 1e18), investorLinearEpochVestingConfig, signatureInv2Claim, vestingSignatureInv2Epoch
+        );
+    }
+
+    /**
+     * @notice Test case: Attempt to claim tokens with incorrect ops fee amount
+     * @dev Expects LegionSale__InvalidOpsFee revert when provided ops fee is incorrect
+     */
+    function test_claimTokenAllocation_revertsWithWrongOpsFeeAmount() public {
+        // Arrange
+        prepareCreateLegionTokenDistributor();
+        prepareMintAndApproveTokens();
+        prepareInvestorSignatures();
+
+        vm.warp(block.timestamp + 1);
+
+        vm.deal(investor2, 1 ether);
+
+        vm.prank(legionBouncer);
+        ILegionTokenDistributor(legionTokenDistributorInstance).updateLegionOpsFee(34_500_000_000_000);
+
+        vm.prank(projectAdmin);
+        ILegionTokenDistributor(legionTokenDistributorInstance).supplyTokens(20_000 * 1e18, 500 * 1e18, 200 * 1e18);
+
+        // Expect
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Errors.LegionSale__InvalidOpsFee.selector, 34_500_000_000_000 + 1, 34_500_000_000_000
+            )
+        );
+
+        // Act
+        vm.prank(investor2);
+        ILegionTokenDistributor(legionTokenDistributorInstance).claimTokenAllocation{ value: 34_500_000_000_001 }(
+            uint256(5000 * 1e18), investorLinearEpochVestingConfig, signatureInv2Claim, vestingSignatureInv2Epoch
+        );
     }
 
     /**

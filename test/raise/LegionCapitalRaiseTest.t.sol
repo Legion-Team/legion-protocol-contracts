@@ -116,7 +116,7 @@ contract LegionCapitalRaiseTest is Test {
     address referrerFeeReceiver = address(0x08);
 
     /// @notice Address representing the Legion fee receiver, set to 0x09
-    address legionFeeReceiver = address(0x09);
+    address legionFeeReceiver = makeAddr("legionFeeReceiver");
 
     /**
      * @notice Sets up the test environment by deploying necessary contracts and configurations
@@ -142,6 +142,7 @@ contract LegionCapitalRaiseTest is Test {
             refundPeriodSeconds: _capitalRaiseInitParams.refundPeriodSeconds,
             legionFeeOnCapitalRaisedBps: _capitalRaiseInitParams.legionFeeOnCapitalRaisedBps,
             referrerFeeOnCapitalRaisedBps: _capitalRaiseInitParams.referrerFeeOnCapitalRaisedBps,
+            legionOpsFeeInWei: _capitalRaiseInitParams.legionOpsFeeInWei,
             bidToken: _capitalRaiseInitParams.bidToken,
             projectAdmin: _capitalRaiseInitParams.projectAdmin,
             addressRegistry: _capitalRaiseInitParams.addressRegistry,
@@ -162,6 +163,7 @@ contract LegionCapitalRaiseTest is Test {
                 refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
+                legionOpsFeeInWei: 0,
                 bidToken: address(bidToken),
                 projectAdmin: projectAdmin,
                 addressRegistry: address(legionAddressRegistry),
@@ -182,7 +184,9 @@ contract LegionCapitalRaiseTest is Test {
     function prepareMintAndApproveTokens() public {
         vm.startPrank(legionBouncer);
         bidToken.mint(investor1, 100_000 * 1e6);
+        vm.deal(investor1, 1 ether);
         bidToken.mint(investor2, 100_000 * 1e6);
+        vm.deal(investor2, 1 ether);
         vm.stopPrank();
 
         vm.prank(investor1);
@@ -387,6 +391,7 @@ contract LegionCapitalRaiseTest is Test {
                 refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
+                legionOpsFeeInWei: 0,
                 bidToken: address(bidToken),
                 projectAdmin: projectAdmin,
                 addressRegistry: address(legionAddressRegistry),
@@ -417,6 +422,7 @@ contract LegionCapitalRaiseTest is Test {
                 refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
+                legionOpsFeeInWei: 0,
                 bidToken: address(bidToken),
                 projectAdmin: projectAdmin,
                 addressRegistry: address(legionAddressRegistry),
@@ -445,6 +451,7 @@ contract LegionCapitalRaiseTest is Test {
                 refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
+                legionOpsFeeInWei: 0,
                 bidToken: address(0),
                 projectAdmin: address(0),
                 addressRegistry: address(0),
@@ -474,6 +481,7 @@ contract LegionCapitalRaiseTest is Test {
                 refundPeriodSeconds: 0,
                 legionFeeOnCapitalRaisedBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
+                legionOpsFeeInWei: 0,
                 bidToken: address(bidToken),
                 projectAdmin: projectAdmin,
                 addressRegistry: address(legionAddressRegistry),
@@ -503,6 +511,7 @@ contract LegionCapitalRaiseTest is Test {
                 refundPeriodSeconds: 2 weeks + 1,
                 legionFeeOnCapitalRaisedBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
+                legionOpsFeeInWei: 0,
                 bidToken: address(bidToken),
                 projectAdmin: projectAdmin,
                 addressRegistry: address(legionAddressRegistry),
@@ -519,6 +528,44 @@ contract LegionCapitalRaiseTest is Test {
         // Act
         vm.prank(legionBouncer);
         legionCapitalRaiseFactory.createCapitalRaise(capitalRaiseInitParams);
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                        UPDATE LEGION OPS FEE TESTS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /**
+     * @notice Tests successful update of Legion ops fee by Legion admin
+     * @dev Expects LegionOpsFeeUpdated event emission with correct parameters
+     */
+    function test_updateLegionOpsFeeInWei_successfullyUpdateLegionOpsFee() public {
+        // Arrange
+        prepareCreateLegionCapitalRaise();
+
+        // Expect
+        vm.expectEmit();
+        emit ILegionCapitalRaise.LegionOpsFeeUpdated(0, 34_500_000_000_000);
+
+        // Act
+        vm.prank(legionBouncer);
+        ILegionCapitalRaise(legionCapitalRaiseInstance).updateLegionOpsFee(34_500_000_000_000);
+    }
+
+    /**
+     * @notice Tests that updating Legion ops fee by a non-Legion admin reverts
+     * @dev Expects LegionSale__NotCalledByLegion revert when called by nonLegionAdmin
+     */
+    function testFuzz_updateLegionOpsFeeInWei_revertsIfNotCalledByLegionAdmin(address nonLegionAdmin) public {
+        // Arrange
+        vm.assume(nonLegionAdmin != legionBouncer);
+        prepareCreateLegionCapitalRaise();
+
+        // Expect
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NotCalledByLegion.selector));
+
+        // Act
+        vm.prank(nonLegionAdmin);
+        ILegionCapitalRaise(legionCapitalRaiseInstance).updateLegionOpsFee(34_500_000_000_000);
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -629,6 +676,61 @@ contract LegionCapitalRaiseTest is Test {
             ILegionCapitalRaise(payable(legionCapitalRaiseInstance)).investorPosition(investor1);
 
         assertEq(position.investedCapital, 10_000 * 1e6);
+    }
+
+    /**
+     * @notice Tests successful investment with a non-zero Legion ops fee
+     * @dev Expects CapitalInvested event emission with correct parameters
+     */
+    function test_invest_successfullyInvestsWithOpsFee() public {
+        // Arrange
+        prepareCreateLegionCapitalRaise();
+        prepareMintAndApproveTokens();
+        prepareInvestorSignatures();
+
+        vm.warp(1);
+
+        vm.prank(legionBouncer);
+        ILegionCapitalRaise(payable(legionCapitalRaiseInstance)).updateLegionOpsFee(34_500_000_000_000);
+
+        // Expect
+        vm.expectEmit();
+        emit ILegionCapitalRaise.CapitalInvested(10_000 * 1e6, investor1, 1);
+
+        // Act
+        vm.prank(investor1);
+        ILegionCapitalRaise(payable(legionCapitalRaiseInstance)).invest{ value: 34_500_000_000_000 }(
+            10_000 * 1e6, 10_000 * 1e6, 5_000_000_000_000_000, signatureInv1
+        );
+    }
+
+    /**
+     * @notice Tests that investing with an incorrect Legion ops fee amount reverts
+     * @dev Expects LegionSale__InvalidOpsFee revert when sent value does not match required fee
+     */
+    function test_invest_revertsIfInvalidOpsFee() public {
+        // Arrange
+        prepareCreateLegionCapitalRaise();
+        prepareMintAndApproveTokens();
+        prepareInvestorSignatures();
+
+        vm.warp(1);
+
+        vm.prank(legionBouncer);
+        ILegionCapitalRaise(payable(legionCapitalRaiseInstance)).updateLegionOpsFee(34_500_000_000_000);
+
+        // Expect
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Errors.LegionSale__InvalidOpsFee.selector, 34_500_000_000_000 - 1, 34_500_000_000_000
+            )
+        );
+
+        // Act
+        vm.prank(investor1);
+        ILegionCapitalRaise(payable(legionCapitalRaiseInstance)).invest{ value: 34_500_000_000_000 - 1 }(
+            10_000 * 1e6, 10_000 * 1e6, 5_000_000_000_000_000, signatureInv1
+        );
     }
 
     /**
@@ -1885,7 +1987,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        LegionCapitalRaise(legionCapitalRaiseInstance).transferInvestorPosition(investor1, investor2, 1);
+        LegionCapitalRaise(payable(legionCapitalRaiseInstance)).transferInvestorPosition(investor1, investor2, 1);
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
@@ -1936,7 +2038,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        LegionCapitalRaise(legionCapitalRaiseInstance).transferInvestorPosition(investor1, investor2, 1);
+        LegionCapitalRaise(payable(legionCapitalRaiseInstance)).transferInvestorPosition(investor1, investor2, 1);
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
@@ -2004,7 +2106,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        LegionCapitalRaise(legionCapitalRaiseInstance).transferInvestorPosition(investor1, investor2, 1);
+        LegionCapitalRaise(payable(legionCapitalRaiseInstance)).transferInvestorPosition(investor1, investor2, 1);
     }
 
     /**
@@ -2029,7 +2131,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(investor1);
-        LegionCapitalRaise(legionCapitalRaiseInstance).transferInvestorPosition(investor1, investor2, 1);
+        LegionCapitalRaise(payable(legionCapitalRaiseInstance)).transferInvestorPosition(investor1, investor2, 1);
     }
 
     /**
@@ -2057,7 +2159,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        LegionCapitalRaise(legionCapitalRaiseInstance).transferInvestorPosition(investor1, investor2, 1);
+        LegionCapitalRaise(payable(legionCapitalRaiseInstance)).transferInvestorPosition(investor1, investor2, 1);
     }
 
     /**
@@ -2089,7 +2191,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        LegionCapitalRaise(legionCapitalRaiseInstance).transferInvestorPosition(investor1, investor2, 1);
+        LegionCapitalRaise(payable(legionCapitalRaiseInstance)).transferInvestorPosition(investor1, investor2, 1);
     }
 
     /**
@@ -2122,7 +2224,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        LegionCapitalRaise(legionCapitalRaiseInstance).transferInvestorPosition(investor1, investor2, 1);
+        LegionCapitalRaise(payable(legionCapitalRaiseInstance)).transferInvestorPosition(investor1, investor2, 1);
     }
 
     /**
@@ -2155,7 +2257,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        LegionCapitalRaise(legionCapitalRaiseInstance).transferInvestorPosition(investor1, investor2, 1);
+        LegionCapitalRaise(payable(legionCapitalRaiseInstance)).transferInvestorPosition(investor1, investor2, 1);
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -2192,7 +2294,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(investor1);
-        LegionCapitalRaise(legionCapitalRaiseInstance).transferInvestorPositionWithAuthorization(
+        LegionCapitalRaise(payable(legionCapitalRaiseInstance)).transferInvestorPositionWithAuthorization(
             investor1, investor2, 1, signatureInv1Transfer
         );
 
@@ -2251,7 +2353,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(investor1);
-        LegionCapitalRaise(legionCapitalRaiseInstance).transferInvestorPositionWithAuthorization(
+        LegionCapitalRaise(payable(legionCapitalRaiseInstance)).transferInvestorPositionWithAuthorization(
             investor1, investor2, 1, signatureInv1Transfer
         );
 
@@ -2322,7 +2424,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(investor1);
-        LegionCapitalRaise(legionCapitalRaiseInstance).transferInvestorPositionWithAuthorization(
+        LegionCapitalRaise(payable(legionCapitalRaiseInstance)).transferInvestorPositionWithAuthorization(
             investor1, investor2, 1, signatureInv1Transfer
         );
     }
@@ -2355,7 +2457,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(investor2);
-        LegionCapitalRaise(legionCapitalRaiseInstance).transferInvestorPositionWithAuthorization(
+        LegionCapitalRaise(payable(legionCapitalRaiseInstance)).transferInvestorPositionWithAuthorization(
             investor1, investor2, 1, signatureInv1Transfer
         );
     }
@@ -2386,7 +2488,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(investor1);
-        LegionCapitalRaise(legionCapitalRaiseInstance).transferInvestorPositionWithAuthorization(
+        LegionCapitalRaise(payable(legionCapitalRaiseInstance)).transferInvestorPositionWithAuthorization(
             investor1, investor2, 1, signatureInv1Transfer
         );
     }
@@ -2421,7 +2523,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(investor1);
-        LegionCapitalRaise(legionCapitalRaiseInstance).transferInvestorPositionWithAuthorization(
+        LegionCapitalRaise(payable(legionCapitalRaiseInstance)).transferInvestorPositionWithAuthorization(
             investor1, investor2, 1, signatureInv1Transfer
         );
     }
@@ -2457,7 +2559,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(investor1);
-        LegionCapitalRaise(legionCapitalRaiseInstance).transferInvestorPositionWithAuthorization(
+        LegionCapitalRaise(payable(legionCapitalRaiseInstance)).transferInvestorPositionWithAuthorization(
             investor1, investor2, 1, signatureInv1Transfer
         );
     }
@@ -2493,7 +2595,7 @@ contract LegionCapitalRaiseTest is Test {
 
         // Act
         vm.prank(investor1);
-        LegionCapitalRaise(legionCapitalRaiseInstance).transferInvestorPositionWithAuthorization(
+        LegionCapitalRaise(payable(legionCapitalRaiseInstance)).transferInvestorPositionWithAuthorization(
             investor1, investor2, 1, signatureInv1Transfer
         );
     }

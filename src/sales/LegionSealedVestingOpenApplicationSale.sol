@@ -91,6 +91,7 @@ contract LegionSealedVestingOpenApplicationSale is LegionAbstractSale, ILegionSe
         bytes calldata signature
     )
         external
+        payable
         whenNotPaused
         whenSaleNotEnded
         whenSaleNotCanceled
@@ -128,6 +129,9 @@ contract LegionSealedVestingOpenApplicationSale is LegionAbstractSale, ILegionSe
 
         // Emit CapitalInvested event
         emit CapitalInvested(amount, encryptedVestingOption, msg.sender, positionId);
+
+        // Collect Legion's operations fee
+        _handleOpsFee();
 
         // Transfer the invested capital to the contract
         SafeTransferLib.safeTransferFrom(s_addressConfig.bidToken, msg.sender, address(this), amount);

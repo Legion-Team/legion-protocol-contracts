@@ -122,6 +122,9 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
         _;
     }
 
+    /// Standard receive function to accept ETH payments for ops fees
+    receive() external payable { }
+
     /// @notice Constructor for the LegionCapitalRaise contract.
     /// @dev Prevents the implementation contract from being initialized directly.
     constructor() {
@@ -142,6 +145,7 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
         bytes calldata investSignature
     )
         external
+        payable
         whenNotPaused
         whenRaiseNotCanceled
         whenRaiseNotEnded
@@ -181,6 +185,9 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
 
         // Emit CapitalInvested
         emit CapitalInvested(amount, msg.sender, positionId);
+
+        // Handle Legion's operations fee
+        _handleOpsFee();
 
         // Transfer the invested capital to the contract
         SafeTransferLib.safeTransferFrom(s_capitalRaiseConfig.bidToken, msg.sender, address(this), amount);
@@ -334,6 +341,7 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
         bytes calldata claimExcessSignature
     )
         external
+        payable
         whenNotPaused
         whenRaiseNotCanceled
     {
@@ -372,6 +380,9 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
 
         // Emit ExcessCapitalWithdrawn
         emit ExcessCapitalWithdrawn(amount, msg.sender, positionId);
+
+        // Handle Legion's operations fee
+        _handleOpsFee();
 
         // Transfer the excess capital to the investor
         if (amount > 0) SafeTransferLib.safeTransfer(s_capitalRaiseConfig.bidToken, msg.sender, amount);
@@ -474,6 +485,19 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
         _unpause();
     }
 
+    /// @notice Updates Legion's operations fee.
+    /// @param newFee The new fee amount in wei.
+    function updateLegionOpsFee(uint256 newFee) external virtual onlyLegion {
+        // Cache the old fee
+        uint256 oldFee = s_capitalRaiseConfig.legionOpsFeeInWei;
+
+        // Update the operations fee
+        s_capitalRaiseConfig.legionOpsFeeInWei = newFee;
+
+        // Emit LegionOpsFeeUpdated
+        emit LegionOpsFeeUpdated(oldFee, newFee);
+    }
+
     /// @inheritdoc ILegionCapitalRaise
     function saleConfiguration() external view returns (CapitalRaiseConfig memory) {
         return s_capitalRaiseConfig;
@@ -495,6 +519,18 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
         return s_investorPositions[positionId];
     }
 
+    /// @dev Verifies that the correct ops fee is sent and transfers it to the Legion fee receiver.
+    function _handleOpsFee() internal virtual {
+        uint256 requiredFee = s_capitalRaiseConfig.legionOpsFeeInWei;
+        if (requiredFee > 0) {
+            if (msg.value != requiredFee) {
+                revert Errors.LegionSale__InvalidOpsFee(msg.value, requiredFee);
+            }
+            // Transfer the ops fee to the Legion fee receiver
+            SafeTransferLib.safeTransferETH(s_capitalRaiseConfig.legionFeeReceiver, requiredFee);
+        }
+    }
+
     /// @dev Sets the capital raise parameters during initialization.
     /// @param _preLiquidSaleInitParams The initialization parameters.
     function _setLegionCapitalRaiseConfig(CapitalRaiseInitializationParams calldata _preLiquidSaleInitParams)
@@ -508,6 +544,7 @@ contract LegionCapitalRaise is ILegionCapitalRaise, LegionPositionManager, Initi
         s_capitalRaiseConfig.refundPeriodSeconds = _preLiquidSaleInitParams.refundPeriodSeconds;
         s_capitalRaiseConfig.legionFeeOnCapitalRaisedBps = _preLiquidSaleInitParams.legionFeeOnCapitalRaisedBps;
         s_capitalRaiseConfig.referrerFeeOnCapitalRaisedBps = _preLiquidSaleInitParams.referrerFeeOnCapitalRaisedBps;
+        s_capitalRaiseConfig.legionOpsFeeInWei = _preLiquidSaleInitParams.legionOpsFeeInWei;
         s_capitalRaiseConfig.bidToken = _preLiquidSaleInitParams.bidToken;
         s_capitalRaiseConfig.projectAdmin = _preLiquidSaleInitParams.projectAdmin;
         s_capitalRaiseConfig.addressRegistry = _preLiquidSaleInitParams.addressRegistry;

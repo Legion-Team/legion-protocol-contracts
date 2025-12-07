@@ -33,6 +33,8 @@ interface ILegionAbstractSale {
         uint16 referrerFeeOnCapitalRaisedBps;
         // Minimum investment amount in bid token
         uint256 minimumInvestAmount;
+        // Legion's operations fee in wei
+        uint256 legionOpsFeeInWei;
         // Address of the token used for raising capital
         address bidToken;
         // Admin address of the project raising capital
@@ -63,6 +65,8 @@ interface ILegionAbstractSale {
         uint16 referrerFeeOnCapitalRaisedBps;
         // Minimum investment amount in bid token
         uint256 minimumInvestAmount;
+        // Legion's operations fee in wei
+        uint256 legionOpsFeeInWei;
     }
 
     /// @dev Struct containing the address configuration for the sale
@@ -147,6 +151,11 @@ interface ILegionAbstractSale {
     /// @param legionFeeReceiver The updated Legion fee receiver address.
     event LegionAddressesSynced(address legionBouncer, address legionSigner, address legionFeeReceiver);
 
+    /// @notice Emitted when Legion's operations fee is updated.
+    /// @param oldFee The previous fee amount in wei.
+    /// @param newFee The new fee amount in wei.
+    event LegionOpsFeeUpdated(uint256 oldFee, uint256 newFee);
+
     /// @notice Emitted when a sale is canceled.
     event SaleCanceled();
 
@@ -195,4 +204,8 @@ interface ILegionAbstractSale {
     /// @notice Cancels the ongoing sale.
     /// @dev Allows cancellation before results are published; only callable by the project admin.
     function cancel() external;
+
+    /// @notice Updates Legion's operations fee.
+    /// @param newFee The new fee amount in wei.
+    function updateLegionOpsFee(uint256 newFee) external;
 }

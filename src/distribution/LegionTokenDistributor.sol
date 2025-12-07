@@ -58,6 +58,9 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
         _;
     }
 
+    /// Standard receive function to accept ETH payments for ops fees
+    receive() external payable { }
+
     /// @notice Constructs the LegionTokenDistributor and disables initializers.
     /// @dev Prevents the implementation contract from being initialized directly.
     constructor() {
@@ -140,6 +143,7 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
         bytes calldata vestingSignature
     )
         external
+        payable
         whenNotPaused
     {
         // Verify that the vesting configuration is valid
@@ -175,6 +179,9 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
 
         // Emit TokenAllocationClaimed
         emit TokenAllocationClaimed(amountToBeVested, amountToDistributeOnClaim, msg.sender);
+
+        // Handle Legion's operations fee
+        _handleOpsFee();
 
         // Deploy vesting and distribute tokens only if there is anything to distribute
         if (amountToBeVested != 0) {
@@ -224,6 +231,19 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
         _unpause();
     }
 
+    /// @notice Updates Legion's operations fee.
+    /// @param newFee The new fee amount in wei.
+    function updateLegionOpsFee(uint256 newFee) external virtual onlyLegion {
+        // Cache the old fee
+        uint256 oldFee = s_tokenDistributorConfig.legionOpsFeeInWei;
+
+        // Update the operations fee
+        s_tokenDistributorConfig.legionOpsFeeInWei = newFee;
+
+        // Emit LegionOpsFeeUpdated
+        emit LegionOpsFeeUpdated(oldFee, newFee);
+    }
+
     /// @inheritdoc ILegionTokenDistributor
     function distributorConfiguration() external view returns (TokenDistributorConfig memory) {
         return s_tokenDistributorConfig;
@@ -257,6 +277,18 @@ contract LegionTokenDistributor is ILegionTokenDistributor, LegionVestingManager
                 )
             )
             : vestingStatus;
+    }
+
+    /// @dev Verifies that the correct ops fee is sent and transfers it to the Legion fee receiver.
+    function _handleOpsFee() internal virtual {
+        uint256 requiredFee = s_tokenDistributorConfig.legionOpsFeeInWei;
+        if (requiredFee > 0) {
+            if (msg.value != requiredFee) {
+                revert Errors.LegionSale__InvalidOpsFee(msg.value, requiredFee);
+            }
+            // Transfer the ops fee to the Legion fee receiver
+            SafeTransferLib.safeTransferETH(s_tokenDistributorConfig.legionFeeReceiver, requiredFee);
+        }
     }
 
     /// @dev Sets the distributor configuration during initialization

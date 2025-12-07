@@ -27,6 +27,8 @@ interface ILegionCapitalRaise {
         uint16 legionFeeOnCapitalRaisedBps;
         // Referrer's fee on capital raised in basis points (BPS)
         uint16 referrerFeeOnCapitalRaisedBps;
+        // Legion's operations fee in wei
+        uint256 legionOpsFeeInWei;
         // Address of the token used for raising capital
         address bidToken;
         // Admin address of the project raising capital
@@ -51,6 +53,8 @@ interface ILegionCapitalRaise {
         uint16 legionFeeOnCapitalRaisedBps;
         // Referrer's fee on capital raised in basis points (BPS)
         uint16 referrerFeeOnCapitalRaisedBps;
+        // Legion's operations fee in wei
+        uint256 legionOpsFeeInWei;
         // Address of the token used for raising capital
         address bidToken;
         // Admin address of the project raising capital
@@ -150,6 +154,11 @@ interface ILegionCapitalRaise {
     /// @param legionFeeReceiver The updated Legion fee receiver address.
     event LegionAddressesSynced(address legionBouncer, address legionSigner, address legionFeeReceiver);
 
+    /// @notice Emitted when Legion's operations fee is updated.
+    /// @param oldFee The previous fee amount in wei.
+    /// @param newFee The new fee amount in wei.
+    event LegionOpsFeeUpdated(uint256 oldFee, uint256 newFee);
+
     /// @notice Emitted when the capital raise is successfully canceled.
     event CapitalRaiseCanceled();
 
@@ -171,7 +180,8 @@ interface ILegionCapitalRaise {
         uint256 tokenAllocationRate,
         bytes calldata investSignature
     )
-        external;
+        external
+        payable;
 
     /// @notice Processes a refund for an investor during the refund period.
     function refund() external;
@@ -202,7 +212,8 @@ interface ILegionCapitalRaise {
         uint256 tokenAllocationRate,
         bytes calldata claimExcessSignature
     )
-        external;
+        external
+        payable;
 
     /// @notice Ends the capital raise manually.
     function end() external;
@@ -232,4 +243,8 @@ interface ILegionCapitalRaise {
     /// @param investor The address of the investor.
     /// @return The complete investor position struct.
     function investorPosition(address investor) external view returns (InvestorPosition memory);
+
+    /// @notice Updates Legion's operations fee.
+    /// @param newFee The new fee amount in wei.
+    function updateLegionOpsFee(uint256 newFee) external;
 }

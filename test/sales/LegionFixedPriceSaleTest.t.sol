@@ -183,6 +183,7 @@ contract LegionFixedPriceSaleTest is Test {
             legionFeeOnCapitalRaisedBps: _saleInitParams.legionFeeOnCapitalRaisedBps,
             referrerFeeOnCapitalRaisedBps: _saleInitParams.referrerFeeOnCapitalRaisedBps,
             minimumInvestAmount: _saleInitParams.minimumInvestAmount,
+            legionOpsFeeInWei: _saleInitParams.legionOpsFeeInWei,
             bidToken: _saleInitParams.bidToken,
             projectAdmin: _saleInitParams.projectAdmin,
             addressRegistry: _saleInitParams.addressRegistry,
@@ -210,6 +211,7 @@ contract LegionFixedPriceSaleTest is Test {
                 legionFeeOnCapitalRaisedBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
                 minimumInvestAmount: 1e6,
+                legionOpsFeeInWei: 0,
                 bidToken: address(bidToken),
                 projectAdmin: projectAdmin,
                 addressRegistry: address(legionAddressRegistry),
@@ -574,6 +576,7 @@ contract LegionFixedPriceSaleTest is Test {
                 legionFeeOnCapitalRaisedBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
                 minimumInvestAmount: 1e6,
+                legionOpsFeeInWei: 0,
                 bidToken: address(0),
                 projectAdmin: address(0),
                 addressRegistry: address(0),
@@ -622,6 +625,7 @@ contract LegionFixedPriceSaleTest is Test {
                 legionFeeOnCapitalRaisedBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
                 minimumInvestAmount: 1e6,
+                legionOpsFeeInWei: 0,
                 bidToken: address(bidToken),
                 projectAdmin: projectAdmin,
                 addressRegistry: address(legionAddressRegistry),
@@ -657,6 +661,7 @@ contract LegionFixedPriceSaleTest is Test {
                 legionFeeOnCapitalRaisedBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
                 minimumInvestAmount: 1e6,
+                legionOpsFeeInWei: 0,
                 bidToken: address(bidToken),
                 projectAdmin: projectAdmin,
                 addressRegistry: address(legionAddressRegistry),
@@ -1451,6 +1456,7 @@ contract LegionFixedPriceSaleTest is Test {
                 legionFeeOnCapitalRaisedBps: 0,
                 referrerFeeOnCapitalRaisedBps: 100,
                 minimumInvestAmount: 1e6,
+                legionOpsFeeInWei: 0,
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
@@ -1805,7 +1811,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        LegionFixedPriceSale(legionSaleInstance).transferInvestorPosition(investor1, investor2, 1);
+        LegionFixedPriceSale(payable(legionSaleInstance)).transferInvestorPosition(investor1, investor2, 1);
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
@@ -1843,7 +1849,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        LegionFixedPriceSale(legionSaleInstance).transferInvestorPosition(investor1, investor2, 1);
+        LegionFixedPriceSale(payable(legionSaleInstance)).transferInvestorPosition(investor1, investor2, 1);
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
@@ -1887,7 +1893,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        LegionFixedPriceSale(legionSaleInstance).transferInvestorPosition(investor1, investor2, 1);
+        LegionFixedPriceSale(payable(legionSaleInstance)).transferInvestorPosition(investor1, investor2, 1);
     }
 
     /**
@@ -1906,7 +1912,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(investor1);
-        LegionFixedPriceSale(legionSaleInstance).transferInvestorPosition(investor1, investor2, 1);
+        LegionFixedPriceSale(payable(legionSaleInstance)).transferInvestorPosition(investor1, investor2, 1);
     }
 
     /**
@@ -1928,7 +1934,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        LegionFixedPriceSale(legionSaleInstance).transferInvestorPosition(investor1, investor2, 1);
+        LegionFixedPriceSale(payable(legionSaleInstance)).transferInvestorPosition(investor1, investor2, 1);
     }
 
     /**
@@ -1951,7 +1957,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        LegionFixedPriceSale(legionSaleInstance).transferInvestorPosition(investor1, investor2, 1);
+        LegionFixedPriceSale(payable(legionSaleInstance)).transferInvestorPosition(investor1, investor2, 1);
     }
 
     /**
@@ -1975,7 +1981,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        LegionFixedPriceSale(legionSaleInstance).transferInvestorPosition(investor1, investor2, 1);
+        LegionFixedPriceSale(payable(legionSaleInstance)).transferInvestorPosition(investor1, investor2, 1);
     }
 
     /**
@@ -1999,7 +2005,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        LegionFixedPriceSale(legionSaleInstance).transferInvestorPosition(investor1, investor2, 1);
+        LegionFixedPriceSale(payable(legionSaleInstance)).transferInvestorPosition(investor1, investor2, 1);
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -2026,7 +2032,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(investor1);
-        LegionFixedPriceSale(legionSaleInstance).transferInvestorPositionWithAuthorization(
+        LegionFixedPriceSale(payable(legionSaleInstance)).transferInvestorPositionWithAuthorization(
             investor1, investor2, 1, signatureInv1Transfer
         );
 
@@ -2072,7 +2078,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(investor1);
-        LegionFixedPriceSale(legionSaleInstance).transferInvestorPositionWithAuthorization(
+        LegionFixedPriceSale(payable(legionSaleInstance)).transferInvestorPositionWithAuthorization(
             investor1, investor2, 1, signatureInv1Transfer
         );
 
@@ -2119,7 +2125,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(investor1);
-        LegionFixedPriceSale(legionSaleInstance).transferInvestorPositionWithAuthorization(
+        LegionFixedPriceSale(payable(legionSaleInstance)).transferInvestorPositionWithAuthorization(
             investor1, investor2, 1, signatureInv1Transfer
         );
     }
@@ -2143,7 +2149,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(investor2);
-        LegionFixedPriceSale(legionSaleInstance).transferInvestorPositionWithAuthorization(
+        LegionFixedPriceSale(payable(legionSaleInstance)).transferInvestorPositionWithAuthorization(
             investor1, investor2, 1, signatureInv1Transfer
         );
     }
@@ -2168,7 +2174,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(investor1);
-        LegionFixedPriceSale(legionSaleInstance).transferInvestorPositionWithAuthorization(
+        LegionFixedPriceSale(payable(legionSaleInstance)).transferInvestorPositionWithAuthorization(
             investor1, investor2, 1, signatureInv1Transfer
         );
     }
@@ -2194,7 +2200,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(investor1);
-        LegionFixedPriceSale(legionSaleInstance).transferInvestorPositionWithAuthorization(
+        LegionFixedPriceSale(payable(legionSaleInstance)).transferInvestorPositionWithAuthorization(
             investor1, investor2, 1, signatureInv1Transfer
         );
     }
@@ -2221,7 +2227,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(investor1);
-        LegionFixedPriceSale(legionSaleInstance).transferInvestorPositionWithAuthorization(
+        LegionFixedPriceSale(payable(legionSaleInstance)).transferInvestorPositionWithAuthorization(
             investor1, investor2, 1, signatureInv1Transfer
         );
     }
@@ -2248,7 +2254,7 @@ contract LegionFixedPriceSaleTest is Test {
 
         // Act
         vm.prank(investor1);
-        LegionFixedPriceSale(legionSaleInstance).transferInvestorPositionWithAuthorization(
+        LegionFixedPriceSale(payable(legionSaleInstance)).transferInvestorPositionWithAuthorization(
             investor1, investor2, 1, signatureInv1Transfer
         );
     }

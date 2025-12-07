@@ -72,6 +72,7 @@ contract LegionFixedPriceSale is LegionAbstractSale, ILegionFixedPriceSale {
         bytes calldata signature
     )
         external
+        payable
         whenNotPaused
         whenNotPrefundAllocationPeriod
         whenSaleNotEnded
@@ -106,6 +107,9 @@ contract LegionFixedPriceSale is LegionAbstractSale, ILegionFixedPriceSale {
 
         // Emit CapitalInvested event
         emit CapitalInvested(amount, msg.sender, isPrefund, positionId);
+
+        // Collect Legion's operations fee
+        _handleOpsFee();
 
         // Transfer the invested capital to the contract
         SafeTransferLib.safeTransferFrom(s_addressConfig.bidToken, msg.sender, address(this), amount);

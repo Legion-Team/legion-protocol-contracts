@@ -98,7 +98,8 @@ interface ILegionSealedVestingOpenApplicationSale is ILegionAbstractSale {
         bytes calldata sealedVestingOption,
         bytes calldata signature
     )
-        external;
+        external
+        payable;
 
     /// @notice Allows an investor to update their sealed vesting option.
     /// @param newSealedVestingOption The new encrypted vesting option from the investor

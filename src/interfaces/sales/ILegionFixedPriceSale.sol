@@ -61,7 +61,7 @@ interface ILegionFixedPriceSale is ILegionAbstractSale {
     /// @param amount The amount of capital to invest.
     /// @param deadline The deadline for the investment.
     /// @param signature The Legion signature for investor verification.
-    function invest(uint256 amount, uint256 deadline, bytes calldata signature) external;
+    function invest(uint256 amount, uint256 deadline, bytes calldata signature) external payable;
 
     /// @notice Publishes the total capital raised.
     /// @param capitalRaised The total capital raised by the project.

@@ -354,6 +354,7 @@ contract LegionSealedVestingOpenApplicationSaleTest is Test {
             legionFeeOnCapitalRaisedBps: _saleInitParams.legionFeeOnCapitalRaisedBps,
             referrerFeeOnCapitalRaisedBps: _saleInitParams.referrerFeeOnCapitalRaisedBps,
             minimumInvestAmount: _saleInitParams.minimumInvestAmount,
+            legionOpsFeeInWei: _saleInitParams.legionOpsFeeInWei,
             bidToken: _saleInitParams.bidToken,
             projectAdmin: _saleInitParams.projectAdmin,
             addressRegistry: _saleInitParams.addressRegistry,
@@ -379,6 +380,7 @@ contract LegionSealedVestingOpenApplicationSaleTest is Test {
                 legionFeeOnCapitalRaisedBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
                 minimumInvestAmount: 1e6,
+                legionOpsFeeInWei: 0,
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
@@ -787,6 +789,7 @@ contract LegionSealedVestingOpenApplicationSaleTest is Test {
                 legionFeeOnCapitalRaisedBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
                 minimumInvestAmount: 1e6,
+                legionOpsFeeInWei: 0,
                 bidToken: address(0),
                 projectAdmin: address(0),
                 addressRegistry: address(0),
@@ -821,6 +824,7 @@ contract LegionSealedVestingOpenApplicationSaleTest is Test {
                 legionFeeOnCapitalRaisedBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
                 minimumInvestAmount: 1e6,
+                legionOpsFeeInWei: 0,
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
@@ -855,6 +859,7 @@ contract LegionSealedVestingOpenApplicationSaleTest is Test {
                 legionFeeOnCapitalRaisedBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
                 minimumInvestAmount: 1e6,
+                legionOpsFeeInWei: 0,
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
@@ -889,6 +894,7 @@ contract LegionSealedVestingOpenApplicationSaleTest is Test {
                 legionFeeOnCapitalRaisedBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
                 minimumInvestAmount: 1e6,
+                legionOpsFeeInWei: 0,
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
@@ -923,6 +929,7 @@ contract LegionSealedVestingOpenApplicationSaleTest is Test {
                 legionFeeOnCapitalRaisedBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
                 minimumInvestAmount: 1e6,
+                legionOpsFeeInWei: 0,
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
@@ -2303,6 +2310,7 @@ contract LegionSealedVestingOpenApplicationSaleTest is Test {
                 legionFeeOnCapitalRaisedBps: 0,
                 referrerFeeOnCapitalRaisedBps: 100,
                 minimumInvestAmount: 1e6,
+                legionOpsFeeInWei: 0,
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
@@ -2715,7 +2723,9 @@ contract LegionSealedVestingOpenApplicationSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        LegionSealedVestingOpenApplicationSale(legionSaleInstance).transferInvestorPosition(investor1, investor2, 1);
+        LegionSealedVestingOpenApplicationSale(payable(legionSaleInstance)).transferInvestorPosition(
+            investor1, investor2, 1
+        );
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
@@ -2764,7 +2774,9 @@ contract LegionSealedVestingOpenApplicationSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        LegionSealedVestingOpenApplicationSale(legionSaleInstance).transferInvestorPosition(investor1, investor2, 1);
+        LegionSealedVestingOpenApplicationSale(payable(legionSaleInstance)).transferInvestorPosition(
+            investor1, investor2, 1
+        );
 
         // Expect
         vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
@@ -2819,7 +2831,9 @@ contract LegionSealedVestingOpenApplicationSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        LegionSealedVestingOpenApplicationSale(legionSaleInstance).transferInvestorPosition(investor1, investor2, 1);
+        LegionSealedVestingOpenApplicationSale(payable(legionSaleInstance)).transferInvestorPosition(
+            investor1, investor2, 1
+        );
     }
 
     /**
@@ -2831,7 +2845,7 @@ contract LegionSealedVestingOpenApplicationSaleTest is Test {
         prepareStandardTestSetup();
 
         vm.prank(investor1);
-        ILegionSealedVestingOpenApplicationSale(legionSaleInstance).invest(
+        ILegionSealedVestingOpenApplicationSale(payable(legionSaleInstance)).invest(
             1000 * 1e6, (block.timestamp + 100), sealedVestingDataInvestor1, signatureInv1
         );
 
@@ -2840,7 +2854,9 @@ contract LegionSealedVestingOpenApplicationSaleTest is Test {
 
         // Act
         vm.prank(investor1);
-        LegionSealedVestingOpenApplicationSale(legionSaleInstance).transferInvestorPosition(investor1, investor2, 1);
+        LegionSealedVestingOpenApplicationSale(payable(legionSaleInstance)).transferInvestorPosition(
+            investor1, investor2, 1
+        );
     }
 
     /**
@@ -2864,7 +2880,9 @@ contract LegionSealedVestingOpenApplicationSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        LegionSealedVestingOpenApplicationSale(legionSaleInstance).transferInvestorPosition(investor1, investor2, 1);
+        LegionSealedVestingOpenApplicationSale(payable(legionSaleInstance)).transferInvestorPosition(
+            investor1, investor2, 1
+        );
     }
 
     /**
@@ -2892,7 +2910,9 @@ contract LegionSealedVestingOpenApplicationSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        LegionSealedVestingOpenApplicationSale(legionSaleInstance).transferInvestorPosition(investor1, investor2, 1);
+        LegionSealedVestingOpenApplicationSale(payable(legionSaleInstance)).transferInvestorPosition(
+            investor1, investor2, 1
+        );
     }
 
     /**
@@ -2921,7 +2941,9 @@ contract LegionSealedVestingOpenApplicationSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        LegionSealedVestingOpenApplicationSale(legionSaleInstance).transferInvestorPosition(investor1, investor2, 1);
+        LegionSealedVestingOpenApplicationSale(payable(legionSaleInstance)).transferInvestorPosition(
+            investor1, investor2, 1
+        );
     }
 
     /**
@@ -2950,7 +2972,9 @@ contract LegionSealedVestingOpenApplicationSaleTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        LegionSealedVestingOpenApplicationSale(legionSaleInstance).transferInvestorPosition(investor1, investor2, 1);
+        LegionSealedVestingOpenApplicationSale(payable(legionSaleInstance)).transferInvestorPosition(
+            investor1, investor2, 1
+        );
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -2983,7 +3007,7 @@ contract LegionSealedVestingOpenApplicationSaleTest is Test {
 
         // Act
         vm.prank(investor1);
-        LegionSealedVestingOpenApplicationSale(legionSaleInstance).transferInvestorPositionWithAuthorization(
+        LegionSealedVestingOpenApplicationSale(payable(legionSaleInstance)).transferInvestorPositionWithAuthorization(
             investor1, investor2, 1, signatureInv1Transfer
         );
 
@@ -3039,7 +3063,7 @@ contract LegionSealedVestingOpenApplicationSaleTest is Test {
 
         // Act
         vm.prank(investor1);
-        LegionSealedVestingOpenApplicationSale(legionSaleInstance).transferInvestorPositionWithAuthorization(
+        LegionSealedVestingOpenApplicationSale(payable(legionSaleInstance)).transferInvestorPositionWithAuthorization(
             investor1, investor2, 1, signatureInv1Transfer
         );
 
@@ -3096,7 +3120,7 @@ contract LegionSealedVestingOpenApplicationSaleTest is Test {
 
         // Act
         vm.prank(investor1);
-        LegionSealedVestingOpenApplicationSale(legionSaleInstance).transferInvestorPositionWithAuthorization(
+        LegionSealedVestingOpenApplicationSale(payable(legionSaleInstance)).transferInvestorPositionWithAuthorization(
             investor1, investor2, 1, signatureInv1Transfer
         );
     }
@@ -3124,7 +3148,7 @@ contract LegionSealedVestingOpenApplicationSaleTest is Test {
 
         // Act
         vm.prank(investor2);
-        LegionSealedVestingOpenApplicationSale(legionSaleInstance).transferInvestorPositionWithAuthorization(
+        LegionSealedVestingOpenApplicationSale(payable(legionSaleInstance)).transferInvestorPositionWithAuthorization(
             investor1, investor2, 1, signatureInv1Transfer
         );
     }
@@ -3150,7 +3174,7 @@ contract LegionSealedVestingOpenApplicationSaleTest is Test {
 
         // Act
         vm.prank(investor1);
-        LegionSealedVestingOpenApplicationSale(legionSaleInstance).transferInvestorPositionWithAuthorization(
+        LegionSealedVestingOpenApplicationSale(payable(legionSaleInstance)).transferInvestorPositionWithAuthorization(
             investor1, investor2, 1, signatureInv1Transfer
         );
     }
@@ -3180,7 +3204,7 @@ contract LegionSealedVestingOpenApplicationSaleTest is Test {
 
         // Act
         vm.prank(investor1);
-        LegionSealedVestingOpenApplicationSale(legionSaleInstance).transferInvestorPositionWithAuthorization(
+        LegionSealedVestingOpenApplicationSale(payable(legionSaleInstance)).transferInvestorPositionWithAuthorization(
             investor1, investor2, 1, signatureInv1Transfer
         );
     }
@@ -3211,7 +3235,7 @@ contract LegionSealedVestingOpenApplicationSaleTest is Test {
 
         // Act
         vm.prank(investor1);
-        LegionSealedVestingOpenApplicationSale(legionSaleInstance).transferInvestorPositionWithAuthorization(
+        LegionSealedVestingOpenApplicationSale(payable(legionSaleInstance)).transferInvestorPositionWithAuthorization(
             investor1, investor2, 1, signatureInv1Transfer
         );
     }
@@ -3242,7 +3266,7 @@ contract LegionSealedVestingOpenApplicationSaleTest is Test {
 
         // Act
         vm.prank(investor1);
-        LegionSealedVestingOpenApplicationSale(legionSaleInstance).transferInvestorPositionWithAuthorization(
+        LegionSealedVestingOpenApplicationSale(payable(legionSaleInstance)).transferInvestorPositionWithAuthorization(
             investor1, investor2, 1, signatureInv1Transfer
         );
     }

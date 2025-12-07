@@ -53,6 +53,9 @@ abstract contract LegionAbstractSale is ILegionAbstractSale, LegionPositionManag
     /// @dev Mapping of position IDs to their respective positions
     mapping(uint256 s_positionId => InvestorPosition s_investorPosition) internal s_investorPositions;
 
+    /// Standard receive function to accept ETH payments for ops fees
+    receive() external payable { }
+
     /// @notice Restricts function access to the Legion bouncer only.
     /// @dev Reverts if the caller is not the configured Legion bouncer.
     modifier onlyLegion() {
@@ -347,6 +350,19 @@ abstract contract LegionAbstractSale is ILegionAbstractSale, LegionPositionManag
         _burnOrTransferInvestorPosition(from, to, positionId);
     }
 
+    /// @notice Updates Legion's operations fee.
+    /// @param newFee The new fee amount in wei.
+    function updateLegionOpsFee(uint256 newFee) external virtual onlyLegion {
+        // Cache the old fee
+        uint256 oldFee = s_saleConfig.legionOpsFeeInWei;
+
+        // Update the operations fee
+        s_saleConfig.legionOpsFeeInWei = newFee;
+
+        // Emit LegionOpsFeeUpdated
+        emit LegionOpsFeeUpdated(oldFee, newFee);
+    }
+
     /// @inheritdoc ILegionAbstractSale
     function saleConfiguration() external view virtual returns (LegionSaleConfiguration memory) {
         return s_saleConfig;
@@ -389,6 +405,18 @@ abstract contract LegionAbstractSale is ILegionAbstractSale, LegionPositionManag
         }
     }
 
+    /// @dev Verifies that the correct ops fee is sent and transfers it to the Legion fee receiver.
+    function _handleOpsFee() internal virtual {
+        uint256 requiredFee = s_saleConfig.legionOpsFeeInWei;
+        if (requiredFee > 0) {
+            if (msg.value != requiredFee) {
+                revert Errors.LegionSale__InvalidOpsFee(msg.value, requiredFee);
+            }
+            // Transfer the ops fee to the Legion fee receiver
+            SafeTransferLib.safeTransferETH(s_addressConfig.legionFeeReceiver, requiredFee);
+        }
+    }
+
     /// @notice Sets the sale parameters during initialization
     /// @dev Virtual function to configure sale
     /// @param _saleInitParams Calldata struct with initialization parameters
@@ -404,6 +432,7 @@ abstract contract LegionAbstractSale is ILegionAbstractSale, LegionPositionManag
         s_saleConfig.legionFeeOnCapitalRaisedBps = _saleInitParams.legionFeeOnCapitalRaisedBps;
         s_saleConfig.referrerFeeOnCapitalRaisedBps = _saleInitParams.referrerFeeOnCapitalRaisedBps;
         s_saleConfig.minimumInvestAmount = _saleInitParams.minimumInvestAmount;
+        s_saleConfig.legionOpsFeeInWei = _saleInitParams.legionOpsFeeInWei;
 
         // Set the address configuration
         s_addressConfig.bidToken = _saleInitParams.bidToken;

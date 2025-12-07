@@ -61,6 +61,7 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
         bytes calldata signature
     )
         external
+        payable
         whenNotPaused
         whenSaleNotEnded
         whenSaleNotCanceled
@@ -91,6 +92,9 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
 
         // Emit CapitalInvested event
         emit CapitalInvested(amount, msg.sender, positionId);
+
+        // Collect Legion's operations fee
+        _handleOpsFee();
 
         // Transfer the invested capital to the contract
         SafeTransferLib.safeTransferFrom(s_addressConfig.bidToken, msg.sender, address(this), amount);

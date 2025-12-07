@@ -37,6 +37,8 @@ interface ILegionTokenDistributor {
         address projectAdmin;
         // The total amount of tokens to be distributed.
         uint256 totalAmountToDistribute;
+        // Legion's operations fee in wei
+        uint256 legionOpsFeeInWei;
     }
 
     /// @dev Struct for storing the configuration of the Token Distributor.
@@ -49,6 +51,8 @@ interface ILegionTokenDistributor {
         bool tokensSupplied;
         // The total amount of tokens to be distributed.
         uint256 totalAmountToDistribute;
+        // Legion's operations fee in wei
+        uint256 legionOpsFeeInWei;
         // The total amount of tokens already claimed.
         uint256 totalAmountClaimed;
         // Address of the token being sold to investors.
@@ -95,6 +99,11 @@ interface ILegionTokenDistributor {
         address vestingController
     );
 
+    /// @notice Emitted when Legion's operations fee is updated.
+    /// @param oldFee The previous fee amount in wei.
+    /// @param newFee The new fee amount in wei.
+    event LegionOpsFeeUpdated(uint256 oldFee, uint256 newFee);
+
     /// @notice Emitted when an investor successfully claims their token allocation.
     /// @param amountToBeVested The amount of tokens sent to vesting contract.
     /// @param amountOnClaim The amount of tokens distributed immediately.
@@ -138,7 +147,8 @@ interface ILegionTokenDistributor {
         bytes calldata claimSignature,
         bytes calldata vestingSignature
     )
-        external;
+        external
+        payable;
 
     /// @notice Releases vested tokens to the investor.
     function releaseVestedTokens() external;
@@ -168,4 +178,8 @@ interface ILegionTokenDistributor {
         external
         view
         returns (ILegionVestingManager.LegionInvestorVestingStatus memory);
+
+    /// @notice Updates Legion's operations fee.
+    /// @param newFee The new fee amount in wei.
+    function updateLegionOpsFee(uint256 newFee) external;
 }

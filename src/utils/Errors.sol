@@ -72,6 +72,11 @@ library Errors {
     /// @param amount The amount being invested.
     error LegionSale__InvalidInvestAmount(uint256 amount);
 
+    /// @notice Thrown when an invalid operations fee amount is provided.
+    /// @param amount The operations fee amount provided.
+    /// @param expectedAmount The expected operations fee amount.
+    error LegionSale__InvalidOpsFee(uint256 amount, uint256 expectedAmount);
+
     /// @notice Thrown when an invalid time period configuration is provided.
     /// @dev Indicates periods (e.g., sale, refund) are outside allowed ranges.
     error LegionSale__InvalidPeriodConfig();
