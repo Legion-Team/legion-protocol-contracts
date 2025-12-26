@@ -14,33 +14,33 @@ pragma solidity 0.8.30;
 //      \/__/     \/__/         \/__/                     \/__/         \/__/
 
 import { ILegionAbstractSale } from "../sales/ILegionAbstractSale.sol";
-import { ILegionSealedBidAuctionSale } from "../sales/ILegionSealedBidAuctionSale.sol";
+import { ILegionSealedBidSale } from "../sales/ILegionSealedBidSale.sol";
 
 /**
- * @title ILegionSealedBidAuctionSaleFactory
+ * @title ILegionSealedBidSaleFactory
  * @author Legion
- * @notice Interface for the LegionSealedBidAuctionSaleFactory contract.
+ * @notice Interface for the LegionSealedBidSaleFactory contract.
  */
-interface ILegionSealedBidAuctionSaleFactory {
-    /// @notice Emitted when a new sealed bid auction sale contract is deployed and initialized.
-    /// @param saleInstance The address of the newly deployed sealed bid auction sale contract.
+interface ILegionSealedBidSaleFactory {
+    /// @notice Emitted when a new sealed bid sale contract is deployed and initialized.
+    /// @param saleInstance The address of the newly deployed sealed bid sale contract.
     /// @param saleInitParams The Legion sale initialization parameters used.
-    /// @param sealedBidAuctionSaleInitParams The sealed bid auction sale specific initialization parameters used.
-    event NewSealedBidAuctionSaleCreated(
+    /// @param sealedBidSaleInitParams The sealed bid sale specific initialization parameters used.
+    event NewSealedBidSaleCreated(
         address saleInstance,
         ILegionAbstractSale.LegionSaleInitializationParams saleInitParams,
-        ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams sealedBidAuctionSaleInitParams
+        ILegionSealedBidSale.SealedBidSaleInitializationParams sealedBidSaleInitParams
     );
 
-    /// @notice Deploys a new LegionSealedBidAuctionSale contract instance.
+    /// @notice Deploys a new LegionSealedBidSale contract instance.
     /// @param saleInitParams The general Legion sale initialization parameters.
-    /// @param sealedBidAuctionSaleInitParams The sealed bid auction sale specific initialization parameters.
-    /// @return sealedBidAuctionInstance The address of the newly deployed and initialized LegionSealedBidAuctionSale
+    /// @param sealedBidSaleInitParams The sealed bid sale specific initialization parameters.
+    /// @return sealedBidSaleInstance The address of the newly deployed and initialized LegionSealedBidSale
     /// instance.
-    function createSealedBidAuctionSale(
+    function createSealedBidSale(
         ILegionAbstractSale.LegionSaleInitializationParams memory saleInitParams,
-        ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams memory sealedBidAuctionSaleInitParams
+        ILegionSealedBidSale.SealedBidSaleInitializationParams memory sealedBidSaleInitParams
     )
         external
-        returns (address payable sealedBidAuctionInstance);
+        returns (address payable sealedBidSaleInstance);
 }

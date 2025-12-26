@@ -17,11 +17,11 @@ import { ECIES, Point } from "../../lib/ECIES.sol";
 import { ILegionAbstractSale } from "./ILegionAbstractSale.sol";
 
 /**
- * @title ILegionSealedVestingOpenApplicationSale
+ * @title ILegionSealedVestingSale
  * @author Legion
- * @notice Interface for the LegionSealedVestingOpenApplicationSale contract.
+ * @notice Interface for the LegionSealedVestingSale contract.
  */
-interface ILegionSealedVestingOpenApplicationSale is ILegionAbstractSale {
+interface ILegionSealedVestingSale is ILegionAbstractSale {
     /// @dev Struct defining initialization parameters for the pre-liquid sealed vesting sale
     struct PreLiquidSaleInitializationParams {
         // Public key used to encrypt sealed vesting options

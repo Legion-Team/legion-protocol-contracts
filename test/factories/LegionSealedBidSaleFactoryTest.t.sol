@@ -10,40 +10,40 @@ import { ECIES, Point } from "../../src/lib/ECIES.sol";
 import { Errors } from "../../src/utils/Errors.sol";
 
 import { ILegionAbstractSale } from "../../src/interfaces/sales/ILegionAbstractSale.sol";
-import { ILegionSealedBidAuctionSale } from "../../src/interfaces/sales/ILegionSealedBidAuctionSale.sol";
+import { ILegionSealedBidSale } from "../../src/interfaces/sales/ILegionSealedBidSale.sol";
 import { ILegionVestingManager } from "../../src/interfaces/vesting/ILegionVestingManager.sol";
 
 import { LegionAddressRegistry } from "../../src/registries/LegionAddressRegistry.sol";
-import { LegionSealedBidAuctionSale } from "../../src/sales/LegionSealedBidAuctionSale.sol";
-import { LegionSealedBidAuctionSaleFactory } from "../../src/factories/LegionSealedBidAuctionSaleFactory.sol";
+import { LegionSealedBidSale } from "../../src/sales/LegionSealedBidSale.sol";
+import { LegionSealedBidSaleFactory } from "../../src/factories/LegionSealedBidSaleFactory.sol";
 import { LegionVestingFactory } from "../../src/factories/LegionVestingFactory.sol";
 
 /**
- * @title Legion Sealed Bid Auction Sale Factory Test
+ * @title Legion Sealed Bid Sale Factory Test
  * @author Legion
- * @notice Test suite for the LegionSealedBidAuctionSaleFactory contract
+ * @notice Test suite for the LegionSealedBidSaleFactory contract
  * @dev Inherits from Forge's Test contract to access testing utilities
  */
-contract LegionSealedBidAuctionSaleFactoryTest is Test {
+contract LegionSealedBidSaleFactoryTest is Test {
     /*//////////////////////////////////////////////////////////////////////////
                                    STRUCTS
     //////////////////////////////////////////////////////////////////////////*/
 
     /**
      * @notice Configuration structure for sale tests
-     * @dev Encapsulates sealed bid auction sale test configuration
+     * @dev Encapsulates sealed bid sale test configuration
      */
     struct SaleTestConfig {
-        SealedBidAuctionSaleTestConfig sealedBidAuctionSaleTestConfig; // Nested config for sealed bid auction
+        SealedBidSaleTestConfig sealedBidSaleTestConfig; // Nested config for sealed bid sale
     }
 
     /**
-     * @notice Configuration structure for sealed bid auction sale tests
-     * @dev Combines general sale params with sealed bid auction-specific params
+     * @notice Configuration structure for sealed bid sale tests
+     * @dev Combines general sale params with sealed bid sale-specific params
      */
-    struct SealedBidAuctionSaleTestConfig {
+    struct SealedBidSaleTestConfig {
         ILegionAbstractSale.LegionSaleInitializationParams saleInitParams; // General sale initialization params
-        ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams sealedBidAuctionSaleInitParams; // Sealed
+        ILegionSealedBidSale.SealedBidSaleInitializationParams sealedBidSaleInitParams; // Sealed
             // bid-specific params
     }
 
@@ -52,7 +52,7 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
     //////////////////////////////////////////////////////////////////////////*/
 
     /**
-     * @notice Test configuration for sealed bid auction sale tests
+     * @notice Test configuration for sealed bid sale tests
      * @dev Stores the configuration used across test cases
      */
     SaleTestConfig public testConfig;
@@ -64,10 +64,10 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
     LegionAddressRegistry public legionAddressRegistry;
 
     /**
-     * @notice Factory contract for creating sealed bid auction sale instances
-     * @dev Deploys new instances of LegionSealedBidAuctionSale
+     * @notice Factory contract for creating sealed bid sale instances
+     * @dev Deploys new instances of LegionSealedBidSale
      */
-    LegionSealedBidAuctionSaleFactory public legionSaleFactory;
+    LegionSealedBidSaleFactory public legionSaleFactory;
 
     /**
      * @notice Factory contract for creating vesting instances
@@ -82,10 +82,10 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
     MockERC20 public bidToken;
 
     /**
-     * @notice Address of the deployed sealed bid auction sale instance
+     * @notice Address of the deployed sealed bid sale instance
      * @dev Points to the active sale contract being tested
      */
-    address public legionSealedBidAuctionInstance;
+    address public legionSealedBidSaleInstance;
 
     /**
      * @notice Address representing the Legion bouncer (owner)
@@ -118,7 +118,7 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
     uint256 public legionSignerPK = 1234;
 
     /**
-     * @notice Public key for sealed bid auction encryption
+     * @notice Public key for sealed bid encryption
      * @dev Computed using ECIES.calcPubKey with a test point (1, 2) and private key 69
      */
     Point public PUBLIC_KEY = ECIES.calcPubKey(Point(1, 2), 69);
@@ -132,7 +132,7 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
      * @dev Initializes factory, vesting factory, registry, and mock tokens; configures the address registry
      */
     function setUp() public {
-        legionSaleFactory = new LegionSealedBidAuctionSaleFactory(legionBouncer);
+        legionSaleFactory = new LegionSealedBidSaleFactory(legionBouncer);
         legionVestingFactory = new LegionVestingFactory();
         legionAddressRegistry = new LegionAddressRegistry(legionBouncer);
         bidToken = new MockERC20("USD Coin", "USDC", 6); // 6 decimals for USDC
@@ -144,27 +144,27 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
     //////////////////////////////////////////////////////////////////////////*/
 
     /**
-     * @notice Sets the sealed bid auction sale configuration parameters
+     * @notice Sets the sealed bid sale configuration parameters
      * @dev Updates the testConfig with provided general and sealed bid-specific initialization parameters
      * @param _saleInitParams General sale initialization parameters
-     * @param _sealedBidAuctionSaleInitParams Sealed bid auction-specific initialization parameters
+     * @param _sealedBidSaleInitParams Sealed bid sale-specific initialization parameters
      */
-    function setSealedBidAuctionSaleParams(
+    function setSealedBidSaleParams(
         ILegionAbstractSale.LegionSaleInitializationParams memory _saleInitParams,
-        ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams memory _sealedBidAuctionSaleInitParams
+        ILegionSealedBidSale.SealedBidSaleInitializationParams memory _sealedBidSaleInitParams
     )
         public
     {
-        testConfig.sealedBidAuctionSaleTestConfig.saleInitParams = _saleInitParams;
-        testConfig.sealedBidAuctionSaleTestConfig.sealedBidAuctionSaleInitParams = _sealedBidAuctionSaleInitParams;
+        testConfig.sealedBidSaleTestConfig.saleInitParams = _saleInitParams;
+        testConfig.sealedBidSaleTestConfig.sealedBidSaleInitParams = _sealedBidSaleInitParams;
     }
 
     /**
-     * @notice Creates and initializes a LegionSealedBidAuctionSale instance
-     * @dev Deploys a sealed bid auction sale with default parameters via the factory
+     * @notice Creates and initializes a LegionSealedBidSale instance
+     * @dev Deploys a sealed bid sale with default parameters via the factory
      */
-    function prepareCreateLegionSealedBidAuction() public {
-        setSealedBidAuctionSaleParams(
+    function prepareCreateLegionSealedBidSale() public {
+        setSealedBidSaleParams(
             ILegionAbstractSale.LegionSaleInitializationParams({
                 salePeriodSeconds: 1 hours,
                 refundPeriodSeconds: 2 weeks,
@@ -180,13 +180,13 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
                 saleSymbol: "LLFGS",
                 saleBaseURI: "https://metadata.legion.cc/"
             }),
-            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
+            ILegionSealedBidSale.SealedBidSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
 
         vm.prank(legionBouncer);
-        legionSealedBidAuctionInstance = legionSaleFactory.createSealedBidAuctionSale(
-            testConfig.sealedBidAuctionSaleTestConfig.saleInitParams,
-            testConfig.sealedBidAuctionSaleTestConfig.sealedBidAuctionSaleInitParams
+        legionSealedBidSaleInstance = legionSaleFactory.createSealedBidSale(
+            testConfig.sealedBidSaleTestConfig.saleInitParams,
+            testConfig.sealedBidSaleTestConfig.sealedBidSaleInitParams
         );
     }
 
@@ -211,7 +211,7 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
 
     /**
      * @notice Tests that the factory contract initializes with the correct owner
-     * @dev Verifies that the owner of the LegionSealedBidAuctionSaleFactory is set to legionBouncer during deployment
+     * @dev Verifies that the owner of the LegionSealedBidSaleFactory is set to legionBouncer during deployment
      */
     function test_transferOwnership_successfullySetsTheCorrectOwner() public view {
         // Expect
@@ -219,41 +219,40 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
     }
 
     /**
-     * @notice Tests successful creation of a new LegionSealedBidAuctionSale instance by the owner
+     * @notice Tests successful creation of a new LegionSealedBidSale instance by the owner
      * @dev Ensures the factory deploys a non-zero address for the sale instance when called by legionBouncer
      */
-    function test_createSealedBidAuctionSale_successullyCreatesSealedBidAuction() public {
+    function test_createSealedBidSale_successullyCreatesSealedBidSale() public {
         // Arrange & Act
-        prepareCreateLegionSealedBidAuction();
+        prepareCreateLegionSealedBidSale();
 
         // Expect
-        assertNotEq(legionSealedBidAuctionInstance, address(0));
+        assertNotEq(legionSealedBidSaleInstance, address(0));
     }
 
     /**
      * @notice Tests that the created sale instance initializes with the correct configuration
      * @dev Verifies the public key and vesting factory address are correctly set in the deployed sale contract
      */
-    function test_createSealedBidAuctionSale_successfullyCreatedWithCorrectConfiguration() public {
+    function test_createSealedBidSale_successfullyCreatedWithCorrectConfiguration() public {
         // Arrange & Act
-        prepareCreateLegionSealedBidAuction();
+        prepareCreateLegionSealedBidSale();
 
-        ILegionSealedBidAuctionSale.SealedBidAuctionSaleConfiguration memory _sealedBidAuctionSaleConfig =
-            LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).sealedBidAuctionSaleConfiguration();
+        ILegionSealedBidSale.SealedBidSaleConfiguration memory _sealedBidSaleConfig =
+            LegionSealedBidSale(payable(legionSealedBidSaleInstance)).sealedBidSaleConfiguration();
 
         // Expect
-        assertEq(_sealedBidAuctionSaleConfig.publicKey.x, PUBLIC_KEY.x); // Check x-coordinate of public key
-        assertEq(_sealedBidAuctionSaleConfig.publicKey.y, PUBLIC_KEY.y); // Check y-coordinate of public key
-
-        assertEq(LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).name(), "Legion LFG Sale");
-        assertEq(LegionSealedBidAuctionSale(payable(legionSealedBidAuctionInstance)).symbol(), "LLFGS");
+        assertEq(_sealedBidSaleConfig.publicKey.x, PUBLIC_KEY.x); // Check x-coordinate of public key
+        assertEq(_sealedBidSaleConfig.publicKey.y, PUBLIC_KEY.y); // Check y-coordinate of public key
+        assertEq(LegionSealedBidSale(payable(legionSealedBidSaleInstance)).name(), "Legion LFG Sale");
+        assertEq(LegionSealedBidSale(payable(legionSealedBidSaleInstance)).symbol(), "LLFGS");
     }
 
     /**
      * @notice Tests that creating a sale instance by a non-owner reverts
      * @dev Expects an Unauthorized revert from Ownable when called by nonOwner
      */
-    function testFuzz_createSealedBidAuctionSale_revertsIfNotCalledByOwner(address nonOwner) public {
+    function testFuzz_createSealedBidSale_revertsIfNotCalledByOwner(address nonOwner) public {
         // Arrange
         vm.assume(nonOwner != legionBouncer);
 
@@ -262,9 +261,9 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
 
         // Act
         vm.prank(nonOwner);
-        legionSaleFactory.createSealedBidAuctionSale(
-            testConfig.sealedBidAuctionSaleTestConfig.saleInitParams,
-            testConfig.sealedBidAuctionSaleTestConfig.sealedBidAuctionSaleInitParams
+        legionSaleFactory.createSealedBidSale(
+            testConfig.sealedBidSaleTestConfig.saleInitParams,
+            testConfig.sealedBidSaleTestConfig.sealedBidSaleInitParams
         );
     }
 
@@ -272,9 +271,9 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
      * @notice Tests that creating a sale with zero address configurations reverts
      * @dev Expects a LegionSale__ZeroAddressProvided revert when key addresses (bidToken, etc.) are zero
      */
-    function test_createSealedBidAuctionSale_revertsWithZeroAddressProvided() public {
+    function test_createSealedBidSale_revertsWithZeroAddressProvided() public {
         // Arrange
-        setSealedBidAuctionSaleParams(
+        setSealedBidSaleParams(
             ILegionAbstractSale.LegionSaleInitializationParams({
                 salePeriodSeconds: 1 hours,
                 refundPeriodSeconds: 2 weeks,
@@ -290,7 +289,7 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
                 saleSymbol: "LLFGS",
                 saleBaseURI: "https://metadata.legion.cc/"
             }),
-            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
+            ILegionSealedBidSale.SealedBidSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
 
         // Expect
@@ -298,9 +297,9 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        legionSaleFactory.createSealedBidAuctionSale(
-            testConfig.sealedBidAuctionSaleTestConfig.saleInitParams,
-            testConfig.sealedBidAuctionSaleTestConfig.sealedBidAuctionSaleInitParams
+        legionSaleFactory.createSealedBidSale(
+            testConfig.sealedBidSaleTestConfig.saleInitParams,
+            testConfig.sealedBidSaleTestConfig.sealedBidSaleInitParams
         );
     }
 
@@ -308,9 +307,9 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
      * @notice Tests that creating a sale with zero value configurations reverts
      * @dev Expects a LegionSale__ZeroValueProvided revert when key parameters (sale period, fees, etc.) are zero
      */
-    function test_createSealedBidAuctionSale_revertsWithZeroValueProvided() public {
+    function test_createSealedBidSale_revertsWithZeroValueProvided() public {
         // Arrange
-        setSealedBidAuctionSaleParams(
+        setSealedBidSaleParams(
             ILegionAbstractSale.LegionSaleInitializationParams({
                 salePeriodSeconds: 0,
                 refundPeriodSeconds: 0,
@@ -326,7 +325,7 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
                 saleSymbol: "",
                 saleBaseURI: ""
             }),
-            ILegionSealedBidAuctionSale.SealedBidAuctionSaleInitializationParams({ publicKey: PUBLIC_KEY })
+            ILegionSealedBidSale.SealedBidSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
 
         // Expect
@@ -334,9 +333,9 @@ contract LegionSealedBidAuctionSaleFactoryTest is Test {
 
         // Act
         vm.prank(legionBouncer);
-        legionSaleFactory.createSealedBidAuctionSale(
-            testConfig.sealedBidAuctionSaleTestConfig.saleInitParams,
-            testConfig.sealedBidAuctionSaleTestConfig.sealedBidAuctionSaleInitParams
+        legionSaleFactory.createSealedBidSale(
+            testConfig.sealedBidSaleTestConfig.saleInitParams,
+            testConfig.sealedBidSaleTestConfig.sealedBidSaleInitParams
         );
     }
 }

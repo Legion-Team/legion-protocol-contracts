@@ -2,9 +2,9 @@
 pragma solidity 0.8.30;
 
 import { Script, console2 } from "forge-std/Script.sol";
-import { LegionSealedBidAuctionSaleFactory } from "../src/factories/LegionSealedBidAuctionSaleFactory.sol";
+import { LegionSealedVestingSaleFactory } from "../src/factories/LegionSealedVestingSaleFactory.sol";
 
-contract LegionSealedBidAuctionSaleFactoryScript is Script {
+contract LegionSealedVestingSaleFactoryScript is Script {
     function setUp() public { }
 
     function run() external {
@@ -14,7 +14,7 @@ contract LegionSealedBidAuctionSaleFactoryScript is Script {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        new LegionSealedBidAuctionSaleFactory(legionBouncer);
+        new LegionSealedVestingSaleFactory(legionBouncer);
 
         vm.stopBroadcast();
     }

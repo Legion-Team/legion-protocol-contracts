@@ -16,11 +16,10 @@ pragma solidity 0.8.30;
 import { LibClone } from "@solady/src/utils/LibClone.sol";
 import { Ownable } from "@solady/src/auth/Ownable.sol";
 
-import { ILegionPreLiquidOpenApplicationSaleFactory } from
-    "../interfaces/factories/ILegionPreLiquidOpenApplicationSaleFactory.sol";
+import { ILegionPreLiquidSaleFactory } from "../interfaces/factories/ILegionPreLiquidSaleFactory.sol";
 import { ILegionAbstractSale } from "../interfaces/sales/ILegionAbstractSale.sol";
 
-import { LegionPreLiquidOpenApplicationSale } from "../sales/LegionPreLiquidOpenApplicationSale.sol";
+import { LegionPreLiquidSale } from "../sales/LegionPreLiquidSale.sol";
 
 /**
  * @title Legion Pre-Liquid Open Application Sale Factory
@@ -28,21 +27,21 @@ import { LegionPreLiquidOpenApplicationSale } from "../sales/LegionPreLiquidOpen
  * @notice Deploys proxy instances of Legion pre-liquid open application sale contracts using the clone pattern.
  * @dev Creates gas-efficient clones of a single implementation contract for each pre-liquid open application sale.
  */
-contract LegionPreLiquidOpenApplicationSaleFactory is ILegionPreLiquidOpenApplicationSaleFactory, Ownable {
+contract LegionPreLiquidSaleFactory is ILegionPreLiquidSaleFactory, Ownable {
     using LibClone for address;
 
-    /// @notice The address of the LegionPreLiquidOpenApplicationSale implementation contract used as a template.
+    /// @notice The address of the LegionPreLiquidSale implementation contract used as a template.
     /// @dev Immutable reference to the base implementation deployed during construction.
-    address public immutable i_preLiquidOpenApplicationSaleTemplate = address(new LegionPreLiquidOpenApplicationSale());
+    address public immutable i_preLiquidOpenApplicationSaleTemplate = address(new LegionPreLiquidSale());
 
-    /// @notice Constructor for the LegionPreLiquidOpenApplicationSaleFactory contract.
+    /// @notice Constructor for the LegionPreLiquidSaleFactory contract.
     /// @dev Initializes ownership during contract deployment.
     /// @param newOwner The address to be set as the initial owner of the factory.
     constructor(address newOwner) {
         _initializeOwner(newOwner);
     }
 
-    /// @inheritdoc ILegionPreLiquidOpenApplicationSaleFactory
+    /// @inheritdoc ILegionPreLiquidSaleFactory
     function createPreLiquidOpenApplicationSale(
         ILegionAbstractSale.LegionSaleInitializationParams memory saleInitParams
     )
@@ -50,13 +49,13 @@ contract LegionPreLiquidOpenApplicationSaleFactory is ILegionPreLiquidOpenApplic
         onlyOwner
         returns (address payable preLiquidOpenApplicationSaleInstance)
     {
-        // Deploy a LegionPreLiquidOpenApplicationSale instance
+        // Deploy a LegionPreLiquidSale instance
         preLiquidOpenApplicationSaleInstance = payable(i_preLiquidOpenApplicationSaleTemplate.clone());
 
         // Emit NewPreLiquidOpenApplicationSaleCreated
         emit NewPreLiquidOpenApplicationSaleCreated(preLiquidOpenApplicationSaleInstance, saleInitParams);
 
-        // Initialize the LegionPreLiquidOpenApplicationSale with the provided configuration
-        LegionPreLiquidOpenApplicationSale(preLiquidOpenApplicationSaleInstance).initialize(saleInitParams);
+        // Initialize the LegionPreLiquidSale with the provided configuration
+        LegionPreLiquidSale(preLiquidOpenApplicationSaleInstance).initialize(saleInitParams);
     }
 }

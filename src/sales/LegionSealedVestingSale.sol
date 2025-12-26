@@ -19,8 +19,7 @@ import { Constants } from "../utils/Constants.sol";
 import { ECIES, Point } from "../lib/ECIES.sol";
 import { Errors } from "../utils/Errors.sol";
 
-import { ILegionSealedVestingOpenApplicationSale } from
-    "../interfaces/sales/ILegionSealedVestingOpenApplicationSale.sol";
+import { ILegionSealedVestingSale } from "../interfaces/sales/ILegionSealedVestingSale.sol";
 import { ILegionAbstractSale } from "../interfaces/sales/ILegionAbstractSale.sol";
 
 import { LegionAbstractSale } from "./LegionAbstractSale.sol";
@@ -29,10 +28,10 @@ import { LegionAbstractSale } from "./LegionAbstractSale.sol";
  * @title Legion Pre-Liquid Sealed-Vesting Open Application Sale
  * @author Legion
  * @notice Executes pre-liquid sales of ERC20 tokens before Token Generation Event (TGE).
- * @dev Inherits from LegionAbstractSale and implements ILegionSealedVestingOpenApplicationSale for open application
+ * @dev Inherits from LegionAbstractSale and implements ILegionSealedVestingSale for open application
  * pre-liquid sale management.
  */
-contract LegionSealedVestingOpenApplicationSale is LegionAbstractSale, ILegionSealedVestingOpenApplicationSale {
+contract LegionSealedVestingSale is LegionAbstractSale, ILegionSealedVestingSale {
     /// @dev Struct containing the pre-liquid sale configuration
     PreLiquidSaleConfiguration private s_preLiquidSaleConfig;
 
@@ -60,7 +59,7 @@ contract LegionSealedVestingOpenApplicationSale is LegionAbstractSale, ILegionSe
         _;
     }
 
-    /// @inheritdoc ILegionSealedVestingOpenApplicationSale
+    /// @inheritdoc ILegionSealedVestingSale
     function initialize(
         LegionSaleInitializationParams calldata saleInitParams,
         PreLiquidSaleInitializationParams calldata preLiquidSaleInitParams
@@ -83,7 +82,7 @@ contract LegionSealedVestingOpenApplicationSale is LegionAbstractSale, ILegionSe
         s_preLiquidSaleConfig.publicKey = preLiquidSaleInitParams.publicKey;
     }
 
-    /// @inheritdoc ILegionSealedVestingOpenApplicationSale
+    /// @inheritdoc ILegionSealedVestingSale
     function invest(
         uint256 amount,
         uint256 deadline,
@@ -137,7 +136,7 @@ contract LegionSealedVestingOpenApplicationSale is LegionAbstractSale, ILegionSe
         SafeTransferLib.safeTransferFrom(s_addressConfig.bidToken, msg.sender, address(this), amount);
     }
 
-    /// @inheritdoc ILegionSealedVestingOpenApplicationSale
+    /// @inheritdoc ILegionSealedVestingSale
     function updateSealedVestingOption(bytes calldata newSealedVestingOption)
         external
         whenNotPaused
@@ -166,7 +165,7 @@ contract LegionSealedVestingOpenApplicationSale is LegionAbstractSale, ILegionSe
         emit SealedVestingOptionUpdated(positionId, msg.sender, encryptedVestingOption);
     }
 
-    /// @inheritdoc ILegionSealedVestingOpenApplicationSale
+    /// @inheritdoc ILegionSealedVestingSale
     function end() external onlyLegionOrProject whenNotPaused whenSaleNotCanceled whenSaleNotEnded {
         // Update the `hasEnded` status to true
         s_preLiquidSaleConfig.hasEnded = true;
@@ -181,7 +180,7 @@ contract LegionSealedVestingOpenApplicationSale is LegionAbstractSale, ILegionSe
         emit SaleEnded();
     }
 
-    /// @inheritdoc ILegionSealedVestingOpenApplicationSale
+    /// @inheritdoc ILegionSealedVestingSale
     function publishRaisedCapital(uint256 capitalRaised)
         external
         onlyLegion
@@ -200,7 +199,7 @@ contract LegionSealedVestingOpenApplicationSale is LegionAbstractSale, ILegionSe
         emit CapitalRaisedPublished(capitalRaised);
     }
 
-    /// @inheritdoc ILegionSealedVestingOpenApplicationSale
+    /// @inheritdoc ILegionSealedVestingSale
     function initializeReveal()
         external
         onlyLegion
@@ -216,7 +215,7 @@ contract LegionSealedVestingOpenApplicationSale is LegionAbstractSale, ILegionSe
         emit RevealInitialized();
     }
 
-    /// @inheritdoc ILegionSealedVestingOpenApplicationSale
+    /// @inheritdoc ILegionSealedVestingSale
     function reveal(
         uint256 sealedVestingOptionPrivateKey,
         uint256 fixedSalt
@@ -297,7 +296,7 @@ contract LegionSealedVestingOpenApplicationSale is LegionAbstractSale, ILegionSe
         }
     }
 
-    /// @inheritdoc ILegionSealedVestingOpenApplicationSale
+    /// @inheritdoc ILegionSealedVestingSale
     function preLiquidSaleConfiguration() external view returns (PreLiquidSaleConfiguration memory) {
         return s_preLiquidSaleConfig;
     }
@@ -315,7 +314,7 @@ contract LegionSealedVestingOpenApplicationSale is LegionAbstractSale, ILegionSe
         super.cancel();
     }
 
-    /// @inheritdoc ILegionSealedVestingOpenApplicationSale
+    /// @inheritdoc ILegionSealedVestingSale
     function decryptSealedVestingOption(
         uint256 encryptedVestingOption,
         address investor

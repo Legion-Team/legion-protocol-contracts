@@ -17,19 +17,19 @@ import { ECIES, Point } from "../../lib/ECIES.sol";
 import { ILegionAbstractSale } from "./ILegionAbstractSale.sol";
 
 /**
- * @title ILegionSealedBidAuctionSale
+ * @title ILegionSealedBidSale
  * @author Legion
- * @notice Interface for the LegionSealedBidAuctionSale contract.
+ * @notice Interface for the LegionSealedBidSale contract.
  */
-interface ILegionSealedBidAuctionSale is ILegionAbstractSale {
-    /// @dev Struct defining initialization parameters for the sealed bid auction sale
-    struct SealedBidAuctionSaleInitializationParams {
+interface ILegionSealedBidSale is ILegionAbstractSale {
+    /// @dev Struct defining initialization parameters for the sealed bid sale
+    struct SealedBidSaleInitializationParams {
         // Public key used to encrypt sealed bids
         Point publicKey;
     }
 
-    /// @dev Struct containing the runtime configuration of the sealed bid auction sale
-    struct SealedBidAuctionSaleConfiguration {
+    /// @dev Struct containing the runtime configuration of the sealed bid sale
+    struct SealedBidSaleConfiguration {
         // Flag indicating if sale cancellation is locked
         bool cancelLocked;
         // Public key used to encrypt sealed bids
@@ -48,7 +48,7 @@ interface ILegionSealedBidAuctionSale is ILegionAbstractSale {
         Point publicKey;
     }
 
-    /// @notice Emitted when capital is successfully invested in the sealed bid auction.
+    /// @notice Emitted when capital is successfully invested in the sealed bid sale.
     /// @param amount The amount of capital invested (in bid tokens).
     /// @param encryptedAmountOut The encrypted bid amount of tokens from the investor.
     /// @param investor The address of the investor.
@@ -67,16 +67,16 @@ interface ILegionSealedBidAuctionSale is ILegionAbstractSale {
     /// @param fixedSalt The fixed salt used for sealing bids.
     event Revealed(uint256 sealedBidPrivateKey, uint256 fixedSalt);
 
-    /// @notice Initializes the sealed bid auction sale contract with parameters.
+    /// @notice Initializes the sealed bid sale contract with parameters.
     /// @param saleInitParams The Legion sale initialization parameters.
-    /// @param sealedBidAuctionSaleInitParams The sealed bid auction-specific parameters.
+    /// @param sealedBidSaleInitParams The sealed bid sale-specific parameters.
     function initialize(
         LegionSaleInitializationParams calldata saleInitParams,
-        SealedBidAuctionSaleInitializationParams calldata sealedBidAuctionSaleInitParams
+        SealedBidSaleInitializationParams calldata sealedBidSaleInitParams
     )
         external;
 
-    /// @notice Allows an investor to invest in the sealed bid auction.
+    /// @notice Allows an investor to invest in the sealed bid sale.
     /// @param amount The amount of capital to invest.
     /// @param deadline The deadline for the investment.
     /// @param sealedBid The encoded sealed bid data (encrypted amount out, salt, public key).
@@ -93,7 +93,7 @@ interface ILegionSealedBidAuctionSale is ILegionAbstractSale {
     /// @notice Locks sale cancellation to initialize publishing of results.
     function initializeReveal() external;
 
-    /// @notice Publishes auction results including token allocation and capital raised.
+    /// @notice Publishes sale results including token allocation and capital raised.
     /// @param sealedBidPrivateKey The private key to decrypt sealed bids.
     /// @param fixedSalt The fixed salt used for sealing bids.
     function reveal(uint256 sealedBidPrivateKey, uint256 fixedSalt) external;
@@ -102,10 +102,10 @@ interface ILegionSealedBidAuctionSale is ILegionAbstractSale {
     /// @param capitalRaised The total capital raised by the project.
     function publishRaisedCapital(uint256 capitalRaised) external;
 
-    /// @notice Returns the current sealed bid auction sale configuration.
-    /// @dev Provides read-only access to the auction configuration.
-    /// @return The complete sealed bid auction sale configuration struct.
-    function sealedBidAuctionSaleConfiguration() external view returns (SealedBidAuctionSaleConfiguration memory);
+    /// @notice Returns the current sealed bid sale configuration.
+    /// @dev Provides read-only access to the sale configuration.
+    /// @return The complete sealed bid sale configuration struct.
+    function sealedBidSaleConfiguration() external view returns (SealedBidSaleConfiguration memory);
 
     /// @notice Decrypts a sealed bid using the published private key.
     /// @param encryptedAmountOut The encrypted bid amount from the investor.

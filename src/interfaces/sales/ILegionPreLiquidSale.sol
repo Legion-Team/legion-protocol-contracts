@@ -16,11 +16,11 @@ pragma solidity 0.8.30;
 import { ILegionAbstractSale } from "./ILegionAbstractSale.sol";
 
 /**
- * @title ILegionPreLiquidOpenApplicationSale
+ * @title ILegionPreLiquidSale
  * @author Legion
- * @notice Interface for the LegionPreLiquidOpenApplicationSale contract.
+ * @notice Interface for the LegionPreLiquidSale contract.
  */
-interface ILegionPreLiquidOpenApplicationSale is ILegionAbstractSale {
+interface ILegionPreLiquidSale is ILegionAbstractSale {
     /// @dev Struct defining the configuration for the pre-liquid sale
     struct PreLiquidSaleConfiguration {
         // Duration of the refund period in seconds

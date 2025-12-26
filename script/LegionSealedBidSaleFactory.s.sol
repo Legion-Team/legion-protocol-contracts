@@ -2,10 +2,9 @@
 pragma solidity 0.8.30;
 
 import { Script, console2 } from "forge-std/Script.sol";
-import { LegionPreLiquidOpenApplicationSaleFactory } from
-    "../src/factories/LegionPreLiquidOpenApplicationSaleFactory.sol";
+import { LegionSealedBidSaleFactory } from "../src/factories/LegionSealedBidSaleFactory.sol";
 
-contract LegionPreLiquidOpenApplicationSaleFactoryScript is Script {
+contract LegionSealedBidSaleFactoryScript is Script {
     function setUp() public { }
 
     function run() external {
@@ -15,7 +14,7 @@ contract LegionPreLiquidOpenApplicationSaleFactoryScript is Script {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        new LegionPreLiquidOpenApplicationSaleFactory(legionBouncer);
+        new LegionSealedBidSaleFactory(legionBouncer);
 
         vm.stopBroadcast();
     }

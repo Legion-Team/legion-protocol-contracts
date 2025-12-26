@@ -18,7 +18,7 @@ import { SafeTransferLib } from "@solady/src/utils/SafeTransferLib.sol";
 import { Constants } from "../utils/Constants.sol";
 import { Errors } from "../utils/Errors.sol";
 
-import { ILegionPreLiquidOpenApplicationSale } from "../interfaces/sales/ILegionPreLiquidOpenApplicationSale.sol";
+import { ILegionPreLiquidSale } from "../interfaces/sales/ILegionPreLiquidSale.sol";
 import { ILegionAbstractSale } from "../interfaces/sales/ILegionAbstractSale.sol";
 
 import { LegionAbstractSale } from "./LegionAbstractSale.sol";
@@ -27,10 +27,10 @@ import { LegionAbstractSale } from "./LegionAbstractSale.sol";
  * @title Legion Pre-Liquid Open Application Sale
  * @author Legion
  * @notice Executes pre-liquid sales of ERC20 tokens before Token Generation Event (TGE).
- * @dev Inherits from LegionAbstractSale and implements ILegionPreLiquidOpenApplicationSale for open application
+ * @dev Inherits from LegionAbstractSale and implements ILegionPreLiquidSale for open application
  * pre-liquid sale management.
  */
-contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiquidOpenApplicationSale {
+contract LegionPreLiquidSale is LegionAbstractSale, ILegionPreLiquidSale {
     /// @dev Struct containing the pre-liquid sale configuration
     PreLiquidSaleConfiguration private s_preLiquidSaleConfig;
 
@@ -42,7 +42,7 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
         _;
     }
 
-    /// @inheritdoc ILegionPreLiquidOpenApplicationSale
+    /// @inheritdoc ILegionPreLiquidSale
     function initialize(LegionSaleInitializationParams calldata saleInitParams) external initializer {
         // Initialize and set the sale common parameters
         _setLegionSaleConfig(saleInitParams);
@@ -54,7 +54,7 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
         s_preLiquidSaleConfig.refundPeriodSeconds = saleInitParams.refundPeriodSeconds;
     }
 
-    /// @inheritdoc ILegionPreLiquidOpenApplicationSale
+    /// @inheritdoc ILegionPreLiquidSale
     function invest(
         uint256 amount,
         uint256 deadline,
@@ -100,7 +100,7 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
         SafeTransferLib.safeTransferFrom(s_addressConfig.bidToken, msg.sender, address(this), amount);
     }
 
-    /// @inheritdoc ILegionPreLiquidOpenApplicationSale
+    /// @inheritdoc ILegionPreLiquidSale
     function end() external onlyLegionOrProject whenNotPaused whenSaleNotCanceled whenSaleNotEnded {
         // Update the `hasEnded` status to true
         s_preLiquidSaleConfig.hasEnded = true;
@@ -115,7 +115,7 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
         emit SaleEnded();
     }
 
-    /// @inheritdoc ILegionPreLiquidOpenApplicationSale
+    /// @inheritdoc ILegionPreLiquidSale
     function publishRaisedCapital(uint256 capitalRaised)
         external
         onlyLegion
@@ -189,7 +189,7 @@ contract LegionPreLiquidOpenApplicationSale is LegionAbstractSale, ILegionPreLiq
         }
     }
 
-    /// @inheritdoc ILegionPreLiquidOpenApplicationSale
+    /// @inheritdoc ILegionPreLiquidSale
     function preLiquidSaleConfiguration() external view returns (PreLiquidSaleConfiguration memory) {
         return s_preLiquidSaleConfig;
     }

@@ -16,11 +16,11 @@ pragma solidity 0.8.30;
 import { ILegionAbstractSale } from "../sales/ILegionAbstractSale.sol";
 
 /**
- * @title ILegionPreLiquidOpenApplicationSaleFactory
+ * @title ILegionPreLiquidSaleFactory
  * @author Legion
  * @notice Interface for the Legion PreLiquidOpenApplicationSaleFactory contract.
  */
-interface ILegionPreLiquidOpenApplicationSaleFactory {
+interface ILegionPreLiquidSaleFactory {
     /// @notice Emitted when a new pre-liquid open application sale contract is deployed and initialized.
     /// @param saleInstance The address of the newly deployed pre-liquid open application sale contract.
     /// @param saleInitParams The Legion sale initialization parameters used.
@@ -28,10 +28,10 @@ interface ILegionPreLiquidOpenApplicationSaleFactory {
         address saleInstance, ILegionAbstractSale.LegionSaleInitializationParams saleInitParams
     );
 
-    /// @notice Deploys a new LegionPreLiquidOpenApplicationSale contract instance.
+    /// @notice Deploys a new LegionPreLiquidSale contract instance.
     /// @param saleInitParams The Legion sale initialization parameters.
     /// @return preLiquidOpenApplicationSaleInstance The address of the newly deployed and initialized
-    /// LegionPreLiquidOpenApplicationSale instance.
+    /// LegionPreLiquidSale instance.
     function createPreLiquidOpenApplicationSale(
         ILegionAbstractSale.LegionSaleInitializationParams memory saleInitParams
     )
