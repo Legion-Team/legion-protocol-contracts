@@ -25,8 +25,6 @@ interface ILegionPreLiquidSale is ILegionAbstractSale {
     struct PreLiquidSaleConfiguration {
         // Duration of the refund period in seconds
         uint64 refundPeriodSeconds;
-        // Flag indicating whether the sale has ended
-        bool hasEnded;
     }
 
     /// @notice Emitted when capital is successfully invested in the pre-liquid sale.

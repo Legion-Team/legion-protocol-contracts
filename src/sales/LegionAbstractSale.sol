@@ -95,6 +95,14 @@ abstract contract LegionAbstractSale is ILegionAbstractSale, LegionPositionManag
         _;
     }
 
+    /// @notice Restricts interaction to when the sale has ended.
+    /// @dev Reverts if the sale has not ended.
+    modifier whenSaleEnded() {
+        // Verify that the sale has ended
+        _verifySaleHasEnded();
+        _;
+    }
+
     /// @notice Restricts interaction to when the sale is not ended
     /// @dev Reverts if the sale has ended.
     modifier whenSaleNotEnded() {
@@ -162,6 +170,7 @@ abstract contract LegionAbstractSale is ILegionAbstractSale, LegionPositionManag
         virtual
         onlyProject
         whenNotPaused
+        whenSaleEnded
         whenRefundPeriodIsOver
         whenSaleNotCanceled
     {
@@ -568,9 +577,14 @@ abstract contract LegionAbstractSale is ILegionAbstractSale, LegionPositionManag
         if (_amount < s_saleConfig.minimumInvestAmount) revert Errors.LegionSale__InvalidInvestAmount(_amount);
     }
 
+    /// @dev Verifies that the sale has ended.
+    function _verifySaleHasEnded() internal view virtual {
+        if (!s_saleStatus.hasEnded) revert Errors.LegionSale__SaleHasNotEnded(block.timestamp);
+    }
+
     /// @dev Verifies that the sale has not ended.
     function _verifySaleHasNotEnded() internal view virtual {
-        if (block.timestamp >= s_saleConfig.endTime) revert Errors.LegionSale__SaleHasEnded(block.timestamp);
+        if (s_saleStatus.hasEnded) revert Errors.LegionSale__SaleHasEnded(block.timestamp);
     }
 
     /// @dev Verifies that the refund period has ended.
@@ -578,7 +592,7 @@ abstract contract LegionAbstractSale is ILegionAbstractSale, LegionPositionManag
         // Cache the refund end time from the sale configuration
         uint256 refundEndTime = s_saleConfig.refundEndTime;
 
-        if (block.timestamp < refundEndTime) {
+        if (refundEndTime > 0 && block.timestamp < refundEndTime) {
             revert Errors.LegionSale__RefundPeriodIsNotOver(block.timestamp, refundEndTime);
         }
     }
@@ -588,7 +602,7 @@ abstract contract LegionAbstractSale is ILegionAbstractSale, LegionPositionManag
         // Cache the refund end time from the sale configuration
         uint256 refundEndTime = s_saleConfig.refundEndTime;
 
-        if (block.timestamp >= refundEndTime) {
+        if (refundEndTime > 0 && block.timestamp >= refundEndTime) {
             revert Errors.LegionSale__RefundPeriodIsOver(block.timestamp, refundEndTime);
         }
     }
@@ -633,7 +647,7 @@ abstract contract LegionAbstractSale is ILegionAbstractSale, LegionPositionManag
         LegionSaleStatus memory _saleStatus = s_saleStatus;
 
         if (_saleStatus.capitalWithdrawn) revert Errors.LegionSale__CapitalAlreadyWithdrawn();
-        if (_saleStatus.totalCapitalRaised == 0) revert Errors.LegionSale__CapitalNotRaised();
+        if (_saleStatus.totalCapitalRaised == 0) revert Errors.LegionSale__CapitalRaisedNotPublished();
     }
 
     /// @dev Verifies that the investor has not refunded.

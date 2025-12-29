@@ -285,7 +285,6 @@ contract LegionPreLiquidOpenApplicationSaleFactoryTest is Test {
 
         // Expect
         assertEq(_preLiquidSaleConfig.refundPeriodSeconds, 2 weeks);
-        assertEq(_preLiquidSaleConfig.hasEnded, false);
 
         assertEq(LegionPreLiquidSale(payable(legionPreLiquidSaleInstance)).name(), "Legion LFG Sale");
         assertEq(LegionPreLiquidSale(payable(legionPreLiquidSaleInstance)).symbol(), "LLFGS");

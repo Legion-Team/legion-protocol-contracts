@@ -628,7 +628,7 @@ contract LegionPreLiquidSaleTest is Test {
             LegionPreLiquidSale(payable(legionSaleInstance)).preLiquidSaleConfiguration();
 
         // Expect
-        assertEq(_preLiquidSaleConfig.hasEnded, false);
+        assertEq(_preLiquidSaleConfig.refundPeriodSeconds, 2 weeks);
     }
 
     /**

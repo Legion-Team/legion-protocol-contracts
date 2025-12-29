@@ -30,6 +30,8 @@ interface ILegionSealedBidSale is ILegionAbstractSale {
 
     /// @dev Struct containing the runtime configuration of the sealed bid sale
     struct SealedBidSaleConfiguration {
+        // Duration of the refund period in seconds
+        uint64 refundPeriodSeconds;
         // Flag indicating if sale cancellation is locked
         bool cancelLocked;
         // Public key used to encrypt sealed bids
@@ -67,6 +69,9 @@ interface ILegionSealedBidSale is ILegionAbstractSale {
     /// @param fixedSalt The fixed salt used for sealing bids.
     event Revealed(uint256 sealedBidPrivateKey, uint256 fixedSalt);
 
+    /// @notice Emitted when the sale is ended by Legion or project.
+    event SaleEnded();
+
     /// @notice Initializes the sealed bid sale contract with parameters.
     /// @param saleInitParams The Legion sale initialization parameters.
     /// @param sealedBidSaleInitParams The sealed bid sale-specific parameters.
@@ -97,6 +102,9 @@ interface ILegionSealedBidSale is ILegionAbstractSale {
     /// @param sealedBidPrivateKey The private key to decrypt sealed bids.
     /// @param fixedSalt The fixed salt used for sealing bids.
     function reveal(uint256 sealedBidPrivateKey, uint256 fixedSalt) external;
+
+    /// @notice Ends the sale and sets the refund period.
+    function end() external;
 
     /// @notice Publishes the total capital raised.
     /// @param capitalRaised The total capital raised by the project.

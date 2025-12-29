@@ -39,10 +39,6 @@ library Errors {
     /// @notice Thrown when capital has already been withdrawn by the project.
     error LegionSale__CapitalAlreadyWithdrawn();
 
-    /// @notice Thrown when no capital has been raised.
-    /// @dev Indicates no capital is available for withdrawal.
-    error LegionSale__CapitalNotRaised();
-
     /// @notice Thrown when capital raised data has already been published.
     error LegionSale__CapitalRaisedAlreadyPublished();
 

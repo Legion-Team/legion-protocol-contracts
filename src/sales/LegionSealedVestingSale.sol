@@ -35,14 +35,6 @@ contract LegionSealedVestingSale is LegionAbstractSale, ILegionSealedVestingSale
     /// @dev Struct containing the pre-liquid sale configuration
     PreLiquidSaleConfiguration private s_preLiquidSaleConfig;
 
-    /// @notice Restricts interaction to when the sale has ended.
-    /// @dev Reverts if the sale has not ended.
-    modifier whenSaleEnded() {
-        // Verify that the sale has ended
-        _verifySaleHasEnded();
-        _;
-    }
-
     /// @notice Restricts interaction to when the sale cancelation is locked.
     /// @dev Reverts if canceling is not locked.
     modifier whenCancelLocked() {
@@ -168,7 +160,7 @@ contract LegionSealedVestingSale is LegionAbstractSale, ILegionSealedVestingSale
     /// @inheritdoc ILegionSealedVestingSale
     function end() external onlyLegionOrProject whenNotPaused whenSaleNotCanceled whenSaleNotEnded {
         // Update the `hasEnded` status to true
-        s_preLiquidSaleConfig.hasEnded = true;
+        s_saleStatus.hasEnded = true;
 
         // Set the `endTime` of the sale
         s_saleConfig.endTime = uint64(block.timestamp);
@@ -241,61 +233,6 @@ contract LegionSealedVestingSale is LegionAbstractSale, ILegionSealedVestingSale
         emit Revealed(sealedVestingOptionPrivateKey, fixedSalt);
     }
 
-    /// @inheritdoc ILegionAbstractSale
-    function withdrawRaisedCapital()
-        external
-        override(ILegionAbstractSale, LegionAbstractSale)
-        onlyProject
-        whenNotPaused
-        whenSaleEnded
-        whenRefundPeriodIsOver
-        whenSaleNotCanceled
-    {
-        // Verify that the project can withdraw capital
-        _verifyCanWithdrawCapital();
-
-        // Flag that the capital has been withdrawn
-        s_saleStatus.capitalWithdrawn = true;
-
-        // Cache value in memory
-        uint256 _totalCapitalRaised = s_saleStatus.totalCapitalRaised;
-
-        // Set the total capital that has been withdrawn
-        s_saleStatus.totalCapitalWithdrawn = _totalCapitalRaised;
-
-        // Cache Legion Sale Address Configuration
-        LegionSaleAddressConfiguration memory addressConfig = s_addressConfig;
-
-        // Cache Legion Sale Configuration
-        LegionSaleConfiguration memory saleConfig = s_saleConfig;
-
-        // Calculate Legion Fee
-        uint256 _legionFee =
-            (saleConfig.legionFeeOnCapitalRaisedBps * _totalCapitalRaised) / Constants.BASIS_POINTS_DENOMINATOR;
-
-        // Calculate Referrer Fee
-        uint256 _referrerFee =
-            (saleConfig.referrerFeeOnCapitalRaisedBps * _totalCapitalRaised) / Constants.BASIS_POINTS_DENOMINATOR;
-
-        // Emit CapitalWithdrawn event
-        emit CapitalWithdrawn(_totalCapitalRaised);
-
-        // Transfer the raised capital to the project owner
-        SafeTransferLib.safeTransfer(
-            addressConfig.bidToken, msg.sender, (_totalCapitalRaised - _legionFee - _referrerFee)
-        );
-
-        // Transfer the Legion fee to the Legion fee receiver address
-        if (_legionFee != 0) {
-            SafeTransferLib.safeTransfer(addressConfig.bidToken, addressConfig.legionFeeReceiver, _legionFee);
-        }
-
-        // Transfer the Referrer fee to the Referrer fee receiver address
-        if (_referrerFee != 0) {
-            SafeTransferLib.safeTransfer(addressConfig.bidToken, addressConfig.referrerFeeReceiver, _referrerFee);
-        }
-    }
-
     /// @inheritdoc ILegionSealedVestingSale
     function preLiquidSaleConfiguration() external view returns (PreLiquidSaleConfiguration memory) {
         return s_preLiquidSaleConfig;
@@ -336,45 +273,6 @@ contract LegionSealedVestingSale is LegionAbstractSale, ILegionSealedVestingSale
             preLiquidSaleConfig.privateKey,
             uint256(keccak256(abi.encodePacked(investor, preLiquidSaleConfig.fixedSalt)))
         );
-    }
-
-    /// @dev Verifies that the sale has not ended.
-    function _verifySaleHasNotEnded() internal view override {
-        if (s_preLiquidSaleConfig.hasEnded) revert Errors.LegionSale__SaleHasEnded(block.timestamp);
-    }
-
-    /// @dev Verifies that the refund period has ended.
-    function _verifyRefundPeriodIsOver() internal view override {
-        // Cache the refund end time from the sale configuration
-        uint256 refundEndTime = s_saleConfig.refundEndTime;
-
-        if (refundEndTime > 0 && block.timestamp < refundEndTime) {
-            revert Errors.LegionSale__RefundPeriodIsNotOver(block.timestamp, refundEndTime);
-        }
-    }
-
-    /// @dev Verifies that the refund period is still active.
-    function _verifyRefundPeriodIsNotOver() internal view override {
-        // Cache the refund end time from the sale configuration
-        uint256 refundEndTime = s_saleConfig.refundEndTime;
-
-        if (refundEndTime > 0 && block.timestamp >= refundEndTime) {
-            revert Errors.LegionSale__RefundPeriodIsOver(block.timestamp, refundEndTime);
-        }
-    }
-
-    /// @dev Verifies conditions for withdrawing capital.
-    function _verifyCanWithdrawCapital() internal view override {
-        // Load the sale status
-        LegionSaleStatus memory saleStatus = s_saleStatus;
-
-        if (saleStatus.capitalWithdrawn) revert Errors.LegionSale__CapitalAlreadyWithdrawn();
-        if (saleStatus.totalCapitalRaised == 0) revert Errors.LegionSale__CapitalRaisedNotPublished();
-    }
-
-    /// @dev Verifies that the sale has ended.
-    function _verifySaleHasEnded() private view {
-        if (!s_preLiquidSaleConfig.hasEnded) revert Errors.LegionSale__SaleHasNotEnded(block.timestamp);
     }
 
     /// @dev Verifies conditions for publishing capital raised.

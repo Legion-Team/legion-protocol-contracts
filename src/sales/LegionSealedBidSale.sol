@@ -15,6 +15,7 @@ pragma solidity 0.8.30;
 
 import { SafeTransferLib } from "@solady/src/utils/SafeTransferLib.sol";
 
+import { Constants } from "../utils/Constants.sol";
 import { ECIES, Point } from "../lib/ECIES.sol";
 import { Errors } from "../utils/Errors.sol";
 
@@ -64,13 +65,14 @@ contract LegionSealedBidSale is LegionAbstractSale, ILegionSealedBidSale {
         // Initialize and set the sale common parameters
         _setLegionSaleConfig(saleInitParams);
 
-        // Set the sealed bid sale specific configuration
-        (s_sealedBidSaleConfig.publicKey) = sealedBidSaleInitParams.publicKey;
-
-        // Calculate and set startTime, endTime and refundEndTime
+        // Set the sale start time
         s_saleConfig.startTime = uint64(block.timestamp);
-        s_saleConfig.endTime = s_saleConfig.startTime + saleInitParams.salePeriodSeconds;
-        s_saleConfig.refundEndTime = s_saleConfig.endTime + saleInitParams.refundPeriodSeconds;
+
+        // Set the refund period duration in seconds
+        s_sealedBidSaleConfig.refundPeriodSeconds = saleInitParams.refundPeriodSeconds;
+
+        // Set the public key for encrypting sealed bids
+        s_sealedBidSaleConfig.publicKey = sealedBidSaleInitParams.publicKey;
     }
 
     /// @inheritdoc ILegionSealedBidSale
@@ -168,6 +170,21 @@ contract LegionSealedBidSale is LegionAbstractSale, ILegionSealedBidSale {
     }
 
     /// @inheritdoc ILegionSealedBidSale
+    function end() external onlyLegionOrProject whenNotPaused whenSaleNotCanceled whenSaleNotEnded {
+        // Update the `hasEnded` status to true
+        s_saleStatus.hasEnded = true;
+
+        // Set the `endTime` of the sale
+        s_saleConfig.endTime = uint64(block.timestamp);
+
+        // Set the `refundEndTime` of the sale
+        s_saleConfig.refundEndTime = uint64(block.timestamp) + s_sealedBidSaleConfig.refundPeriodSeconds;
+
+        // Emit SaleEnded event
+        emit SaleEnded();
+    }
+
+    /// @inheritdoc ILegionSealedBidSale
     function publishRaisedCapital(uint256 capitalRaised)
         external
         onlyLegion
@@ -220,8 +237,13 @@ contract LegionSealedBidSale is LegionAbstractSale, ILegionSealedBidSale {
         );
     }
 
-    /// @dev Verifies the validity of sealed bid sale initialization parameters.
-    /// @param _sealedBidSaleInitParams The sale-specific parameters to validate.
+    /// @dev Verifies conditions for publishing capital raised.
+    function _verifyCanPublishCapitalRaised() private view {
+        if (s_saleStatus.totalCapitalRaised != 0) revert Errors.LegionSale__CapitalRaisedAlreadyPublished();
+    }
+
+    /// @dev Verifies the validity of sealed vesting sale initialization parameters.
+    /// @param _sealedBidSaleInitParams The auction-specific parameters to validate.
     function _verifyValidParams(SealedBidSaleInitializationParams calldata _sealedBidSaleInitParams) private pure {
         // Check if the public key used for encryption is valid
         if (!ECIES.isValid(_sealedBidSaleInitParams.publicKey)) {
@@ -229,36 +251,36 @@ contract LegionSealedBidSale is LegionAbstractSale, ILegionSealedBidSale {
         }
     }
 
-    /// @dev Verifies the validity of the public key used in a sealed bid.
-    /// @param _publicKey The public key provided in the sealed bid.
+    /// @dev Verifies the validity of the public key used in a sealed vesting option.
+    /// @param _publicKey The public key provided in the sealed vesting option.
     function _verifyValidPublicKey(Point memory _publicKey) private view {
         // Verify that the _publicKey is a valid point for the encryption library
         if (!ECIES.isValid(_publicKey)) revert Errors.LegionSale__InvalidBidPublicKey();
 
-        // Cache the sealed bid sale configuration
-        SealedBidSaleConfiguration memory sealedBidSaleConfig = s_sealedBidSaleConfig;
+        // Cache the pre-liquid sealed vesting sale configuration
+        SealedBidSaleConfiguration memory preLiquidSaleConfig = s_sealedBidSaleConfig;
 
-        // Verify that the _publicKey is the one used for the entire sale
+        // Verify that the _publicKey is the one used for the entire auction
         if (
             keccak256(abi.encodePacked(_publicKey.x, _publicKey.y))
-                != keccak256(abi.encodePacked(sealedBidSaleConfig.publicKey.x, sealedBidSaleConfig.publicKey.y))
+                != keccak256(abi.encodePacked(preLiquidSaleConfig.publicKey.x, preLiquidSaleConfig.publicKey.y))
         ) revert Errors.LegionSale__InvalidBidPublicKey();
     }
 
-    /// @dev Verifies the validity of the private key for decrypting bids.
+    /// @dev Verifies the validity of the private key for decrypting sealed vesting options.
     /// @param _privateKey The private key provided for decryption.
     function _verifyValidPrivateKey(uint256 _privateKey) private view {
-        // Cache the sealed bid sale configuration
-        SealedBidSaleConfiguration memory sealedBidSaleConfig = s_sealedBidSaleConfig;
+        // Cache the sealed pre-liquid sealed vesting sale configuration
+        SealedBidSaleConfiguration memory preLiquidSaleConfig = s_sealedBidSaleConfig;
 
         // Verify that the private key has not already been published
-        if (sealedBidSaleConfig.privateKey != 0) {
+        if (preLiquidSaleConfig.privateKey != 0) {
             revert Errors.LegionSale__PrivateKeyAlreadyPublished();
         }
 
         // Verify that the private key is valid for the public key
         Point memory calcPubKey = ECIES.calcPubKey(Point(1, 2), _privateKey);
-        if (calcPubKey.x != sealedBidSaleConfig.publicKey.x || calcPubKey.y != sealedBidSaleConfig.publicKey.y) {
+        if (calcPubKey.x != preLiquidSaleConfig.publicKey.x || calcPubKey.y != preLiquidSaleConfig.publicKey.y) {
             revert Errors.LegionSale__InvalidBidPrivateKey();
         }
     }
@@ -282,10 +304,5 @@ contract LegionSealedBidSale is LegionAbstractSale, ILegionSealedBidSale {
         if (!s_sealedBidSaleConfig.cancelLocked) {
             revert Errors.LegionSale__CancelNotLocked();
         }
-    }
-
-    /// @dev Verifies conditions for publishing capital raised.
-    function _verifyCanPublishCapitalRaised() private view {
-        if (s_saleStatus.totalCapitalRaised != 0) revert Errors.LegionSale__CapitalRaisedAlreadyPublished();
     }
 }

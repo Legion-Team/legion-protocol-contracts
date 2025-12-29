@@ -99,6 +99,8 @@ interface ILegionAbstractSale {
         bool isCanceled;
         // Indicates if capital has been withdrawn by the project
         bool capitalWithdrawn;
+        // Flag indicating whether the sale has ended
+        bool hasEnded;
     }
 
     /// @dev Struct representing an investor's position in the sale

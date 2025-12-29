@@ -720,7 +720,7 @@ contract LegionSealedVestingSaleTest is Test {
             LegionSealedVestingSale(payable(legionSaleInstance)).preLiquidSaleConfiguration();
 
         // Expect
-        assertEq(_preLiquidSaleConfig.hasEnded, false);
+        assertEq(_preLiquidSaleConfig.refundPeriodSeconds, 2 weeks);
     }
 
     /**
