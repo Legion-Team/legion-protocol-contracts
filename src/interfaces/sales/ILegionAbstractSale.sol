@@ -43,12 +43,6 @@ interface ILegionAbstractSale {
         address addressRegistry;
         // Address of the referrer fee receiver
         address referrerFeeReceiver;
-        // Name of the pre-liquid sale soulbound token
-        string saleName;
-        // Symbol of the pre-liquid sale soulbound token
-        string saleSymbol;
-        // Base URI for the pre-liquid sale soulbound token
-        string saleBaseURI;
     }
 
     /// @dev Struct containing the runtime configuration of the sale
@@ -127,8 +121,7 @@ interface ILegionAbstractSale {
     /// @notice Emitted when capital is refunded to an investor.
     /// @param amount The amount of capital refunded.
     /// @param investor The address of the investor receiving refund.
-    /// @param positionId The ID of the investor's position.
-    event CapitalRefunded(uint256 amount, address investor, uint256 positionId);
+    event CapitalRefunded(uint256 amount, address investor);
 
     /// @notice Emitted when capital is refunded after sale cancellation.
     /// @param amount The amount of capital refunded.
@@ -138,8 +131,7 @@ interface ILegionAbstractSale {
     /// @notice Emitted when excess capital is claimed by an investor after sale completion.
     /// @param amount The amount of excess capital withdrawn.
     /// @param investor The address of the investor claiming excess.
-    /// @param positionId The ID of the investor's position.
-    event ExcessCapitalWithdrawn(uint256 amount, address investor, uint256 positionId);
+    event ExcessCapitalWithdrawn(uint256 amount, address investor);
 
     /// @notice Emitted during an emergency withdrawal by Legion.
     /// @param receiver The address receiving withdrawn tokens.

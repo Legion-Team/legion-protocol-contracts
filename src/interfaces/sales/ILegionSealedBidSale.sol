@@ -54,8 +54,7 @@ interface ILegionSealedBidSale is ILegionAbstractSale {
     /// @param amount The amount of capital invested (in bid tokens).
     /// @param encryptedAmountOut The encrypted bid amount of tokens from the investor.
     /// @param investor The address of the investor.
-    /// @param positionId The unique identifier for the investment position.
-    event CapitalInvested(uint256 amount, uint256 encryptedAmountOut, address investor, uint256 positionId);
+    event CapitalInvested(uint256 amount, uint256 encryptedAmountOut, address investor);
 
     /// @notice Emitted when the total capital raised is published by the Legion admin.
     /// @param capitalRaised The total capital raised by the project.

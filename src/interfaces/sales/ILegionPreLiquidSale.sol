@@ -30,8 +30,7 @@ interface ILegionPreLiquidSale is ILegionAbstractSale {
     /// @notice Emitted when capital is successfully invested in the pre-liquid sale.
     /// @param amount The amount of capital invested (in bid tokens).
     /// @param investor The address of the investor.
-    /// @param positionId The unique identifier for the investment position.
-    event CapitalInvested(uint256 amount, address investor, uint256 positionId);
+    event CapitalInvested(uint256 amount, address investor);
 
     /// @notice Emitted when the total capital raised is published by the Legion admin.
     /// @param capitalRaised The total capital raised by the project.

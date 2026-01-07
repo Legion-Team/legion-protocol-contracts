@@ -186,10 +186,7 @@ contract LegionSealedVestingSaleFactoryTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver,
-                saleName: "Legion LFG Sale",
-                saleSymbol: "LLFGS",
-                saleBaseURI: "https://metadata.legion.cc/"
+                referrerFeeReceiver: referrerFeeReceiver
             }),
             ILegionSealedVestingSale.PreLiquidSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
@@ -293,10 +290,7 @@ contract LegionSealedVestingSaleFactoryTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver,
-                saleName: "",
-                saleSymbol: "",
-                saleBaseURI: ""
+                referrerFeeReceiver: referrerFeeReceiver
             }),
             ILegionSealedVestingSale.PreLiquidSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
@@ -325,8 +319,5 @@ contract LegionSealedVestingSaleFactoryTest is Test {
 
         // Expect
         assertEq(_preLiquidSaleConfig.refundPeriodSeconds, 2 weeks);
-
-        assertEq(LegionSealedVestingSale(payable(legionPreLiquidSaleInstance)).name(), "Legion LFG Sale");
-        assertEq(LegionSealedVestingSale(payable(legionPreLiquidSaleInstance)).symbol(), "LLFGS");
     }
 }

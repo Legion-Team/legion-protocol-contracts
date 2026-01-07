@@ -87,12 +87,6 @@ contract LegionSealedVestingSale is LegionAbstractSale, ILegionSealedVestingSale
         whenSaleNotEnded
         whenSaleNotCanceled
     {
-        // Check if the investor has already invested
-        // If not, create a new investor position
-        uint256 positionId = _getInvestorPositionId(msg.sender) == 0
-            ? _createInvestorPosition(msg.sender)
-            : s_investorPositionIds[msg.sender];
-
         // Verify that the amount invested is more than the minimum required
         _verifyMinimumInvestAmount(amount);
 
@@ -107,19 +101,19 @@ contract LegionSealedVestingSale is LegionAbstractSale, ILegionSealedVestingSale
         _verifyValidPublicKey(sealedVestingOptionPublicKey);
 
         // Verify that the investor has not refunded
-        _verifyHasNotRefunded(positionId);
+        _verifyHasNotRefunded(msg.sender);
 
         // Verify that the investor has not claimed excess capital
-        _verifyHasNotClaimedExcess(positionId);
+        _verifyHasNotClaimedExcess(msg.sender);
 
         // Increment total capital invested from all investors
         s_saleStatus.totalCapitalInvested += amount;
 
         // Increment total invested capital for the investor
-        s_investorPositions[positionId].investedCapital += amount;
+        s_investorPositions[msg.sender].investedCapital += amount;
 
         // Emit CapitalInvested event
-        emit CapitalInvested(amount, encryptedVestingOption, msg.sender, positionId);
+        emit CapitalInvested(amount, encryptedVestingOption, msg.sender);
 
         // Collect Legion's operations fee
         _handleOpsFee();
@@ -135,17 +129,11 @@ contract LegionSealedVestingSale is LegionAbstractSale, ILegionSealedVestingSale
         whenSaleNotEnded
         whenSaleNotCanceled
     {
-        // Get the investor position ID
-        uint256 positionId = _getInvestorPositionId(msg.sender);
-
-        // Verify that the position exists
-        _verifyPositionExists(positionId);
-
         // Verify that the investor has not refunded
-        _verifyHasNotRefunded(positionId);
+        _verifyHasNotRefunded(msg.sender);
 
         // Verify that the investor has not claimed excess capital
-        _verifyHasNotClaimedExcess(positionId);
+        _verifyHasNotClaimedExcess(msg.sender);
 
         // Decode the sealed vesting data
         (uint256 encryptedVestingOption, Point memory publicKey) = abi.decode(newSealedVestingOption, (uint256, Point));
@@ -154,7 +142,7 @@ contract LegionSealedVestingSale is LegionAbstractSale, ILegionSealedVestingSale
         _verifyValidPublicKey(publicKey);
 
         // Emit VestingOptionEdited event
-        emit SealedVestingOptionUpdated(positionId, msg.sender, encryptedVestingOption);
+        emit SealedVestingOptionUpdated(msg.sender, encryptedVestingOption);
     }
 
     /// @inheritdoc ILegionSealedVestingSale

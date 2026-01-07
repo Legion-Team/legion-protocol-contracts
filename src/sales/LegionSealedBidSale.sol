@@ -88,12 +88,6 @@ contract LegionSealedBidSale is LegionAbstractSale, ILegionSealedBidSale {
         whenSaleNotEnded
         whenSaleNotCanceled
     {
-        // Check if the investor has already invested
-        // If not, create a new investor position
-        uint256 positionId = _getInvestorPositionId(msg.sender) == 0
-            ? _createInvestorPosition(msg.sender)
-            : s_investorPositionIds[msg.sender];
-
         // Verify that the amount invested is more than the minimum required
         _verifyMinimumInvestAmount(amount);
 
@@ -107,19 +101,19 @@ contract LegionSealedBidSale is LegionAbstractSale, ILegionSealedBidSale {
         _verifyValidPublicKey(sealedBidPublicKey);
 
         // Verify that the investor has not refunded
-        _verifyHasNotRefunded(positionId);
+        _verifyHasNotRefunded(msg.sender);
 
         // Verify that the investor has not claimed excess capital
-        _verifyHasNotClaimedExcess(positionId);
+        _verifyHasNotClaimedExcess(msg.sender);
 
         // Increment total capital invested from all investors
         s_saleStatus.totalCapitalInvested += amount;
 
         // Increment total invested capital for the investor
-        s_investorPositions[positionId].investedCapital += amount;
+        s_investorPositions[msg.sender].investedCapital += amount;
 
         // Emit CapitalInvested event
-        emit CapitalInvested(amount, encryptedAmountOut, msg.sender, positionId);
+        emit CapitalInvested(amount, encryptedAmountOut, msg.sender);
 
         // Collect Legion's operations fee
         _handleOpsFee();

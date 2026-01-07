@@ -54,8 +54,7 @@ interface ILegionSealedVestingSale is ILegionAbstractSale {
     /// @param amount The amount of capital invested (in bid tokens).
     /// @param encryptedVestingOption The encrypted vesting option from the investor.
     /// @param investor The address of the investor.
-    /// @param positionId The unique identifier for the investment position.
-    event CapitalInvested(uint256 amount, uint256 encryptedVestingOption, address investor, uint256 positionId);
+    event CapitalInvested(uint256 amount, uint256 encryptedVestingOption, address investor);
 
     /// @notice Emitted when the total capital raised is published by the Legion admin.
     /// @param capitalRaised The total capital raised by the project.
@@ -68,10 +67,9 @@ interface ILegionSealedVestingSale is ILegionAbstractSale {
     event Revealed(uint256 sealedVestingOptionPrivateKey, uint256 fixedSalt);
 
     /// @notice Emitted when an investor updates their sealed vesting option.
-    /// @param positionId The unique identifier for the investment position.
     /// @param investor The address of the investor.
     /// @param encryptedVestingOption The new encrypted vesting option from the investor.
-    event SealedVestingOptionUpdated(uint256 positionId, address investor, uint256 encryptedVestingOption);
+    event SealedVestingOptionUpdated(address investor, uint256 encryptedVestingOption);
 
     /// @notice Emitted when the sale is ended by Legion or project.
     event SaleEnded();

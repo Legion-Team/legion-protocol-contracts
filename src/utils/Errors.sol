@@ -109,14 +109,6 @@ library Errors {
     /// @param investor The address of the refunded investor.
     error LegionSale__InvestorHasRefunded(address investor);
 
-    /// @notice Thrown when attempting to transfer a position that has been refunded or settled.
-    /// @param positionId The ID of the position that cannot be transferred.
-    error LegionSale__UnableToTransferInvestorPosition(uint256 positionId);
-
-    /// @notice Thrown when attempting to merge an investor position that has been refunded or settled.
-    /// @param positionId The ID of the position that cannot be merged.
-    error LegionSale__UnableToMergeInvestorPosition(uint256 positionId);
-
     /// @notice Thrown when a function is not called by the Legion address.
     error LegionSale__NotCalledByLegion();
 

@@ -303,10 +303,7 @@ contract LegionPreLiquidSaleTest is Test {
             bidToken: _saleInitParams.bidToken,
             projectAdmin: _saleInitParams.projectAdmin,
             addressRegistry: _saleInitParams.addressRegistry,
-            referrerFeeReceiver: _saleInitParams.referrerFeeReceiver,
-            saleName: _saleInitParams.saleName,
-            saleSymbol: _saleInitParams.saleSymbol,
-            saleBaseURI: _saleInitParams.saleBaseURI
+            referrerFeeReceiver: _saleInitParams.referrerFeeReceiver
         });
     }
 
@@ -326,10 +323,7 @@ contract LegionPreLiquidSaleTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver,
-                saleName: "Legion LFG Sale",
-                saleSymbol: "LLFGS",
-                saleBaseURI: "https://metadata.legion.cc/"
+                referrerFeeReceiver: referrerFeeReceiver
             })
         );
 
@@ -690,10 +684,7 @@ contract LegionPreLiquidSaleTest is Test {
                 bidToken: address(0),
                 projectAdmin: address(0),
                 addressRegistry: address(0),
-                referrerFeeReceiver: address(0),
-                saleName: "Legion LFG Sale",
-                saleSymbol: "LLFGS",
-                saleBaseURI: "https://metadata.legion.cc"
+                referrerFeeReceiver: address(0)
             })
         );
 
@@ -722,10 +713,7 @@ contract LegionPreLiquidSaleTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver,
-                saleName: "",
-                saleSymbol: "",
-                saleBaseURI: ""
+                referrerFeeReceiver: referrerFeeReceiver
             })
         );
 
@@ -754,10 +742,7 @@ contract LegionPreLiquidSaleTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver,
-                saleName: "Legion LFG Sale",
-                saleSymbol: "LLFGS",
-                saleBaseURI: "https://metadata.legion.cc"
+                referrerFeeReceiver: referrerFeeReceiver
             })
         );
 
@@ -786,10 +771,7 @@ contract LegionPreLiquidSaleTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver,
-                saleName: "Legion LFG Sale",
-                saleSymbol: "LLFGS",
-                saleBaseURI: "https://metadata.legion.cc"
+                referrerFeeReceiver: referrerFeeReceiver
             })
         );
 
@@ -931,7 +913,7 @@ contract LegionPreLiquidSaleTest is Test {
 
         // Expect
         vm.expectEmit();
-        emit ILegionPreLiquidSale.CapitalInvested(1000 * 1e6, investor1, 1);
+        emit ILegionPreLiquidSale.CapitalInvested(1000 * 1e6, investor1);
 
         // Act
         vm.prank(investor1);
@@ -951,7 +933,7 @@ contract LegionPreLiquidSaleTest is Test {
 
         // Expect
         vm.expectEmit();
-        emit ILegionPreLiquidSale.CapitalInvested(1000 * 1e6, investor1, 1);
+        emit ILegionPreLiquidSale.CapitalInvested(1000 * 1e6, investor1);
 
         // Act
         vm.prank(investor1);
@@ -981,31 +963,6 @@ contract LegionPreLiquidSaleTest is Test {
         ILegionPreLiquidSale(legionSaleInstance).invest{ value: 10_000_000_000_000 }(
             1000 * 1e6, (block.timestamp + 100), signatureInv1
         );
-    }
-
-    /**
-     * @notice Tests that successful investment mints an investor position
-     * @dev Expects ERC721 balance increase and correct token URI after investment
-     */
-    function test_invest_successfullyMintsInvestorPosition() public {
-        // Arrange
-        prepareStandardTestSetup();
-
-        vm.warp(1);
-
-        // Expect
-        vm.expectRevert("ERC721: URI query for nonexistent token");
-
-        vm.prank(investor1);
-        LegionPreLiquidSale(payable(legionSaleInstance)).tokenURI(1);
-
-        // Act
-        vm.prank(investor1);
-        ILegionPreLiquidSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
-
-        // Assert
-        assertEq(ERC721(legionSaleInstance).balanceOf(investor1), 1);
-        assertEq(LegionPreLiquidSale(payable(legionSaleInstance)).tokenURI(1), "https://metadata.legion.cc/1");
     }
 
     /**
@@ -1437,7 +1394,7 @@ contract LegionPreLiquidSaleTest is Test {
 
         // Act & Assert
         vm.expectEmit();
-        emit ILegionAbstractSale.CapitalRefunded(1000 * 1e6, investor1, 1);
+        emit ILegionAbstractSale.CapitalRefunded(1000 * 1e6, investor1);
 
         vm.prank(investor1);
         ILegionPreLiquidSale(legionSaleInstance).refund();
@@ -1512,7 +1469,7 @@ contract LegionPreLiquidSaleTest is Test {
         vm.warp(endTime() + 1);
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidWithdrawAmount.selector, 0));
 
         // Act
         vm.prank(investor1);
@@ -1701,7 +1658,7 @@ contract LegionPreLiquidSaleTest is Test {
         ILegionPreLiquidSale(legionSaleInstance).cancel();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidWithdrawAmount.selector, 0));
 
         // Act
         vm.prank(investor1);
@@ -1788,10 +1745,7 @@ contract LegionPreLiquidSaleTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver,
-                saleName: "Legion LFG Sale",
-                saleSymbol: "LLFGS",
-                saleBaseURI: "https://metadata.legion.cc"
+                referrerFeeReceiver: referrerFeeReceiver
             })
         );
 
@@ -2052,7 +2006,9 @@ contract LegionPreLiquidSaleTest is Test {
         vm.warp(endTime() + 1);
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.LegionSale__InvalidSignature.selector, signatureInv1ExcessWithdrawal)
+        );
 
         // Act
         vm.prank(investor5);
@@ -2099,507 +2055,5 @@ contract LegionPreLiquidSaleTest is Test {
         // Act
         vm.prank(nonLegionAdmin);
         ILegionPreLiquidSale(legionSaleInstance).syncLegionAddresses();
-    }
-
-    /*//////////////////////////////////////////////////////////////////////////
-                        TRANSFER INVESTOR POSITION TESTS
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /**
-     * @notice Test case: Successfully transfer investor position to another investor by Legion
-     * @dev Verifies that investor position is transferred correctly and original position no longer exists
-     */
-    function test_transferInvestorPosition_successfullyTransfersInvestorPosition() public {
-        // Arrange
-        prepareStandardTestSetup();
-        prepareExcessWithdrawalSignatures();
-
-        vm.prank(investor1);
-        ILegionPreLiquidSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
-
-        vm.prank(projectAdmin);
-        ILegionPreLiquidSale(legionSaleInstance).end();
-
-        vm.warp(block.timestamp + 2 weeks + 1);
-
-        vm.prank(investor1);
-        ILegionPreLiquidSale(legionSaleInstance).withdrawExcessInvestedCapital(0, signatureInv1ExcessWithdrawal);
-
-        // Act
-        vm.prank(legionBouncer);
-        LegionPreLiquidSale(payable(legionSaleInstance)).transferInvestorPosition(investor1, investor2, 1);
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
-        LegionPreLiquidSale(payable(legionSaleInstance)).investorPosition(investor1);
-        assertEq(
-            LegionPreLiquidSale(payable(legionSaleInstance)).investorPosition(investor2).investedCapital, 1000 * 1e6
-        );
-        assertEq(ERC721(legionSaleInstance).ownerOf(1), investor2);
-    }
-
-    /**
-     * @notice Test case: Successfully transfer investor position to an existing investor by Legion admin
-     * @dev Verifies that investor position is transferred correctly and both investors' positions are updated
-     */
-    function test_transferInvestorPosition_successfullyTransfersInvestorPositionToExistingInvestor() public {
-        // Arrange
-        prepareStandardTestSetup();
-        prepareExcessWithdrawalSignatures();
-
-        vm.prank(investor1);
-        ILegionPreLiquidSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
-
-        vm.prank(investor2);
-        ILegionPreLiquidSale(legionSaleInstance).invest(2000 * 1e6, (block.timestamp + 100), signatureInv2);
-
-        vm.prank(projectAdmin);
-        ILegionPreLiquidSale(legionSaleInstance).end();
-
-        vm.warp(block.timestamp + 2 weeks + 1);
-
-        vm.prank(investor1);
-        ILegionPreLiquidSale(legionSaleInstance).withdrawExcessInvestedCapital(0, signatureInv1ExcessWithdrawal);
-
-        vm.prank(investor2);
-        ILegionPreLiquidSale(legionSaleInstance).withdrawExcessInvestedCapital(
-            1000 * 1e6, signatureInv2ExcessWithdrawal
-        );
-
-        // Act
-        vm.prank(legionBouncer);
-        LegionPreLiquidSale(payable(legionSaleInstance)).transferInvestorPosition(investor1, investor2, 1);
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
-        LegionPreLiquidSale(payable(legionSaleInstance)).investorPosition(investor1);
-
-        vm.expectRevert(abi.encodeWithSelector(ERC721.TokenDoesNotExist.selector));
-        ERC721(legionSaleInstance).ownerOf(1);
-
-        assertEq(ERC721(legionSaleInstance).ownerOf(2), investor2);
-
-        assertEq(
-            LegionPreLiquidSale(payable(legionSaleInstance)).investorPosition(investor2).investedCapital, 2000 * 1e6
-        );
-    }
-
-    /**
-     * @notice Test case: Attempt to transfer investor position if existing position is refunded
-     * @dev Expects LegionSale__UnableToMergeInvestorPosition revert when trying to transfer position of refunded
-     * investor
-     */
-    function test_transferInvestorPosition_revertsIfExistingPositionIsRefunded() public {
-        // Arrange
-        prepareStandardTestSetup();
-        prepareExcessWithdrawalSignatures();
-
-        vm.prank(investor1);
-        ILegionPreLiquidSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
-
-        vm.startPrank(investor2);
-        ILegionPreLiquidSale(legionSaleInstance).invest(2000 * 1e6, (block.timestamp + 100), signatureInv2);
-        ILegionPreLiquidSale(legionSaleInstance).refund();
-        vm.stopPrank();
-
-        vm.prank(projectAdmin);
-        ILegionPreLiquidSale(legionSaleInstance).end();
-
-        vm.warp(block.timestamp + 2 weeks + 1);
-
-        vm.prank(investor1);
-        ILegionPreLiquidSale(legionSaleInstance).withdrawExcessInvestedCapital(0, signatureInv1ExcessWithdrawal);
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__UnableToMergeInvestorPosition.selector, 2));
-
-        // Act
-        vm.prank(legionBouncer);
-        LegionPreLiquidSale(payable(legionSaleInstance)).transferInvestorPosition(investor1, investor2, 1);
-    }
-
-    /**
-     * @notice Test case: Attempt to transfer investor position without Legion admin permissions
-     * @dev Expects LegionSale__NotCalledByLegion revert when called by non-Legion admin
-     */
-    function test_transferInvestorPosition_revertsIfNotCalledByLegion() public {
-        // Arrange
-        prepareStandardTestSetup();
-
-        vm.prank(investor1);
-        ILegionPreLiquidSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__NotCalledByLegion.selector));
-
-        // Act
-        vm.prank(investor1);
-        LegionPreLiquidSale(payable(legionSaleInstance)).transferInvestorPosition(investor1, investor2, 1);
-    }
-
-    /**
-     * @notice Test case: Attempt to transfer investor position if sale is canceled
-     * @dev Expects LegionSale__SaleIsCanceled revert when trying to transfer position after sale cancellation
-     */
-    function test_transferInvestorPosition_revertsIfSaleIsCanceled() public {
-        // Arrange
-        prepareStandardTestSetup();
-
-        vm.prank(investor1);
-        ILegionPreLiquidSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
-
-        vm.prank(projectAdmin);
-        ILegionPreLiquidSale(legionSaleInstance).cancel();
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
-
-        // Act
-        vm.prank(legionBouncer);
-        LegionPreLiquidSale(payable(legionSaleInstance)).transferInvestorPosition(investor1, investor2, 1);
-    }
-
-    /**
-     * @notice Test case: Attempt to transfer investor position if refund period is not over
-     * @dev Expects LegionSale__RefundPeriodIsNotOver revert when trying to transfer position before refund period ends
-     */
-    function test_transferInvestorPosition_revertsIfRefundPeriodIsNotOver() public {
-        // Arrange
-        prepareStandardTestSetup();
-
-        vm.prank(investor1);
-        ILegionPreLiquidSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
-
-        vm.prank(projectAdmin);
-        ILegionPreLiquidSale(legionSaleInstance).end();
-
-        vm.warp(block.timestamp + 1 days);
-
-        // Expect
-        vm.expectRevert(
-            abi.encodeWithSelector(Errors.LegionSale__RefundPeriodIsNotOver.selector, block.timestamp, refundEndTime())
-        );
-
-        // Act
-        vm.prank(legionBouncer);
-        LegionPreLiquidSale(payable(legionSaleInstance)).transferInvestorPosition(investor1, investor2, 1);
-    }
-
-    /**
-     * @notice Test case: Attempt to transfer investor position while sale is paused
-     * @dev Expects Pausable.EnforcedPause revert when trying to transfer position while sale is paused
-     */
-    function test_transferInvestorPosition_revertsIfPaused() public {
-        // Arrange
-        prepareStandardTestSetup();
-
-        vm.prank(investor1);
-        ILegionPreLiquidSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
-
-        vm.prank(projectAdmin);
-        ILegionPreLiquidSale(legionSaleInstance).end();
-
-        vm.warp(block.timestamp + 2 weeks + 1);
-
-        vm.prank(legionBouncer);
-        ILegionPreLiquidSale(legionSaleInstance).pause();
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-
-        // Act
-        vm.prank(legionBouncer);
-        LegionPreLiquidSale(payable(legionSaleInstance)).transferInvestorPosition(investor1, investor2, 1);
-    }
-
-    /**
-     * @notice Test case: Attempt to transfer investor position that has already been refunded
-     * @dev Expects LegionSale__UnableToTransferInvestorPosition revert when trying to transfer refunded position
-     */
-    function test_transferInvestorPosition_revertsIfPositionHasBeenRefunded() public {
-        // Arrange
-        prepareStandardTestSetup();
-
-        vm.prank(investor1);
-        ILegionPreLiquidSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
-
-        vm.prank(investor1);
-        ILegionPreLiquidSale(legionSaleInstance).refund();
-
-        vm.prank(projectAdmin);
-        ILegionPreLiquidSale(legionSaleInstance).end();
-
-        vm.warp(block.timestamp + 2 weeks + 1);
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__UnableToTransferInvestorPosition.selector, 1));
-
-        // Act
-        vm.prank(legionBouncer);
-        LegionPreLiquidSale(payable(legionSaleInstance)).transferInvestorPosition(investor1, investor2, 1);
-    }
-
-    /*//////////////////////////////////////////////////////////////////////////
-                   TRANSFER INVESTOR POSITION WITH SIGNATURE TESTS
-    //////////////////////////////////////////////////////////////////////////*/
-
-    /**
-     * @notice Test case: Successfully transfer investor position with signature
-     * @dev Verifies that investor position is transferred correctly using a signature
-     */
-    function test_transferInvestorPositionWithSignature_successfullyTransfersInvestorPosition() public {
-        // Arrange
-        prepareTransferTestSetup();
-        prepareExcessWithdrawalSignatures();
-
-        vm.prank(investor1);
-        ILegionPreLiquidSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
-
-        vm.prank(projectAdmin);
-        ILegionPreLiquidSale(legionSaleInstance).end();
-
-        vm.warp(block.timestamp + 2 weeks + 1);
-
-        vm.prank(investor1);
-        ILegionPreLiquidSale(legionSaleInstance).withdrawExcessInvestedCapital(0, signatureInv1ExcessWithdrawal);
-
-        // Act
-        vm.prank(investor1);
-        LegionPreLiquidSale(payable(legionSaleInstance)).transferInvestorPositionWithAuthorization(
-            investor1, investor2, 1, signatureInv1Transfer
-        );
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
-
-        vm.prank(investor1);
-        LegionPreLiquidSale(payable(legionSaleInstance)).investorPosition(investor1);
-
-        assertEq(
-            LegionPreLiquidSale(payable(legionSaleInstance)).investorPosition(investor2).investedCapital, 1000 * 1e6
-        );
-        assertEq(ERC721(legionSaleInstance).ownerOf(1), investor2);
-    }
-
-    /**
-     * @notice Test case: Successfully transfer investor position with signature to an existing investor
-     * @dev Verifies that investor position is transferred correctly and both investors' positions are updated
-     */
-    function test_transferInvestorPositionWithSignature_successfullyTransfersInvestorPositionToExistingInvestor()
-        public
-    {
-        // Arrange
-        prepareTransferTestSetup();
-        prepareExcessWithdrawalSignatures();
-
-        vm.prank(investor1);
-        ILegionPreLiquidSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
-
-        vm.prank(investor2);
-        ILegionPreLiquidSale(legionSaleInstance).invest(2000 * 1e6, (block.timestamp + 100), signatureInv2);
-
-        vm.prank(projectAdmin);
-        ILegionPreLiquidSale(legionSaleInstance).end();
-
-        vm.warp(block.timestamp + 2 weeks + 1);
-
-        vm.prank(investor1);
-        ILegionPreLiquidSale(legionSaleInstance).withdrawExcessInvestedCapital(0, signatureInv1ExcessWithdrawal);
-
-        vm.prank(investor2);
-        ILegionPreLiquidSale(legionSaleInstance).withdrawExcessInvestedCapital(
-            1000 * 1e6, signatureInv2ExcessWithdrawal
-        );
-
-        // Act
-        vm.prank(investor1);
-        LegionPreLiquidSale(payable(legionSaleInstance)).transferInvestorPositionWithAuthorization(
-            investor1, investor2, 1, signatureInv1Transfer
-        );
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorPositionDoesNotExist.selector));
-        LegionPreLiquidSale(payable(legionSaleInstance)).investorPosition(investor1);
-
-        vm.expectRevert(abi.encodeWithSelector(ERC721.TokenDoesNotExist.selector));
-        ERC721(legionSaleInstance).ownerOf(1);
-
-        assertEq(ERC721(legionSaleInstance).ownerOf(2), investor2);
-
-        assertEq(
-            LegionPreLiquidSale(payable(legionSaleInstance)).investorPosition(investor2).investedCapital, 2000 * 1e6
-        );
-    }
-
-    /**
-     * @notice Test case: Attempt to transfer investor position with signature if existing position is refunded
-     * @dev Expects LegionSale__UnableToMergeInvestorPosition revert when trying to transfer position of refunded
-     * investor
-     */
-    function test_transferInvestorPositionWithSignature_revertsIfExistingPositionIsRefunded() public {
-        // Arrange
-        prepareTransferTestSetup();
-        prepareExcessWithdrawalSignatures();
-
-        vm.prank(investor1);
-        ILegionPreLiquidSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
-
-        vm.startPrank(investor2);
-        ILegionPreLiquidSale(legionSaleInstance).invest(2000 * 1e6, (block.timestamp + 100), signatureInv2);
-        ILegionPreLiquidSale(legionSaleInstance).refund();
-        vm.stopPrank();
-
-        vm.prank(projectAdmin);
-        ILegionPreLiquidSale(legionSaleInstance).end();
-
-        vm.prank(investor1);
-        ILegionPreLiquidSale(legionSaleInstance).withdrawExcessInvestedCapital(0, signatureInv1ExcessWithdrawal);
-
-        vm.warp(block.timestamp + 2 weeks + 1);
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__UnableToMergeInvestorPosition.selector, 2));
-
-        // Act
-        vm.prank(investor1);
-        LegionPreLiquidSale(payable(legionSaleInstance)).transferInvestorPositionWithAuthorization(
-            investor1, investor2, 1, signatureInv1Transfer
-        );
-    }
-
-    /**
-     * @notice Test case: Attempt to transfer investor position by non-position owner using signature
-     * @dev Expects LegionSale__InvalidSignature revert when called by non-Legion admin
-     */
-    function test_transferInvestorPositionWithSignature_revertsIfNotCalledByPositionOwner() public {
-        // Arrange
-        prepareTransferTestSetup();
-
-        vm.prank(investor1);
-        ILegionPreLiquidSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
-
-        vm.prank(projectAdmin);
-        ILegionPreLiquidSale(legionSaleInstance).end();
-
-        vm.warp(block.timestamp + 2 weeks + 1);
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidSignature.selector, signatureInv1Transfer));
-
-        // Act
-        vm.prank(investor2);
-        LegionPreLiquidSale(payable(legionSaleInstance)).transferInvestorPositionWithAuthorization(
-            investor1, investor2, 1, signatureInv1Transfer
-        );
-    }
-
-    /**
-     * @notice Test case: Attempt to transfer investor position with signature if sale is canceled
-     * @dev Expects LegionSale__SaleIsCanceled revert when trying to transfer position after sale cancellation
-     */
-    function test_transferInvestorPositionWithSignature_revertsIfSaleIsCanceled() public {
-        // Arrange
-        prepareTransferTestSetup();
-
-        vm.prank(investor1);
-        ILegionPreLiquidSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
-
-        vm.prank(projectAdmin);
-        ILegionPreLiquidSale(legionSaleInstance).cancel();
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
-
-        // Act
-        vm.prank(investor1);
-        LegionPreLiquidSale(payable(legionSaleInstance)).transferInvestorPositionWithAuthorization(
-            investor1, investor2, 1, signatureInv1Transfer
-        );
-    }
-
-    /**
-     * @notice Test case: Attempt to transfer investor position with signature if refund period is not over
-     * @dev Expects LegionSale__RefundPeriodIsNotOver revert when trying to transfer position before refund period ends
-     */
-    function test_transferInvestorPositionWithSignature_revertsIfRefundPeriodIsNotOver() public {
-        // Arrange
-        prepareTransferTestSetup();
-
-        vm.prank(investor1);
-        ILegionPreLiquidSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
-
-        vm.prank(projectAdmin);
-        ILegionPreLiquidSale(legionSaleInstance).end();
-
-        vm.warp(block.timestamp + 1 days);
-
-        // Expect
-        vm.expectRevert(
-            abi.encodeWithSelector(Errors.LegionSale__RefundPeriodIsNotOver.selector, block.timestamp, refundEndTime())
-        );
-
-        // Act
-        vm.prank(investor1);
-        LegionPreLiquidSale(payable(legionSaleInstance)).transferInvestorPositionWithAuthorization(
-            investor1, investor2, 1, signatureInv1Transfer
-        );
-    }
-
-    /**
-     * @notice Test case: Attempt to transfer investor position with signature while sale is paused
-     * @dev Expects Pausable.EnforcedPause revert when trying to transfer position while sale is paused
-     */
-    function test_transferInvestorPositionWithSignature_revertsIfPaused() public {
-        // Arrange
-        prepareTransferTestSetup();
-
-        vm.prank(investor1);
-        ILegionPreLiquidSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
-
-        vm.prank(projectAdmin);
-        ILegionPreLiquidSale(legionSaleInstance).end();
-
-        vm.warp(block.timestamp + 2 weeks + 1);
-
-        vm.prank(legionBouncer);
-        ILegionPreLiquidSale(legionSaleInstance).pause();
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
-
-        // Act
-        vm.prank(investor1);
-        LegionPreLiquidSale(payable(legionSaleInstance)).transferInvestorPositionWithAuthorization(
-            investor1, investor2, 1, signatureInv1Transfer
-        );
-    }
-
-    /**
-     * @notice Test case: Attempt to transfer investor position with signature that has already been refunded
-     * @dev Expects LegionSale__UnableToTransferInvestorPosition revert when trying to transfer refunded position
-     */
-    function test_transferInvestorPositionWithSignature_revertsIfPositionHasBeenRefunded() public {
-        // Arrange
-        prepareTransferTestSetup();
-
-        vm.prank(investor1);
-        ILegionPreLiquidSale(legionSaleInstance).invest(1000 * 1e6, (block.timestamp + 100), signatureInv1);
-
-        vm.prank(projectAdmin);
-        ILegionPreLiquidSale(legionSaleInstance).end();
-
-        vm.prank(investor1);
-        ILegionPreLiquidSale(legionSaleInstance).refund();
-
-        vm.warp(block.timestamp + 2 weeks + 1);
-
-        // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__UnableToTransferInvestorPosition.selector, 1));
-
-        // Act
-        vm.prank(investor1);
-        LegionPreLiquidSale(payable(legionSaleInstance)).transferInvestorPositionWithAuthorization(
-            investor1, investor2, 1, signatureInv1Transfer
-        );
     }
 }

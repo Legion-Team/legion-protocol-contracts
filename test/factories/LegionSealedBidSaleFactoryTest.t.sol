@@ -175,10 +175,7 @@ contract LegionSealedBidSaleFactoryTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver,
-                saleName: "Legion LFG Sale",
-                saleSymbol: "LLFGS",
-                saleBaseURI: "https://metadata.legion.cc/"
+                referrerFeeReceiver: referrerFeeReceiver
             }),
             ILegionSealedBidSale.SealedBidSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
@@ -244,8 +241,6 @@ contract LegionSealedBidSaleFactoryTest is Test {
         // Expect
         assertEq(_sealedBidSaleConfig.publicKey.x, PUBLIC_KEY.x); // Check x-coordinate of public key
         assertEq(_sealedBidSaleConfig.publicKey.y, PUBLIC_KEY.y); // Check y-coordinate of public key
-        assertEq(LegionSealedBidSale(payable(legionSealedBidSaleInstance)).name(), "Legion LFG Sale");
-        assertEq(LegionSealedBidSale(payable(legionSealedBidSaleInstance)).symbol(), "LLFGS");
     }
 
     /**
@@ -284,10 +279,7 @@ contract LegionSealedBidSaleFactoryTest is Test {
                 bidToken: address(0),
                 projectAdmin: address(0),
                 addressRegistry: address(0),
-                referrerFeeReceiver: address(0),
-                saleName: "Legion LFG Sale",
-                saleSymbol: "LLFGS",
-                saleBaseURI: "https://metadata.legion.cc/"
+                referrerFeeReceiver: address(0)
             }),
             ILegionSealedBidSale.SealedBidSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
@@ -320,10 +312,7 @@ contract LegionSealedBidSaleFactoryTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver,
-                saleName: "",
-                saleSymbol: "",
-                saleBaseURI: ""
+                referrerFeeReceiver: referrerFeeReceiver
             }),
             ILegionSealedBidSale.SealedBidSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
