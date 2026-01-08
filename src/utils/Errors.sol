@@ -46,11 +46,6 @@ library Errors {
     /// @dev Indicates an action requires published capital data.
     error LegionSale__CapitalRaisedNotPublished();
 
-    /// @notice Thrown when an investor is not eligible to withdraw excess invested capital.
-    /// @param investor The address of the investor attempting to withdraw.
-    /// @param amount The amount of excess capital the investor is trying to withdraw.
-    error LegionSale__CannotWithdrawExcessInvestedCapital(address investor, uint256 amount);
-
     /// @notice Thrown when an invalid private key is provided for bid decryption.
     /// @dev Indicates the private key does not correspond to the public key.
     error LegionSale__InvalidBidPrivateKey();
@@ -76,14 +71,6 @@ library Errors {
     /// @notice Thrown when an invalid time period configuration is provided.
     /// @dev Indicates periods (e.g., sale, refund) are outside allowed ranges.
     error LegionSale__InvalidPeriodConfig();
-
-    /// @notice Thrown when invested capital does not match the SAFT amount.
-    /// @param investor The address of the investor with the mismatch.
-    error LegionSale__InvalidPositionAmount(address investor);
-
-    /// @notice Thrown when an invalid salt is used for bid encryption.
-    /// @dev Indicates the salt does not match the expected value (e.g., investor address).
-    error LegionSale__InvalidSalt();
 
     /// @notice Thrown when an invalid signature is provided for investment.
     /// @param signature The signature provided by the investor.
@@ -121,17 +108,6 @@ library Errors {
     /// @notice Thrown when a function is not called by the vesting controller.
     error LegionSale__NotCalledByVestingController();
 
-    /// @notice Thrown when an investor is not in the token claim whitelist.
-    /// @param investor The address of the non-whitelisted investor.
-    error LegionSale__NotInClaimWhitelist(address investor);
-
-    /// @notice Thrown when attempting to access a non-existent investor position.
-    error LegionSale__InvestorPositionDoesNotExist();
-
-    /// @notice Thrown when investment is attempted during the prefund allocation period.
-    /// @param timestamp The current timestamp when the investment is attempted.
-    error LegionSale__PrefundAllocationPeriodNotEnded(uint256 timestamp);
-
     /// @notice Thrown when the private key has already been published.
     error LegionSale__PrivateKeyAlreadyPublished();
 
@@ -162,29 +138,13 @@ library Errors {
     /// @notice Thrown when an action requires the sale to be canceled first.
     error LegionSale__SaleIsNotCanceled();
 
-    /// @notice Thrown when attempting to republish sale results.
-    error LegionSale__SaleResultsAlreadyPublished();
-
-    /// @notice Thrown when an action requires published sale results.
-    error LegionSale__SaleResultsNotPublished();
-
-    /// @notice Thrown when a signature is reused.
-    /// @param signature The signature that was previously used.
-    error LegionSale__SignatureAlreadyUsed(bytes signature);
-
     /// @notice Thrown when a signature has expired.
     /// @param currentTimestamp The current block timestamp when the signature is used.
     /// @param deadline The deadline timestamp after which the signature is invalid.
     error LegionSale__SignatureExpired(uint256 currentTimestamp, uint256 deadline);
 
-    /// @notice Thrown when attempting to reallocate tokens.
-    error LegionSale__TokensAlreadyAllocated();
-
     /// @notice Thrown when attempting to resupply tokens.
     error LegionSale__TokensAlreadySupplied();
-
-    /// @notice Thrown when an action requires token allocation first.
-    error LegionSale__TokensNotAllocated();
 
     /// @notice Thrown when an action requires supplied tokens first.
     error LegionSale__TokensNotSupplied();

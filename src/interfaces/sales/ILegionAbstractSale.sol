@@ -13,8 +13,6 @@ pragma solidity 0.8.30;
 //     \:\__\    \:\__\        \::/  /      \/__/        \::/  /        /:/  /
 //      \/__/     \/__/         \/__/                     \/__/         \/__/
 
-import { ILegionVestingManager } from "../../interfaces/vesting/ILegionVestingManager.sol";
-
 /**
  * @title ILegionAbstractSale
  * @author Legion

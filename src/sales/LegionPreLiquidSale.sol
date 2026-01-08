@@ -15,7 +15,6 @@ pragma solidity 0.8.30;
 
 import { SafeTransferLib } from "@solady/src/utils/SafeTransferLib.sol";
 
-import { Constants } from "../utils/Constants.sol";
 import { Errors } from "../utils/Errors.sol";
 
 import { ILegionPreLiquidSale } from "../interfaces/sales/ILegionPreLiquidSale.sol";

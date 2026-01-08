@@ -17,7 +17,6 @@ import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { Initializable } from "@solady/src/utils/Initializable.sol";
-import { MerkleProofLib } from "@solady/src/utils/MerkleProofLib.sol";
 import { SafeTransferLib } from "@solady/src/utils/SafeTransferLib.sol";
 
 import { Constants } from "../utils/Constants.sol";
@@ -25,9 +24,6 @@ import { Errors } from "../utils/Errors.sol";
 
 import { ILegionAddressRegistry } from "../interfaces/registries/ILegionAddressRegistry.sol";
 import { ILegionAbstractSale } from "../interfaces/sales/ILegionAbstractSale.sol";
-import { ILegionVesting } from "../interfaces/vesting/ILegionVesting.sol";
-
-import { LegionVestingManager } from "../vesting/LegionVestingManager.sol";
 
 /**
  * @title Legion Abstract Sale
