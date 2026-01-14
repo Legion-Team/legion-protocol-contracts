@@ -177,12 +177,12 @@ contract LegionSealedVestingSaleFactoryTest is Test {
     function prepareCreateLegionPreLiquidSale() public {
         setPreLiquidSaleParams(
             ILegionAbstractSale.LegionSaleInitializationParams({
-                salePeriodSeconds: 1 hours,
                 refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
                 minimumInvestAmount: 1e18,
                 legionOpsFeeInWei: 0,
+                bidTokenDecimals: 6,
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
@@ -281,12 +281,12 @@ contract LegionSealedVestingSaleFactoryTest is Test {
         // Arrange
         setPreLiquidSaleParams(
             ILegionAbstractSale.LegionSaleInitializationParams({
-                salePeriodSeconds: 0,
                 refundPeriodSeconds: 0,
                 legionFeeOnCapitalRaisedBps: 0,
                 referrerFeeOnCapitalRaisedBps: 0,
                 minimumInvestAmount: 0,
                 legionOpsFeeInWei: 0,
+                bidTokenDecimals: 6,
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),

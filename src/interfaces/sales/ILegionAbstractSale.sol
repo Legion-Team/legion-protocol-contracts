@@ -21,8 +21,6 @@ pragma solidity 0.8.30;
 interface ILegionAbstractSale {
     /// @dev Struct defining initialization parameters for a Legion sale
     struct LegionSaleInitializationParams {
-        // Duration of the sale period in seconds
-        uint64 salePeriodSeconds;
         // Duration of the refund period in seconds
         uint64 refundPeriodSeconds;
         // Legion's fee on capital raised in basis points (BPS)
@@ -33,6 +31,8 @@ interface ILegionAbstractSale {
         uint256 minimumInvestAmount;
         // Legion's operations fee in wei
         uint256 legionOpsFeeInWei;
+        // Decimals of the bid token
+        uint8 bidTokenDecimals;
         // Address of the token used for raising capital
         address bidToken;
         // Admin address of the project raising capital
@@ -59,6 +59,8 @@ interface ILegionAbstractSale {
         uint256 minimumInvestAmount;
         // Legion's operations fee in wei
         uint256 legionOpsFeeInWei;
+        // Decimals of the bid token
+        uint8 bidTokenDecimals;
     }
 
     /// @dev Struct containing the address configuration for the sale

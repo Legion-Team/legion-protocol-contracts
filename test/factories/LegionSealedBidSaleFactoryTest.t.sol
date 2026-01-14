@@ -166,12 +166,12 @@ contract LegionSealedBidSaleFactoryTest is Test {
     function prepareCreateLegionSealedBidSale() public {
         setSealedBidSaleParams(
             ILegionAbstractSale.LegionSaleInitializationParams({
-                salePeriodSeconds: 1 hours,
                 refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
                 minimumInvestAmount: 1e6,
                 legionOpsFeeInWei: 0,
+                bidTokenDecimals: 6,
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
@@ -270,12 +270,12 @@ contract LegionSealedBidSaleFactoryTest is Test {
         // Arrange
         setSealedBidSaleParams(
             ILegionAbstractSale.LegionSaleInitializationParams({
-                salePeriodSeconds: 1 hours,
                 refundPeriodSeconds: 2 weeks,
                 legionFeeOnCapitalRaisedBps: 250,
                 referrerFeeOnCapitalRaisedBps: 100,
                 minimumInvestAmount: 1e18,
                 legionOpsFeeInWei: 0,
+                bidTokenDecimals: 6,
                 bidToken: address(0),
                 projectAdmin: address(0),
                 addressRegistry: address(0),
@@ -303,12 +303,12 @@ contract LegionSealedBidSaleFactoryTest is Test {
         // Arrange
         setSealedBidSaleParams(
             ILegionAbstractSale.LegionSaleInitializationParams({
-                salePeriodSeconds: 0,
                 refundPeriodSeconds: 0,
                 legionFeeOnCapitalRaisedBps: 0,
                 referrerFeeOnCapitalRaisedBps: 0,
                 minimumInvestAmount: 0,
                 legionOpsFeeInWei: 0,
+                bidTokenDecimals: 6,
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),

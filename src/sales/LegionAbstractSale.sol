@@ -14,6 +14,7 @@ pragma solidity 0.8.30;
 //      \/__/     \/__/         \/__/                     \/__/         \/__/
 
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import { ERC20 } from "@solady/src/tokens/ERC20.sol";
 import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { Initializable } from "@solady/src/utils/Initializable.sol";
@@ -32,7 +33,7 @@ import { ILegionAbstractSale } from "../interfaces/sales/ILegionAbstractSale.sol
  * @dev Abstract base contract that implements common sale operations including investments, refunds, token
  * distribution, and position management using soulbound NFTs.
  */
-abstract contract LegionAbstractSale is ILegionAbstractSale, Initializable, Pausable {
+abstract contract LegionAbstractSale is ILegionAbstractSale, Initializable, Pausable, ERC20 {
     using ECDSA for bytes32;
     using MessageHashUtils for bytes32;
 
@@ -129,6 +130,21 @@ abstract contract LegionAbstractSale is ILegionAbstractSale, Initializable, Paus
         _disableInitializers();
     }
 
+    /// @inheritdoc ERC20
+    function name() public pure override returns (string memory) {
+        return "Legion Sale Receipt";
+    }
+
+    /// @inheritdoc ERC20
+    function symbol() public pure override returns (string memory) {
+        return "LGN-RECEIPT";
+    }
+
+    /// @inheritdoc ERC20
+    function decimals() public view override returns (uint8) {
+        return s_saleConfig.bidTokenDecimals;
+    }
+
     /// @inheritdoc ILegionAbstractSale
     function refund() external virtual whenNotPaused whenRefundPeriodNotOver whenSaleNotCanceled {
         // Verify that the investor has not refunded
@@ -151,6 +167,9 @@ abstract contract LegionAbstractSale is ILegionAbstractSale, Initializable, Paus
 
         // Emit CapitalRefunded
         emit CapitalRefunded(amountToRefund, msg.sender);
+
+        // Burn the sale receipt tokens from the investor
+        _burn(msg.sender, amountToRefund);
 
         // Transfer the refunded amount back to the investor
         SafeTransferLib.safeTransfer(s_addressConfig.bidToken, msg.sender, amountToRefund);
@@ -239,6 +258,9 @@ abstract contract LegionAbstractSale is ILegionAbstractSale, Initializable, Paus
         // Emit ExcessCapitalWithdrawn
         emit ExcessCapitalWithdrawn(amount, msg.sender);
 
+        // Burn the sale receipt tokens from the investor
+        _burn(msg.sender, amount);
+
         // Transfer the excess capital back to the investor
         if (amount > 0) SafeTransferLib.safeTransfer(s_addressConfig.bidToken, msg.sender, amount);
     }
@@ -262,6 +284,9 @@ abstract contract LegionAbstractSale is ILegionAbstractSale, Initializable, Paus
 
         // Emit CapitalRefundedAfterCancel
         emit CapitalRefundedAfterCancel(amountToWithdraw, msg.sender);
+
+        // Burn the sale receipt tokens from the investor
+        _burn(msg.sender, amountToWithdraw);
 
         // Transfer the refunded amount back to the investor
         SafeTransferLib.safeTransfer(s_addressConfig.bidToken, msg.sender, amountToWithdraw);
@@ -371,6 +396,7 @@ abstract contract LegionAbstractSale is ILegionAbstractSale, Initializable, Paus
         s_saleConfig.referrerFeeOnCapitalRaisedBps = _saleInitParams.referrerFeeOnCapitalRaisedBps;
         s_saleConfig.minimumInvestAmount = _saleInitParams.minimumInvestAmount;
         s_saleConfig.legionOpsFeeInWei = _saleInitParams.legionOpsFeeInWei;
+        s_saleConfig.bidTokenDecimals = _saleInitParams.bidTokenDecimals;
 
         // Set the address configuration
         s_addressConfig.bidToken = _saleInitParams.bidToken;
@@ -440,17 +466,17 @@ abstract contract LegionAbstractSale is ILegionAbstractSale, Initializable, Paus
         }
 
         // Check for zero values provided
-        if (_saleInitParams.salePeriodSeconds == 0 || _saleInitParams.refundPeriodSeconds == 0) {
+        if (_saleInitParams.refundPeriodSeconds == 0) {
             revert Errors.LegionSale__ZeroValueProvided();
         }
 
-        // Check if sale and refund periods are longer than allowed
-        if (_saleInitParams.salePeriodSeconds > 12 weeks || _saleInitParams.refundPeriodSeconds > 2 weeks) {
+        // Check if refund period is longer than allowed
+        if (_saleInitParams.refundPeriodSeconds > 2 weeks) {
             revert Errors.LegionSale__InvalidPeriodConfig();
         }
 
-        // Check if sale and refund periods are shorter than allowed
-        if (_saleInitParams.salePeriodSeconds < 1 hours || _saleInitParams.refundPeriodSeconds < 1 hours) {
+        // Check if refund period is shorter than allowed
+        if (_saleInitParams.refundPeriodSeconds < 1 hours) {
             revert Errors.LegionSale__InvalidPeriodConfig();
         }
     }
