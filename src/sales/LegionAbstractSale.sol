@@ -31,7 +31,7 @@ import { ILegionAbstractSale } from "../interfaces/sales/ILegionAbstractSale.sol
  * @author Legion
  * @notice Provides core functionality for token sales in the Legion Protocol.
  * @dev Abstract base contract that implements common sale operations including investments, refunds, token
- * distribution, and position management using soulbound NFTs.
+ * distribution, and investor position tracking.
  */
 abstract contract LegionAbstractSale is ILegionAbstractSale, Initializable, Pausable, ERC20 {
     using ECDSA for bytes32;

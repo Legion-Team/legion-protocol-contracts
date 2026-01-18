@@ -34,7 +34,7 @@ contract LegionSealedVestingSale is LegionAbstractSale, ILegionSealedVestingSale
     /// @dev Struct containing the pre-liquid sale configuration
     PreLiquidSaleConfiguration private s_preLiquidSaleConfig;
 
-    /// @notice Restricts interaction to when the sale cancelation is locked.
+    /// @notice Restricts interaction to when the sale cancellation is locked.
     /// @dev Reverts if canceling is not locked.
     modifier whenCancelLocked() {
         // Verify that canceling is locked
@@ -42,7 +42,7 @@ contract LegionSealedVestingSale is LegionAbstractSale, ILegionSealedVestingSale
         _;
     }
 
-    /// @notice Restricts interaction to when the sale cancelation is not locked.
+    /// @notice Restricts interaction to when the sale cancellation is not locked.
     /// @dev Reverts if canceling is locked.
     modifier whenCancelNotLocked() {
         // Verify that canceling is not locked
