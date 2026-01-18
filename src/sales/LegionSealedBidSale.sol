@@ -34,7 +34,7 @@ contract LegionSealedBidSale is LegionAbstractSale, ILegionSealedBidSale {
     /// @dev Struct containing the sealed bid sale configuration
     SealedBidSaleConfiguration private s_sealedBidSaleConfig;
 
-    /// @notice Restricts interaction to when the sale cancelation is locked.
+    /// @notice Restricts interaction to when the sale cancellation is locked.
     /// @dev Reverts if canceling is not locked.
     modifier whenCancelLocked() {
         // Verify that canceling is locked
@@ -42,7 +42,7 @@ contract LegionSealedBidSale is LegionAbstractSale, ILegionSealedBidSale {
         _;
     }
 
-    /// @notice Restricts interaction to when the sale cancelation is not locked.
+    /// @notice Restricts interaction to when the sale cancellation is not locked.
     /// @dev Reverts if canceling is locked.
     modifier whenCancelNotLocked() {
         // Verify that canceling is not locked
