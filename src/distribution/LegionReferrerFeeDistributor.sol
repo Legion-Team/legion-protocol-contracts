@@ -75,7 +75,7 @@ contract LegionReferrerFeeDistributor is ILegionReferrerFeeDistributor, Pausable
         uint256 amountToClaim = amount - amountClaimed;
 
         // If the amount to claim is zero, revert
-        if (amountToClaim == 0) revert Errors.LegionSale__InvalidWithdrawAmount(amountToClaim);
+        if (amountToClaim == 0) revert Errors.LegionSale__InvalidAmount(amountToClaim);
 
         // Update the claimed amount
         s_claimedAmounts[msg.sender] += amountToClaim;

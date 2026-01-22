@@ -83,7 +83,7 @@ library Errors {
 
     /// @notice Thrown when an invalid withdrawal amount is requested.
     /// @param amount The amount of tokens requested for withdrawal.
-    error LegionSale__InvalidWithdrawAmount(uint256 amount);
+    error LegionSale__InvalidAmount(uint256 amount);
 
     /// @notice Thrown when an invalid Merkle proof is provided for referrer fee claims.
     error LegionSale__InvalidMerkleProof();
@@ -91,6 +91,10 @@ library Errors {
     /// @notice Thrown when an investor who has already claimed excess capital attempts another action.
     /// @param investor The address of the investor who claimed excess.
     error LegionSale__InvestorHasClaimedExcess(address investor);
+
+    /// @notice Thrown when an investor who has not claimed excess capital attempts an action requiring it.
+    /// @param investor The address of the investor who has not claimed excess.
+    error LegionSale__InvestorHasNotClaimedExcess(address investor);
 
     /// @notice Thrown when an investor who has already refunded attempts another action.
     /// @param investor The address of the refunded investor.

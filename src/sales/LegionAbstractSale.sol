@@ -154,7 +154,7 @@ abstract contract LegionAbstractSale is ILegionAbstractSale, Initializable, Paus
         uint256 amountToRefund = s_investorPositions[msg.sender].investedCapital;
 
         // Revert in case there's nothing to refund
-        if (amountToRefund == 0) revert Errors.LegionSale__InvalidWithdrawAmount(0);
+        if (amountToRefund == 0) revert Errors.LegionSale__InvalidAmount(0);
 
         // Set the total invested capital for the investor to 0
         s_investorPositions[msg.sender].investedCapital = 0;
@@ -167,9 +167,6 @@ abstract contract LegionAbstractSale is ILegionAbstractSale, Initializable, Paus
 
         // Emit CapitalRefunded
         emit CapitalRefunded(amountToRefund, msg.sender);
-
-        // Burn the sale receipt tokens from the investor
-        _burn(msg.sender, amountToRefund);
 
         // Transfer the refunded amount back to the investor
         SafeTransferLib.safeTransfer(s_addressConfig.bidToken, msg.sender, amountToRefund);
@@ -258,9 +255,6 @@ abstract contract LegionAbstractSale is ILegionAbstractSale, Initializable, Paus
         // Emit ExcessCapitalWithdrawn
         emit ExcessCapitalWithdrawn(amount, msg.sender);
 
-        // Burn the sale receipt tokens from the investor
-        _burn(msg.sender, amount);
-
         // Transfer the excess capital back to the investor
         if (amount > 0) SafeTransferLib.safeTransfer(s_addressConfig.bidToken, msg.sender, amount);
     }
@@ -274,7 +268,7 @@ abstract contract LegionAbstractSale is ILegionAbstractSale, Initializable, Paus
         uint256 amountToWithdraw = s_investorPositions[msg.sender].investedCapital;
 
         // Revert in case there's nothing to claim
-        if (amountToWithdraw == 0) revert Errors.LegionSale__InvalidWithdrawAmount(0);
+        if (amountToWithdraw == 0) revert Errors.LegionSale__InvalidAmount(0);
 
         // Set the total invested capital for the investor to 0
         s_investorPositions[msg.sender].investedCapital = 0;
@@ -284,9 +278,6 @@ abstract contract LegionAbstractSale is ILegionAbstractSale, Initializable, Paus
 
         // Emit CapitalRefundedAfterCancel
         emit CapitalRefundedAfterCancel(amountToWithdraw, msg.sender);
-
-        // Burn the sale receipt tokens from the investor
-        _burn(msg.sender, amountToWithdraw);
 
         // Transfer the refunded amount back to the investor
         SafeTransferLib.safeTransfer(s_addressConfig.bidToken, msg.sender, amountToWithdraw);
@@ -366,6 +357,24 @@ abstract contract LegionAbstractSale is ILegionAbstractSale, Initializable, Paus
             // Transfer the capital back to the contract
             SafeTransferLib.safeTransferFrom(s_addressConfig.bidToken, msg.sender, address(this), capitalToReturn);
         }
+    }
+
+    /// @inheritdoc ILegionAbstractSale
+    function claimReceiptTokens() external virtual whenNotPaused whenRefundPeriodIsOver whenSaleNotCanceled {
+        // Verify that the investor has not refunded
+        _verifyHasNotRefunded(msg.sender);
+
+        // Verify that the investor has claimed excess capital
+        _verifyHasClaimedExcess(msg.sender);
+
+        // Cache the amount of receipt tokens to claim
+        uint256 amountToClaim = s_investorPositions[msg.sender].investedCapital;
+
+        // Mint sale receipt tokens to the investor
+        _mint(msg.sender, amountToClaim);
+
+        // Emit ReceiptTokensClaimed
+        emit ReceiptTokensClaimed(msg.sender, amountToClaim);
     }
 
     /// @dev Verifies that the correct ops fee is sent and transfers it to the Legion fee receiver.
@@ -571,6 +580,14 @@ abstract contract LegionAbstractSale is ILegionAbstractSale, Initializable, Paus
     function _verifyHasNotClaimedExcess(address _investor) internal view virtual {
         if (s_investorPositions[_investor].hasClaimedExcess) {
             revert Errors.LegionSale__InvestorHasClaimedExcess(msg.sender);
+        }
+    }
+
+    /// @dev Verifies that the investor has claimed excess capital.
+    /// @param _investor The address of the investor.
+    function _verifyHasClaimedExcess(address _investor) internal view virtual {
+        if (!s_investorPositions[_investor].hasClaimedExcess) {
+            revert Errors.LegionSale__InvestorHasNotClaimedExcess(msg.sender);
         }
     }
 }

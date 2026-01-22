@@ -311,7 +311,7 @@ contract LegionReferrerFeeDistributorTest is Test {
 
     /**
      * @notice Tests that claiming referrer fees reverts if the amount to claim is zero
-     * @dev Expects LegionSale__InvalidWithdrawAmount revert when the amount to claim is zero
+     * @dev Expects LegionSale__InvalidAmount revert when the amount to claim is zero
      */
     function test_claim_revertsIfZeroAmountToClaim() public {
         // Arrange
@@ -332,7 +332,7 @@ contract LegionReferrerFeeDistributorTest is Test {
         ILegionReferrerFeeDistributor(legionReferrerFeeDistributorInstance).claim(1000 * 1e6, claimProofInvestor1);
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidWithdrawAmount.selector, 0));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidAmount.selector, 0));
 
         // Act
         vm.prank(investor1);

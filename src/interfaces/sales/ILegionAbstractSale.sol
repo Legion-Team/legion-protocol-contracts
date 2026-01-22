@@ -150,6 +150,11 @@ interface ILegionAbstractSale {
     /// @param newFee The new fee amount in wei.
     event LegionOpsFeeUpdated(uint256 oldFee, uint256 newFee);
 
+    /// @notice Emitted when receipt tokens are claimed by an investor.
+    /// @param investor The address of the investor claiming tokens.
+    /// @param amount The amount of receipt tokens claimed.
+    event ReceiptTokensClaimed(address investor, uint256 amount);
+
     /// @notice Emitted when a sale is canceled.
     event SaleCanceled();
 
@@ -202,4 +207,7 @@ interface ILegionAbstractSale {
     /// @notice Updates Legion's operations fee.
     /// @param newFee The new fee amount in wei.
     function updateLegionOpsFee(uint256 newFee) external;
+
+    /// @notice Claims sale receipt tokens after investment.
+    function claimReceiptTokens() external;
 }

@@ -81,9 +81,6 @@ contract LegionPreLiquidSale is LegionAbstractSale, ILegionPreLiquidSale {
         // Collect Legion's operations fee
         _handleOpsFee();
 
-        // Mint sale receipt tokens to the investor
-        _mint(msg.sender, amount);
-
         // Transfer the invested capital to the contract
         SafeTransferLib.safeTransferFrom(s_addressConfig.bidToken, msg.sender, address(this), amount);
     }

@@ -3,6 +3,7 @@ pragma solidity 0.8.30;
 
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { ERC721 } from "@solady/src/tokens/ERC721.sol";
+import { ERC20 } from "@solady/src/tokens/ERC20.sol";
 import { Initializable } from "@solady/src/utils/Initializable.sol";
 import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import { MockERC20 } from "@solady/test/utils/mocks/MockERC20.sol";
@@ -676,6 +677,10 @@ contract LegionSealedBidSaleTest is Test {
         // Expect
         assertEq(_sealedBidSaleConfig.publicKey.x, PUBLIC_KEY.x, "Public key x-coordinate mismatch");
         assertEq(_sealedBidSaleConfig.publicKey.y, PUBLIC_KEY.y, "Public key y-coordinate mismatch");
+
+        assertEq(ERC20(payable(legionSealedBidSaleInstance)).name(), "Legion Sale Receipt");
+        assertEq(ERC20(payable(legionSealedBidSaleInstance)).symbol(), "LGN-RECEIPT");
+        assertEq(ERC20(payable(legionSealedBidSaleInstance)).decimals(), 6);
     }
 
     /**
@@ -1412,7 +1417,7 @@ contract LegionSealedBidSaleTest is Test {
         vm.warp(endTime() + 1); // Within refund period
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidWithdrawAmount.selector, 0));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidAmount.selector, 0));
 
         // Act
         vm.prank(investor1);
@@ -1583,7 +1588,7 @@ contract LegionSealedBidSaleTest is Test {
 
     /**
      * @notice Tests that withdrawing invested capital with no investment reverts
-     * @dev Expects LegionSale__InvalidWithdrawAmount revert when investor1 has not invested
+     * @dev Expects LegionSale__InvalidAmount revert when investor1 has not invested
      */
     function test_withdrawInvestedCapitalIfCanceled_revertsIfNoCapitalInvested() public {
         // Arrange
@@ -1593,7 +1598,7 @@ contract LegionSealedBidSaleTest is Test {
         ILegionSealedBidSale(legionSealedBidSaleInstance).cancel();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidWithdrawAmount.selector, 0));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidAmount.selector, 0));
 
         // Act
         vm.prank(investor1);
@@ -1602,7 +1607,7 @@ contract LegionSealedBidSaleTest is Test {
 
     /**
      * @notice Tests that withdrawing capital after cancellation reverts if the investor has already withdrawn
-     * @dev Expects LegionSale__InvalidWithdrawAmount revert when investor1 tries to withdraw again
+     * @dev Expects LegionSale__InvalidAmount revert when investor1 tries to withdraw again
      */
     function test_withdrawInvestedCapitalIfCanceled_revertsIfInvestorHasAlreadyWithdrawnInvestedCapital() public {
         // Arrange
@@ -1623,7 +1628,7 @@ contract LegionSealedBidSaleTest is Test {
         ILegionSealedBidSale(legionSealedBidSaleInstance).withdrawInvestedCapitalIfCanceled();
 
         // Expect
-        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidWithdrawAmount.selector, 0));
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvalidAmount.selector, 0));
 
         // Act
         vm.prank(investor1);
@@ -2330,5 +2335,153 @@ contract LegionSealedBidSaleTest is Test {
         // Act
         vm.prank(nonLegionAdmin);
         ILegionSealedBidSale(legionSealedBidSaleInstance).syncLegionAddresses();
+    }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                            CLAIM RECEIPT TOKENS TESTS
+    //////////////////////////////////////////////////////////////////////////*/
+
+    /**
+     * @notice Tests successful claiming of receipt tokens after refund period ends
+     * @dev Expects ReceiptTokensClaimed event emission and verifies investor's receipt token balance
+     */
+    function test_claimReceiptTokens_successfullyEmitsReceiptTokensClaimed() public {
+        // Arrange
+        prepareExcessWithdrawalTestSetup();
+
+        vm.prank(investor2);
+        ILegionSealedBidSale(legionSealedBidSaleInstance).withdrawExcessInvestedCapital(
+            1000 * 1e6, signatureInv2ExcessWithdrawal
+        );
+
+        vm.prank(projectAdmin);
+        ILegionSealedBidSale(legionSealedBidSaleInstance).end();
+
+        vm.warp(refundEndTime() + 1);
+
+        // Expect
+        vm.expectEmit();
+        emit ILegionAbstractSale.ReceiptTokensClaimed(investor2, 1000 * 1e6);
+
+        // Act
+        vm.prank(investor2);
+        ILegionSealedBidSale(legionSealedBidSaleInstance).claimReceiptTokens();
+
+        // Expect
+        assertEq(ERC20(legionSealedBidSaleInstance).balanceOf(investor2), 1000 * 1e6);
+    }
+
+    /**
+     * @notice Tests that claiming receipt tokens before refund period ends reverts
+     * @dev Expects LegionSale__RefundPeriodIsNotOver revert when refund period is still active
+     */
+    function test_claimReceiptTokens_revertsIfCalledBeforeRefundPeriodEnds() public {
+        // Arrange
+        prepareExcessWithdrawalTestSetup();
+
+        vm.prank(projectAdmin);
+        ILegionSealedBidSale(legionSealedBidSaleInstance).end();
+
+        // Expect
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.LegionSale__RefundPeriodIsNotOver.selector, block.timestamp, refundEndTime())
+        );
+
+        // Act
+        vm.prank(investor2);
+        ILegionSealedBidSale(legionSealedBidSaleInstance).claimReceiptTokens();
+    }
+
+    /**
+     * @notice Tests that claiming receipt tokens when sale is paused reverts
+     * @dev Expects Pausable.EnforcedPause revert when sale is paused
+     */
+    function test_claimReceiptTokens_revertsIfSaleIsPaused() public {
+        // Arrange
+        prepareExcessWithdrawalTestSetup();
+
+        vm.prank(projectAdmin);
+        ILegionSealedBidSale(legionSealedBidSaleInstance).end();
+
+        vm.prank(legionBouncer);
+        ILegionSealedBidSale(legionSealedBidSaleInstance).pause();
+
+        vm.warp(refundEndTime() + 1);
+
+        // Expect
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+
+        // Act
+        vm.prank(investor2);
+        ILegionSealedBidSale(legionSealedBidSaleInstance).claimReceiptTokens();
+    }
+
+    /**
+     * @notice Tests that claiming receipt tokens when sale is canceled reverts
+     * @dev Expects LegionSale__SaleIsCanceled revert when sale is canceled
+     */
+    function test_claimReceiptTokens_revertsIfSaleIsCanceled() public {
+        // Arrange
+        prepareExcessWithdrawalTestSetup();
+
+        vm.prank(projectAdmin);
+        ILegionSealedBidSale(legionSealedBidSaleInstance).end();
+
+        vm.prank(projectAdmin);
+        ILegionSealedBidSale(legionSealedBidSaleInstance).cancel();
+
+        vm.warp(refundEndTime() + 1);
+
+        // Expect
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__SaleIsCanceled.selector));
+
+        // Act
+        vm.prank(investor2);
+        ILegionSealedBidSale(legionSealedBidSaleInstance).claimReceiptTokens();
+    }
+
+    /**
+     * @notice Tests that claiming receipt tokens reverts if investor has refunded
+     * @dev Expects LegionSale__RefundPeriodIsNotOver revert when refund period is still active
+     */
+    function test_claimReceiptTokens_revertsIfInvestorHasRefunded() public {
+        // Arrange
+        prepareExcessWithdrawalTestSetup();
+
+        vm.prank(projectAdmin);
+        ILegionSealedBidSale(legionSealedBidSaleInstance).end();
+
+        vm.prank(investor2);
+        ILegionSealedBidSale(legionSealedBidSaleInstance).refund();
+
+        vm.warp(refundEndTime() + 1);
+
+        // Expect
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorHasRefunded.selector, investor2));
+
+        // Act
+        vm.prank(investor2);
+        ILegionSealedBidSale(legionSealedBidSaleInstance).claimReceiptTokens();
+    }
+
+    /**
+     * @notice Tests that claiming receipt tokens reverts if investor has not claimed excess capital
+     * @dev Expects LegionSale__InvestorHasNotClaimedExcess revert when investor has not withdrawn excess capital
+     */
+    function test_claimReceiptTokens_revertsIfInvestorHasNotClaimedExcessCapital() public {
+        // Arrange
+        prepareExcessWithdrawalTestSetup();
+
+        vm.prank(projectAdmin);
+        ILegionSealedBidSale(legionSealedBidSaleInstance).end();
+
+        vm.warp(refundEndTime() + 1);
+
+        // Expect
+        vm.expectRevert(abi.encodeWithSelector(Errors.LegionSale__InvestorHasNotClaimedExcess.selector, investor2));
+
+        // Act
+        vm.prank(investor2);
+        ILegionSealedBidSale(legionSealedBidSaleInstance).claimReceiptTokens();
     }
 }
