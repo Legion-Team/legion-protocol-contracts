@@ -186,7 +186,8 @@ contract LegionSealedVestingSaleFactoryTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver
+                referrerFeeReceiver: referrerFeeReceiver,
+                transferReceiptTokensIsPaused: false
             }),
             ILegionSealedVestingSale.PreLiquidSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
@@ -290,7 +291,8 @@ contract LegionSealedVestingSaleFactoryTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver
+                referrerFeeReceiver: referrerFeeReceiver,
+                transferReceiptTokensIsPaused: false
             }),
             ILegionSealedVestingSale.PreLiquidSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );

@@ -153,6 +153,9 @@ library Errors {
     /// @notice Thrown when an action requires supplied tokens first.
     error LegionSale__TokensNotSupplied();
 
+    /// @notice Thrown when transfer of receipt tokens is paused.
+    error LegionSale__TransferReceiptTokensPaused();
+
     /// @notice Thrown when a zero address is provided as a parameter.
     error LegionSale__ZeroAddressProvided();
 

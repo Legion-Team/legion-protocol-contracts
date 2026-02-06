@@ -175,7 +175,8 @@ contract LegionSealedBidSaleFactoryTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver
+                referrerFeeReceiver: referrerFeeReceiver,
+                transferReceiptTokensIsPaused: false
             }),
             ILegionSealedBidSale.SealedBidSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
@@ -279,7 +280,8 @@ contract LegionSealedBidSaleFactoryTest is Test {
                 bidToken: address(0),
                 projectAdmin: address(0),
                 addressRegistry: address(0),
-                referrerFeeReceiver: address(0)
+                referrerFeeReceiver: address(0),
+                transferReceiptTokensIsPaused: false
             }),
             ILegionSealedBidSale.SealedBidSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
@@ -312,7 +314,8 @@ contract LegionSealedBidSaleFactoryTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver
+                referrerFeeReceiver: referrerFeeReceiver,
+                transferReceiptTokensIsPaused: false
             }),
             ILegionSealedBidSale.SealedBidSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );

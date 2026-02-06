@@ -304,7 +304,8 @@ contract LegionPreLiquidSaleTest is Test {
             bidToken: _saleInitParams.bidToken,
             projectAdmin: _saleInitParams.projectAdmin,
             addressRegistry: _saleInitParams.addressRegistry,
-            referrerFeeReceiver: _saleInitParams.referrerFeeReceiver
+            referrerFeeReceiver: _saleInitParams.referrerFeeReceiver,
+            transferReceiptTokensIsPaused: _saleInitParams.transferReceiptTokensIsPaused
         });
     }
 
@@ -324,7 +325,8 @@ contract LegionPreLiquidSaleTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver
+                referrerFeeReceiver: referrerFeeReceiver,
+                transferReceiptTokensIsPaused: false
             })
         );
 
@@ -688,7 +690,8 @@ contract LegionPreLiquidSaleTest is Test {
                 bidToken: address(0),
                 projectAdmin: address(0),
                 addressRegistry: address(0),
-                referrerFeeReceiver: address(0)
+                referrerFeeReceiver: address(0),
+                transferReceiptTokensIsPaused: false
             })
         );
 
@@ -717,7 +720,8 @@ contract LegionPreLiquidSaleTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver
+                referrerFeeReceiver: referrerFeeReceiver,
+                transferReceiptTokensIsPaused: false
             })
         );
 
@@ -746,7 +750,8 @@ contract LegionPreLiquidSaleTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver
+                referrerFeeReceiver: referrerFeeReceiver,
+                transferReceiptTokensIsPaused: false
             })
         );
 
@@ -775,7 +780,8 @@ contract LegionPreLiquidSaleTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver
+                referrerFeeReceiver: referrerFeeReceiver,
+                transferReceiptTokensIsPaused: false
             })
         );
 
@@ -1749,7 +1755,8 @@ contract LegionPreLiquidSaleTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver
+                referrerFeeReceiver: referrerFeeReceiver,
+                transferReceiptTokensIsPaused: false
             })
         );
 

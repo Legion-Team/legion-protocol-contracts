@@ -377,6 +377,15 @@ abstract contract LegionAbstractSale is ILegionAbstractSale, Initializable, Paus
         emit ReceiptTokensClaimed(msg.sender, amountToClaim);
     }
 
+    /// @inheritdoc ILegionAbstractSale
+    function toggleTransferReceiptTokens() external virtual onlyLegion {
+        // Toggle the transfer of receipt tokens
+        s_saleConfig.transferReceiptTokensIsPaused = !s_saleConfig.transferReceiptTokensIsPaused;
+
+        // Emit TransferReceiptTokensToggled
+        emit TransferReceiptTokensToggled(s_saleConfig.transferReceiptTokensIsPaused);
+    }
+
     /// @dev Verifies that the correct ops fee is sent and transfers it to the Legion fee receiver.
     function _handleOpsFee() internal virtual {
         uint256 requiredFee = s_saleConfig.legionOpsFeeInWei;
@@ -406,6 +415,7 @@ abstract contract LegionAbstractSale is ILegionAbstractSale, Initializable, Paus
         s_saleConfig.minimumInvestAmount = _saleInitParams.minimumInvestAmount;
         s_saleConfig.legionOpsFeeInWei = _saleInitParams.legionOpsFeeInWei;
         s_saleConfig.bidTokenDecimals = _saleInitParams.bidTokenDecimals;
+        s_saleConfig.transferReceiptTokensIsPaused = _saleInitParams.transferReceiptTokensIsPaused;
 
         // Set the address configuration
         s_addressConfig.bidToken = _saleInitParams.bidToken;
@@ -588,6 +598,20 @@ abstract contract LegionAbstractSale is ILegionAbstractSale, Initializable, Paus
     function _verifyHasClaimedExcess(address _investor) internal view virtual {
         if (!s_investorPositions[_investor].hasClaimedExcess) {
             revert Errors.LegionSale__InvestorHasNotClaimedExcess(msg.sender);
+        }
+    }
+
+    /// @dev Overrides the ERC20 _beforeTokenTransfer hook to prevent transfers when paused.
+    /// @param from The address tokens are being transferred from.
+    /// @param to The address tokens are being transferred to.
+    /// @param amount The amount of tokens being transferred.
+    function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual override {
+        super._beforeTokenTransfer(from, to, amount);
+
+        if (s_saleConfig.transferReceiptTokensIsPaused) {
+            if (from != address(0) && to != address(0)) {
+                revert Errors.LegionSale__TransferReceiptTokensPaused();
+            }
         }
     }
 }

@@ -159,7 +159,8 @@ contract LegionPreLiquidOpenApplicationSaleFactoryTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver
+                referrerFeeReceiver: referrerFeeReceiver,
+                transferReceiptTokensIsPaused: false
             })
         );
 
@@ -254,7 +255,8 @@ contract LegionPreLiquidOpenApplicationSaleFactoryTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver
+                referrerFeeReceiver: referrerFeeReceiver,
+                transferReceiptTokensIsPaused: false
             })
         );
 

@@ -308,7 +308,8 @@ contract LegionSealedBidSaleTest is Test {
             bidToken: _saleInitParams.bidToken,
             projectAdmin: _saleInitParams.projectAdmin,
             addressRegistry: _saleInitParams.addressRegistry,
-            referrerFeeReceiver: _saleInitParams.referrerFeeReceiver
+            referrerFeeReceiver: _saleInitParams.referrerFeeReceiver,
+            transferReceiptTokensIsPaused: _saleInitParams.transferReceiptTokensIsPaused
         });
 
         testConfig.sealedBidSaleInitParams =
@@ -331,7 +332,8 @@ contract LegionSealedBidSaleTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver
+                referrerFeeReceiver: referrerFeeReceiver,
+                transferReceiptTokensIsPaused: false
             }),
             ILegionSealedBidSale.SealedBidSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
@@ -748,7 +750,8 @@ contract LegionSealedBidSaleTest is Test {
                 bidToken: address(0),
                 projectAdmin: address(0),
                 addressRegistry: address(0),
-                referrerFeeReceiver: address(0)
+                referrerFeeReceiver: address(0),
+                transferReceiptTokensIsPaused: false
             }),
             ILegionSealedBidSale.SealedBidSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
@@ -778,7 +781,8 @@ contract LegionSealedBidSaleTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver
+                referrerFeeReceiver: referrerFeeReceiver,
+                transferReceiptTokensIsPaused: false
             }),
             ILegionSealedBidSale.SealedBidSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
@@ -808,7 +812,8 @@ contract LegionSealedBidSaleTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver
+                referrerFeeReceiver: referrerFeeReceiver,
+                transferReceiptTokensIsPaused: false
             }),
             ILegionSealedBidSale.SealedBidSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
@@ -838,7 +843,8 @@ contract LegionSealedBidSaleTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver
+                referrerFeeReceiver: referrerFeeReceiver,
+                transferReceiptTokensIsPaused: false
             }),
             ILegionSealedBidSale.SealedBidSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );
@@ -868,7 +874,8 @@ contract LegionSealedBidSaleTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver
+                referrerFeeReceiver: referrerFeeReceiver,
+                transferReceiptTokensIsPaused: false
             }),
             ILegionSealedBidSale.SealedBidSaleInitializationParams({ publicKey: INVALID_PUBLIC_KEY_1 })
         );
@@ -1926,7 +1933,8 @@ contract LegionSealedBidSaleTest is Test {
                 bidToken: address(bidToken),
                 projectAdmin: address(projectAdmin),
                 addressRegistry: address(legionAddressRegistry),
-                referrerFeeReceiver: referrerFeeReceiver
+                referrerFeeReceiver: referrerFeeReceiver,
+                transferReceiptTokensIsPaused: false
             }),
             ILegionSealedBidSale.SealedBidSaleInitializationParams({ publicKey: PUBLIC_KEY })
         );

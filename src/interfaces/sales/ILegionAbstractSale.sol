@@ -41,6 +41,8 @@ interface ILegionAbstractSale {
         address addressRegistry;
         // Address of the referrer fee receiver
         address referrerFeeReceiver;
+        // Flag indicating whether transfer of receipt tokens is paused
+        bool transferReceiptTokensIsPaused;
     }
 
     /// @dev Struct containing the runtime configuration of the sale
@@ -61,6 +63,8 @@ interface ILegionAbstractSale {
         uint256 legionOpsFeeInWei;
         // Decimals of the bid token
         uint8 bidTokenDecimals;
+        // Flag indicating whether transfer of receipt tokens is paused
+        bool transferReceiptTokensIsPaused;
     }
 
     /// @dev Struct containing the address configuration for the sale
@@ -158,6 +162,10 @@ interface ILegionAbstractSale {
     /// @notice Emitted when a sale is canceled.
     event SaleCanceled();
 
+    /// @notice Emitted when transfer of receipt tokens is toggled.
+    /// @param isPaused The new paused state of receipt token transfers.
+    event TransferReceiptTokensToggled(bool isPaused);
+
     /// @notice Requests a refund from the sale during the refund window.
     function refund() external;
 
@@ -210,4 +218,7 @@ interface ILegionAbstractSale {
 
     /// @notice Claims sale receipt tokens after investment.
     function claimReceiptTokens() external;
+
+    /// @notice Toggles the transferability of receipt tokens.
+    function toggleTransferReceiptTokens() external;
 }
