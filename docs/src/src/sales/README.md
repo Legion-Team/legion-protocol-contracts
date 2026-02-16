@@ -2,7 +2,6 @@
 
 # Contents
 - [LegionAbstractSale](LegionAbstractSale.sol/abstract.LegionAbstractSale.md)
-- [LegionFixedPriceSale](LegionFixedPriceSale.sol/contract.LegionFixedPriceSale.md)
-- [LegionPreLiquidApprovedSale](LegionPreLiquidApprovedSale.sol/contract.LegionPreLiquidApprovedSale.md)
-- [LegionPreLiquidOpenApplicationSale](LegionPreLiquidOpenApplicationSale.sol/contract.LegionPreLiquidOpenApplicationSale.md)
-- [LegionSealedBidAuctionSale](LegionSealedBidAuctionSale.sol/contract.LegionSealedBidAuctionSale.md)
+- [LegionPreLiquidSale](LegionPreLiquidSale.sol/contract.LegionPreLiquidSale.md)
+- [LegionSealedBidSale](LegionSealedBidSale.sol/contract.LegionSealedBidSale.md)
+- [LegionSealedVestingSale](LegionSealedVestingSale.sol/contract.LegionSealedVestingSale.md)

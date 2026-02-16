@@ -1,5 +1,5 @@
 # ILegionTokenDistributor
-[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/85d479ea08d148a380138b535ed11768adee16de/src/interfaces/distribution/ILegionTokenDistributor.sol)
+[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/bb72c57782fae97ef9d644762c4c3ac28e3a2e85/src/interfaces/distribution/ILegionTokenDistributor.sol)
 
 **Author:**
 Legion
@@ -69,7 +69,8 @@ function claimTokenAllocation(
     bytes calldata claimSignature,
     bytes calldata vestingSignature
 )
-    external;
+    external
+    payable;
 ```
 **Parameters**
 
@@ -177,6 +178,21 @@ function investorVestingStatus(address investor)
 |`<none>`|`ILegionVestingManager.LegionInvestorVestingStatus`|The complete vesting status struct.|
 
 
+### updateLegionOpsFee
+
+Updates Legion's operations fee.
+
+
+```solidity
+function updateLegionOpsFee(uint256 newFee) external;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`newFee`|`uint256`|The new fee amount in wei.|
+
+
 ## Events
 ### EmergencyWithdraw
 Emitted during an emergency withdrawal by Legion.
@@ -218,6 +234,21 @@ event LegionAddressesSynced(
 |`vestingFactory`|`address`|The updated vesting factory address.|
 |`vestingController`|`address`|The updated vesting controller address.|
 
+### LegionOpsFeeUpdated
+Emitted when Legion's operations fee is updated.
+
+
+```solidity
+event LegionOpsFeeUpdated(uint256 oldFee, uint256 newFee);
+```
+
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`oldFee`|`uint256`|The previous fee amount in wei.|
+|`newFee`|`uint256`|The new fee amount in wei.|
+
 ### TokenAllocationClaimed
 Emitted when an investor successfully claims their token allocation.
 
@@ -250,6 +281,20 @@ event TokensSuppliedForDistribution(uint256 amount, uint256 legionFee, uint256 r
 |`legionFee`|`uint256`|The fee amount collected by Legion.|
 |`referrerFee`|`uint256`|The fee amount collected by the referrer.|
 
+### VestedTokensReleased
+Emitted when tokens are released to an investor.
+
+
+```solidity
+event VestedTokensReleased(address investor);
+```
+
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`investor`|`address`|The address of the investor.|
+
 ## Structs
 ### TokenDistributorInitializationParams
 *Struct for initializing the Token Distributor.*
@@ -264,6 +309,7 @@ struct TokenDistributorInitializationParams {
     address addressRegistry;
     address projectAdmin;
     uint256 totalAmountToDistribute;
+    uint256 legionOpsFeeInWei;
 }
 ```
 
@@ -277,6 +323,7 @@ struct TokenDistributorConfig {
     uint16 referrerFeeOnTokensSoldBps;
     bool tokensSupplied;
     uint256 totalAmountToDistribute;
+    uint256 legionOpsFeeInWei;
     uint256 totalAmountClaimed;
     address askToken;
     address projectAdmin;

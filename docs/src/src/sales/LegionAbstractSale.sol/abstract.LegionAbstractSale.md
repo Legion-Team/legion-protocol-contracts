@@ -1,8 +1,8 @@
 # LegionAbstractSale
-[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/85d479ea08d148a380138b535ed11768adee16de/src/sales/LegionAbstractSale.sol)
+[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/bb72c57782fae97ef9d644762c4c3ac28e3a2e85/src/sales/LegionAbstractSale.sol)
 
 **Inherits:**
-[ILegionAbstractSale](/src/interfaces/sales/ILegionAbstractSale.sol/interface.ILegionAbstractSale.md), [LegionVestingManager](/src/vesting/LegionVestingManager.sol/abstract.LegionVestingManager.md), [LegionPositionManager](/src/position/LegionPositionManager.sol/abstract.LegionPositionManager.md), Initializable, Pausable
+[ILegionAbstractSale](/src/interfaces/sales/ILegionAbstractSale.sol/interface.ILegionAbstractSale.md), Initializable, Pausable, ERC20
 
 **Author:**
 Legion
@@ -10,7 +10,7 @@ Legion
 Provides core functionality for token sales in the Legion Protocol.
 
 *Abstract base contract that implements common sale operations including investments, refunds, token
-distribution, and position management using soulbound NFTs.*
+distribution, and investor position tracking.*
 
 
 ## State Variables
@@ -42,15 +42,24 @@ LegionSaleStatus internal s_saleStatus;
 
 
 ### s_investorPositions
-*Mapping of position IDs to their respective positions*
+*Mapping of investor addresses to their respective positions*
 
 
 ```solidity
-mapping(uint256 s_positionId => InvestorPosition s_investorPosition) internal s_investorPositions;
+mapping(address s_investorAddress => InvestorPosition s_investorPosition) internal s_investorPositions;
 ```
 
 
 ## Functions
+### receive
+
+Standard receive function to accept ETH payments for ops fees
+
+
+```solidity
+receive() external payable;
+```
+
 ### onlyLegion
 
 Restricts function access to the Legion bouncer only.
@@ -106,6 +115,17 @@ Restricts interaction to when the sale is not canceled.
 modifier whenSaleNotCanceled();
 ```
 
+### whenSaleEnded
+
+Restricts interaction to when the sale has ended.
+
+*Reverts if the sale has not ended.*
+
+
+```solidity
+modifier whenSaleEnded();
+```
+
 ### whenSaleNotEnded
 
 Restricts interaction to when the sale is not ended
@@ -139,50 +159,6 @@ Restricts interaction to when the refund period is not over.
 modifier whenRefundPeriodNotOver();
 ```
 
-### whenTokensNotSupplied
-
-Restricts interaction to when tokens have not been supplied for distribution.
-
-*Reverts if tokens have been supplied.*
-
-
-```solidity
-modifier whenTokensNotSupplied();
-```
-
-### whenTokensSupplied
-
-Restricts interaction to when tokens have been supplied for distribution.
-
-*Reverts if tokens have not been supplied.*
-
-
-```solidity
-modifier whenTokensSupplied();
-```
-
-### whenSaleResultsArePublished
-
-Restricts interaction to when the sale results have been published.
-
-*Reverts if sale results have not been published.*
-
-
-```solidity
-modifier whenSaleResultsArePublished();
-```
-
-### whenSaleResultsNotPublished
-
-Restricts interaction to when the sale results have not been published.
-
-*Reverts if sale results have been published.*
-
-
-```solidity
-modifier whenSaleResultsNotPublished();
-```
-
 ### constructor
 
 Constructor for the LegionAbstractSale contract.
@@ -192,6 +168,42 @@ Constructor for the LegionAbstractSale contract.
 
 ```solidity
 constructor();
+```
+
+### name
+
+*Returns the name of the token.*
+
+
+```solidity
+function name() public pure override returns (string memory);
+```
+
+### symbol
+
+*Returns the symbol of the token, usually a shorter version of the
+name.*
+
+
+```solidity
+function symbol() public pure override returns (string memory);
+```
+
+### decimals
+
+*Returns the number of decimals used to get its user representation.
+For example, if `decimals` equals `2`, a balance of `505` tokens should
+be displayed to a user as `5.05` (`505 / 10 ** 2`).
+Tokens usually opt for a value of 18, imitating the relationship between
+Ether and Wei. This is the default value returned by this function, unless
+it's overridden.
+NOTE: This information is only used for _display_ purposes: it in
+no way affects any of the arithmetic of the contract, including
+{IERC20-balanceOf} and {IERC20-transfer}.*
+
+
+```solidity
+function decimals() public view override returns (uint8);
 ```
 
 ### refund
@@ -214,38 +226,10 @@ function withdrawRaisedCapital()
     virtual
     onlyProject
     whenNotPaused
+    whenSaleEnded
     whenRefundPeriodIsOver
-    whenSaleNotCanceled
-    whenSaleResultsArePublished
-    whenTokensSupplied;
+    whenSaleNotCanceled;
 ```
-
-### claimTokenAllocation
-
-Claims token allocation for an investor.
-
-
-```solidity
-function claimTokenAllocation(
-    uint256 amount,
-    LegionVestingManager.LegionInvestorVestingConfig calldata investorVestingConfig,
-    bytes32[] calldata proof
-)
-    external
-    virtual
-    whenNotPaused
-    whenSaleNotCanceled
-    whenRefundPeriodIsOver
-    whenSaleResultsArePublished;
-```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`amount`|`uint256`|The total amount of tokens to claim.|
-|`investorVestingConfig`|`LegionVestingManager.LegionInvestorVestingConfig`|The vesting configuration for the investor.|
-|`proof`|`bytes32[]`|The Merkle proof for claim verification.|
-
 
 ### withdrawExcessInvestedCapital
 
@@ -255,7 +239,7 @@ Withdraws excess invested capital back to the investor.
 ```solidity
 function withdrawExcessInvestedCapital(
     uint256 amount,
-    bytes32[] calldata proof
+    bytes calldata signature
 )
     external
     virtual
@@ -267,60 +251,7 @@ function withdrawExcessInvestedCapital(
 |Name|Type|Description|
 |----|----|-----------|
 |`amount`|`uint256`|The amount of excess capital to withdraw.|
-|`proof`|`bytes32[]`|The Merkle proof for excess capital verification.|
-
-
-### releaseVestedTokens
-
-Releases vested tokens to the investor.
-
-*Interacts with the investor's vesting contract to release available tokens.*
-
-
-```solidity
-function releaseVestedTokens() external virtual whenNotPaused;
-```
-
-### supplyTokens
-
-Supplies tokens for distribution after the sale.
-
-
-```solidity
-function supplyTokens(
-    uint256 amount,
-    uint256 legionFee,
-    uint256 referrerFee
-)
-    external
-    virtual
-    onlyProject
-    whenNotPaused
-    whenSaleNotCanceled
-    whenTokensNotSupplied;
-```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`amount`|`uint256`|The amount of tokens to supply.|
-|`legionFee`|`uint256`|The fee amount for Legion.|
-|`referrerFee`|`uint256`|The fee amount for the referrer.|
-
-
-### setAcceptedCapital
-
-Sets the Merkle root for accepted capital verification.
-
-
-```solidity
-function setAcceptedCapital(bytes32 merkleRoot) external virtual onlyLegion whenSaleNotCanceled;
-```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`merkleRoot`|`bytes32`|The Merkle root for accepted capital verification.|
+|`signature`|`bytes`|The signature authorizing the withdrawal.|
 
 
 ### withdrawInvestedCapitalIfCanceled
@@ -376,43 +307,20 @@ Resumes all sale operations.
 function unpause() external virtual onlyLegion;
 ```
 
-### transferInvestorPosition
+### updateLegionOpsFee
+
+Updates Legion's operations fee.
 
 
 ```solidity
-function transferInvestorPosition(
-    address from,
-    address to,
-    uint256 positionId
-)
-    external
-    virtual
-    override
-    onlyLegion
-    whenNotPaused
-    whenSaleNotCanceled
-    whenRefundPeriodIsOver
-    whenSaleResultsNotPublished;
+function updateLegionOpsFee(uint256 newFee) external virtual onlyLegion;
 ```
+**Parameters**
 
-### transferInvestorPositionWithAuthorization
+|Name|Type|Description|
+|----|----|-----------|
+|`newFee`|`uint256`|The new fee amount in wei.|
 
-
-```solidity
-function transferInvestorPositionWithAuthorization(
-    address from,
-    address to,
-    uint256 positionId,
-    bytes calldata transferSignature
-)
-    external
-    virtual
-    override
-    whenNotPaused
-    whenSaleNotCanceled
-    whenRefundPeriodIsOver
-    whenSaleResultsNotPublished;
-```
 
 ### saleConfiguration
 
@@ -465,31 +373,6 @@ function investorPosition(address investor) external view virtual returns (Inves
 |`<none>`|`InvestorPosition`|The complete investor position struct.|
 
 
-### investorVestingStatus
-
-Returns an investor's vesting status.
-
-
-```solidity
-function investorVestingStatus(address investor)
-    external
-    view
-    virtual
-    returns (LegionInvestorVestingStatus memory vestingStatus);
-```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`investor`|`address`|The address of the investor.|
-
-**Returns**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`vestingStatus`|`LegionInvestorVestingStatus`|The complete vesting status including timestamps, amounts, and release information.|
-
-
 ### cancel
 
 Cancels the ongoing sale.
@@ -498,7 +381,34 @@ Cancels the ongoing sale.
 
 
 ```solidity
-function cancel() public virtual onlyProject whenNotPaused whenSaleResultsNotPublished whenSaleNotCanceled;
+function cancel() public virtual onlyProject whenNotPaused whenSaleNotCanceled;
+```
+
+### claimReceiptTokens
+
+Claims sale receipt tokens after investment.
+
+
+```solidity
+function claimReceiptTokens() external virtual whenNotPaused whenRefundPeriodIsOver whenSaleNotCanceled;
+```
+
+### toggleTransferReceiptTokens
+
+Toggles the transferability of receipt tokens.
+
+
+```solidity
+function toggleTransferReceiptTokens() external virtual onlyLegion;
+```
+
+### _handleOpsFee
+
+*Verifies that the correct ops fee is sent and transfers it to the Legion fee receiver.*
+
+
+```solidity
+function _handleOpsFee() internal virtual;
 ```
 
 ### _setLegionSaleConfig
@@ -530,49 +440,6 @@ function _setLegionSaleConfig(LegionSaleInitializationParams calldata _saleInitP
 function _syncLegionAddresses() internal virtual;
 ```
 
-### _burnOrTransferInvestorPosition
-
-*Burns or transfers an investor position based on receiver's existing position.*
-
-
-```solidity
-function _burnOrTransferInvestorPosition(address _from, address _to, uint256 _positionId) private;
-```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`_from`|`address`|The address of the current owner.|
-|`_to`|`address`|The address of the new owner.|
-|`_positionId`|`uint256`|The ID of the position to transfer or burn.|
-
-
-### _verifyCanClaimTokenAllocation
-
-*Verifies investor eligibility to claim token allocation using Merkle proof.*
-
-
-```solidity
-function _verifyCanClaimTokenAllocation(
-    address _investor,
-    uint256 _amount,
-    LegionVestingManager.LegionInvestorVestingConfig calldata _investorVestingConfig,
-    bytes32[] calldata _proof
-)
-    internal
-    view
-    virtual;
-```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`_investor`|`address`|The address of the investor.|
-|`_amount`|`uint256`|The amount of tokens to claim.|
-|`_investorVestingConfig`|`LegionVestingManager.LegionInvestorVestingConfig`|The vesting configuration for the investor.|
-|`_proof`|`bytes32[]`|The Merkle proof for claim verification.|
-
-
 ### _verifyCanClaimExcessCapital
 
 *Verifies investor eligibility to claim excess capital using Merkle proof.*
@@ -581,9 +448,8 @@ function _verifyCanClaimTokenAllocation(
 ```solidity
 function _verifyCanClaimExcessCapital(
     address _investor,
-    uint256 _positionId,
     uint256 _amount,
-    bytes32[] calldata _proof
+    bytes calldata _signature
 )
     internal
     view
@@ -594,9 +460,8 @@ function _verifyCanClaimExcessCapital(
 |Name|Type|Description|
 |----|----|-----------|
 |`_investor`|`address`|The address of the investor.|
-|`_positionId`|`uint256`|The position ID of the investor.|
 |`_amount`|`uint256`|The amount of excess capital to claim.|
-|`_proof`|`bytes32[]`|The Merkle proof for excess capital verification.|
+|`_signature`|`bytes`|The signature authorizing the withdrawal.|
 
 
 ### _verifyValidInitParams
@@ -629,6 +494,15 @@ function _verifyMinimumInvestAmount(uint256 _amount) internal view virtual;
 |`_amount`|`uint256`|The amount being invested.|
 
 
+### _verifySaleHasEnded
+
+*Verifies that the sale has ended.*
+
+
+```solidity
+function _verifySaleHasEnded() internal view virtual;
+```
+
 ### _verifySaleHasNotEnded
 
 *Verifies that the sale has not ended.*
@@ -656,48 +530,6 @@ function _verifyRefundPeriodIsOver() internal view virtual;
 function _verifyRefundPeriodIsNotOver() internal view virtual;
 ```
 
-### _verifySaleResultsArePublished
-
-*Verifies that sale results have been published.*
-
-
-```solidity
-function _verifySaleResultsArePublished() internal view virtual;
-```
-
-### _verifySaleResultsNotPublished
-
-*Verifies that sale results have not been published.*
-
-
-```solidity
-function _verifySaleResultsNotPublished() internal view virtual;
-```
-
-### _verifyCanSupplyTokens
-
-*Verifies conditions for supplying tokens.*
-
-
-```solidity
-function _verifyCanSupplyTokens(uint256 _amount) internal view virtual;
-```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`_amount`|`uint256`|The amount of tokens to supply.|
-
-
-### _verifyCanPublishSaleResults
-
-*Verifies conditions for publishing sale results.*
-
-
-```solidity
-function _verifyCanPublishSaleResults() internal view virtual;
-```
-
 ### _verifySaleNotCanceled
 
 *Verifies that the sale is not canceled.*
@@ -716,37 +548,21 @@ function _verifySaleNotCanceled() internal view virtual;
 function _verifySaleIsCanceled() internal view virtual;
 ```
 
-### _verifyTokensNotSupplied
-
-*Verifies that tokens have not been supplied.*
-
-
-```solidity
-function _verifyTokensNotSupplied() internal view virtual;
-```
-
-### _verifyTokensSupplied
-
-*Verifies that tokens have been supplied.*
-
-
-```solidity
-function _verifyTokensSupplied() internal view virtual;
-```
-
 ### _verifyInvestSignature
 
 *Verifies that an investment signature is valid.*
 
 
 ```solidity
-function _verifyInvestSignature(bytes calldata _signature) internal view virtual;
+function _verifyInvestSignature(bytes calldata _signature, uint256 amount, uint256 deadline) internal view virtual;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
 |`_signature`|`bytes`|The signature to verify.|
+|`amount`|`uint256`||
+|`deadline`|`uint256`||
 
 
 ### _verifyCanWithdrawCapital
@@ -764,13 +580,13 @@ function _verifyCanWithdrawCapital() internal view virtual;
 
 
 ```solidity
-function _verifyHasNotRefunded(uint256 _positionId) internal view virtual;
+function _verifyHasNotRefunded(address _investor) internal view virtual;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`_positionId`|`uint256`|The ID of the investor's position.|
+|`_investor`|`address`|The address of the investor.|
 
 
 ### _verifyHasNotClaimedExcess
@@ -779,27 +595,44 @@ function _verifyHasNotRefunded(uint256 _positionId) internal view virtual;
 
 
 ```solidity
-function _verifyHasNotClaimedExcess(uint256 _positionId) internal view virtual;
+function _verifyHasNotClaimedExcess(address _investor) internal view virtual;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`_positionId`|`uint256`|The ID of the investor's position.|
+|`_investor`|`address`|The address of the investor.|
 
 
-### _verifyCanTransferInvestorPosition
+### _verifyHasClaimedExcess
 
-*Verifies conditions for transferring an investor position.*
+*Verifies that the investor has claimed excess capital.*
 
 
 ```solidity
-function _verifyCanTransferInvestorPosition(uint256 _positionId) private view;
+function _verifyHasClaimedExcess(address _investor) internal view virtual;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`_positionId`|`uint256`|The ID of the investor's position.|
+|`_investor`|`address`|The address of the investor.|
+
+
+### _beforeTokenTransfer
+
+*Overrides the ERC20 _beforeTokenTransfer hook to prevent transfers when paused.*
+
+
+```solidity
+function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual override;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`from`|`address`|The address tokens are being transferred from.|
+|`to`|`address`|The address tokens are being transferred to.|
+|`amount`|`uint256`|The amount of tokens being transferred.|
 
 

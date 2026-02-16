@@ -1,5 +1,5 @@
 # LegionTokenDistributor
-[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/85d479ea08d148a380138b535ed11768adee16de/src/distribution/LegionTokenDistributor.sol)
+[Git Source](https://github.com/Legion-Team/legion-protocol-contracts/blob/bb72c57782fae97ef9d644762c4c3ac28e3a2e85/src/distribution/LegionTokenDistributor.sol)
 
 **Inherits:**
 [ILegionTokenDistributor](/src/interfaces/distribution/ILegionTokenDistributor.sol/interface.ILegionTokenDistributor.md), [LegionVestingManager](/src/vesting/LegionVestingManager.sol/abstract.LegionVestingManager.md), Initializable, Pausable
@@ -52,6 +52,15 @@ Restricts function access to the project admin only.
 
 ```solidity
 modifier onlyProject();
+```
+
+### receive
+
+Standard receive function to accept ETH payments for ops fees
+
+
+```solidity
+receive() external payable;
 ```
 
 ### constructor
@@ -127,6 +136,7 @@ function claimTokenAllocation(
     bytes calldata vestingSignature
 )
     external
+    payable
     whenNotPaused;
 ```
 **Parameters**
@@ -174,6 +184,21 @@ Resumes the distribution.
 ```solidity
 function unpause() external onlyLegion;
 ```
+
+### updateLegionOpsFee
+
+Updates Legion's operations fee.
+
+
+```solidity
+function updateLegionOpsFee(uint256 newFee) external virtual onlyLegion;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`newFee`|`uint256`|The new fee amount in wei.|
+
 
 ### distributorConfiguration
 
@@ -234,6 +259,15 @@ function investorVestingStatus(address investor)
 |----|----|-----------|
 |`vestingStatus`|`LegionInvestorVestingStatus`|The complete vesting status struct.|
 
+
+### _handleOpsFee
+
+*Verifies that the correct ops fee is sent and transfers it to the Legion fee receiver.*
+
+
+```solidity
+function _handleOpsFee() internal virtual;
+```
 
 ### _setTokenDistributorConfig
 
