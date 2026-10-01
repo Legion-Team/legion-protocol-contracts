@@ -11,30 +11,31 @@ Detailed user documentation is available at [docs.legion.cc](https://legion-1.gi
 Get started with the Legion Protocol smart contracts by following these steps to set up, build and test the codebase.
 
 ```bash
-# 1. Clone the repo
-$ git clone https://github.com/legion-protocol/legion-protocol-contracts.git
+# 1. Clone the repo and enter its directory
+git clone https://github.com/Legion-Team/legion-protocol-contracts.git
+cd legion-protocol-contracts
 
 # 2. Install dependencies
-$ forge install
+forge install
 
 # 3. Compile contracts
-$ forge build
+forge build
 
 # 4. Run tests
-$ forge test
+forge test
 
 # 5. Run coverage
-$ forge coverage --no-match-coverage "(script|test|lib|mocks)"
+forge coverage --no-match-coverage "(script|test|lib|mocks)"
 ```
 
-Run static analysis with **Slither** and **Aderyn**.
+Run static analysis with **Slither** and **Aderyn** from the repository directory.
 
 ```bash
 # 1. Run Slither (requires Slither installed via `brew install slither-analyzer`)
-$ slither .
+slither .
 
 # 2. Run Aderyn (requires Aderyn by Cyfrin, installed via `brew install cyfrin/tap/aderyn`)
-$ aderyn .
+aderyn .
 ```
 
 ## Background
